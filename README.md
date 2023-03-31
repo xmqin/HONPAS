@@ -13,9 +13,9 @@ The current version is based on SIESTA-4.1.5
   HONPAS requires an external library LIBINT for two-electron repulsion integrals over Gaussian-type orbitals.
  (1) LIBINT-1.1.5 is located in the home directory of HONPAS
  (2) Build LIBINT
-   # cd libint-1.1.5
-   # ./configure --prefix=/your-PATH/libint-1.1.5 CC=icc CXX=icpc F77=ifort
-   # make -j && make install
+  $ cd libint-1.1.5
+  $ ./configure --prefix=/your-PATH/libint-1.1.5 CC=icc CXX=icpc F77=ifort
+  $ make -j && make install
 
 2. Build honpas
  (1) Go to honpas/Obj
