@@ -1,0 +1,258 @@
+%YAML 1.2
+---
+
+# Default test parameters:
+#
+# - category   : basic = "just run SIESTA", advanced = "complex workflow"
+# - fail_allow : whether it is OK for a test to fail
+# - fail_expect: whether a test is expected to fail (new feature development)
+# - program    : executable program to run
+# - timeout    : maximum run time allowed (in case the program hangs)
+#
+# All these parameters can be overridden individually for each test.
+#
+defaults:
+  category: basic
+  fail_allow: no
+  fail_expect: no
+  program: siesta
+  timeout: 300
+
+# Term-wise tolerances (can be overridden individually for each test)
+# Note: the following values were imported from ~siesta/Tests/tolerances.dat
+tolerances:
+  DEna:   0.015
+  DUscf:  0.001
+  Eharris: 0.003
+  Ekin:   0.017
+  Ena:     0.003
+  Enl:    0.005
+  Etot:   0.003
+  Exc:    0.003
+  FreeEng: 0.005
+  Uscf:   0.015
+
+# Specifications for each test case:
+#
+# - auxdata : auxilliary files needed by the test
+# - name    : short name for the test (should match the test directory name)
+# - title   : one-sentence description of the test
+# - triggers: optional SIESTA features (see the "siesta" section of any
+#             OUTVARS.yml file)
+#
+# The "name" and "title" fields are mandatory. The rest is optional.
+#
+tests:
+  - name: "32_h2o"
+    title: "32 water molecules for simplex minimization"
+  - name: "ag"
+    title: "Untitled"
+  - name: "ar2_vdw"
+    title: "Unconverged optimization of the Argon dimer with vdW-DF"
+  - name: "batio3"
+    title: "Barium titanate cubic structure"
+  - name: "benzene"
+    title: "Benzene molecule"
+  - name: "bessel"
+    title: "Water molecule with Bessel orbitals"
+  - name: "born"
+    title: "Untitled"
+    auxdata: ["FC.fdf"]
+  - name: "born_spin"
+    title: "Untitled"
+    auxdata: ["FC.fdf"]
+  - name: "carbon_nanoscroll"
+    title: "80-5-20 carbon nanoscroll"
+  - name: "ch4"
+    title: "FCC Methane with vdW pre-packaged molecules"
+  - name: "chargeconf-h2o"
+    title: "Water molecule with charge confinement"
+  - name: "constant_volume"
+    title: "MgCO3 SZ in variable primitive cell with constant volume"
+  - name: "dipole_correction"
+    title: "Automatic dipole correction of a layer of water molecules"
+  - name: "fe"
+    title: "BCC iron, non-linear partial-core correction, Pulay mixing"
+  - name: "fe_broyden"
+    title: "BCC iron, non-linear partial-core correction, Broyden mixing"
+  - name: "fe_clust_noncollinear"
+    title: "Linear Fe3 cluster, LDA"
+  - name: "fe_clust_noncollinear-gga"
+    title: "Linear Fe3 cluster, GGA"
+  - name: "fe_cohp"
+    title: "BCC iron, non-linear partial-core correction, COOP curves"
+  - name: "fe_noncol_kp"
+    title: "Linear Fe3 cluster with k-points"
+  - name: "fen"
+    title: "Bulk FeN in ZB structure , COOP curves"
+  - name: "fire_benzene"
+    title: "Benzene molecule with FIRE optimizer"
+  - name: "floating"
+    title: "Water molecule with Floating H orbitals"
+  - name: "force_2"
+    title: "Untitled"
+    auxdata: ["FC.fdf"]
+  - name: "force_constants"
+    title: "Untitled"
+    auxdata: ["FC.fdf"]
+  - name: "gate_G_charge"
+    title: "Untitled"
+  - name: "gate_G_hartree"
+    title: "Untitled"
+  - name: "ge111"
+    title: "Germanium 111 slab with 2x8 reconstruction"
+  - name: "ge_fatbands_so"
+    title: "Bulk Ge with SOC and various types of WFS output"
+    tags: ["WIP"]
+  - name: "graphite_c6"
+    title: "Untitled"
+  - name: "graphite_vdw_df"
+    title: "Unconverged graphite with vdw-DF"
+  - name: "h2_bessel"
+    title: "H2 molecule with a Bessel orbital in the middle"
+  - name: "h2o"
+    title: "Water molecule"
+  - name: "h2o-pop"
+    title: "Untitled"
+  - name: "h2o-rhog-mixing"
+    title: "Untitled"
+  - name: "h2oZ"
+    title: "Untitled"
+  - name: "h2o_2"
+    title: "Water molecule, changing the numbering of atoms"
+  - name: "h2o_4"
+    title: "Cluster of 4 water molecules, compute mu"
+  - name: "h2o_am05"
+    title: "Water molecule optimization with the AM05 functional"
+  - name: "h2o_basis"
+    title: "Water molecule with various basis generation options"
+  - name: "h2o_coop"
+    title: "Water molecule, COOP curves"
+  - name: "h2o_dipole"
+    title: "Dipole correction of a water molecule from DOI:10.1103/PhysRevB.59.12301"
+  - name: "h2o_dipole2"
+    title: "Dipole correction of a water molecule from DOI:10.1103/PhysRevB.59.12301"
+  - name: "h2o_dos"
+    title: "Untitled"
+  - name: "h2o_filteret_basis"
+    title: "Water molecule using a Filteret basis set"
+  - name: "h2o_findp_bug"
+    title: "Pre-findp bug example"
+  - name: "h2o_netcdf"
+    title: "NetCDF DMHS history of a water molecule"
+    triggers: ["netcdf"]
+  - name: "h2o_op_broyden"
+    title: "Broyden optimization of a water molecule"
+  - name: "h2o_orderN"
+    title: "Order-N optimization of a water molecule"
+  - name: "h2o_radialgrid"
+    title: "Example of accurate radial grid use"
+  - name: "h2o_reparam"
+    title: "Pseudopotential reparametrization of a water molecule"
+  - name: "h3po4_1"
+    title: "H3PO4 molecule optimization changing species ordering"
+  - name: "h3po4_2"
+    title: "H3PO4 molecule optimization changing species ordering"
+  - name: "h3po4_3"
+    title: "H3PO4 molecule optimization changing species ordering"
+  - name: "h_chain"
+    title: "Hydrogen chain"
+  - name: "h_chain2"
+    title: "Hydrogen chain with 2 atoms per cell and SZ basis"
+  - name: "md_anneal"
+    title: "Harris-functional annealing of a primitive c-Si supercell"
+    auxdata: ["md_anneal.STRUCT_IN"]
+  - name: "md_nose"
+    title: "Nosé MD of a MgCO3 primitive cell"
+  - name: "md_npr"
+    title: "Nosé-Parinello-Rahman MD of a MgCO3 primitive cell"
+  - name: "md_pr"
+    title: "Parinello-Rahman MD of a MgCO3 primitive cell"
+  - name: "md_verlet"
+    title: "Verlet MD of a MgCO3 primitive cell"
+  - name: "mgc-force"
+    title: "One-shot forces of a MgCO3 primitive cell"
+  - name: "mgco3"
+    title: "Default MD of a MgCO3 primitive cell"
+  - name: "mix_broyden"
+    title: "Linear Fe3 cluster, Broyden mixing"
+  - name: "mix_linear"
+    title: "Linear Fe3 cluster, linear mixing"
+  - name: "mix_pulay"
+    title: "Linear Fe3 cluster, Pulay mixing"
+  - name: "mno_ldau"
+    title: "Ferromagnetic Manganese oxide, LDA+U"
+  - name: "n_chain"
+    title: "Nitrogen atom chain"
+  - name: "nanotube-c-5-0"
+    title: "Metallic (5,0) carbon nanotube"
+  - name: "oxyn"
+    title: "Molecule made up of ON hybrids"
+  - name: "pb_bulk"
+    title: "Bulk lead"
+  - name: "pb_bulk_1000"
+    title: "Bulk lead"
+  - name: "pb_filter_cutoff"
+    title: "Bulk lead, cutoff-filtered"
+  - name: "pb_filter_tol"
+    title: "Bulk lead, tolerance-filtered"
+  - name: "ptcda"
+    title: "Untitled"
+  - name: "ptcda-au"
+    title: "Untitled"
+  - name: "scfmix"
+    title: "Linear Fe3 cluster, various mixing methods"
+  - name: "si-optical"
+    title: "Optical properties of bulk Si"
+  - name: "si001"
+    title: "Si(100), asymmetric 2x1 reconstruction"
+  - name: "si001-diags"
+    title: "Untitled"
+  - name: "si001-ldos"
+    title: "Untitled"
+  - name: "si111-spinpol"
+    title: "Untitled"
+  - name: "si2x1h"
+    title: "Untitled"
+  - name: "si2x1h-dipole"
+    title: "Untitled"
+  - name: "si2x1h-dipole-gcs"
+    title: "Untitled"
+  - name: "si2x1h-quench"
+    title: "Untitled"
+  - name: "si64"
+    title: "Untitled"
+  - name: "si64_coop"
+    title: " Cubic supercell of 64 Si atoms, COOP curves"
+  - name: "si_bandpoints"
+    title: "Bulk Silicon to test BandPoints"
+  - name: "si_coop"
+    title: "Si chain for the calculation of COOP curves"
+  - name: "si_fatbands"
+    title: "Bulk Silicon with various types of WFS output"
+  - name: "si_pdos_kgrid"
+    title: "bulk silicon with extra sampling for PDOS"
+  - name: "sic-slab"
+    title: "Hydrogen/SiC surface"
+  - name: "sih"
+    title: "Hydrogen in a supercell of 64 Silicon atoms"
+  - name: "sih-mrrr"
+    title: "Hydrogen in a supercell of 64 Silicon atoms, MRRR diagonalizer"
+  - name: "sih_fire"
+    title: "Hydrogen in a supercell of 64 Silicon atoms, FIRE quenching"
+  - name: "sih_op_broyden"
+    title: "Hydrogen in a supercell of 64 Silicon atoms, Broyden optimization"
+  - name: "sinw"
+    title: "Si Nanowire grown along the 110 direction"
+  - name: "sinw_2"
+    title: "Untitled"
+  - name: "var_cell"
+    title: "Broyden optimization of MgCO3 in a variable primitive cell"
+  - name: "wannier"
+    title: "Occupied bonding Wannier functions of Silicon"
+    auxdata: ["wannier.nnkp"]
+  - name: "zmatrix"
+    title: "Convoluted example of zmatrix input"
+    auxdata: ["Zmatrix.data"]
+
+...

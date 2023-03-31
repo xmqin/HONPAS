@@ -1,0 +1,342 @@
+------------------------------------------------------------
+2015-06-30   Alberto Garcia trunk-473--radfunc-6--wannier-10
+Merge trunk-473
+
+473: Merge code for 'server' operation via sockets and i-PI interface
+472: Revert previous change affecting FA and FC files. FAC/FCC files.
+
+added:
+  Src/fsiesta_sockets.F90
+  Src/fsockets.f90
+  Src/iosockets.F90
+  Src/sockets.c
+  Tests/ipi-test/
+  Util/SiestaSubroutine/SimpleTest/README
+  Util/SiestaSubroutine/SimpleTest/socket.fdf
+  Util/SiestaSubroutine/SimpleTest/sockets.sh
+  Util/Sockets/
+renamed:
+  Util/SiestaSubroutine/SimpleTest/Src/simple_pipes_parallel.f90 => 
+       Util/SiestaSubroutine/SimpleTest/Src/simple_parallel.f90
+  Util/Vibra/Src/vibrator.f => Util/Vibra/Src/vibra.f
+modified:
+  Docs/CHANGES
+  Docs/siesta.tex
+  Src/Makefile
+  Src/fsiesta_mpi.F90
+  Src/fsiesta_pipes.F90
+  Src/iofa.f
+  Src/ofc.f
+  Src/siesta_analysis.F
+  Src/siesta_forces.F
+  Src/siesta_master.f90
+  Src/siesta_options.F90
+  Src/state_analysis.F
+  Src/struct_init.F
+  Src/write_subs.F
+  Util/README
+  Util/SiestaSubroutine/FmixMD/Src/para.f90
+  Util/SiestaSubroutine/README
+  Util/SiestaSubroutine/SimpleTest/Src/Makefile
+  Util/SiestaSubroutine/SimpleTest/h2o.fdf
+  Util/SiestaSubroutine/SimpleTest/test.sh
+  Util/Vibra/Docs/CHANGES
+  Util/Vibra/Docs/vibra.tex
+  Util/Vibra/Examples/README
+  Util/Vibra/Examples/si54.bands
+  Util/Vibra/Examples/si54.fdf
+  Util/Vibra/Src/Makefile
+  Util/Vibra/Src/fcbuild.f
+  Util/Vibra/Src/recoor.f
+  Util/SiestaSubroutine/SimpleTest/Src/simple_parallel.f90
+  Util/Vibra/Src/vibra.f
+
+------------------------------------------------------------
+2015-06-23   Alberto Garcia trunk-471--radfunc-6--wannier-10
+Optimize writeunk some more
+
+Compute the values of the bands on the grid at
+all once. 
+
+modified:
+  Src/siesta2wannier90.F90
+  Src/write_inp_wannier.F90
+
+------------------------------------------------------------
+2015-06-19   Alberto Garcia trunk-471--radfunc-6--wannier-9
+Merge radfunc-6: reduce dispatching overheads
+
+To avoid dispatching overheads, the registered objects
+have new lcut and rcut fields, initialized at registration
+time.
+
+Removed print statements.
+
+modified:
+  Src/matel_registry.F90
+  Src/register_rfs.F90
+
+------------------------------------------------------------
+2015-06-19   Alberto Garcia trunk-471--radfunc-5--wannier-9
+Sync to trunk-471
+
+modified:
+  Docs/siesta.tex
+  Src/SiestaXC/makefile
+
+------------------------------------------------------------
+2015-06-17   Alberto Garcia trunk-470--radfunc-5--wannier-9
+Wrap some items for MPI
+
+modified:
+  Src/m_orderbands.F
+  Src/m_overkkneig.F90
+
+------------------------------------------------------------
+2015-06-17   Alberto Garcia trunk-470--radfunc-5--wannier-8
+Avoid memory leaks and some global reductions
+
+Some pointers were repeatedly 'nullified', hence causing memory leaks.
+
+Uses of global reduction where only a reduction to the IONode was
+needed have been fixed.
+
+Some instances of globalization of band data can be avoided. So far
+only the case of writeunk has been fixed.
+
+modified:
+  Src/amn.F90
+  Src/diagonalizeHk.F90
+  Src/m_orderbands.F
+  Src/m_overkkneig.F90
+  Src/mmn.F90
+  Src/reordpsi.F
+  Src/siesta2wannier90.F90
+  Src/write_inp_wannier.F90
+
+------------------------------------------------------------
+2015-06-15   Alberto Garcia trunk-470--radfunc-5--wannier-7
+Merge re-ordering changes by J. Junquera + sync to trunk-470
+
+  Sync to trunk-470
+  
+   Build fixes in Util and SiestaXC
+   Replacement of NR routines. Fix for charge-conf variables.
+  
+  removed:
+    Src/m_recipes.f
+    Src/ran3.f
+    Util/Grid/libfft.f
+    Util/Macroave/Src/recipes.f
+  added:
+    Src/errorf.f
+    Src/m_fft_gpfa.F
+    Src/randomg.f90
+    Util/Gen-basis/local_die.F
+    Util/Grid/fft3d.f
+    Util/Grid/local_die.f90
+    Util/Macroave/Src/local_die.f
+    Util/STM/ol-stm/Src/handlers.f
+  renamed:
+    Src/flib_spline.f90 => Src/interpolation.f90
+  modified:
+    Docs/siesta.tex
+    Src/Fstack.T90
+    Src/Makefile
+    Src/SiestaXC/atomxc.F90
+    Src/SiestaXC/lib-makefile
+    Src/SiestaXC/makefile
+    Src/SiestaXC/mesh1d.f90
+    Src/SiestaXC/siestaXC.files
+    Src/SiestaXC/siestaxc.F90
+    Src/SiestaXC/vdwxc.F90
+    Src/SiestaXC/vv_vdwxc.F90
+    Src/atom.F
+    Src/atomlwf.F
+    Src/basis_specs.f
+    Src/basis_types.f
+    Src/bonds.f
+    Src/chempot.F
+    Src/die.F
+    Src/electrostatic.f
+    Src/fermid.F
+    Src/m_convergence.f90
+    Src/m_filter.f90
+    Src/m_rhog.F90
+    Src/matel.f
+    Src/new_matel.f
+    Src/pseudopotential.f
+    Src/radfft.f
+    Src/radial.f
+    Src/sorting.f
+    Src/vmb.F
+    Util/Denchar/Src/Makefile
+    Util/Gen-basis/Makefile
+    Util/Gen-basis/gen-basis.F
+    Util/Grid/cdf_fft.F90
+    Util/Grid/makefile
+    Util/Macroave/Src/Makefile
+    Util/Macroave/Src/macroave.f
+    Util/Macroave/Src/paste.f
+    Util/Optimizer/amoeba.f
+    Util/Optimizer/simplex.f90
+    Util/STM/ol-stm/Src/Makefile
+    Util/STM/ol-stm/Src/atompla.f
+    Util/STM/ol-stm/Src/extrapolate.f
+    Util/STM/ol-stm/Src/fftw3_mymod.f90
+    Util/STM/ol-stm/Src/readstm.f
+    Util/STM/ol-stm/Src/reinitstm.f
+    Util/STM/ol-stm/Src/stm.f
+    Util/SiestaSubroutine/FmixMD/Src/Makefile
+    Util/VCA/Makefile
+    Util/VCA/fractional.f
+    Util/VCA/mixps.f
+    Util/build_all.sh
+    Src/interpolation.f90
+
+* Order_bands declared as a subroutine to be used only in a parallel calculation
+
+* The call to order_index is done only in case of a parallel
+  calculation
+
+* Small changes in the tex file to document the number of bands
+  included in the simulation in case of dealing with metals.
+
+* New version of the manual including the different options for the
+  interface with Wannier90
+
+* Small changes in the declaration of some variables that were
+  erroneously declared only if the parallel MPI directive was
+  activated.
+
+* The indices of the bands that each node manages have changed, 
+  according to the new block-cyclic distribution 
+  
+  added:
+    Src/m_orderbands.F
+  modified:
+    Src/Makefile
+    Src/amn.F90                 ! New manage of the indices of the bands,
+                                !   using the arrays populated in m_orderbands.f
+    Src/diagonalizeHk.F90
+    Src/ksv.f                   ! A comment for debugging has been deleted
+    Src/m_overkkneig.F90        ! New manage of the indices of the bands,
+                                !   using the arrays populated in m_orderbands.f
+    Src/parallelsubs.F          ! Special case added if the number of bands
+                                !   is smaller than the number of nodes in 
+                                !   set_blocksizedefault
+    Src/reordpsi.F              ! New manage of the indices of the bands,
+                                !   using the arrays populated in m_orderbands.f
+    Src/siesta2wannier90.F90    ! Typo in one comment corrected
+    Src/write_inp_wannier.F90   ! New manage of the indices of the bands,
+                                !   using the arrays populated in m_orderbands.f
+
+------------------------------------------------------------
+2015-05-04   Alberto Garcia trunk-467--radfunc-5--wannier-6
+Sync to trunk-467
+
+Fix import of idyn in save_density_matrix (rc-4.0)
+Fixed IO statements for molecularmechanics module
+Merge fix from rc-4.0: MPI tag in SiestaXC/mesh3d
+Merge fixes from rc-4.0: constr. forces, MPI compilation, mm.p...
+Added restart file for smooth continuation of annealing runs
+
+added:
+  Tests/anneal-cont/
+  Tests/anneal-cont/README
+  Tests/anneal-cont/makefile
+  Tests/anneal-cont/script.sh
+modified:
+  Docs/siesta.tex
+  Src/MPI/Makefile
+  Src/SiestaXC/mesh3d.F90
+  Src/dynamics.f
+  Src/molecularmechanics.F90
+  Src/save_density_matrix.F
+  Src/write_subs.F
+
+------------------------------------------------------------
+2015-05-04   Alberto Garcia trunk-462--radfunc-5--wannier-6
+Remove delk call from inside of dhscf
+
+A simple routine 'delk_wrapper' lives now in the dhscf
+module, but *outside* dhscf itself. This removes the
+changes to the dhscf interface introduced in the original
+version. Routine planewavematrix has been considerably
+simplified.
+
+(A. Garcia)
+
+modified:
+  Src/Makefile
+  Src/compute_energies.F90
+  Src/dhscf.F
+  Src/grdsam.F
+  Src/local_DOS.F
+  Src/m_planewavematrix.F90
+  Src/setup_hamiltonian.F
+  Src/siesta_analysis.F
+
+------------------------------------------------------------
+2014-12-05   Alberto Garcia trunk-462--radfunc-5--wannier-5
+Diagonalize H(k) only once in Wannier interface
+
+(Merge rev 440 from J. Junquera's branch)
+
+A bug has been corrected in the parallel version of the interface
+between Siesta and Wannier90.  The former version produced different
+results depending on the number of nodes used in the simulations.  It
+was related with the diagonalization of the Hamiltonian for every
+k-point at different places of the implementation. Everytime the
+Hamiltonian was diagonalized, a random phase for the wavefunctions was
+chosen, and this yielded inconsistent results in some cases.  Now, the
+Hamiltonian is diagonalized only once (in diagonalizeHk.F90
+subroutine) and then the wavefunctions stored in memory.
+
+NOTE: The extension of the eigenvalue file in the Wannier90 interface
+      has been changed to .eigW
+
+added:
+  Src/diagonalizeHk.F90
+modified:
+  Src/Makefile
+  Src/amn.F90
+  Src/m_overkkneig.F90
+  Src/mmn.F90
+  Src/reordpsi.F
+  Src/siesta2wannier90.F90
+  Src/write_inp_wannier.F90
+
+------------------------------------------------------------
+2014-10-20   Alberto Garcia trunk-462--radfunc-5--wannier-4
+Sync to trunk-462
+
+Improved MPI version of siesta as a subroutine (J.M.Soler)
+%files added to Util/JobList options (J.M.Soler)
+New GGA and VDW functionals (M.Fritz & J.M.Soler)
+Fix bug when reading spin-polarized deformation charge
+Fixes and new features in fdf
+Fix printed charges for transiesta in spin-polarized case
+Bug fixes and feature changes in charge-density mixing
+Charge-density mixing
+Allow the handling of ghosts of synthetic atoms
+Added a simple ps-->inp converter for ATOM
+Fixed a wrong threshold for the bias for transiesta runs
+
+------------------------------------------------------------
+2013-12-09   Alberto Garcia trunk-451--radfunc-5--wannier-4
+Sync to trunk-451
+
+ Use electronic entropy from current SCF step....
+ Fix SiestaXC/mesh3d to avoid overflow of distri...
+ Fix Tbtrans runs at Gamma when using Tr...
+ Minor fixes in XC library (JMS)
+ Improve the estimation of the orbital distrib...
+ Output file names for dhscf packed in a derived...
+ New mixing options and simplification...
+ Bug fixes to the preconditioner in th...
+ Update to gnubands program           ...
+ Synch patch-logs from siesta-3.0 bran...
+ Cosmetic fixes to please Cray compi...
+ Avoid allocation of auxiliary index arrays in...
+ Siesta as subroutine using MPI. Vydrov-Va...

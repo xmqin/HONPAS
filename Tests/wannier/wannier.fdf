@@ -1,0 +1,71 @@
+SystemName  Si 
+#           input file generated according to the example03 in the
+#           Wannier90 distribution
+SystemLabel wannier
+
+NumberOfAtoms 2
+NumberOfSpecies 1
+
+%block ChemicalSpeciesLabel
+ 1 14 Si
+%endblock ChemicalSpeciesLabel
+
+LatticeConstant 5.3976 Ang
+%block LatticeVectors
+ -0.5  0.0  0.5
+  0.0  0.5  0.5
+ -0.5  0.5  0.0
+%endblock LatticeVectors
+
+AtomicCoordinatesFormat Fractional
+%block AtomicCoordinatesAndAtomicSpecies
+-0.25000  0.75000  -0.25000 1 Si
+ 0.00000  0.00000   0.00000 1 Si
+%endblock AtomicCoordinatesAndAtomicSpecies
+
+XC.functional      LDA
+XC.authors         CA
+
+%block kgrid_Monkhorst_Pack
+   4  0  0  0.5
+   0  4  0  0.5
+   0  0  4  0.5
+%endblock Kgrid_Monkhorst_Pack
+
+MeshCutoff         100 Ry
+
+MaxSCFIterations   20
+DM.MixingWeight    0.20
+DM.NumberPulay     10
+DM.Tolerance       1.d-5
+
+SolutionMethod     diagon
+DivideAndConquer   .false.
+
+BandLinesScale ReciprocalLatticeVectors
+%block BandLines
+1   0.500  0.500  0.500 L       # Begin at L
+20  0.000  0.000  0.000 \Gamma  # 20 points from L to Gamma
+20  0.500  0.500  0.000 X       # 20 points from Gamma to X
+20  0.500  0.750  0.250 W       # 20 points from X to W
+20  0.000  0.000  0.000 \Gamma  # 20 points from W to Gamma
+%endblock BandLines
+
+%Block PAO.Basis
+Si   3      0.10073
+ n=3   0   2   E    54.95098     5.18731
+     7.96169     1.84771
+     1.00000     1.00000
+ n=3   1   2   E    17.89634     5.06832
+     7.97707     4.20154
+     1.00000     1.00000
+ n=3   2   1   E     9.35202     0.00031
+     4.48819
+     1.00000
+%EndBlock PAO.Basis
+
+Siesta2Wannier90.WriteMmn       .true.
+Siesta2Wannier90.WriteAmn       .true.
+Siesta2Wannier90.WriteEig       .true.
+Siesta2Wannier90.WriteUnk       .false.
+Siesta2Wannier90.NumberOfBands  26

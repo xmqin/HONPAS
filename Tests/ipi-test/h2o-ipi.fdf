@@ -1,0 +1,29 @@
+SystemName          Water molecule -- driven by i-Pi
+SystemLabel         h2o-ipi
+NumberOfAtoms       3
+NumberOfSpecies     2
+
+MD.TypeOfRun forces
+Master.interface socket
+Master.code i-pi
+Master.socketType unix
+Master.address localhost      # In this case, Unix socket name, not host name (confusing!)
+Master.port 12345             # Irrelevant for unix sockets
+
+%block ChemicalSpeciesLabel
+ 1  8  O      # Species index, atomic number, species label
+ 2  1  H
+%endblock ChemicalSpeciesLabel
+
+XC.functional           GGA         # Exchange-correlation functional type
+XC.authors              PBE         # Particular parametrization of xc func
+SpinPolarized           .false.     # Spin unpolarized calculation
+MeshCutoff              150. Ry     # Equivalent planewave cutoff for the grid
+
+AtomicCoordinatesFormat  Ang
+%block AtomicCoordinatesAndAtomicSpecies
+ 0.757  0.586  0.000  2
+-0.757  0.586  0.000  2
+ 0.000  0.000  0.000  1
+%endblock AtomicCoordinatesAndAtomicSpecies
+

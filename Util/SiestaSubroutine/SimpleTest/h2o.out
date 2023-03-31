@@ -1,0 +1,910 @@
+SIESTA 1.4.5  -- [Bug fix (initdm)] (5 Dec 2003)
+Architecture  : intel-mkl
+Compiler flags: ifc  -w -mp -tpp5 -O3
+SERIAL version
+
+* Running in serial mode
+>> Start of run:  19-JAN-2004  12:18:43
+
+                           ***********************       
+                           *  WELCOME TO SIESTA  *       
+                           ***********************       
+
+reinit: Reading from standard input
+************************** Dump of input data file ****************************
+SystemName        Water molecule
+SystemLabel       h2o.fast  # MUST be this file prefix (eg. h2o for h2o.fdf)
+NumberOfAtoms     3
+NumberOfSpecies   2
+%block ChemicalSpeciesLabel
+ 1  8  O      # Species index, atomic number, species label
+ 2  1  H
+%endblock ChemicalSpeciesLabel
+AtomicCoordinatesFormat  Ang
+%block AtomicCoordinatesAndAtomicSpecies
+ 0.000  0.000  0.000  1
+ 0.757  0.586  0.000  2
+-0.757  0.586  0.000  2
+%endblock AtomicCoordinatesAndAtomicSpecies
+HarrisFunctional
+PAO.BasisSize     SZ
+PAO.EnergyShift   0.5 eV
+MD.TypeOfRun      forces
+************************** End of input data file *****************************
+
+reinit: -----------------------------------------------------------------------
+reinit: System Name: Water molecule                                             
+reinit: -----------------------------------------------------------------------
+reinit: System Label: h2o.fast            
+reinit: -----------------------------------------------------------------------
+
+initatom: Reading input for the pseudopotentials and atomic orbitals ----------
+ Species number:            1  Label: O Atomic number:           8
+ Species number:            2  Label: H Atomic number:           1
+Ground state valence configuration:   2s02  2p04
+Reading pseudopotential information in unformatted form from O.vps
+Ground state valence configuration:   1s01
+Reading pseudopotential information in unformatted form from H.vps
+For O, standard SIESTA heuristics set lmxkb to 2
+ (one more than the basis l, including polarization orbitals).
+Use PS.lmax or PS.KBprojectors blocks to override.
+For H, standard SIESTA heuristics set lmxkb to 1
+ (one more than the basis l, including polarization orbitals).
+Use PS.lmax or PS.KBprojectors blocks to override.
+
+<basis_specs>
+===============================================================================
+O                    Z=   8    Mass=  16.000        Charge=  0.0000    
+Lmxo=1 Lmxkb=2     BasisType=split      Semic=F
+L=0  Nsemic=0  Cnfigmx=2
+          n=1  nzeta=1  polorb=0
+               vcte:    0.0000    
+               rinn:    0.0000    
+                rcs:    0.0000    
+            lambdas:    1.0000    
+L=1  Nsemic=0  Cnfigmx=2
+          n=1  nzeta=1  polorb=0
+               vcte:    0.0000    
+               rinn:    0.0000    
+                rcs:    0.0000    
+            lambdas:    1.0000    
+-------------------------------------------------------------------------------
+L=0  Nkbl=1  erefs: 0.17977+309
+L=1  Nkbl=1  erefs: 0.17977+309
+L=2  Nkbl=1  erefs: 0.17977+309
+===============================================================================
+</basis_specs>
+
+atom: Called for O   (Z =   8)
+
+read_vps: Pseudopotential generation method:
+read_vps: ATM3      Troullier-Martins                       
+
+read_vps: Valence configuration (pseudopotential and basis set generation):
+2s( 2.00) rc: 1.14
+2p( 4.00) rc: 1.14
+3d( 0.00) rc: 1.14
+Total valence charge:    6.00000
+
+xc_check: Exchange-correlation functional:
+xc_check: Ceperley-Alder
+V l=0 = -2*Zval/r beyond r=  1.1278
+V l=1 = -2*Zval/r beyond r=  1.1278
+V l=2 = -2*Zval/r beyond r=  1.1278
+All V_l potentials equal beyond r=  1.1278
+This should be close to max(r_c) in ps generation
+All pots = -2*Zval/r beyond r=  1.1278
+
+VLOCAL1: 99.0% of the norm of Vloc inside     34.126 Ry
+VLOCAL1: 99.9% of the norm of Vloc inside     77.774 Ry
+atom: Maximum radius for 4*pi*r*r*local-pseudopot. charge    1.37759
+atom: Maximum radius for r*vlocal+2*Zval:    1.18566
+GHOST: No ghost state for L =  0
+GHOST: No ghost state for L =  1
+GHOST: No ghost state for L =  2
+
+KBgen: Kleinman-Bylander projectors: 
+   l= 0   rc=  1.294105   el= -1.742414   Ekb=  9.135903   kbcos=  0.326910
+   l= 1   rc=  1.294105   el= -0.676589   Ekb= -8.124878   kbcos= -0.395047
+   l= 2   rc=  1.448233   el=  0.002386   Ekb= -2.039267   kbcos= -0.003484
+
+KBgen: Total number of  Kleinman-Bylander projectors:    9
+atom: -------------------------------------------------------------------------
+
+atom: SANKEY-TYPE ORBITALS:
+
+SPLIT: Orbitals with angular momentum L= 0
+
+SPLIT: Basis orbitals for state 2s
+
+SPLIT: PAO cut-off radius determinated from an
+SPLIT: energy shift=  0.036749 Ry
+
+   izeta = 1
+                 lambda =    1.000000
+                     rc =    3.066256
+                 energy =   -1.708739
+                kinetic =    1.670947
+    potential(screened) =   -3.379686
+       potential(ionic) =  -11.394099
+
+SPLIT: Orbitals with angular momentum L= 1
+
+SPLIT: Basis orbitals for state 2p
+
+SPLIT: PAO cut-off radius determinated from an
+SPLIT: energy shift=  0.036749 Ry
+
+   izeta = 1
+                 lambda =    1.000000
+                     rc =    3.562532
+                 energy =   -0.643422
+                kinetic =    5.169042
+    potential(screened) =   -5.812464
+       potential(ionic) =  -13.689476
+atom: Total number of Sankey-type orbitals:  4
+
+atm_pop: Valence configuration(local Pseudopot. screening):
+ 2s( 2.00)                                                            
+ 2p( 4.00)                                                            
+Vna: chval, zval:    6.00000   6.00000
+
+Vna:  Cut-off radius for the neutral-atom potential:   3.562532
+
+atom: _________________________________________________________________________
+
+<basis_specs>
+===============================================================================
+H                    Z=   1    Mass=  1.0100        Charge=  0.0000    
+Lmxo=0 Lmxkb=1     BasisType=split      Semic=F
+L=0  Nsemic=0  Cnfigmx=1
+          n=1  nzeta=1  polorb=0
+               vcte:    0.0000    
+               rinn:    0.0000    
+                rcs:    0.0000    
+            lambdas:    1.0000    
+-------------------------------------------------------------------------------
+L=0  Nkbl=1  erefs: 0.17977+309
+L=1  Nkbl=1  erefs: 0.17977+309
+===============================================================================
+</basis_specs>
+
+atom: Called for H   (Z =   1)
+
+read_vps: Pseudopotential generation method:
+read_vps: ATM3      Troullier-Martins                       
+
+read_vps: Valence configuration (pseudopotential and basis set generation):
+1s( 1.00) rc: 1.25
+2p( 0.00) rc: 1.25
+Total valence charge:    1.00000
+
+xc_check: Exchange-correlation functional:
+xc_check: Ceperley-Alder
+V l=0 = -2*Zval/r beyond r=  1.2343
+V l=1 = -2*Zval/r beyond r=  1.2189
+All V_l potentials equal beyond r=  1.2343
+This should be close to max(r_c) in ps generation
+All pots = -2*Zval/r beyond r=  1.2343
+
+VLOCAL1: 99.0% of the norm of Vloc inside     28.493 Ry
+VLOCAL1: 99.9% of the norm of Vloc inside     64.935 Ry
+atom: Maximum radius for 4*pi*r*r*local-pseudopot. charge    1.45251
+atom: Maximum radius for r*vlocal+2*Zval:    1.21892
+GHOST: No ghost state for L =  0
+GHOST: No ghost state for L =  1
+
+KBgen: Kleinman-Bylander projectors: 
+   l= 0   rc=  1.364359   el= -0.467325   Ekb= -2.005361   kbcos= -0.336422
+   l= 1   rc=  1.434438   el=  0.001430   Ekb= -0.501708   kbcos= -0.021697
+
+KBgen: Total number of  Kleinman-Bylander projectors:    4
+atom: -------------------------------------------------------------------------
+
+atom: SANKEY-TYPE ORBITALS:
+
+SPLIT: Orbitals with angular momentum L= 0
+
+SPLIT: Basis orbitals for state 1s
+
+SPLIT: PAO cut-off radius determinated from an
+SPLIT: energy shift=  0.036749 Ry
+
+   izeta = 1
+                 lambda =    1.000000
+                     rc =    4.260636
+                 energy =   -0.430337
+                kinetic =    1.009248
+    potential(screened) =   -1.439585
+       potential(ionic) =   -1.982918
+atom: Total number of Sankey-type orbitals:  1
+
+atm_pop: Valence configuration(local Pseudopot. screening):
+ 1s( 1.00)                                                            
+Vna: chval, zval:    1.00000   1.00000
+
+Vna:  Cut-off radius for the neutral-atom potential:   4.260636
+
+atom: _________________________________________________________________________
+
+prinput: Basis input ----------------------------------------------------------
+
+PAO.BasisType split     
+
+%block ChemicalSpeciesLabel
+    1    8 O                       # Species index, atomic number, species label
+    2    1 H                       # Species index, atomic number, species label
+%endblock ChemicalSpeciesLabel
+
+%block PAO.Basis                 # Define Basis set
+O           2                    # Species label, number of l-shells
+ n=2   0   1                         # n, l, Nzeta 
+   3.066   
+   1.000   
+ n=2   1   1                         # n, l, Nzeta 
+   3.563   
+   1.000   
+H           1                    # Species label, number of l-shells
+ n=1   0   1                         # n, l, Nzeta 
+   4.261   
+   1.000   
+%endblock PAO.Basis
+
+prinput: ----------------------------------------------------------------------
+
+
+siesta: ******************** Simulation parameters ****************************
+siesta:
+siesta: The following are some of the parameters of the simulation.
+siesta: A complete list of the parameters used, including defect values,
+siesta: can be found in file out.fdf
+siesta:
+coor:   Atomic-coordinates input format  =     Cartesian coordinates
+coor:                                          (in Angstroms)
+redata: Number of spin components        =     1
+redata: Long output                      =     F
+redata: Number of Atomic Species         =     2
+redata: Charge density info will appear in .RHO file
+redata: Write Mulliken Pop.              =     NO
+redata: Mesh Cutoff                      =   100.0000  Ry
+redata: Net charge of the system         =     0.0000 |e|
+redata: Max. number of SCF Iter          =    50
+redata: Mixing is linear
+redata: Mix DM in first SCF step ?       =     F
+redata: Write Pulay info on disk?        =     F
+redata: New DM Mixing Weight             =     0.2500
+redata: No kicks to SCF
+redata: DM Mixing Weight for Kicks       =     0.5000
+redata: DM Tolerance for SCF             =     0.000100
+redata: Use continuation files for DM    =     F
+redata: Neglect nonoverlap interactions  =     F
+redata: Method of Calculation            =     Diagonalization
+redata: Divide and Conquer               =     F
+redata: Electronic Temperature           =     0.0019  Ry
+redata: Fix the spin of the system       =     F
+redata: Dynamics option                  =     Force evaluation
+redata: ***********************************************************************
+
+coordsFromPipe: cell (Ang) =
+   10.000000    0.000000    0.000000
+    0.000000   10.000000    0.000000
+    0.000000    0.000000   10.000000
+coordsFromPipe: xa (Ang) =
+    0.000000    0.000000    0.000000
+    0.757000    0.586000    0.000000
+   -0.757000    0.586000    0.000000
+
+siesta: Atomic coordinates (Bohr) and species
+siesta:      0.00000   0.00000   0.00000  1        1
+siesta:      1.43052   1.10738   0.00000  2        2
+siesta:     -1.43052   1.10738   0.00000  2        3
+
+initatomlists: Number of atoms, orbitals, and projectors:      3     6    17
+
+siesta: System type = molecule  
+ 
+* Maximum dynamic memory allocated =     2 MB
+
+siesta:                 ==============================
+                        ==============================
+
+InitMesh: MESH =    64 x    64 x    64 =      262144
+InitMesh: Mesh cutoff (required, used) =   100.000   113.204 Ry
+ 
+* Maximum dynamic memory allocated =    10 MB
+
+stepf: Fermi-Dirac step function
+
+siesta: Program's energy decomposition (eV):
+siesta: Eions   =       815.854478
+siesta: Ena     =       168.758025
+siesta: Ekin    =       354.216033
+siesta: Enl     =       -54.787202
+siesta: DEna    =         0.000001
+siesta: DUscf   =         0.000000
+siesta: DUext   =         0.000000
+siesta: Exc     =      -112.160153
+siesta: eta*DQ  =         0.000000
+siesta: Emadel  =         0.000000
+siesta: Eharris =      -462.309184
+siesta: Etot    =      -459.827775
+siesta: FreeEng =      -459.827775
+
+siesta: iscf   Eharris(eV)      E_KS(eV)   FreeEng(eV)   dDmax  Ef(eV)
+siesta:    1     -462.3092     -459.8278     -459.8278  0.6667 -1.3917
+
+siesta: Eharris(eV) =    -462.309184
+
+timer: Routine,Calls,Time,% = IterSCF        1       1.410  64.98
+
+siesta: E_KS - E_eggbox =      -460.0209
+
+siesta: Atomic forces (eV/Ang):
+----------------------------------------
+ Tot   -0.000001   -0.090890    0.000000
+----------------------------------------
+ Max    5.014260
+ Res    2.654261    sqrt( Sum f_i^2 / 3N )
+----------------------------------------
+ Max    5.014260    constrained
+
+siesta: Stress tensor (static) (eV/Ang**3):
+        -0.001193    0.000000    0.000000
+         0.000000    0.001986    0.000000
+         0.000000    0.000000    0.003338
+
+siesta: Pressure (static):         -2.20613924  kBar
+
+siesta: Stress tensor (total) (eV/Ang**3):
+        -0.001193    0.000000    0.000000
+         0.000000    0.001986    0.000000
+         0.000000    0.000000    0.003338
+
+siesta: Pressure (total):         -2.20613924  kBar
+
+forcesToPipe: energy (eV) = -460.021344
+forcesToPipe: stress (eV/Ang**3) =
+   -0.001193    0.000000    0.000000
+    0.000000    0.001986    0.000000
+    0.000000    0.000000    0.003338
+forcesToPipe: forces (eV/Ang) =
+    0.000000   -5.014260    0.000000
+    3.615474    2.461685    0.000000
+   -3.615474    2.461685    0.000000
+ 
+* Maximum dynamic memory allocated =    10 MB
+
+siesta:                 ==============================
+                        ==============================
+
+coordsFromPipe: cell (Ang) =
+   10.000000    0.000000    0.000000
+    0.000000   10.000000    0.000000
+    0.000000    0.000000   10.000000
+coordsFromPipe: xa (Ang) =
+    0.000000    0.002541    0.000000
+    0.728548    0.565930    0.000000
+   -0.728548    0.565930    0.000000
+
+siesta: iscf   Eharris(eV)      E_KS(eV)   FreeEng(eV)   dDmax  Ef(eV)
+siesta:    1     -461.9013     -460.3268     -460.3268  0.6667 -1.0062
+
+siesta: Eharris(eV) =    -461.901342
+
+
+siesta: Atomic forces (eV/Ang):
+----------------------------------------
+ Tot   -0.000011   -0.126535    0.000001
+----------------------------------------
+ Max    7.901236
+ Res    4.204993    sqrt( Sum f_i^2 / 3N )
+----------------------------------------
+ Max    7.901236    constrained
+
+siesta: Stress tensor (static) (eV/Ang**3):
+        -0.003936    0.000000    0.000000
+         0.000000    0.000665    0.000000
+         0.000000    0.000000    0.003460
+
+siesta: Pressure (static):         -0.10055240  kBar
+
+siesta: Stress tensor (total) (eV/Ang**3):
+        -0.003936    0.000000    0.000000
+         0.000000    0.000665    0.000000
+         0.000000    0.000000    0.003460
+
+siesta: Pressure (total):         -0.10055240  kBar
+
+forcesToPipe: energy (eV) = -459.516110
+forcesToPipe: stress (eV/Ang**3) =
+   -0.003937    0.000000    0.000000
+    0.000000    0.000665    0.000000
+    0.000000    0.000000    0.003460
+forcesToPipe: forces (eV/Ang) =
+   -0.000013   -7.901236    0.000001
+    5.765640    3.887351    0.000000
+   -5.765639    3.887350    0.000000
+ 
+* Maximum dynamic memory allocated =    10 MB
+
+siesta:                 ==============================
+                        ==============================
+
+coordsFromPipe: cell (Ang) =
+   10.000000    0.000000    0.000000
+    0.000000   10.000000    0.000000
+    0.000000    0.000000   10.000000
+coordsFromPipe: xa (Ang) =
+    0.000000    0.003848    0.000000
+    0.714510    0.555579    0.000000
+   -0.714510    0.555579    0.000000
+
+siesta: iscf   Eharris(eV)      E_KS(eV)   FreeEng(eV)   dDmax  Ef(eV)
+siesta:    1     -461.6216     -460.5343     -460.5343  0.6667 -0.8048
+
+siesta: Eharris(eV) =    -461.621611
+
+
+siesta: Atomic forces (eV/Ang):
+----------------------------------------
+ Tot    0.000000   -0.134345    0.000000
+----------------------------------------
+ Max    9.595346
+ Res    5.117099    sqrt( Sum f_i^2 / 3N )
+----------------------------------------
+ Max    9.595346    constrained
+
+siesta: Stress tensor (static) (eV/Ang**3):
+        -0.005478    0.000000    0.000000
+         0.000000   -0.000069    0.000000
+         0.000000    0.000000    0.003526
+
+siesta: Pressure (static):          1.07927144  kBar
+
+siesta: Stress tensor (total) (eV/Ang**3):
+        -0.005478    0.000000    0.000000
+         0.000000   -0.000069    0.000000
+         0.000000    0.000000    0.003526
+
+siesta: Pressure (total):          1.07927144  kBar
+
+forcesToPipe: energy (eV) = -459.186509
+forcesToPipe: stress (eV/Ang**3) =
+   -0.005478    0.000000    0.000000
+    0.000000   -0.000069    0.000000
+    0.000000    0.000000    0.003526
+forcesToPipe: forces (eV/Ang) =
+   -0.000003   -9.595346    0.000000
+    7.029810    4.730502    0.000000
+   -7.029806    4.730499    0.000000
+ 
+* Maximum dynamic memory allocated =    10 MB
+
+siesta:                 ==============================
+                        ==============================
+
+coordsFromPipe: cell (Ang) =
+   10.000000    0.000000    0.000000
+    0.000000   10.000000    0.000000
+    0.000000    0.000000   10.000000
+coordsFromPipe: xa (Ang) =
+    0.000000    0.003656    0.000000
+    0.718047    0.557054    0.000000
+   -0.718047    0.557054    0.000000
+
+siesta: iscf   Eharris(eV)      E_KS(eV)   FreeEng(eV)   dDmax  Ef(eV)
+siesta:    1     -461.6858     -460.4920     -460.4920  0.6667 -0.8446
+
+siesta: Eharris(eV) =    -461.685824
+
+
+siesta: Atomic forces (eV/Ang):
+----------------------------------------
+ Tot    0.000005   -0.138194    0.000001
+----------------------------------------
+ Max    9.225365
+ Res    4.915265    sqrt( Sum f_i^2 / 3N )
+----------------------------------------
+ Max    9.225365    constrained
+
+siesta: Stress tensor (static) (eV/Ang**3):
+        -0.005146    0.000000    0.000000
+         0.000000    0.000092    0.000000
+         0.000000    0.000000    0.003510
+
+siesta: Pressure (static):          0.82470815  kBar
+
+siesta: Stress tensor (total) (eV/Ang**3):
+        -0.005146    0.000000    0.000000
+         0.000000    0.000092    0.000000
+         0.000000    0.000000    0.003510
+
+siesta: Pressure (total):          0.82470815  kBar
+
+forcesToPipe: energy (eV) = -459.261714
+forcesToPipe: stress (eV/Ang**3) =
+   -0.005146    0.000000    0.000000
+    0.000000    0.000092    0.000000
+    0.000000    0.000000    0.003510
+forcesToPipe: forces (eV/Ang) =
+    0.000001   -9.225365    0.000001
+    6.746956    4.543587    0.000000
+   -6.746952    4.543584    0.000000
+ 
+* Maximum dynamic memory allocated =    10 MB
+
+siesta:                 ==============================
+                        ==============================
+
+coordsFromPipe: cell (Ang) =
+   10.000000    0.000000    0.000000
+    0.000000   10.000000    0.000000
+    0.000000    0.000000   10.000000
+coordsFromPipe: xa (Ang) =
+    0.000000    0.002022    0.000000
+    0.738452    0.569888    0.000000
+   -0.738452    0.569888    0.000000
+
+siesta: iscf   Eharris(eV)      E_KS(eV)   FreeEng(eV)   dDmax  Ef(eV)
+siesta:    1     -462.0415     -460.1876     -460.1876  0.6667 -1.1130
+
+siesta: Eharris(eV) =    -462.041528
+
+
+siesta: Atomic forces (eV/Ang):
+----------------------------------------
+ Tot   -0.000008   -0.120496   -0.000001
+----------------------------------------
+ Max    7.004267
+ Res    3.717033    sqrt( Sum f_i^2 / 3N )
+----------------------------------------
+ Max    7.004267    constrained
+
+siesta: Stress tensor (static) (eV/Ang**3):
+        -0.003084    0.000000    0.000000
+         0.000000    0.001078    0.000000
+         0.000000    0.000000    0.003422
+
+siesta: Pressure (static):         -0.75579031  kBar
+
+siesta: Stress tensor (total) (eV/Ang**3):
+        -0.003084    0.000000    0.000000
+         0.000000    0.001078    0.000000
+         0.000000    0.000000    0.003422
+
+siesta: Pressure (total):         -0.75579031  kBar
+
+forcesToPipe: energy (eV) = -459.685680
+forcesToPipe: stress (eV/Ang**3) =
+   -0.003084    0.000000    0.000000
+    0.000000    0.001078    0.000000
+    0.000000    0.000000    0.003422
+forcesToPipe: forces (eV/Ang) =
+   -0.000011   -7.004267   -0.000001
+    5.079081    3.441887    0.000000
+   -5.079078    3.441884    0.000000
+ 
+* Maximum dynamic memory allocated =    10 MB
+
+siesta:                 ==============================
+                        ==============================
+
+coordsFromPipe: cell (Ang) =
+   10.000000    0.000000    0.000000
+    0.000000   10.000000    0.000000
+    0.000000    0.000000   10.000000
+coordsFromPipe: xa (Ang) =
+    0.000000   -0.000707    0.000000
+    0.771553    0.591327    0.000000
+   -0.771553    0.591327    0.000000
+
+siesta: iscf   Eharris(eV)      E_KS(eV)   FreeEng(eV)   dDmax  Ef(eV)
+siesta:    1     -462.4290     -459.5865     -459.5865  0.6667 -1.5368
+
+siesta: Eharris(eV) =    -462.428997
+
+
+siesta: Atomic forces (eV/Ang):
+----------------------------------------
+ Tot   -0.000003   -0.079299    0.000001
+----------------------------------------
+ Max    3.974504
+ Res    2.082284    sqrt( Sum f_i^2 / 3N )
+----------------------------------------
+ Max    3.974504    constrained
+
+siesta: Stress tensor (static) (eV/Ang**3):
+        -0.000100    0.000000    0.000000
+         0.000000    0.002480    0.000000
+         0.000000    0.000000    0.003287
+
+siesta: Pressure (static):         -3.02633001  kBar
+
+siesta: Stress tensor (total) (eV/Ang**3):
+        -0.000100    0.000000    0.000000
+         0.000000    0.002480    0.000000
+         0.000000    0.000000    0.003287
+
+siesta: Pressure (total):         -3.02633001  kBar
+
+forcesToPipe: energy (eV) = -460.181286
+forcesToPipe: stress (eV/Ang**3) =
+   -0.000100    0.000000    0.000000
+    0.000000    0.002480    0.000000
+    0.000000    0.000000    0.003287
+forcesToPipe: forces (eV/Ang) =
+   -0.000004   -3.974504    0.000001
+    2.796441    1.947603    0.000000
+   -2.796440    1.947602    0.000000
+ 
+* Maximum dynamic memory allocated =    10 MB
+
+siesta:                 ==============================
+                        ==============================
+
+coordsFromPipe: cell (Ang) =
+   10.000000    0.000000    0.000000
+    0.000000   10.000000    0.000000
+    0.000000    0.000000   10.000000
+coordsFromPipe: xa (Ang) =
+    0.000000   -0.004056    0.000000
+    0.811646    0.617635    0.000000
+   -0.811646    0.617635    0.000000
+
+siesta: iscf   Eharris(eV)      E_KS(eV)   FreeEng(eV)   dDmax  Ef(eV)
+siesta:    1     -462.6328     -458.7403     -458.7403  0.6667 -2.0241
+
+siesta: Eharris(eV) =    -462.632802
+
+
+siesta: Atomic forces (eV/Ang):
+----------------------------------------
+ Tot   -0.000003   -0.037469    0.000005
+----------------------------------------
+ Max    1.086067
+ Res    0.523556    sqrt( Sum f_i^2 / 3N )
+----------------------------------------
+ Max    1.086067    constrained
+
+siesta: Stress tensor (static) (eV/Ang**3):
+         0.003007    0.000000    0.000000
+         0.000000    0.003897    0.000000
+         0.000000    0.000000    0.003135
+
+siesta: Pressure (static):         -5.36109174  kBar
+
+siesta: Stress tensor (total) (eV/Ang**3):
+         0.003007    0.000000    0.000000
+         0.000000    0.003897    0.000000
+         0.000000    0.000000    0.003135
+
+siesta: Pressure (total):         -5.36109174  kBar
+
+forcesToPipe: energy (eV) = -460.512680
+forcesToPipe: stress (eV/Ang**3) =
+    0.003007    0.000000    0.000000
+    0.000000    0.003897    0.000000
+    0.000000    0.000000    0.003135
+forcesToPipe: forces (eV/Ang) =
+   -0.000003   -1.086067    0.000005
+    0.607322    0.524300    0.000000
+   -0.607322    0.524299    0.000000
+ 
+* Maximum dynamic memory allocated =    10 MB
+
+siesta:                 ==============================
+                        ==============================
+
+coordsFromPipe: cell (Ang) =
+   10.000000    0.000000    0.000000
+    0.000000   10.000000    0.000000
+    0.000000    0.000000   10.000000
+coordsFromPipe: xa (Ang) =
+    0.000000   -0.007575    0.000000
+    0.853258    0.645254    0.000000
+   -0.853258    0.645254    0.000000
+
+siesta: iscf   Eharris(eV)      E_KS(eV)   FreeEng(eV)   dDmax  Ef(eV)
+siesta:    1     -462.6094     -457.7943     -457.7943  0.6667 -2.4987
+
+siesta: Eharris(eV) =    -462.609394
+
+
+siesta: Atomic forces (eV/Ang):
+----------------------------------------
+ Tot   -0.000006   -0.011540    0.000002
+----------------------------------------
+ Max    1.020416
+ Res    0.636902    sqrt( Sum f_i^2 / 3N )
+----------------------------------------
+ Max    1.020416    constrained
+
+siesta: Stress tensor (static) (eV/Ang**3):
+         0.005494    0.000000    0.000000
+         0.000000    0.004953    0.000000
+         0.000000    0.000000    0.002978
+
+siesta: Pressure (static):         -7.16993882  kBar
+
+siesta: Stress tensor (total) (eV/Ang**3):
+         0.005494    0.000000    0.000000
+         0.000000    0.004953    0.000000
+         0.000000    0.000000    0.002978
+
+siesta: Pressure (total):         -7.16993882  kBar
+
+forcesToPipe: energy (eV) = -460.619943
+forcesToPipe: stress (eV/Ang**3) =
+    0.005494    0.000000    0.000000
+    0.000000    0.004953    0.000000
+    0.000000    0.000000    0.002978
+forcesToPipe: forces (eV/Ang) =
+   -0.000005    1.018651    0.000003
+   -1.020416   -0.515095    0.000000
+    1.020415   -0.515095   -0.000001
+ 
+* Maximum dynamic memory allocated =    10 MB
+
+siesta:                 ==============================
+                        ==============================
+
+coordsFromPipe: cell (Ang) =
+   10.000000    0.000000    0.000000
+    0.000000   10.000000    0.000000
+    0.000000    0.000000   10.000000
+coordsFromPipe: xa (Ang) =
+    0.000000   -0.010935    0.000000
+    0.892318    0.671584    0.000000
+   -0.892318    0.671584    0.000000
+
+siesta: iscf   Eharris(eV)      E_KS(eV)   FreeEng(eV)   dDmax  Ef(eV)
+siesta:    1     -462.4308     -456.8952     -456.8952  0.6667 -2.9171
+
+siesta: Eharris(eV) =    -462.430792
+
+
+siesta: Atomic forces (eV/Ang):
+----------------------------------------
+ Tot   -0.000006    0.020261   -0.000003
+----------------------------------------
+ Max    2.500659
+ Res    1.435616    sqrt( Sum f_i^2 / 3N )
+----------------------------------------
+ Max    2.500659    constrained
+
+siesta: Stress tensor (static) (eV/Ang**3):
+         0.007346    0.000000    0.000000
+         0.000000    0.005734    0.000000
+         0.000000    0.000000    0.002837
+
+siesta: Pressure (static):         -8.50096177  kBar
+
+siesta: Stress tensor (total) (eV/Ang**3):
+         0.007346    0.000000    0.000000
+         0.000000    0.005734    0.000000
+         0.000000    0.000000    0.002837
+
+siesta: Pressure (total):         -8.50096177  kBar
+
+forcesToPipe: energy (eV) = -460.564472
+forcesToPipe: stress (eV/Ang**3) =
+    0.007346    0.000000    0.000000
+    0.000000    0.005734    0.000000
+    0.000000    0.000000    0.002837
+forcesToPipe: forces (eV/Ang) =
+   -0.000005    2.500659   -0.000002
+   -2.147029   -1.240199    0.000000
+    2.147028   -1.240198   -0.000001
+ 
+* Maximum dynamic memory allocated =    10 MB
+
+siesta:                 ==============================
+                        ==============================
+
+coordsFromPipe: cell (Ang) =
+   10.000000    0.000000    0.000000
+    0.000000   10.000000    0.000000
+    0.000000    0.000000   10.000000
+coordsFromPipe: xa (Ang) =
+    0.000000   -0.013904    0.000000
+    0.926011    0.694815    0.000000
+   -0.926011    0.694815    0.000000
+
+siesta: iscf   Eharris(eV)      E_KS(eV)   FreeEng(eV)   dDmax  Ef(eV)
+siesta:    1     -462.1810     -456.1285     -456.1285  0.6667 -3.2608
+
+siesta: Eharris(eV) =    -462.181018
+
+
+siesta: Atomic forces (eV/Ang):
+----------------------------------------
+ Tot    0.000001    0.035939    0.000003
+----------------------------------------
+ Max    3.499881
+ Res    1.973959    sqrt( Sum f_i^2 / 3N )
+----------------------------------------
+ Max    3.499881    constrained
+
+siesta: Stress tensor (static) (eV/Ang**3):
+         0.008697    0.000000    0.000000
+         0.000000    0.006289    0.000000
+         0.000000    0.000000    0.002715
+
+siesta: Pressure (static):         -9.45288063  kBar
+
+siesta: Stress tensor (total) (eV/Ang**3):
+         0.008697    0.000000    0.000000
+         0.000000    0.006289    0.000000
+         0.000000    0.000000    0.002715
+
+siesta: Pressure (total):         -9.45288063  kBar
+
+forcesToPipe: energy (eV) = -460.421869
+forcesToPipe: stress (eV/Ang**3) =
+    0.008697    0.000000    0.000000
+    0.000000    0.006289    0.000000
+    0.000000    0.000000    0.002715
+forcesToPipe: forces (eV/Ang) =
+    0.000002    3.499881    0.000003
+   -2.900003   -1.731971    0.000000
+    2.900002   -1.731970    0.000000
+ 
+* Maximum dynamic memory allocated =    10 MB
+
+siesta:                 ==============================
+                        ==============================
+
+coordsFromPipe: cell (Ang) =
+   10.000000    0.000000    0.000000
+    0.000000   10.000000    0.000000
+    0.000000    0.000000   10.000000
+coordsFromPipe: xa (Ang) =
+    0.000000   -0.016327    0.000000
+    0.952453    0.713715    0.000000
+   -0.952453    0.713715    0.000000
+
+siesta: iscf   Eharris(eV)      E_KS(eV)   FreeEng(eV)   dDmax  Ef(eV)
+siesta:    1     -461.9353     -455.5387     -455.5387  0.6667 -3.5215
+
+siesta: Eharris(eV) =    -461.935285
+
+
+siesta: Atomic forces (eV/Ang):
+----------------------------------------
+ Tot   -0.000009    0.047978    0.000000
+----------------------------------------
+ Max    4.084780
+ Res    2.285458    sqrt( Sum f_i^2 / 3N )
+----------------------------------------
+ Max    4.084780    constrained
+
+siesta: Stress tensor (static) (eV/Ang**3):
+         0.009500    0.000000    0.000000
+         0.000000    0.006603    0.000000
+         0.000000    0.000000    0.002614
+
+siesta: Pressure (static):         -9.99577653  kBar
+
+siesta: Stress tensor (total) (eV/Ang**3):
+         0.009500    0.000000    0.000000
+         0.000000    0.006603    0.000000
+         0.000000    0.000000    0.002614
+
+siesta: Pressure (total):         -9.99577653  kBar
+
+forcesToPipe: energy (eV) = -460.261529
+forcesToPipe: stress (eV/Ang**3) =
+    0.009500    0.000000    0.000000
+    0.000000    0.006603    0.000000
+    0.000000    0.000000    0.002614
+forcesToPipe: forces (eV/Ang) =
+   -0.000008    4.084780   -0.000001
+   -3.329905   -2.018402    0.000000
+    3.329904   -2.018400    0.000001
+ 
+* Maximum dynamic memory allocated =    10 MB
+
+siesta:                 ==============================
+                        ==============================
+coordsFromPipe: STOP: requested by driver
+Stopping Program

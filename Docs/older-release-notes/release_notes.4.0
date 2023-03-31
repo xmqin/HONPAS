@@ -1,0 +1,304 @@
+Release Notes for Siesta-4.0  (June 2016)
+
+This version includes the van der Waals functionals, the new
+load-balancing code for real-space grid operations, a Wannier90
+interface, a new Orbital-Minimization-Method solver, and other
+improvements and bug fixes that have been part of the development
+version for some time. Its feature set has been frozen for several
+months and it has undergone enough testing to be considered a
+near-production version.
+
+Please see the BACKWARD COMPATIBILITY ISSUES and the TECHNICAL NOTES
+sections below for some important issues regarding backwards
+compatibility with 3.X versions and previous development snapshots.
+
+See the file REPORTING_BUGS for instructions to report bugs and
+suggestions.
+
+
+-*- NEW FEATURES
+
+Please see the relevant section of the manual for more information.
+
+* New SiestaXC library for exchange and correlation, implementing several
+  van der Waals functionals and some newer GGA ones.
+
+* New code to improve the load-balancing of the operations in the
+  real-space grid when running in parallel.
+
+* A new interface to the Wannier90 code for the generation of
+  maximally localized wannier functions.
+
+* New electronic-structure solver implementing the the Orbital-Minimization-Method
+
+* New mixing options, including hamiltonian and charge-density mixing
+
+* Charge-confinement and "filteret" basis-set generation options.
+
+* Improved MPI version of the Siesta-as-subroutine code for executing
+  independent calculations.
+
+* New JobList utility to organize and run multiple jobs.
+
+* Timer with call-tree awareness.
+
+* Performance and usability enhancements in TranSiesta.
+
+* Enhancements to the restart capabilities in molecular-dynamics runs.
+
+* New options for wave-function output. New WFSX format.
+
+* 'Fatbands' analysis.
+
+* Enhancements to the COOP/COHP analyzer
+
+* Hirshfeld and Voronoi charges. Bader analysis output
+
+* Force-convergence diagnostics.
+
+* New HSX file format for Hamiltonian/Overlap files
+
+* Calculation of the vacuum level for non-bulk systems.
+
+* Updates to other analysis tools in Util/
+
+* Replacement of license-encumbered routines by new ones.
+
+* Enhancements to the manual and build system.
+
+In addition, a number of bugs have been fixed, and there have been
+numerous cosmetic changes to the output and the code itself.
+
+
+-------------------------
+-*- BACKWARD COMPATIBILITY ISSUES
+
+Please take into account the following changes in behavior (more
+details in the TECHNICAL NOTES section below):
+
+*** The grid functions (charge densities, potentials, etc) were in
+single precision by default in the 3.X versions, but are in double
+precision by default for post-3.X versions. The 'phi' array that holds
+the values of the basis orbitals on the real-space grid is kept in
+single precision. Please take this into account if you compare the
+results with those of siesta-3.X runs. See the manual in both versions
+for more information.
+
+*** Changes in the geometry used for the analysis of the electronic
+structure, as well as in the handling of the density matrix (DM) and
+hamiltonian (H). This will _slightly_ change the output of most
+calculations and the detailed results of any post-processing. Keep
+this in mind if you need to maintain coherency within a project.
+
+*** Electric field and dipole correction for slab calculations
+
+Older versions applied an incorrect dipole correction when also using
+an electric field (old behavior may be recovered by forcing
+SlabDipoleCorrection to .false.)
+
+Older versions over-estimated the energy contribution from the dipole
+correction by a factor of 2 (old behavior cannot be recovered).
+
+-------------------------
+-*- TECHNICAL NOTES
+
+*** Changes in the geometry used for the analysis of the electronic
+structure, as well as in the handling of the density matrix (DM) and
+hamiltonian (H).
+
+-*-*-*-*-* 
+NOTE: This change will _slightly_ change the output
+of most calculations and the detailed results of any
+post-processing. Keep this in mind if you need to maintain coherency
+within a project. See the rest of the text for ways to restore
+backward compatibility.
+-*-*-*-*-*
+  
+This change is part of a long-overdue clarification work related
+to the "outer geometry loop" in Siesta and its interaction with the
+analysis of the electronic structure.
+
+The most important changes, following the actual refactoring logic, are:
+
+* Superfluous calls to 'superx' to propagate the new coordinates to
+  the auxiliary supercell in 'siesta_move' have been removed, as they
+  are already issued by 'state_init'.
+
+* The above change has the side effect of leaving inconsistent sets of
+  unit cell and supercell coordinates in 'siesta_analysis' if the unit
+  cell coordinates used in the latter are those 'moved' by the
+  geometry-update routines. To avoid this, and to do the analysis
+  using the actual coordinates used in the computation of the
+  electronic structure, the coordinates are reset to those values
+  (using the *_last arrays) in 'siesta_analysis'.  The old behavior
+  can be recovered by using by setting the backward compatibility
+  switch 'compat-pre-v4-dynamics' to 'true'.
+
+* To guarantee that the DM and H used in the analysis correspond to
+  the latest electronic structure computed, there should be no mixing
+  at the end of the scf loop. This behavior, which was optional until
+  now (controlled by the value of scf-mix-after-convergence) is now
+  the default. The use of DM_out instead of DM_mixed provides also a
+  truly variational total-energy and more consistent forces. If the
+  scf cycle is carried out mixing H, H(DM_in) is recovered by
+  re-setting H to Hold in siesta_forces at the end of the cycle.
+
+  Also, to preserve the original H for analysis it is necessary to
+  avoid overwriting it in post_scf_work. This is now done by default,
+  except if the option 'scf-recompute-h-after-scf' is 'true'.
+
+  There is another switch for pre-v4.0 compatibility in this context:
+  If 'compat-pre-v4-dm-h' is 'true', the 'scf-mix-after-convergence'
+  and 'scf-recompute-h-after-scf' options are activated too.
+
+  Some comments have been added to siesta_forces to document possible
+  further clarifications.
+
+* For clarity, each MD or geometry-optimization flavor has now its own
+  self-contained logic block in 'siesta_move'. This has uncovered a
+  few issues that have been corrected:
+
+  - The quenched forms of the Verlet and Parrinello-Rahman (PR)
+    schemes, which are actually relaxations, did not check for
+    convergence before moving the atoms (PR did not check at any
+    point).  Now the 'constrained' forces and stress are checked
+    before invoking the routines. In the case of PR, a 'target stress'
+    can optionally be subtracted from the constrained stress (a
+    further form of constraint that was previously only available
+    (internally) in the standard relaxation routines). A future update
+    might put all these constraint conditions in 'fixed', but care
+    should be taken to study their interaction with the MD
+    variable-cell routines. A future revision might look into the
+    effectiveness of the variable-cell routines.
+    There is a new example in Tests for quenched MD relaxation.
+
+  - The geometry output in 'siesta_move' is now exclusively done for
+    checkpointing purposes, and typically involves the 'moved'
+    geometries.  The current geometry output is done in 'state_init',
+    and any final output in 'siesta_analysis'.
+
+  - Some output calls have been removed where they did not make much
+    sense (as in the FC or server blocks).
+
+  - The deprecated 'phonon' support has been removed.
+
+* Siesta_analysis outputs the 'current' final geometry, and not the
+  'moved' one. The old behavior can be recovered by using the
+  'compat-pre-v4-dynamics' switch.
+
+* The default 'dynamics' option has been changed from 'verlet' to 'CG'.
+  There should really be a new 'single-point' default which completely
+  avoids 'siesta_move'. The old behavior can be recovered by using the
+  'compat-pre-v4-dynamics' switch.
+
+* Single-point calculations do not write .STRUCT_NEXT_ITER files, and
+  the coordinates in the XV file are the current ones, unmoved.
+  Extra output in siesta_options is avoided for this case.
+
+* The headings for the beginning of the dynamics blocks are now
+  more concrete.
+
+*** Merge code for interoperation with Wannier90
+
+(Javier Junquera, after work by Richard Korytar, and Alberto Garcia)
+
+Siesta can now read the .nnkp file produced by Wannier90 and output
+the *.amn, *.mmn, *.eig (see below), and UNK* files needed by
+post-processing with that program, which generates maximally-localized
+Wannier functions.
+
+The most relevant changes in the code needed to support this
+functionality are detailed below. For practical guidance, see the
+manual, the simple test in Tests/wannier, and the suite of Wannier90
+examples adapted for Siesta in
+
+   http://personales.unican.es/junqueraj/Wannier-examples.tar.gz
+
+
+* To implement support for "projection functions", which might not be
+  pure radial functions, but hybrids with mixed angular momentum and
+  varying spatial orientation, as well as to provide support of
+  arbitrary kinds of radial functions for future developments, the
+  'matel' framework has been extended:
+
+  Matel (actually renamed to 'new_matel') now accepts two generalized
+  indexes instead of the two pairs of indexes previously used. The
+  generalized indexes can represent either a normal "radial function",
+  as in previous Siesta usage, or a "projection function". The indexes
+  are obtained via a "check-in" into a registry of functions, which
+  keeps track of the nature of the functions and provides the needed
+  evaluators and accessors for 'new_matel'.
+
+  The relevant code is in 'matel_registry', 'new_matel', and
+  'register_rfs'. The latter shows how to "register" the usual radial
+  functions for PAOs, KB projectors, etc. 
+
+* Bloch states are computed and saved, instead of being recomputed as
+  needed, to avoid problems with irreproducible random phases and
+  linear combinations within degenerate subspaces.
+
+* At this point the parallelization of the new code is only "over
+  orbitals". It is not yet possible to parallelize the operations over
+  the k-points on the grid. The production of the UNK* files can be
+  slow if there are many k-points and bands.
+
+* There is not yet support for "spinor wavefunctions". In the case of
+  spin-polarized calculations, separate spin-up and spin-down
+  processings are needed.
+
+* There is not yet support for interaction with Wannier90 in "library
+  mode", due to licensing issues.
+
+* The "eigenvalue file" for Wannier90 has extension .eigW to avoid
+  clashes with the standard Siesta eigenvalue file in case-insensitive
+  filesystems.
+
+*** Merge code for 'server' operation via sockets and i-PI interface
+
+(Michele Ceriotti, Jose Soler)
+
+* A new infrastructure for socket handling in f90 has been
+implemented by Michele Ceriotti (EPFL), who is also the author
+of the i-PI framework. From its web-page:
+
+  i-PI is a Path Integral Molecular Dynamics (PIMD) wrapper code
+  designed to be used together with ab initio evaluation of the
+  interactions between the atoms. i-PI should be run as a separate
+  program, and communicates with one or more instances of an
+  electronic structure code using internet (or UNIX) sockets. The
+  communication is regulated by a simple protocol, and requires
+  patching the client code to handle the exchange of data with i-PI.
+
+This revision implements the interface to the i-PI protocol. In
+Siesta, the new socket functionality can also be used as a new form of
+'server' operation.
+
+See Util/Sockets for examples of the f90 socket interface,
+Util/SiestaSubroutine for examples of the server operation (including
+via sockets) and Tests/i-pi-test for a simple test of interoperability
+with i-PI.
+
+*** Fix shortcomings in reading of empirical potential block
+  
+  * The number of potential lines is now arbitrary.
+  * Units handling has been improved, to allow arbitrary
+    length and energy units.
+
+  (Nick R. Papior)
+  
+*** Added restart file for smooth continuation of annealing runs
+
+* Added the writing and reading of an .ANNEAL_RESTART file, along the
+  same lines of the .VERLET_RESTART file. This fixes a small problem
+  for restarting annealing calculations when a continuous smooth run
+  is desired.
+
+  (Fabiano Corsetti)
+  
+*** Updated gnubands (new.gnubands) and grid2cube (g2c_ng) programs
+    in the Util section.
+
+  (Nick R. Papior and Alberto Garcia)
+
+
+

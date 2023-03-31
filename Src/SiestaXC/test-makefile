@@ -1,0 +1,32 @@
+#!!@LICENSE
+#
+.SUFFIXES:
+.SUFFIXES: .f .F .o .a  .f90 .F90
+#
+ARCH_MAKE_DEFAULT=../lib-arch.make
+ARCH_MAKE?=$(ARCH_MAKE_DEFAULT)
+include $(ARCH_MAKE)
+#
+INCFLAGS=-I../MPI -I../     # Note -I../ to pick up all modules above
+#
+default: test1 test2 test3 test4
+#
+LIBXC=../libSiestaXC.a
+$(LIBXC):
+	(cd .. ; $(MAKE) module)
+#
+test1:  $(LIBXC) test1.o
+	$(FC) $(FFLAGS) $(DEFS) $(INCFLAGS) -o test1 test1.o $(LIBXC)
+#
+test2:  $(LIBXC) test2.o
+	$(FC) $(FFLAGS) $(DEFS) $(INCFLAGS) -o test2 test2.o $(LIBXC)
+#
+test3:  $(LIBXC) test3.o
+	$(FC) $(FFLAGS) $(DEFS) $(INCFLAGS) -o test3 test3.o $(LIBXC)
+#
+test4:  $(LIBXC) test4.o
+	$(FC) $(FFLAGS) $(DEFS) $(INCFLAGS) -o test4 test4.o $(LIBXC)
+#
+clean:
+	rm -f *.o *.*d *.a test1 test2 test3 test4
+

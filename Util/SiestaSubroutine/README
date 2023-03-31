@@ -1,0 +1,214 @@
+** Warning
+   Before compiling the programs in this directory, make sure that
+   you have compiled Siesta in Obj (or in the OBJDIR of your choice)
+**   
+   
+This directory documents support for calling siesta as a subroutine from a 
+user's program. There are three versions that use different communication modes:
+- The 'pipes' version uses Unix/Linux pipes for communications between the 
+  user's program and siesta, which are compiled independently. The user's
+  program must be compiled with file fsiesta_pipes.f90, and call routines
+  in this module to send coordinates to siesta and receive forces from it.
+- The 'sockets' version uses a Unix or Inet socket for communication between
+  the user's program and siesta, which are compiled independently. The user's
+  program must be compiled with file fsiesta_sockets.f90, and call routines
+  in this module to send coordinates to siesta and receive forces from it.
+  Inet sockets allow that siesta and the user's program run on different
+  computers. Sockets are also used for communication between siesta and 
+  the i-PI code: http://epfl-cosmo.github.io/gle4md/index.html?page=ipi
+  (The socket functionality is based on code by M. Ceriotti. See also
+   Util/Sockets)
+- The 'MPI' version requires the user's program to be compiled together
+  with siesta, which becomes a true subroutine. Despite its name, this
+  version works also in serial mode, not requiring MPI in this case.
+All versions allow multiple instances of siesta to run and communicate
+simultaneously with the master program, without mixing their data nor
+communicating among them. However, to do this, the MPI version requires to
+run in parallel using MPI. Both versions use the same calling interfaces,
+so that the same user's code can be used with any of them (although the
+MPI version has some extra functionalities).
+
+**NOTE**: The MPI version does NOT yet work with the PEXSI library, as
+the interface assumes that all processes in the default world communicator
+are available for each instance of Siesta.
+**
+
+To use the package, you must:
+1) Write a normal fdf data file for the siesta program (see the siesta
+   manual for instructions) with the following characteristics:
+ - The SystemLabel contained in it MUST be identical to the file prefix.
+   I.e. if the file is h2o.fdf, the SystemLabel must be h2o
+ - There must be a 'MD.TypeOfRun forces' statement in it
+ - The number of atoms, the atomic species, and the order of them (in the
+   coordinates specification) must be consistent with the arguments in the
+   calls to the subroutine siesta_forces (see below).
+ - The values of the atomic coordinates and cell vectors are arbitrary 
+   (e.g. they may be zero), since they will be reset by your first call
+   to siesta_forces.
+ - The atomic numbers, siesta basis set, and all the remaining siesta 
+   parameters, other than the atomic coordinates and cell vectors will be 
+   those specified in the fdf data file. If not present, they will be set by
+   siesta according to the default values explained in the siesta manual.
+ - Additionally, the sockets version requires the following data to be
+   included in the fdf data file:
+     MD.TypeOfRun      master     # equivalent to 'forces'
+     Master.code       fsiesta    # ( fsiesta | i-pi )
+     Master.interface  socket     # ( pipes | socket | mpi)
+     Master.address    localhost  # e.g. 150.242.7.140
+     Master.port       10001      # 10000+siesta_process_order
+     Master.socketType inet       # ( inet | unix )
+
+2) Write a main program or subroutine(s) of your own that contains:
+ - A 'use fsiesta' statement in each routine with any of the following calls.
+ - A single call, in the whole program, to each of: siesta_launch, 
+   siesta_units, and siesta_quit.
+ - Calls to siesta_forces (after those to siesta_launch and siesta_units
+   and before the call to siesta_quit) to get the atomic forces at each
+   required coordinates.
+ - Calls to siesta_get to retrieve some (restricted) magnitudes used or
+   calculated by siesta, other than those returned by siesta_forces.
+ - In all the previous calls, the 'label' argument must be the same as
+   the prefix of the siesta fdf data file (i.e. 'h2o' for h2o.fdf).
+ - Compile your program, with a copy, in your compilation directory, of:
+   - siesta/Src/fsiesta_pipes.f90 (pipes version). See siesta/Src/Makefile
+     for the appropriate compilation flags and flush routine.
+   - Files fsiesta_sockets.f90, fsockets.f90, and sockets.c from siesta/Src
+     directory (sockets version). See siesta/Src/Makefile for the appropriate 
+     compilation flags.
+   - siesta/Obj/libSiestaForces.a and siesta/Obj/*.mod (MPI version)
+ - Run your program.
+3) Your program may call more than one siesta process, for example to
+   combine the calculations of two different systems, or of the same
+   system with different precision parameters (see FmixMD for an example).
+   In this case you must:
+ - Write an fdf file for each siesta process (obviously with different
+   names and consistent SystemLabel-s)
+ - Make as many calls to siesta_launch, etc, as siesta processes you
+   want to use, with consistent label arguments. In the MPI version, the
+   different siesta processes must be called from different (groups of)
+   MPI processes.
+ - In the sockets version, the value of Master.port must be 10000 plus
+   the order in which each siesta process will be called by the driver.
+   I.e. the first-launched siesta process uses port 10001, the second
+   one uses 10002, etc.
+4) Depending on your compiler and operating system, it may occur that
+   the communication pipes still exist after your program terminates
+   (normally or abnormally). In that case, simply remove them, as if
+   they were normal files (pipes version only).
+5) Make sure that you have a working "flush" subroutine in your system,
+   and that it is compiled-in (in file pxf.F90 in the main source directory)
+   through the appropriate preprocessor symbols. Otherwise the process 
+   might hang. The compilation of fsiesta_pipes.f90 in the main directory 
+   should automate this, but you should check (pipes version only).
+
+General notice about compilers:
+1) GCC have removed support for piped files since version 4.7.0. Thus if 
+   using gfortran, you need to have 4.6.x. or older.
+
+! Subroutines usage:
+!
+!   call siesta_launch( label, nnodes, mpi_comm )
+!     character(len=*),intent(in) :: label    : Name of siesta process
+!                                               (prefix of its .fdf file)
+!     integer,optional,intent(in) :: nnodes   : Number of MPI nodes
+!     integer,optional,intent(in) :: mpi_comm : Communicator (MPI version only)
+!
+!   call siesta_units( length, energy )
+!     character(len=*),intent(in) :: length : Physical unit of length
+!     character(len=*),intent(in) :: energy : Physical unit of energy
+!
+!   call siesta_forces( label, na, xa, cell, energy, fa, stress )
+!     character(len=*), intent(in) :: label      : Name of siesta process
+!     integer,          intent(in) :: na         : Number of atoms
+!     real(dp),         intent(in) :: xa(3,na)   : Cartesian coords
+!     real(dp),optional,intent(in) :: cell(3,3)  : Unit cell vectors
+!     real(dp),optional,intent(out):: energy     : Total energy
+!     real(dp),optional,intent(out):: fa(3,na)   : Atomic forces
+!     real(dp),optional,intent(out):: stress(3,3): Stress tensor
+!
+!   call siesta_get( label, property, value, units )  (MPI version only)
+!     character(len=*), intent(in) :: label      : Name of siesta process
+!     character(len=*), intent(in) :: property   : Name of required magnitude
+!     real(dp),         intent(out):: value      : Value of the magnitude
+!                                                (various dimensions overloaded)
+!     character(len=*), intent(out):: units      : Name of physical units
+!
+!   call siesta_quit( label )
+!     character(len=*),intent(in) :: label  : Name of one siesta process,
+!                                             or 'all' to stop all procs.
+! Behaviour:
+! - If mpi_comm is present in a call to siesta_launch, nnodes is ignored
+!   (MPI version).
+! - If nnodes is not present among siesta_launch arguments, or nnodes<2, 
+!   a serial siesta process will be launched. Otherwise, a parallel 
+!   mpirun process will be launched (pipes and sockets versions).
+! - If siesta_units is not called, length='Ang', energy='eV' are
+!   used by default. If it is called more than once, the units in the
+!   last call become in effect.
+! - The physical units set by siesta_units are used for all the siesta
+!   processes launched
+! - If siesta_forces is called without a previous call to siesta_launch
+!   for that label:
+!   - The pipes version assumes that the siesta process has been launched 
+!     (and the communication pipes created by it) externally in the shell. 
+!     In this case, siesta_forces only opens its end of the pipes and begins 
+!     communication through them. 
+!   - In the sockets version, the siesta process must be launched after the 
+!     driver program calls siesta_forces for the first time (notice that,
+!     from a communications point of view, the driver is the server and
+!     siesta is a client).
+!   - In the MPI version, the first call to siesta_forces generates a call
+!     to siesta_launch without nnodes nor mpi_comm present .
+! - If argument cell is not present in the call to siesta_forces, or if
+!   the cell has zero volume, it is assumed that the system is a molecule,
+!   and a supercell is generated automatically by siesta so that the 
+!   different images do not overlap. In this case the stress returned
+!   has no physical meaning.
+!   ** Note ** : Further calls with no cell information will reset the
+!   unit cell to a *different* one (since it is computed from the coordinates,
+!   and these would have changed. If you would like to maintain the same
+!   cell, you need to pass it explicitly (maybe doing a preliminary run
+!   to get the automatically generated cell, and copying it to the fdf file
+!   or to the client code itself.
+! - The stress is defined as dE/d(strain)/Volume, with a positive sign
+!   when the system tends to contract (negative pressure)
+! - The following events result in a stopping error message:
+!   - siesta_launch is called twice with the same label
+!   - siesta_quit is called without a prior call to siesta_launch or
+!     siesta_forces for that label
+!   - file label.fdf is not found
+!   - NumberOfAtoms in label.fdf is different from na input in siesta_forces
+!   - siesta_forces finds a communication error trough the pipes
+!   - MPI has not been correctly initialized by the driver prog (MPI version)
+!   - mpi_comm is not a valid MPI communicator
+!   - two MPI processes in the same siesta process have a different label
+!   - two different labels are used in any calls within the same MPI process
+!   - An input argument of siesta_forces differs in two MPI processes within
+!     the same siesta process
+! - If siesta_quit is not called for a launched siesta process, that
+!   process will stay listening indefinitedly to the pipe and will need
+!   to be killed in the shell (pipes version).
+! - siesta_units may be called either before or after siesta_launch
+! - In the MPI version, siesta_launch creates a directory called label
+!   (unless it already exists), for each siesta process, where all the
+!   output and continuation files are written.
+! - In the MPI version, siesta_forces closes the standard output unit 6 and
+!   reopens it as file=label/label.out (different for each siesta process).
+!   Before returning, it again closes and reopens it as the primitive output 
+!   file. If unit 6 was the standard output, rather than a file, and if it
+!   cannot be reopened (this is system dependent), it is opened as a file 
+!   named MAIN_OUTPUT. Therefore, to ensure continuity of the output, it 
+!   is recommended to open unit 6 as an explicit file, before calling 
+!   siesta_launch.
+
+The data flow between the user's 'master' program and siesta is as follows:
+  Using unix pipes (master program compiled with fsiesta_pipes.F90):
+    master <--> fsiesta_pipes <--pipe--> iopipes <--> siesta_master <--> siesta
+  Using unix/inet sockets (master program compiled with fsiesta_sockets.F90):
+    master <--> fsiesta_sockets <--socket--> iosockets <--> siesta_master <--> siesta
+  Using MPI (master program compiled with libSiestaForces.a):
+    master <--> fsiesta_mpi <--> siesta_master <--> siesta
+
+J.M.Soler, A.Garcia, and M.Ceriotti. Jan 2004 - Mar 2015
+
+

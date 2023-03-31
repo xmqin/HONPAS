@@ -1,0 +1,33 @@
+set terminal postscript enhanced color
+set output "kbs.ps"
+#
+there_is_0=`test -f KB.L0.1 && echo 1 || echo 0`
+there_is_1=`test -f KB.L1.1 && echo 1 || echo 0`
+there_is_2=`test -f KB.L2.1 && echo 1 || echo 0`
+there_is_3=`test -f KB.L3.1 && echo 1 || echo 0`
+
+set multiplot
+set size 0.5,0.5
+set origin 0.0,0.5
+if (there_is_0 == 1) call "subkb.gplot" "L=0" "KB.L0"
+
+set origin 0.5,0.5
+if (there_is_1 == 1) call "subkb.gplot" "L=1" "KB.L1"
+
+set origin 0.0,0.0
+if (there_is_2 == 1) call "subkb.gplot" "L=2" "KB.L2"
+
+set origin 0.5,0.0
+if (there_is_3 == 1) call "subkb.gplot" "L=3" "KB.L3"
+
+set nomultiplot
+#
+#
+print " ==> Postscript output in kbs.ps"
+
+
+
+
+
+
+

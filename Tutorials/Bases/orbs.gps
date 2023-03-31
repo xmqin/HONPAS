@@ -1,0 +1,67 @@
+set terminal postscript enhanced color
+set output "orbs.ps"
+#
+#
+there_is_s1=`test -f ORB.S1.1 && echo 1 || echo 0`
+there_is_s2=`test -f ORB.S2.1 && echo 1 || echo 0`
+there_is_s3=`test -f ORB.S3.1 && echo 1 || echo 0`
+there_is_s4=`test -f ORB.S4.1 && echo 1 || echo 0`
+there_is_s5=`test -f ORB.S5.1 && echo 1 || echo 0`
+there_is_s6=`test -f ORB.S6.1 && echo 1 || echo 0`
+there_is_s7=`test -f ORB.S7.1 && echo 1 || echo 0`
+there_is_s8=`test -f ORB.S8.1 && echo 1 || echo 0`
+
+print " ==>"
+print " ==> PAOs with the same N,L but different Zs are grouped."
+print " ==> The plots are very sparsely labeled. You will have"
+print " ==> to refer to the key printed on the terminal to find"
+print " ==> out about the N,L values of each series of PAOs."
+print " ==> "
+
+if (there_is_s5==1) \
+print "==> ** There will be TWO pages..."
+
+set multiplot
+set size 0.5,0.5
+set origin 0.0,0.5
+if (there_is_s1 == 1) call "suborb.gplot" "ORB.S1" "ORB.S1"
+
+set origin 0.5,0.5
+if (there_is_s2 == 1) call "suborb.gplot" "ORB.S2" "ORB.S2"
+
+set origin 0.0,0.0
+if (there_is_s3 == 1) call "suborb.gplot" "ORB.S3" "ORB.S3"
+
+set origin 0.5,0.0
+if (there_is_s4 == 1) call "suborb.gplot" "ORB.S4" "ORB.S4"
+
+set nomultiplot
+
+#
+# Check if there are more....
+#
+if (there_is_s5 == 0) exit
+
+set multiplot
+set size 0.5,0.5
+set origin 0.0,0.5
+if (there_is_s5 == 1) call "suborb.gplot" "ORB.S5" "ORB.S5"
+
+set origin 0.5,0.5
+if (there_is_s6 == 1) call "suborb.gplot" "ORB.S6" "ORB.S6"
+
+set origin 0.0,0.0
+if (there_is_s7 == 1) call "suborb.gplot" "ORB.S7" "ORB.S7"
+
+set origin 0.5,0.0
+if (there_is_s8 == 1) call "suborb.gplot" "ORB.S8" "ORB.S8"
+
+set nomultiplot
+#
+print " ==> Postscript output in orbs.ps"
+
+
+
+
+
+

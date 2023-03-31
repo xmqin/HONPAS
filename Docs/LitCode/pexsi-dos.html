@@ -1,0 +1,1015 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<title>Literate version of DOS calculation with PEXSI</title>
+<!-- 2016-09-14 Wed 11:32 -->
+<meta  http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta  name="generator" content="Org-mode" />
+<meta  name="author" content="Alberto Garcia" />
+<style type="text/css">
+ <!--/*--><![CDATA[/*><!--*/
+  .title  { text-align: center; }
+  .todo   { font-family: monospace; color: red; }
+  .done   { color: green; }
+  .tag    { background-color: #eee; font-family: monospace;
+            padding: 2px; font-size: 80%; font-weight: normal; }
+  .timestamp { color: #bebebe; }
+  .timestamp-kwd { color: #5f9ea0; }
+  .right  { margin-left: auto; margin-right: 0px;  text-align: right; }
+  .left   { margin-left: 0px;  margin-right: auto; text-align: left; }
+  .center { margin-left: auto; margin-right: auto; text-align: center; }
+  .underline { text-decoration: underline; }
+  #postamble p, #preamble p { font-size: 90%; margin: .2em; }
+  p.verse { margin-left: 3%; }
+  pre {
+    border: 1px solid #ccc;
+    box-shadow: 3px 3px 3px #eee;
+    padding: 8pt;
+    font-family: monospace;
+    overflow: auto;
+    margin: 1.2em;
+  }
+  pre.src {
+    position: relative;
+    overflow: visible;
+    padding-top: 1.2em;
+  }
+  pre.src:before {
+    display: none;
+    position: absolute;
+    background-color: white;
+    top: -10px;
+    right: 10px;
+    padding: 3px;
+    border: 1px solid black;
+  }
+  pre.src:hover:before { display: inline;}
+  pre.src-sh:before    { content: 'sh'; }
+  pre.src-bash:before  { content: 'sh'; }
+  pre.src-emacs-lisp:before { content: 'Emacs Lisp'; }
+  pre.src-R:before     { content: 'R'; }
+  pre.src-perl:before  { content: 'Perl'; }
+  pre.src-java:before  { content: 'Java'; }
+  pre.src-sql:before   { content: 'SQL'; }
+
+  table { border-collapse:collapse; }
+  caption.t-above { caption-side: top; }
+  caption.t-bottom { caption-side: bottom; }
+  td, th { vertical-align:top;  }
+  th.right  { text-align: center;  }
+  th.left   { text-align: center;   }
+  th.center { text-align: center; }
+  td.right  { text-align: right;  }
+  td.left   { text-align: left;   }
+  td.center { text-align: center; }
+  dt { font-weight: bold; }
+  .footpara:nth-child(2) { display: inline; }
+  .footpara { display: block; }
+  .footdef  { margin-bottom: 1em; }
+  .figure { padding: 1em; }
+  .figure p { text-align: center; }
+  .inlinetask {
+    padding: 10px;
+    border: 2px solid gray;
+    margin: 10px;
+    background: #ffffcc;
+  }
+  #org-div-home-and-up
+   { text-align: right; font-size: 70%; white-space: nowrap; }
+  textarea { overflow-x: auto; }
+  .linenr { font-size: smaller }
+  .code-highlighted { background-color: #ffff00; }
+  .org-info-js_info-navigation { border-style: none; }
+  #org-info-js_console-label
+    { font-size: 10px; font-weight: bold; white-space: nowrap; }
+  .org-info-js_search-highlight
+    { background-color: #ffff00; color: #000000; font-weight: bold; }
+  /*]]>*/-->
+</style>
+<script type="text/javascript">
+/*
+@licstart  The following is the entire license notice for the
+JavaScript code in this tag.
+
+Copyright (C) 2012-2013 Free Software Foundation, Inc.
+
+The JavaScript code in this tag is free software: you can
+redistribute it and/or modify it under the terms of the GNU
+General Public License (GNU GPL) as published by the Free Software
+Foundation, either version 3 of the License, or (at your option)
+any later version.  The code is distributed WITHOUT ANY WARRANTY;
+without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE.  See the GNU GPL for more details.
+
+As additional permission under GNU GPL version 3 section 7, you
+may distribute non-source (e.g., minimized or compacted) forms of
+that code without the copy of the GNU GPL normally required by
+section 4, provided you include this license notice and a URL
+through which recipients can access the Corresponding Source.
+
+
+@licend  The above is the entire license notice
+for the JavaScript code in this tag.
+*/
+<!--/*--><![CDATA[/*><!--*/
+ function CodeHighlightOn(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(null != target) {
+     elem.cacheClassElem = elem.className;
+     elem.cacheClassTarget = target.className;
+     target.className = "code-highlighted";
+     elem.className   = "code-highlighted";
+   }
+ }
+ function CodeHighlightOff(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(elem.cacheClassElem)
+     elem.className = elem.cacheClassElem;
+   if(elem.cacheClassTarget)
+     target.className = elem.cacheClassTarget;
+ }
+/*]]>*///-->
+</script>
+</head>
+<body>
+<div id="content">
+<h1 class="title">Literate version of DOS calculation with PEXSI</h1>
+<div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#sec-1">1. Introduction</a></li>
+<li><a href="#sec-2">2. Auxiliary module for holding the plan</a></li>
+<li><a href="#sec-3">3. The PEXSI DOS code</a>
+<ul>
+<li><a href="#sec-3-1">3.1. Main structure</a></li>
+<li><a href="#sec-3-2">3.2. Routine header</a>
+<ul>
+<li><a href="#sec-3-2-1">3.2.1. Used modules</a></li>
+</ul>
+</li>
+<li><a href="#sec-3-3">3.3. Routine variables</a></li>
+<li><a href="#sec-3-4">3.4. Define communicators</a></li>
+<li><a href="#sec-3-5">3.5. Prepare plan</a></li>
+<li><a href="#sec-3-6">3.6. Re-distribute matrices</a></li>
+<li><a href="#sec-3-7">3.7. Set options</a></li>
+<li><a href="#sec-3-8">3.8. Load H and S matrices</a></li>
+<li><a href="#sec-3-9">3.9. Factorization</a></li>
+<li><a href="#sec-3-10">3.10. Compute integrated DOS by inertia count</a></li>
+<li><a href="#sec-3-11">3.11. Clean up</a></li>
+<li><a href="#sec-3-12">3.12. <span class="todo TODO">TODO</span> Support routines</a>
+<ul>
+<li><a href="#sec-3-12-1">3.12.1. Row and column partition of npPerPole</a></li>
+<li><a href="#sec-3-12-2">3.12.2. Error dispatcher</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<p>
+-*- mode: Org -*-
+</p>
+
+<div id="outline-container-sec-1" class="outline-2">
+<h2 id="sec-1"><span class="section-number-2">1</span> Introduction</h2>
+<div class="outline-text-2" id="text-1">
+<p>
+The inertia-count technology can be used to estimate directly the
+integrated density of states. From this it is relatively easy to get
+an approximation to the DOS.
+</p>
+</div>
+</div>
+
+<div id="outline-container-sec-2" class="outline-2">
+<h2 id="sec-2"><span class="section-number-2">2</span> Auxiliary module for holding the plan</h2>
+<div class="outline-text-2" id="text-2">
+<p>
+The <i>plan</i> feature allows, among other things, the re-use of
+factorization information. 
+</p>
+</div>
+</div>
+
+<div id="outline-container-sec-3" class="outline-2">
+<h2 id="sec-3"><span class="section-number-2">3</span> The PEXSI DOS code</h2>
+<div class="outline-text-2" id="text-3">
+</div><div id="outline-container-sec-3-1" class="outline-3">
+<h3 id="sec-3-1"><span class="section-number-3">3.1</span> Main structure</h3>
+<div class="outline-text-3" id="text-3-1">
+<p>
+This is the main structure of the code. 
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-f90"><span style="color: #a020f0;">module</span> <span style="color: #0000ff;">m_pexsi_dos</span>
+<span style="color: #483d8b;">#ifdef</span> SIESTA__PEXSI
+    <span style="color: #a020f0;">use</span> <span style="color: #0000ff;">precision</span>, <span style="color: #a020f0;">only</span>  : dp
+
+  <span style="color: #a020f0;">public</span> :: pexsi_dos
+
+<span style="color: #a020f0;">CONTAINS</span>
+
+&lt;&lt;routine-header&gt;&gt;
+&lt;&lt;routine-variables&gt;&gt;
+<span style="color: #b22222;">!  </span><span style="color: #b22222;">--------  for serial compilation</span>
+<span style="color: #483d8b;">#ifndef</span> MPI
+    <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">die</span>(<span style="color: #8b2252;">"PEXSI needs MPI"</span>)
+<span style="color: #483d8b;">#else</span>
+&lt;&lt;define-communicators&gt;&gt;
+&lt;&lt;prepare-plan&gt;&gt;
+&lt;&lt;re-<span style="color: #a020f0;">distribute</span>-matrices&gt;&gt;
+&lt;&lt;set-options&gt;&gt;
+&lt;&lt;load-hs-matrices&gt;&gt;
+&lt;&lt;factorization&gt;&gt;
+&lt;&lt;compute-int-dos&gt;&gt;
+&lt;&lt;clean-up&gt;&gt;
+<span style="color: #483d8b;">#endif</span>
+
+<span style="color: #a020f0;">CONTAINS</span>
+
+&lt;&lt;support-routines&gt;&gt;
+
+<span style="color: #a020f0;">end subroutine</span> <span style="color: #0000ff;">pexsi_dos</span>
+<span style="color: #483d8b;">#endif</span>
+<span style="color: #a020f0;">end module</span> <span style="color: #0000ff;">m_pexsi_dos</span>
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-sec-3-2" class="outline-3">
+<h3 id="sec-3-2"><span class="section-number-3">3.2</span> Routine header</h3>
+<div class="outline-text-3" id="text-3-2">
+<div class="org-src-container">
+
+<pre class="src src-f90"><span style="color: #a020f0;">subroutine</span> <span style="color: #0000ff;">pexsi_dos</span>(no_u, no_l, nspin_in,  <span style="color: #a020f0;">&amp;</span>
+     maxnh, numh, listhptr, listh, H, S, qtot, ef_in)
+
+&lt;&lt;used-modules&gt;&gt;
+
+  <span style="color: #a020f0;">implicit</span>          <span style="color: #228b22;">none</span>
+
+  <span style="color: #228b22;">integer</span>, <span style="color: #a020f0;">intent</span>(in)  ::<span style="color: #a0522d;"> maxnh, no_u, no_l, nspin_in</span>
+  <span style="color: #228b22;">integer</span>, <span style="color: #a020f0;">intent</span>(in), <span style="color: #a020f0;">target</span>  ::<span style="color: #a0522d;"> listh(maxnh), numh(no_l), listhptr(no_l)</span>
+  <span style="color: #228b22;">real</span>(dp), <span style="color: #a020f0;">intent</span>(in), <span style="color: #a020f0;">target</span> ::<span style="color: #a0522d;"> H(maxnh,nspin_in), S(maxnh)</span>
+  <span style="color: #228b22;">real</span>(dp), <span style="color: #a020f0;">intent</span>(in)        ::<span style="color: #a0522d;"> qtot </span><span style="color: #b22222;">! </span><span style="color: #b22222;">Total number of electrons</span>
+  <span style="color: #228b22;">real</span>(dp), <span style="color: #a020f0;">intent</span>(in)        ::<span style="color: #a0522d;"> ef_in  </span><span style="color: #b22222;">! </span><span style="color: #b22222;">Fermi energy</span>
+</pre>
+</div>
+</div>
+
+<div id="outline-container-sec-3-2-1" class="outline-4">
+<h4 id="sec-3-2-1"><span class="section-number-4">3.2.1</span> Used modules</h4>
+<div class="outline-text-4" id="text-3-2-1">
+<div class="org-src-container">
+
+<pre class="src src-f90">    <span style="color: #a020f0;">use</span> <span style="color: #0000ff;">fdf</span>
+    <span style="color: #a020f0;">use</span> <span style="color: #0000ff;">parallel</span>, <span style="color: #a020f0;">only</span>   : SIESTA_worker, BlockSize
+    <span style="color: #a020f0;">use</span> <span style="color: #0000ff;">parallel</span>, <span style="color: #a020f0;">only</span>   : SIESTA_Group, SIESTA_Comm
+    <span style="color: #a020f0;">use</span> <span style="color: #0000ff;">m_mpi_utils</span>, <span style="color: #a020f0;">only</span>: globalize_max
+    <span style="color: #a020f0;">use</span> <span style="color: #0000ff;">m_mpi_utils</span>, <span style="color: #a020f0;">only</span>: broadcast
+    <span style="color: #a020f0;">use</span> <span style="color: #0000ff;">units</span>,       <span style="color: #a020f0;">only</span>: eV
+    <span style="color: #a020f0;">use</span> <span style="color: #0000ff;">m_redist_spmatrix</span>, <span style="color: #a020f0;">only</span>: aux_matrix, redistribute_spmatrix
+    <span style="color: #a020f0;">use</span> <span style="color: #0000ff;">class_Distribution</span>
+    <span style="color: #a020f0;">use</span> <span style="color: #0000ff;">alloc</span>,             <span style="color: #a020f0;">only</span>: re_alloc, de_alloc
+<span style="color: #483d8b;">#ifdef</span> MPI
+    <span style="color: #a020f0;">use</span> <span style="color: #0000ff;">mpi_siesta</span>
+<span style="color: #483d8b;">#endif</span>
+
+    <span style="color: #a020f0;">use</span> <span style="color: #0000ff;">iso_c_binding</span>
+    <span style="color: #a020f0;">use</span> <span style="color: #0000ff;">f_ppexsi_interface</span>, <span style="color: #a020f0;">only</span>: f_ppexsi_options
+    <span style="color: #a020f0;">use</span> <span style="color: #0000ff;">f_ppexsi_interface</span>, <span style="color: #a020f0;">only</span>: f_ppexsi_plan_finalize
+    <span style="color: #a020f0;">use</span> <span style="color: #0000ff;">f_ppexsi_interface</span>, <span style="color: #a020f0;">only</span>: f_ppexsi_plan_initialize
+    <span style="color: #a020f0;">use</span> <span style="color: #0000ff;">f_ppexsi_interface</span>, <span style="color: #a020f0;">only</span>: f_ppexsi_inertia_count_real_symmetric_matrix
+    <span style="color: #a020f0;">use</span> <span style="color: #0000ff;">f_ppexsi_interface</span>, <span style="color: #a020f0;">only</span>: f_ppexsi_load_real_symmetric_hs_matrix
+    <span style="color: #a020f0;">use</span> <span style="color: #0000ff;">f_ppexsi_interface</span>, <span style="color: #a020f0;">only</span>: f_ppexsi_set_default_options
+    <span style="color: #a020f0;">use</span> <span style="color: #0000ff;">f_ppexsi_interface</span>, <span style="color: #a020f0;">&amp;</span>
+          <span style="color: #a020f0;">only</span>: f_ppexsi_symbolic_factorize_real_symmetric_matrix
+</pre>
+</div>
+</div>
+</div>
+</div>
+
+<div id="outline-container-sec-3-3" class="outline-3">
+<h3 id="sec-3-3"><span class="section-number-3">3.3</span> Routine variables</h3>
+<div class="outline-text-3" id="text-3-3">
+<p>
+The local variables for the routine must be declared in a certain
+place for the compiler, but it is more clear to introduce them as they
+are needed. The <code>routine-variables</code> noweb-ref will be used for this
+throughout this document.
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-f90"><span style="color: #228b22;">integer</span>        ::<span style="color: #a0522d;"> ih, i</span>
+<span style="color: #228b22;">integer</span>        ::<span style="color: #a0522d;"> info</span>
+<span style="color: #228b22;">logical</span>        ::<span style="color: #a0522d;"> write_ok</span>
+<span style="color: #b22222;">!</span><span style="color: #b22222;">------------</span>
+<span style="color: #a020f0;">external</span>         :: timer
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-sec-3-4" class="outline-3">
+<h3 id="sec-3-4"><span class="section-number-3">3.4</span> Define communicators</h3>
+<div class="outline-text-3" id="text-3-4">
+<p>
+<code>World_Comm</code>, which is in principle set to Siesta's copy of
+<code>MPI_Comm_World</code>, is the global communicator.
+</p>
+
+<p>
+Some variables need to be broadcast since they were assigned only
+by the <i>SIESTA worker</i>  subset of nodes. They are renamed for clarity.
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-f90"><span style="color: #228b22;">integer</span>          ::<span style="color: #a0522d;"> World_Comm, mpirank, ierr</span>
+<span style="color: #b22222;">!</span>
+<span style="color: #228b22;">real</span>(dp)  ::<span style="color: #a0522d;"> numElectronExact, ef</span>
+<span style="color: #228b22;">integer</span>   ::<span style="color: #a0522d;"> norbs, scf_step</span>
+<span style="color: #b22222;">!</span>
+<span style="color: #228b22;">integer</span>   ::<span style="color: #a0522d;"> nspin</span>
+</pre>
+</div>
+
+<div class="org-src-container">
+
+<pre class="src src-f90"><span style="color: #b22222;">!</span>
+<span style="color: #b22222;">! </span><span style="color: #b22222;">Our global communicator is a duplicate of the passed communicator</span>
+<span style="color: #b22222;">!</span>
+<span style="color: #a020f0;">call</span> <span style="color: #0000ff;">MPI_Comm_Dup</span>(true_MPI_Comm_World, World_Comm, ierr)
+<span style="color: #a020f0;">call</span> <span style="color: #0000ff;">mpi_comm_rank</span>( World_Comm, mpirank, ierr )
+
+<span style="color: #a020f0;">call</span> <span style="color: #0000ff;">timer</span>(<span style="color: #8b2252;">"pexsi_dos"</span>, 1)  
+
+<span style="color: #a020f0;">if</span> (SIESTA_worker) <span style="color: #a020f0;">then</span>
+
+   <span style="color: #b22222;">! </span><span style="color: #b22222;">rename and broadcast some intent(in) variables, which are only</span>
+   <span style="color: #b22222;">! </span><span style="color: #b22222;">defined for the Siesta subset</span>
+
+   norbs = no_u
+   nspin = nspin_in
+   numElectronExact = qtot 
+   ef = ef_in
+
+<span style="color: #a020f0;">endif</span>
+<span style="color: #b22222;">!</span>
+<span style="color: #a020f0;">call</span> <span style="color: #0000ff;">broadcast</span>(norbs,comm=World_Comm)
+<span style="color: #a020f0;">call</span> <span style="color: #0000ff;">broadcast</span>(numElectronExact,World_Comm)
+<span style="color: #a020f0;">call</span> <span style="color: #0000ff;">broadcast</span>(nspin,World_Comm)
+<span style="color: #a020f0;">call</span> <span style="color: #0000ff;">broadcast</span>(ef,World_Comm)
+</pre>
+</div>
+
+<p>
+Now we need to define the Siesta distribution object and the
+communicator and distribution object for the first team of PEXSI
+workers, for the purposes of re-distribution of the relevant
+matrices. The PEXSI library takes care of further redistribution among
+teams.
+</p>
+
+<p>
+Note that the first team of PEXSI workers starts at the root
+node. This means that there is overlap between the Siesta workers and
+the PEXSI workers. While this is in principle more economical (and
+convenient for information exchange), it can pose problems later on.
+</p>
+
+<p>
+I will leave it like that, as I do not yet know how to move
+information among disjoint communicators (use of an
+<i>intercommunicator</i>?)
+</p>
+
+<p>
+For spin, things are a bit more complicated. We need to make sure that
+the distributions are defined (via actual ranks) with respect to the
+same reference bridge communicator. For now, this is World<sub>Comm</sub>.
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-f90"><span style="color: #228b22;">integer</span> ::<span style="color: #a0522d;"> PEXSI_Pole_Group, PEXSI_Spatial_Group, World_Group</span>
+<span style="color: #228b22;">integer</span>, <span style="color: #a020f0;">allocatable</span> ::<span style="color: #a0522d;"> pexsi_pole_ranks_in_world(:)</span>
+<span style="color: #228b22;">integer</span>  ::<span style="color: #a0522d;"> nworkers_SIESTA</span>
+<span style="color: #228b22;">integer</span>, <span style="color: #a020f0;">allocatable</span> ::<span style="color: #a0522d;"> siesta_ranks_in_world(:)</span>
+<span style="color: #228b22;">integer</span> ::<span style="color: #a0522d;"> PEXSI_Pole_Group_in_World</span>
+<span style="color: #228b22;">integer</span>, <span style="color: #a020f0;">allocatable</span> ::<span style="color: #a0522d;"> PEXSI_Pole_ranks_in_World_Spin(:,:)</span>
+<span style="color: #228b22;">integer</span> ::<span style="color: #a0522d;"> PEXSI_Pole_Comm, PEXSI_Spatial_Comm, PEXSI_Spin_Comm</span>
+<span style="color: #228b22;">integer</span> ::<span style="color: #a0522d;"> numNodesTotal</span>
+<span style="color: #228b22;">integer</span> ::<span style="color: #a0522d;"> npPerPole</span>
+<span style="color: #228b22;">logical</span>  ::<span style="color: #a0522d;"> PEXSI_worker</span>
+<span style="color: #b22222;">!</span>
+<span style="color: #228b22;">type(Distribution)</span>   :: <span style="color: #a0522d;">dist1</span>
+<span style="color: #228b22;">type(Distribution)</span>, <span style="color: #a020f0;">allocatable</span>, <span style="color: #a020f0;">target</span>   :: <span style="color: #a0522d;">dist2_spin(:)</span>
+<span style="color: #228b22;">type(Distribution)</span>, <span style="color: #a020f0;">pointer</span> :: <span style="color: #a0522d;">dist2</span>
+<span style="color: #228b22;">integer</span>  ::<span style="color: #a0522d;"> pbs, color, spatial_rank, spin_rank</span>
+</pre>
+</div>
+
+<p>
+Define the Siesta distribution. Note that this is known to all nodes.
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-f90"><span style="color: #a020f0;">call</span> <span style="color: #0000ff;">MPI_Comm_Group</span>(World_Comm,World_Group, ierr)
+<span style="color: #a020f0;">call</span> <span style="color: #0000ff;">MPI_Group_Size</span>(SIESTA_Group, nworkers_SIESTA, ierr)
+<span style="color: #a020f0;">allocate</span>(siesta_ranks_in_world(nworkers_SIESTA))
+<span style="color: #a020f0;">call</span> <span style="color: #0000ff;">MPI_Group_translate_ranks</span>( SIESTA_Group, nworkers_SIESTA, <span style="color: #a020f0;">&amp;</span>
+     (/ (i,i=0,nworkers_SIESTA-1) /), <span style="color: #a020f0;">&amp;</span>
+     World_Group, siesta_ranks_in_world, ierr )
+<span style="color: #a020f0;">call</span> <span style="color: #0000ff;">newDistribution</span>(dist1,World_Comm,siesta_ranks_in_world, <span style="color: #a020f0;">&amp;</span>
+                     TYPE_BLOCK_CYCLIC,BlockSize,<span style="color: #8b2252;">"bc dist"</span>)
+<span style="color: #a020f0;">deallocate</span>(siesta_ranks_in_world)
+<span style="color: #a020f0;">call</span> <span style="color: #0000ff;">MPI_Barrier</span>(World_Comm,ierr)
+</pre>
+</div>
+
+<p>
+For possibly spin-polarized calculations, we split the communicator.
+</p>
+
+
+<div class="org-src-container">
+
+<pre class="src src-f90"><span style="color: #a020f0;">call</span> <span style="color: #0000ff;">mpi_comm_size</span>( World_Comm, numNodesTotal, ierr )
+
+npPerPole  = fdf_get(<span style="color: #8b2252;">"PEXSI.np-per-pole"</span>,4)
+<span style="color: #a020f0;">if</span> (nspin*npPerPole &gt; numNodesTotal) <span style="color: #a020f0;">&amp;</span>
+          <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">die</span>(<span style="color: #8b2252;">"PEXSI.np-per-pole is too big for MPI size"</span>)
+
+<span style="color: #b22222;">! </span><span style="color: #b22222;">"Row" communicator for independent PEXSI operations on each spin</span>
+<span style="color: #b22222;">! </span><span style="color: #b22222;">The name refers to "spatial" degrees of freedom.</span>
+color = <span style="color: #a020f0;">mod</span>(mpirank,nspin)    <span style="color: #b22222;">! </span><span style="color: #b22222;">{0,1} for nspin = 2, or {0} for nspin = 1</span>
+<span style="color: #a020f0;">call</span> <span style="color: #0000ff;">MPI_Comm_Split</span>(World_Comm, color, mpirank, PEXSI_Spatial_Comm, ierr)
+
+<span style="color: #b22222;">! </span><span style="color: #b22222;">"Column" communicator for spin reductions</span>
+color = mpirank/nspin       
+<span style="color: #a020f0;">call</span> <span style="color: #0000ff;">MPI_Comm_Split</span>(World_Comm, color, mpirank, PEXSI_Spin_Comm, ierr)
+
+<span style="color: #b22222;">! </span><span style="color: #b22222;">Group and Communicator for first-pole team of PEXSI workers</span>
+<span style="color: #b22222;">!</span>
+<span style="color: #a020f0;">call</span> <span style="color: #0000ff;">MPI_Comm_Group</span>(PEXSI_Spatial_Comm, PEXSI_Spatial_Group, Ierr)
+<span style="color: #a020f0;">call</span> <span style="color: #0000ff;">MPI_Group_incl</span>(PEXSI_Spatial_Group, npPerPole,   <span style="color: #a020f0;">&amp;</span>
+     (/ (i,i=0,npPerPole-1) /),<span style="color: #a020f0;">&amp;</span>
+     PEXSI_Pole_Group, Ierr)
+<span style="color: #a020f0;">call</span> <span style="color: #0000ff;">MPI_Comm_create</span>(PEXSI_Spatial_Comm, PEXSI_Pole_Group,<span style="color: #a020f0;">&amp;</span>
+     PEXSI_Pole_Comm, Ierr)
+
+
+<span style="color: #a020f0;">call</span> <span style="color: #0000ff;">mpi_comm_rank</span>( PEXSI_Spatial_Comm, spatial_rank, ierr )
+<span style="color: #a020f0;">call</span> <span style="color: #0000ff;">mpi_comm_rank</span>( PEXSI_Spin_Comm, spin_rank, ierr )
+PEXSI_worker = (spatial_rank &lt; npPerPole)   <span style="color: #b22222;">! </span><span style="color: #b22222;">Could be spin up or spin down</span>
+
+<span style="color: #b22222;">! </span><span style="color: #b22222;">PEXSI blocksize </span>
+pbs = norbs/npPerPole
+
+<span style="color: #b22222;">! </span><span style="color: #b22222;">Careful with this. For the purposes of matrix transfers,</span>
+<span style="color: #b22222;">! </span><span style="color: #b22222;">we need the ranks of the Pole group</span>
+<span style="color: #b22222;">! </span><span style="color: #b22222;">in the "bridge" communicator/group (World)</span>
+
+<span style="color: #a020f0;">allocate</span>(pexsi_pole_ranks_in_world(npPerPole))
+<span style="color: #a020f0;">call</span> <span style="color: #0000ff;">MPI_Comm_Group</span>(World_Comm, World_Group, Ierr)
+
+<span style="color: #a020f0;">call</span> <span style="color: #0000ff;">MPI_Group_translate_ranks</span>( PEXSI_Pole_Group, npPerPole, <span style="color: #a020f0;">&amp;</span>
+     (/ (i,i=0,npPerPole-1) /), <span style="color: #a020f0;">&amp;</span>
+     World_Group, pexsi_pole_ranks_in_world, ierr )
+
+<span style="color: #b22222;">! </span><span style="color: #b22222;">What we need is to include the actual world ranks</span>
+<span style="color: #b22222;">! </span><span style="color: #b22222;">in the distribution object</span>
+<span style="color: #a020f0;">allocate</span> (PEXSI_Pole_ranks_in_World_Spin(npPerPole,nspin))
+<span style="color: #a020f0;">call</span> <span style="color: #0000ff;">MPI_AllGather</span>(pexsi_pole_ranks_in_world,npPerPole,MPI_integer,<span style="color: #a020f0;">&amp;</span>
+     PEXSI_Pole_Ranks_in_World_Spin(1,1),npPerPole, <span style="color: #a020f0;">&amp;</span>
+     MPI_integer,PEXSI_Spin_Comm,ierr)
+
+<span style="color: #b22222;">! </span><span style="color: #b22222;">Create distributions known to all nodes</span>
+<span style="color: #a020f0;">allocate</span>(dist2_spin(nspin))
+<span style="color: #a020f0;">do</span> ispin = 1, nspin
+   <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">newDistribution</span>(dist2_spin(ispin), World_Comm, <span style="color: #a020f0;">&amp;</span>
+                        PEXSI_Pole_Ranks_in_World_Spin(:,ispin),  <span style="color: #a020f0;">&amp;</span>
+                        TYPE_PEXSI, pbs, <span style="color: #8b2252;">"px dist"</span>)
+<span style="color: #a020f0;">enddo</span>
+<span style="color: #a020f0;">deallocate</span>(pexsi_pole_ranks_in_world,PEXSI_Pole_Ranks_in_World_Spin)
+<span style="color: #a020f0;">call</span> <span style="color: #0000ff;">MPI_Barrier</span>(World_Comm,ierr)
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-sec-3-5" class="outline-3">
+<h3 id="sec-3-5"><span class="section-number-3">3.5</span> Prepare plan</h3>
+<div class="outline-text-3" id="text-3-5">
+<p>
+The plan is created, used, and destroyed in this routine. Presumably
+one could re-use the factorizations carried out during the scf cycle,
+but this is left for a future version.
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-f90"><span style="color: #228b22;">integer</span>(<span style="color: #008b8b;">c_intptr_t</span>)    ::<span style="color: #a0522d;"> plan</span>
+  <span style="color: #228b22;">integer</span> ::<span style="color: #a0522d;"> numProcRow, numProcCol</span>
+  <span style="color: #228b22;">integer</span> ::<span style="color: #a0522d;"> outputFileIndex</span>
+</pre>
+</div>
+<div class="org-src-container">
+
+<pre class="src src-f90"><span style="color: #b22222;">! </span><span style="color: #b22222;">-- Prepare plan</span>
+<span style="color: #a020f0;">call</span> <span style="color: #0000ff;">get_row_col</span>(npPerPole,numProcRow,numProcCol)
+
+  <span style="color: #b22222;">! </span><span style="color: #b22222;">Set the outputFileIndex to be the pole index.</span>
+  <span style="color: #b22222;">! </span><span style="color: #b22222;">Starting from PEXSI v0.8.0, the first processor for each pole outputs</span>
+  <span style="color: #b22222;">! </span><span style="color: #b22222;">information</span>
+
+  <span style="color: #a020f0;">if</span>( <span style="color: #a020f0;">mod</span>( mpirank, npPerPole ) <span style="color: #a020f0;">.eq.</span> 0 ) <span style="color: #a020f0;">then</span>
+    outputFileIndex = mpirank / npPerPole;
+  <span style="color: #a020f0;">else</span>
+    outputFileIndex = -1;
+  <span style="color: #a020f0;">endif</span>
+
+   plan = f_ppexsi_plan_initialize(<span style="color: #a020f0;">&amp;</span>
+      PEXSI_Spatial_Comm,<span style="color: #a020f0;">&amp;</span>
+      numProcRow,<span style="color: #a020f0;">&amp;</span>
+      numProcCol,<span style="color: #a020f0;">&amp;</span>
+      outputFileIndex,<span style="color: #a020f0;">&amp;</span>
+      info) 
+   <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">check_info</span>(info,<span style="color: #8b2252;">"plan_initialize in DOS"</span>)
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-sec-3-6" class="outline-3">
+<h3 id="sec-3-6"><span class="section-number-3">3.6</span> Re-distribute matrices</h3>
+<div class="outline-text-3" id="text-3-6">
+<p>
+This is slightly unseemly, but it works. The <code>aux_matrix</code> derived
+types are used to store and retrieve the matrices in either side. The
+code is in external auxiliary modules.
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-f90"><span style="color: #228b22;">type(aux_matrix)</span>, <span style="color: #a020f0;">allocatable</span>, <span style="color: #a020f0;">target</span> :: <span style="color: #a0522d;">m1_spin(:)</span>
+<span style="color: #228b22;">type(aux_matrix)</span> :: <span style="color: #a0522d;">m2</span>
+<span style="color: #228b22;">type(aux_matrix)</span>, <span style="color: #a020f0;">pointer</span> :: <span style="color: #a0522d;">m1</span>
+<span style="color: #228b22;">integer</span> ::<span style="color: #a0522d;"> nrows, nnz, nnzLocal, numColLocal</span>
+<span style="color: #228b22;">integer</span>, <span style="color: #a020f0;">pointer</span>, <span style="color: #a020f0;">dimension</span>(:) ::<span style="color: #a0522d;">  colptrLocal=&gt; null(), rowindLocal=&gt;null()</span>
+<span style="color: #b22222;">!</span>
+<span style="color: #228b22;">real</span>(dp), <span style="color: #a020f0;">pointer</span>, <span style="color: #a020f0;">dimension</span>(:) ::<span style="color: #a0522d;"> </span><span style="color: #a020f0;">&amp;</span>
+        HnzvalLocal=&gt;null(), SnzvalLocal=&gt;null(),  <span style="color: #a020f0;">&amp;</span>
+        DMnzvalLocal =&gt; <span style="color: #a020f0;">null</span>() , EDMnzvalLocal =&gt; <span style="color: #a020f0;">null</span>(), <span style="color: #a020f0;">&amp;</span>
+        FDMnzvalLocal =&gt; <span style="color: #a020f0;">null</span>()
+<span style="color: #b22222;">!</span>
+<span style="color: #228b22;">integer</span> ::<span style="color: #a0522d;"> ispin, pexsi_spin</span>
+</pre>
+</div>
+<div class="org-src-container">
+
+<pre class="src src-f90">pexsi_spin = spin_rank+1  <span style="color: #b22222;">! </span><span style="color: #b22222;">{1,2}</span>
+<span style="color: #b22222;">! </span><span style="color: #b22222;">This is done serially on the Siesta side, each time</span>
+<span style="color: #b22222;">! </span><span style="color: #b22222;">filling in the structures in one PEXSI set</span>
+
+<span style="color: #a020f0;">allocate</span>(m1_spin(nspin))
+<span style="color: #a020f0;">do</span> ispin = 1, nspin
+
+   m1 =&gt; m1_spin(ispin)
+
+   <span style="color: #a020f0;">if</span> (SIESTA_worker) <span style="color: #a020f0;">then</span>
+      m1%norbs = norbs
+      m1%no_l  = no_l
+      m1%nnzl  = <span style="color: #a020f0;">sum</span>(numH(1:no_l))
+      m1%numcols =&gt; numH
+      m1%cols    =&gt; listH
+      <span style="color: #a020f0;">allocate</span>(m1%vals(2))
+      m1%vals(1)%data =&gt; S(:)
+      m1%vals(2)%data =&gt; H(:,ispin)
+
+   <span style="color: #a020f0;">endif</span>  <span style="color: #b22222;">! </span><span style="color: #b22222;">SIESTA_worker</span>
+
+   <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">timer</span>(<span style="color: #8b2252;">"redist_orbs_fwd"</span>, 1)
+
+   <span style="color: #b22222;">! </span><span style="color: #b22222;">Note that we cannot simply wrap this in a pexsi_spin test, as</span>
+   <span style="color: #b22222;">! </span><span style="color: #b22222;">there are Siesta nodes in both spin sets.</span>
+   <span style="color: #b22222;">! </span><span style="color: #b22222;">We must discriminate the PEXSI workers by the distribution info</span>
+   dist2 =&gt; dist2_spin(ispin)
+   <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">redistribute_spmatrix</span>(norbs,m1,dist1,m2,dist2,World_Comm)
+
+   <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">timer</span>(<span style="color: #8b2252;">"redist_orbs_fwd"</span>, 2)
+
+   <span style="color: #a020f0;">if</span> (PEXSI_worker <span style="color: #a020f0;">.and.</span> (pexsi_spin == ispin) ) <span style="color: #a020f0;">then</span>
+
+      nrows = m2%norbs          <span style="color: #b22222;">! </span><span style="color: #b22222;">or simply 'norbs'</span>
+      numColLocal = m2%no_l
+      nnzLocal    = m2%nnzl
+      <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">MPI_AllReduce</span>(nnzLocal,nnz,1,MPI_integer,MPI_sum,PEXSI_Pole_Comm,ierr)
+
+      <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">re_alloc</span>(colptrLocal,1,numColLocal+1,<span style="color: #8b2252;">"colptrLocal"</span>,<span style="color: #8b2252;">"pexsi_solver"</span>)
+      colptrLocal(1) = 1
+      <span style="color: #a020f0;">do</span> ih = 1,numColLocal
+         colptrLocal(ih+1) = colptrLocal(ih) + m2%numcols(ih)
+      <span style="color: #a020f0;">enddo</span>
+
+      rowindLocal =&gt; m2%cols
+      SnzvalLocal =&gt; m2%vals(1)%data
+      HnzvalLocal =&gt; m2%vals(2)%data
+
+      <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">re_alloc</span>(DMnzvalLocal,1,nnzLocal,<span style="color: #8b2252;">"DMnzvalLocal"</span>,<span style="color: #8b2252;">"pexsi_solver"</span>)
+      <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">re_alloc</span>(EDMnzvalLocal,1,nnzLocal,<span style="color: #8b2252;">"EDMnzvalLocal"</span>,<span style="color: #8b2252;">"pexsi_solver"</span>)
+      <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">re_alloc</span>(FDMnzvalLocal,1,nnzLocal,<span style="color: #8b2252;">"FDMnzvalLocal"</span>,<span style="color: #8b2252;">"pexsi_solver"</span>)
+
+      <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">memory_all</span>(<span style="color: #8b2252;">"after setting up H+S for PEXSI (PEXSI_workers)"</span>,PEXSI_Pole_Comm)
+
+   <span style="color: #a020f0;">endif</span> <span style="color: #b22222;">! </span><span style="color: #b22222;">PEXSI worker</span>
+<span style="color: #a020f0;">enddo</span>
+
+<span style="color: #b22222;">! </span><span style="color: #b22222;">Make these available to all</span>
+<span style="color: #b22222;">! </span><span style="color: #b22222;">(Note that the values are those on process 0, which is in the spin=1 set</span>
+<span style="color: #b22222;">! </span><span style="color: #b22222;">In fact, they are only needed for calls to the interface, so the broadcast</span>
+<span style="color: #b22222;">! </span><span style="color: #b22222;">could be over PEXSI_Spatial_Comm only.</span>
+
+<span style="color: #a020f0;">call</span> <span style="color: #0000ff;">MPI_Bcast</span>(nrows,1,MPI_integer,0,World_Comm,ierr)
+<span style="color: #a020f0;">call</span> <span style="color: #0000ff;">MPI_Bcast</span>(nnz,1,MPI_integer,0,World_Comm,ierr)
+
+<span style="color: #a020f0;">call</span> <span style="color: #0000ff;">memory_all</span>(<span style="color: #8b2252;">"after setting up H+S for PEXSI"</span>,World_comm)
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-sec-3-7" class="outline-3">
+<h3 id="sec-3-7"><span class="section-number-3">3.7</span> Set options</h3>
+<div class="outline-text-3" id="text-3-7">
+<p>
+We use the options interface to get a template with default values,
+and then fill in a few custom options based on fdf variables. Note
+that the <code>options</code> derived type is of limited usefulness when the
+simple DFT driver is not used. The most important entries are then the
+factorization flag and the number of processors per pole.
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-f90"><span style="color: #228b22;">type(f_ppexsi_options)</span> :: <span style="color: #a0522d;">options</span>
+<span style="color: #b22222;">!</span>
+<span style="color: #228b22;">integer</span>                ::<span style="color: #a0522d;"> isSIdentity</span>
+<span style="color: #228b22;">integer</span>                ::<span style="color: #a0522d;"> verbosity</span>
+</pre>
+</div>
+
+<div class="org-src-container">
+
+<pre class="src src-f90"><span style="color: #b22222;">!</span>
+<span style="color: #a020f0;">call</span> <span style="color: #0000ff;">f_ppexsi_set_default_options</span>( options )
+
+isSIdentity = 0
+
+<span style="color: #b22222;">! </span><span style="color: #b22222;">Ordering flag:</span>
+<span style="color: #b22222;">!   </span><span style="color: #b22222;">1: Use METIS</span>
+<span style="color: #b22222;">!   </span><span style="color: #b22222;">0: Use PARMETIS/PTSCOTCH</span>
+options%ordering = fdf_get(<span style="color: #8b2252;">"PEXSI.ordering"</span>,1)
+
+<span style="color: #b22222;">! </span><span style="color: #b22222;">Number of processors for symbolic factorization</span>
+<span style="color: #b22222;">! </span><span style="color: #b22222;">Only relevant for PARMETIS/PT_SCOTCH</span>
+options%npSymbFact = fdf_get(<span style="color: #8b2252;">"PEXSI.np-symbfact"</span>,1)
+
+verbosity = fdf_get(<span style="color: #8b2252;">"PEXSI.verbosity"</span>,1)
+options%verbosity = verbosity
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-sec-3-8" class="outline-3">
+<h3 id="sec-3-8"><span class="section-number-3">3.8</span> Load H and S matrices</h3>
+<div class="outline-text-3" id="text-3-8">
+<p>
+In this version H and S are symmetric. We associate them with the plan
+(I really do not know very well what happens behind the
+scenes. Presumably no copy is made.)
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-f90"><span style="color: #a020f0;">call</span> <span style="color: #0000ff;">f_ppexsi_load_real_symmetric_hs_matrix</span>(<span style="color: #a020f0;">&amp;</span>
+      plan,<span style="color: #a020f0;">&amp;</span>
+      options,<span style="color: #a020f0;">&amp;</span>
+      nrows,<span style="color: #a020f0;">&amp;</span>
+      nnz,<span style="color: #a020f0;">&amp;</span>
+      nnzLocal,<span style="color: #a020f0;">&amp;</span>
+      numColLocal,<span style="color: #a020f0;">&amp;</span>
+      colptrLocal,<span style="color: #a020f0;">&amp;</span>
+      rowindLocal,<span style="color: #a020f0;">&amp;</span>
+      HnzvalLocal,<span style="color: #a020f0;">&amp;</span>
+      isSIdentity,<span style="color: #a020f0;">&amp;</span>
+      SnzvalLocal,<span style="color: #a020f0;">&amp;</span>
+      info) 
+
+<span style="color: #a020f0;">call</span> <span style="color: #0000ff;">check_info</span>(info,<span style="color: #8b2252;">"load_real_sym_hs_matrix"</span>)
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-sec-3-9" class="outline-3">
+<h3 id="sec-3-9"><span class="section-number-3">3.9</span> Factorization</h3>
+<div class="outline-text-3" id="text-3-9">
+<p>
+Presumably it could be done once and for all for one of the spins, but
+we have no way to transfer the info from the spin-up to the spin-down
+manifold.
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-f90"><span style="color: #a020f0;">call</span> <span style="color: #0000ff;">f_ppexsi_symbolic_factorize_real_symmetric_matrix</span>(<span style="color: #a020f0;">&amp;</span>
+     plan, <span style="color: #a020f0;">&amp;</span>
+     options,<span style="color: #a020f0;">&amp;</span>
+     info)
+<span style="color: #a020f0;">call</span> <span style="color: #0000ff;">check_info</span>(info,<span style="color: #8b2252;">"symbolic_factorize_real_symmetric_matrix"</span>)
+
+options%isSymbolicFactorize = 0 <span style="color: #b22222;">! </span><span style="color: #b22222;">We do not need it anymore</span>
+</pre>
+</div>
+</div>
+</div>
+
+
+<div id="outline-container-sec-3-10" class="outline-3">
+<h3 id="sec-3-10"><span class="section-number-3">3.10</span> Compute integrated DOS by inertia count</h3>
+<div class="outline-text-3" id="text-3-10">
+<div class="org-src-container">
+
+<pre class="src src-f90"><span style="color: #228b22;">integer</span>  ::<span style="color: #a0522d;"> npoints, nShifts, numNodesSpatial</span>
+<span style="color: #228b22;">real</span>(dp), <span style="color: #a020f0;">allocatable</span> ::<span style="color: #a0522d;"> edos(:), intdos(:)</span>
+</pre>
+</div>
+
+<p>
+Since we use the processor teams corresponding to the different poles,
+the number of points in the energy interval should be a multiple of
+<code>numNodesSpatial/npPerPole</code>, where <code>numNodesSpatial</code> is the number of
+total nodes per spin component. The number of points is rounded up
+to make it a multiple of the number of samples per call, as there is
+no point (energy?) in leaving processors idle.
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-f90"><span style="color: #a020f0;">call</span> <span style="color: #0000ff;">mpi_comm_size</span>( PEXSI_Spatial_Comm, numNodesSpatial, ierr )
+nShifts = numNodesSpatial/npPerPole
+
+npoints = fdf_get(<span style="color: #8b2252;">"PEXSI.DOS.npoints"</span>,200)
+
+npoints = <span style="color: #a020f0;">ceiling</span>(<span style="color: #a020f0;">dble</span>(npoints)/nShifts) * nShifts
+
+<span style="color: #a020f0;">allocate</span> (edos(npoints),intdos(npoints))
+</pre>
+</div>
+
+<p>
+The range of energies is given in the <code>fdf</code> file. In principle it could
+be an absolute range, but it is referred to the Fermi level by default.
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-f90"><span style="color: #228b22;">real</span>(dp) ::<span style="color: #a0522d;"> emin, emax, delta</span>
+<span style="color: #228b22;">logical</span>  ::<span style="color: #a0522d;"> ef_reference</span>
+</pre>
+</div>
+
+<div class="org-src-container">
+
+<pre class="src src-f90">emin = fdf_get(<span style="color: #8b2252;">"PEXSI.DOS.emin"</span>,-1.0_dp,<span style="color: #8b2252;">"Ry"</span>)
+emax = fdf_get(<span style="color: #8b2252;">"PEXSI.DOS.emax"</span>,+1.0_dp,<span style="color: #8b2252;">"Ry"</span>)
+
+ef_reference = fdf_get(<span style="color: #8b2252;">"PEXSI.DOS.Ef.Reference"</span>,<span style="color: #a020f0;">.true.</span>)
+<span style="color: #a020f0;">if</span> (ef_reference) <span style="color: #a020f0;">then</span>
+   emin = emin + ef
+   emax = emax + ef
+<span style="color: #a020f0;">endif</span>
+  delta = (emax-emin)/(npoints-1)
+  <span style="color: #a020f0;">do</span> j = 1, npoints
+     edos(j) = emin + (j-1)*delta
+  <span style="color: #a020f0;">enddo</span>
+</pre>
+</div>
+
+<p>
+Now we call the inertia-counting routine.
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-f90"><span style="color: #a020f0;">call</span> <span style="color: #0000ff;">timer</span>(<span style="color: #8b2252;">"pexsi-raw-inertia-ct"</span>, 1)
+
+<span style="color: #a020f0;">if</span>(mpirank == 0) <span style="color: #a020f0;">then</span>
+   <span style="color: #a020f0;">write</span> (6,<span style="color: #8b2252;">"(a,f12.5,a,f12.5,a,a,i4)"</span>)  <span style="color: #a020f0;">&amp;</span>
+                <span style="color: #8b2252;">'Calling inertia_count for DOS: ['</span>, <span style="color: #a020f0;">&amp;</span>
+                emin/eV, <span style="color: #8b2252;">","</span>, emax/eV, <span style="color: #8b2252;">"] (eV)"</span>, <span style="color: #a020f0;">&amp;</span>
+                <span style="color: #8b2252;">" Nshifts: "</span>, npoints
+<span style="color: #a020f0;">endif</span>
+
+<span style="color: #a020f0;">call</span> <span style="color: #0000ff;">f_ppexsi_inertia_count_real_symmetric_matrix</span>(<span style="color: #a020f0;">&amp;</span>
+  plan,<span style="color: #a020f0;">&amp;</span>
+  options,<span style="color: #a020f0;">&amp;</span>
+  npoints,<span style="color: #a020f0;">&amp;</span>
+  edos,<span style="color: #a020f0;">&amp;</span>
+  intdos,<span style="color: #a020f0;">&amp;</span>
+  info) 
+<span style="color: #a020f0;">call</span> <span style="color: #0000ff;">check_info</span>(info,<span style="color: #8b2252;">"inertia_count_real_symmetric_matrix in DOS"</span>)
+
+<span style="color: #a020f0;">call</span> <span style="color: #0000ff;">timer</span>(<span style="color: #8b2252;">"pexsi-raw-inertia-ct"</span>, 2)
+</pre>
+</div>
+
+<p>
+We need to gather the information for both spins, at least on the
+global root node, for output. This could be done only by a group of
+<code>npPerPole</code> processors.  We implicitly assume that the global rank 0
+is also rank 0 in the spin communicator!
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-f90"><span style="color: #228b22;">real</span>(dp), <span style="color: #a020f0;">allocatable</span> ::<span style="color: #a0522d;"> intdos_spin(:,:)</span>
+<span style="color: #228b22;">integer</span> ::<span style="color: #a0522d;"> j, lun</span>
+</pre>
+</div>
+
+<div class="org-src-container">
+
+<pre class="src src-f90"><span style="color: #a020f0;">allocate</span>(intdos_spin(npoints,nspin))
+<span style="color: #a020f0;">call</span> <span style="color: #0000ff;">MPI_Gather</span>( intdos, npoints, MPI_double_precision, <span style="color: #a020f0;">&amp;</span>
+     intdos_spin(1,1), npoints, MPI_double_precision, <span style="color: #a020f0;">&amp;</span>
+     0, PEXSI_Spin_Comm, ierr )
+
+<span style="color: #a020f0;">if</span> (mpirank == 0) <span style="color: #a020f0;">then</span>
+   <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">io_assign</span>(lun)
+   <span style="color: #a020f0;">open</span>(unit=lun,file=<span style="color: #8b2252;">"PEXSI_INTDOS"</span>,form=<span style="color: #8b2252;">"formatted"</span>,status=<span style="color: #8b2252;">"unknown"</span>, <span style="color: #a020f0;">&amp;</span>
+        position=<span style="color: #8b2252;">"rewind"</span>,action=<span style="color: #8b2252;">"write"</span>)
+   <span style="color: #a020f0;">write</span>(lun,<span style="color: #8b2252;">"(2f15.6,i6,i2,a)"</span>) ef/eV, qtot, npoints, nspin, <span style="color: #a020f0;">&amp;</span>
+        <span style="color: #8b2252;">"# (Ef, qtot, npoints, nspin) / npoints lines: E(eV), IntDos(E)"</span>
+   <span style="color: #b22222;">! </span><span style="color: #b22222;">Note that the inertia count procedure counts the number of eigenvalues,</span>
+   <span style="color: #b22222;">! </span><span style="color: #b22222;">so for nspin=1 we have to multiply by two to get the number of states</span>
+   <span style="color: #a020f0;">do</span> j=1,npoints
+      <span style="color: #a020f0;">if</span> (nspin == 1) <span style="color: #a020f0;">then</span>
+         <span style="color: #a020f0;">write</span>(lun,<span style="color: #8b2252;">"(f15.6,f15.2)"</span>) edos(j)/eV, 2*intdos(j)
+      <span style="color: #a020f0;">else</span>
+         <span style="color: #a020f0;">write</span>(lun,<span style="color: #8b2252;">"(f15.6,2f15.2)"</span>) edos(j)/eV, intdos_spin(j,1), intdos_spin(j,2)
+      <span style="color: #a020f0;">endif</span>
+   <span style="color: #a020f0;">enddo</span>
+<span style="color: #a020f0;">endif</span>
+
+<span style="color: #a020f0;">call</span> <span style="color: #0000ff;">timer</span>(<span style="color: #8b2252;">"pexsi_dos"</span>, 2)
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-sec-3-11" class="outline-3">
+<h3 id="sec-3-11"><span class="section-number-3">3.11</span> Clean up</h3>
+<div class="outline-text-3" id="text-3-11">
+<p>
+We deallocate the auxiliary derived types for the sparse matrices,
+finalize the plan, and clean up the communicators and groups and the
+distributions.
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-f90"><span style="color: #a020f0;">deallocate</span>(edos,intdos,intdos_spin)
+
+<span style="color: #a020f0;">if</span> (SIESTA_worker) <span style="color: #a020f0;">then</span>
+   <span style="color: #b22222;">! </span><span style="color: #b22222;">Its pointers were not actually allocated</span>
+   <span style="color: #a020f0;">deallocate</span>(m1%vals)
+<span style="color: #a020f0;">endif</span>
+
+<span style="color: #a020f0;">call</span> <span style="color: #0000ff;">delete</span>(dist1)
+<span style="color: #a020f0;">do</span> ispin = 1, nspin
+   <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">delete</span>(dist2_spin(ispin))
+<span style="color: #a020f0;">enddo</span>
+<span style="color: #a020f0;">deallocate</span>(dist2_spin)
+<span style="color: #a020f0;">deallocate</span>(m1_spin)
+
+<span style="color: #a020f0;">if</span> (PEXSI_worker) <span style="color: #a020f0;">then</span>
+
+   <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">de_alloc</span>(colptrLocal,<span style="color: #8b2252;">"colptrLocal"</span>,<span style="color: #8b2252;">"pexsi_dos"</span>)
+
+   <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">de_alloc</span>(m2%numcols,<span style="color: #8b2252;">"m2%numcols"</span>,<span style="color: #8b2252;">"m_pexsi_dos"</span>)
+   <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">de_alloc</span>(m2%cols,<span style="color: #8b2252;">"m2%cols"</span>,<span style="color: #8b2252;">"m_pexsi_dos"</span>)
+   <span style="color: #a020f0;">do</span> j=1,<span style="color: #a020f0;">size</span>(m2%vals)
+      <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">de_alloc</span>(m2%vals(j)%data,<span style="color: #8b2252;">"m2%vals(j)%data"</span>,<span style="color: #8b2252;">"m_pexsi_dos"</span>)
+   <span style="color: #a020f0;">enddo</span>
+   <span style="color: #a020f0;">deallocate</span>(m2%vals)
+
+<span style="color: #a020f0;">endif</span>
+
+<span style="color: #a020f0;">call</span> <span style="color: #0000ff;">f_ppexsi_plan_finalize</span>( plan, info )
+
+<span style="color: #a020f0;">call</span> <span style="color: #0000ff;">MPI_Comm_Free</span>(PEXSI_Spatial_Comm, ierr)
+<span style="color: #a020f0;">call</span> <span style="color: #0000ff;">MPI_Comm_Free</span>(PEXSI_Spin_Comm, ierr)
+<span style="color: #a020f0;">call</span> <span style="color: #0000ff;">MPI_Comm_Free</span>(World_Comm, ierr)
+
+<span style="color: #b22222;">! </span><span style="color: #b22222;">This communicator was created from a subgroup.</span>
+<span style="color: #b22222;">! </span><span style="color: #b22222;">As such, it is MPI_COMM_NULL for those processes</span>
+<span style="color: #b22222;">! </span><span style="color: #b22222;">not in the subgroup (non PEXSI_workers). Only</span>
+<span style="color: #b22222;">! </span><span style="color: #b22222;">defined communicators can be freed</span>
+<span style="color: #a020f0;">if</span> (PEXSI_worker) <span style="color: #a020f0;">then</span>
+   <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">MPI_Comm_Free</span>(PEXSI_Pole_Comm, ierr)
+<span style="color: #a020f0;">endif</span>
+
+<span style="color: #a020f0;">call</span> <span style="color: #0000ff;">MPI_Group_Free</span>(PEXSI_Spatial_Group, ierr)
+<span style="color: #a020f0;">call</span> <span style="color: #0000ff;">MPI_Group_Free</span>(PEXSI_Pole_Group, ierr)
+<span style="color: #a020f0;">call</span> <span style="color: #0000ff;">MPI_Group_Free</span>(World_Group, ierr)
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-sec-3-12" class="outline-3">
+<h3 id="sec-3-12"><span class="section-number-3">3.12</span> <span class="todo TODO">TODO</span> Support routines</h3>
+<div class="outline-text-3" id="text-3-12">
+<p>
+Several routines 
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-f90">&lt;&lt;get-row-col&gt;&gt;
+&lt;&lt;check-info&gt;&gt;
+</pre>
+</div>
+</div>
+
+<div id="outline-container-sec-3-12-1" class="outline-4">
+<h4 id="sec-3-12-1"><span class="section-number-4">3.12.1</span> Row and column partition of npPerPole</h4>
+<div class="outline-text-4" id="text-3-12-1">
+<div class="org-src-container">
+
+<pre class="src src-f90"><span style="color: #a020f0;">subroutine</span> <span style="color: #0000ff;">get_row_col</span>(np,nrow,ncol)
+<span style="color: #228b22;">integer</span>, <span style="color: #a020f0;">intent</span>(in)  ::<span style="color: #a0522d;"> np</span>
+<span style="color: #228b22;">integer</span>, <span style="color: #a020f0;">intent</span>(out) ::<span style="color: #a0522d;"> nrow, ncol</span>
+<span style="color: #b22222;">!</span>
+<span style="color: #b22222;">! </span><span style="color: #b22222;">Finds the factors nrow and ncol such that nrow*ncol=np,</span>
+<span style="color: #b22222;">! </span><span style="color: #b22222;">are as similar as possible, and nrow&gt;=ncol.</span>
+<span style="color: #b22222;">! </span><span style="color: #b22222;">For prime np, ncol=1, nrow=np.</span>
+
+ncol  = <span style="color: #a020f0;">floor</span>(<span style="color: #a020f0;">sqrt</span>(<span style="color: #a020f0;">dble</span>(np)))
+<span style="color: #a020f0;">do</span>
+  nrow = np/ncol
+  <span style="color: #a020f0;">if</span> (nrow*ncol == np) <span style="color: #a020f0;">exit</span>
+  ncol = ncol - 1
+<span style="color: #a020f0;">enddo</span>
+<span style="color: #a020f0;">end subroutine</span> <span style="color: #0000ff;">get_row_col</span>
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-sec-3-12-2" class="outline-4">
+<h4 id="sec-3-12-2"><span class="section-number-4">3.12.2</span> Error dispatcher</h4>
+<div class="outline-text-4" id="text-3-12-2">
+<div class="org-src-container">
+
+<pre class="src src-f90"><span style="color: #a020f0;">subroutine</span> <span style="color: #0000ff;">check_info</span>(info,str)
+<span style="color: #228b22;">integer</span>, <span style="color: #a020f0;">intent</span>(in) ::<span style="color: #a0522d;"> info</span>
+<span style="color: #228b22;">character</span>(len=*), <span style="color: #a020f0;">intent</span>(in) ::<span style="color: #a0522d;"> str</span>
+
+    <span style="color: #a020f0;">if</span>(mpirank == 0) <span style="color: #a020f0;">then</span>
+       <span style="color: #a020f0;">if</span> (info /= 0) <span style="color: #a020f0;">then</span>
+          <span style="color: #a020f0;">write</span>(6,*) <span style="color: #a020f0;">trim</span>(str) // <span style="color: #8b2252;">" info : "</span>, info
+          <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">die</span>(<span style="color: #8b2252;">"Error exit from "</span> // <span style="color: #a020f0;">trim</span>(str) // <span style="color: #8b2252;">" routine"</span>)
+       <span style="color: #a020f0;">endif</span>
+      <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">pxfflush</span>(6)
+    <span style="color: #a020f0;">endif</span>       
+<span style="color: #a020f0;">end subroutine</span> <span style="color: #0000ff;">check_info</span>
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<p class="author">Author: Alberto Garcia</p>
+<p class="date">Created: 2016-09-14 Wed 11:32</p>
+<p class="creator"><a href="http://www.gnu.org/software/emacs/">Emacs</a> 24.5.1 (<a href="http://orgmode.org">Org</a> mode 8.2.10)</p>
+<p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
+</div>
+</body>
+</html>

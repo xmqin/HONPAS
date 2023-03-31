@@ -1,0 +1,67 @@
+=======================================================================
+                  VIBRA CHANGES: TOP IS MOST RECENT
+=======================================================================
+Version: 0.3
+Date: 2006/12/11
+Title: Computation of infrared intensities
+Author: Julian Gale <julian@ivec.org>
+
+Description:
+
+An option has been introduced to compute infra-red intensities. In
+order to do this the Born effective charges must have been computed
+along with the force constants and the .BC file must be present in the
+current directory. The intensities are estimated according to formula
+(6) in the paper by Fernandez-Torre et al in J. Phys.  Chem. A, 108,
+10535-10541 (2004).
+
+Explicit copy of fdf.mod to deal with faulty arch.make's.
+
+====================================================================
+Version: 0.2
+Date: 2006/02/13
+Title: New compilation scheme
+Author: Alberto Garcia <wdpgaara@lg.ehu.es>
+
+Description:
+
+Vibra now uses the top arch.make. fdf and Sys directories removed.
+
+====================================================================
+Version: 0.1.1 
+Date: 2003/06/21 
+Title: Small bug reported by Stephanie Reich and example files
+Author: Pablo Ordejon <ordeojn@icmab.es>
+
+Description:
+  A bug in the counting of equivalent neighbours for q-point
+phonon calculations was detected by S. Reich. The bug produced
+small errors in the computed phonon band frecuencies and 
+eigenvectors (a few percent at most).
+  The output of fcbuild has been changed to include more significant
+digits in the coordinates and lattice constant.
+  The examples files have been changed slightly. In particular,
+I have included the input for Siesta necessary to reproduce
+the provided output. Also, the output files have been updated
+according to the Siesta input (which is slightly different from
+the old one), and for the correction of the bug above. Also,
+input pseudopotential files are provided. This way, users should
+be able to reproduce the provided results.
+
+Files:
+In Vibes:
+  vibra.f : bug corrected
+  fcbuild.f  : increased number of digits in coordinate output
+In Examples:
+  Si.inp           : new file; Si pseudo input
+  C.inp            : new file; Si pseudo input
+  si2-siesta.fdf   : new file; input for Siesta
+  si2.bands        : updated output
+  si2.vectors      : updated output
+  si54-siesta.fdf  : new file; input for Siesta
+  si54.bands       : updated output
+  README           : new file; explanation on how to run examples
+In Docs:
+  CHANGES          : new file: log of changes
+  vibra.tex        : change version, date and address
+=======================================================================

@@ -1,0 +1,24 @@
+Example of spin-texture generation
+
+Copy to this directory the bi2se3_sql.HSX and bi2se3_sql.bands.WFSX files
+from the bi2se3_sql calculation in Tests.
+
+Then execute:
+
+ ln -sf bi2se3_sql.bands.WFSX bi2se3_sql.WFSX
+ ../../spin_texture bi2se3_sql > spin_texture.dat
+
+to generate spin-texture information.
+
+You can use the -m and -M options to restrict the energy window.
+
+For example, for this system the Fermi level is around -5 eV (see the
+output file of the Siesta calculation). Then,
+
+ ../../spin_texture -M 0.0 bi2se3_sql > spin_texture-0.dat
+
+will eliminate too-high energies. Similarly '-m Min_Energy' would eliminate
+energies below Min_Energy.
+
+The energy window could also be specified in the fdf file for the Siesta calculation
+(see manual).

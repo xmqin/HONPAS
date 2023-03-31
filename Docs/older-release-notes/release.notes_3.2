@@ -1,0 +1,73 @@
+Release Notes for SIESTA-3.2
+March 24, 2013
+
+** GENERAL NOTES
+
+Most of the changes over Siesta-3.1 are minor bug fixes and
+improvements to the analysis tools.
+
+To report any remaining issues, see Docs/REPORTING_BUGS
+
+** MOST RELEVANT CHANGES SINCE SIESTA-3.1
+
+This is only a subset of all the changes. A complete list can be found
+in the Docs/CHANGES file.
+
+BUG FIXES AND IMPROVEMENTS
+
+*  Enable MD continuation runs even if the restart file is not available
+
+   If the user has selected MD.UseSaveXV to continue an MD run from a
+   previously computed set of positions and velocities (in the XV
+   file), but the appropriate restart file is not found, the positions
+   x(t) and velocities v(t-dt) are read from the XV file, and the
+   positions are then backward-propagated by one time step using the
+   Euler method to start the MD run from time (t-dt) with a consistent
+   set of positions and velocities.
+
+   In previous versions the program complained if the appropriate
+   restart file was not available. This patch enables cross-restarts
+   (i.e., an Annealing calculation followed by a Nose simulation)
+   within the simple "reuse-the-XV-file" framework. The last point
+   computed in the previous simulation will be basically repeated in
+   the continuation run. For "seamless" continuations, the
+   flavor-specific restart file is needed.
+
+*  Improved the estimate of the 'automatic unit cell'
+
+*  Use actual number of electrons in optical calculations
+
+*  Fix auxiliary routine read_rho
+
+   (Not really used in Siesta, but present for user-level programs)
+  
+*  Close netCDF file descriptors for DM and DMHS files
+
+*  Include missing LDFLAGS symbol in some Util makefiles
+
+*  Fix minor bug in denchar and obsolete output in domain_decom
+
+ANALYSIS TOOLS
+(See the manual for details)
+
+*  New options for charge analysis: Voronoi, Hirshfeld, Bader
+  
+*  Extended the functionality of the 'eig2dos' program
+
+*  New energy-range and band-index options in mprop
+
+*  Enhanced 'bands' routine to write out the wavefunctions
+
+*  New 'Fatbands' functionality
+
+*  Modified Denchar to read the newer WFSX file format
+
+*  Update of Andrei Postnikov's utilities to V0.4
+
+COSMETIC CHANGES
+
+There are now different file names for wavefunction output:
+
+SystemLabel.bands.WFSX      : produced by BandLines + WFS.Write.For.Bands
+SystemLabel.fullBZ.WFSX     : for COOP/COHP-related use
+SystemLabel.selected.WFSX   : produced by WaveFuncKPoints

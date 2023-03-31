@@ -1,0 +1,41 @@
+# -----------------------------------------------------------------------------
+# Primitive c-Si supercell, using STRUCT file
+# Annealing
+# Alberto Garcia, August-December 2005, January 2006
+# -----------------------------------------------------------------------------
+
+SystemName          Primitive silicon, Annealing, Struct File
+SystemLabel         md_anneal
+
+NumberOfAtoms       2
+NumberOfSpecies     1
+MD.Use-Struct-File  T   # Structural information is read from md_anneal.STRUCT_IN
+
+%block ChemicalSpeciesLabel
+ 1  14  Si
+%endblock ChemicalSpeciesLabel
+
+PAO.BasisSize       SZ
+
+MeshCutoff          100.0 Ry
+%block kgrid-monkhorst-pack
+  2 0 0  0.5
+  0 2 0  0.5
+  0 0 2  0.5
+%endblock kgrid-monkhorst-pack
+
+
+SolutionMethod       diagon    
+ElectronicTemperature  100 K
+WriteMDHistory T
+
+MD.TypeOfRun         anneal
+MD.AnnealOption  TemperatureAndPressure
+MD.InitialTemperature 100 K
+MD.TargetTemperature 600 K
+MD.TargetPressure 40 GPa
+MD.LengthTimeStep  1 fs
+MD.TauRelax       25 fs
+MD.FinalTimeStep  100
+
+

@@ -1,0 +1,311 @@
+README to the Sies2xsf selection of routines
+written by Andrei Postnikov (postnikov@univ-metz.fr)
+
+This is  Version_0.4 as of July 2010, 
+including the Makefile and a bunch of Fortran90 sources
+to build the following executables:
+  eig2bxsf   : to plot Fermi surfaces;
+  md2axsf    : to vizualise molecular dynamics or relaxation history;
+  rho2xsf    : to plot charge density or spin density; 
+  vib2xsf    : to vizualize vibration modes;
+  xv2xsf     : to vizualize the crystal structure.
+  
+The set is for transforming SIESTA properties files into input files 
+for the XCrySDen package. XCrySDen is being developed
+by Anton Kokalj at the Jozef Stefan Institute in Ljubljana, Slovenia.
+XCrySDen is released under the GNU General Public License, 
+its web site is http://www.xcrysden.org/
+It offers a straightforward installation under Unix/Linux,
+easy user's interface and fascinating graphics, enabling to manipulate
+crystal structures and their 2-dim. and 3-dim. functions as 2-dim. plots
+or 3-dim. isosurfaces. Its input data formats are simple and well documented 
+on the XCrySDen site 
+[ Home -> Documentation -> Description of XCrySDen's XSF format ] .
+The XCrySDen input files are human-readable, and one can add comments
+(the lines beginning with # ) at the beginning of each file 
+(in fact, between sections within the file as well).
+
+The need of 3-dimensional manipulation of Siesta data seems so far
+to fall into six categories, all of which can be handled by XCrySDen:
+
+1. Viewing crystal structures.
+
+2. Viewing data stored on the grid spanning the simulation cell:
+  RHO   (switch SaveRho );
+  IORHO (switch SaveDeltaRho );
+  VH    (switch SaveElectrostaticPotential );
+  VT    (switch SaveTotalPotential );
+  IOCH  (switch SaveIonicCharge );
+  TOCH  (switch SaveTotalCharge );
+  LDOS  (block LocalDensityOfStates )
+These data are written in subr. iorho (iorho.F) unformatted, 
+and post-processing recommended by the program plrho. The present script
+rho2xsf offers a convenient alternative.
+
+3. Viewing data stored as decomposed over basis functions,
+e.g. wavefunctions. 
+
+4. Viewing Fermi surfaces.
+
+5. Viewing dynamical animations after SIESTA MD or CG runs.
+
+6. Vizualization of phonon modes, obtained by vibrator
+   (an auxiliary program by Pablo Ordejon,
+    Util/Vibra/Vibra/vibrator )
+
+-----  TASK 1 (just basic viewing) ------------------------------------
+may be good for checking that Siesta has 'understood' the structure input
+as intended, to check the slab or cluster geometry in the defined cell,
+etc. It is achieved by a very simple script  xv2xsf
+which asks for the SystemLabel and converts the XV file 1:1 into 
+the XCrysDen format, with unit cell and atoms. 
+Of course the XV file must exist.
+
+-----  TASKS 1 and 2 (Atoms in the box and functions on the grid) -----
+are in principle covered by very good utility program Denchar
+written by Javier Junquera and Pablo Ordejon ( $SIESTA_DIR/Util/Denchar/... )
+Denchar helps to define 2-dim or 3-dim orthogonal region, within which
+the atoms and spatial functions are stored, e.g. in Gaussian cube format.
+The Gaussian cube format can be read by XCrySDen. 
+The unconveniences of Denchar (Version 1.2.1) are:
+i) only orthogonal region is allowed;
+ii) many separate output files are created, i.e. 3 for charge density 
+in spin-polarized calculation;
+iii) there seems to be a bug (or a feature?) in selecting which atoms to plot: 
+only those from the principal (periodic) unit cell which fall into the selected
+region are plotted, without trying lattice translations. The plot region
+might be selected such that one needs lattice translations to recover
+all atoms in it. Some atoms therefore may be missing in the Denchar plot.
+(However, 3-dim properties are constructued correctly, including translations.
+Also the "missing atoms" problem can be handled by introducing a general
+shift by specifying a block Atomic_Coordinates_Origin in the Siesta input).
+
+My program rho2xsf allows (and demands) to choose an "output box" 
+as an arbitrary parallelepiped, defined by its origin and three spanning
+vectors. This box may be of course chosen identically with the unit
+cell. The positions of atoms and grid properties will be then recovered
+throughout the output box, taking into account lattice translations.
+All spin-resolved properties may be put into a single file
+and then manipulated (taken with different weights, added, subtracted)
+within XCrySDen. 
+rho2xsf works interactively and must be started without passing 
+any parameters to it. It uses the .XV file (to plot the atoms in the
+selected region, if nothing else) and, if required, the files with
+3-dim properties (.RHO, .LDOS, etc.) The output will be the .XSF file 
+which can be directly read and worked on by XCrySDen.
+
+Note that XCrySDen permits plotting isosurfaces on non-orthogonal grids,
+as well as contours and color encoding of the 3-dim property.
+
+The way to use the generated .XSF file: 
+Choose in the XCrySDen Menu: File -> Open Structure -> Open XSF
+or launching 
+xcrysden --xsf < XSF file >
+This reads in crystal structure information and shows the atoms of a unit cell.
+If there is a scalar field (3-dim. property) an the XSF file,
+the submenu "Tools" of the XCrySDen main menu shows an active entry
+"Data Grid", which opens a map of grid data available in he XSF file.
+Choose a Block (if there are many, like LDOS, RHO etc.) to plot,
+and within the Block one can activate-deactivate Sub-blocks and sum their
+contents up with arbitrary "Multiply factor"s (in the windows).
+rho2xsf makes two blocks whenever there are two spins in the Siesta
+property files. Note that XCrySDen activates by default only the first
+Sub-block. One may wish to activate both (for summing over spins)
+and e.g. set "Multiply factor"s in the second Sub-block to -1.0 
+(for analyzing spin density).
+
+Note that rho2xsf makes unformatted read-in, according to the sequence of 
+(unformatted) records done in iorho.F. Therefore in the future - in case of 
+problems - one might need to check the consistency of record sequences.
+Moreover it is ESSENTIAL to compile rho2xsf.f using the same compiler
+and parameters as for Siesta (apart from parallelization issues), to ensure 
+the consistency of unformatted record lengths: there are variables defined 
+as real and as double precision in both rho2xsf.f and iorho.F, 
+and compiler settings may influence the actually used word lengths, 
+e.g. imposing double precision throughout.
+
+-------------  TASK 3 (Wavefunction plotting) --------------------------
+is well handled by Denchar. The only annoyance is the abovementioned
+bug/feature that the atoms from the original unit cell are not translated
+over the whole plotting region. This is difficult to correct, because
+it would involved many changes over several places in Denchar.
+My suggestion is to live with this, adopting if necessary the following trick:
+i) run Denchar and obtain output in the Gaussian cube format;
+ii) open it with XCrySDen as  File -> Open Structure -> Gaussian98 Cube File
+and save in the native .xsf format;
+iii) run rho2xsf on the existing .XV file, passing the description of
+the plotting region (origin and three spanning vectors) consistently
+with that used in Denchar. Save the result in the .xsf format;
+iv) paste this latter part (number of atoms with their positions) 
+in place of atomic parts in all previously stored .xsf files with
+wavefunctions. Many files with wavefunctions may be glued together
+as a sequence of 2D or 3D blocks in the same .xsf file.
+
+-------------  TASK 4 (Fermi surface plotting) -------------------------
+There is a special format for this in XCrySDen (BXSF)
+invoked from the XCrySDen Menu: File -> Open Structure -> Open BXSF
+or launching 
+xcrysden --bxsf < BXSF file >
+The file is produced by the program ene2bxsf, which manipulates the eigenvalues
+previously calculated by Siesta on a (fine enough) k-mesh.
+As XCrySDen demands the k-mesh to include the Gamma point,
+this outlaws the use of a shifted k-mesh in Siesta, and also the use of
+common kgrid_cutoff, because it introduces shifter k-mesh by default
+(or so it seems). Therefore one must explicitly give number of divisions
+along three reciprocal vectors in the kgrid_Monkhorst_Pack block, e.g.
+%block kgrid_Monkhorst_Pack
+ 24  0  0    0.
+  0 24  0    0.
+  0  0 24    0.
+%endblock kgrid_Monkhorst_Pack 
+
+The script must be started in the directory which contains 
+the files from a Siesta calculation; after inquiring for the Siesta 
+SystemLabel, the script opens the following files:
+...XV   (to read the lattice vectors),
+...KP   (to read the list of irreducible k-points),
+...EIG  (to read the eigenvalues over k-points and bands).
+The resulting file(s) 
+...BXSF (two for a spin-polarized calculation) 
+contain(s) the ordered list of eigenvalues, band by band, over a full
+k-mesh, consistently with the rules for constructing bandgrids
+for XCrySDen, see   www.xcrysden.org
+  -> Documentation 
+    -> Specification of the XSF Format
+      -> Bandgrids (visualization of Fermi surfaces).
+The visualization proceeds by invoking XCrySDen, 
+File -> Open Structure -> Open BXSF
+then confirm (or change) the Fermi energy, 
+select bands for Fermi surface drawing.
+The access to the graphic menu for visual control 
+is via the right mouse button. See details in the XCrySDen Documentation
+ -> Description of XCrySDen's Fermi surface viewer.
+I find it a bit annoying that the option
+Display -> Depth Cuing
+is activated by default,
+and apparently there is no way to change the width (or color) of
+the Brillouin zone wire, but one can live with this. 
+
+Two important issues:
+1. The origin of a bandgrid for XCrySDen must be at Gamma, therefore
+the k-mesh used for the calculation should not be shifted. This is
+actually tested in ene2bxsf, as the list of irreducible k-points is mapped
+onto the general bandgrid.
+2. The resulting .BXSF file contains only the bands which are actually crossing
+the Fermi level, whose value is read from the first line of .EIG.
+The subsequent tuning of the Fermi energy is possible in the "Isolevel"
+window of the "XCrySDen-Fermi Surface" program. However, if you need
+to choose other band(s) for plotting you must change the Fermi energy
+in the first line of .EIG and re-run the ene2bxsf script.
+
+-------------  TASK 5 (Animations of molecular dynamics) ------------------
+There is a special format for this in XCrySDen (AXSF)
+invoked from the XCrySDen Menu: File -> Open Structure -> Open XSF
+or launching 
+xcrysden --axsf < AXSF file >
+The AXSF format has different flavours depending on whether the structure
+is periodic or not, variable cell or not. The script md2axsf offers
+(interactively) several options to design the AXSF file:
+reading from unformatted .MD file or from formatted .ANI file, and
+plotting the atoms within the native Siesta simulation box (variable
+or fixed), or within an arbitrary user-defined output box.
+With respect to reading, the options are:
+i) read unformatted .MD file; md2axsf will (hopefully) recognize
+whether it contains variable cell or not, and accordingly the AXSF
+will be written as for periodic structure, either for fixed cell
+(as read in from the .XV file) or variable one (as read in from the .MD file);
+ii) read formatted .ANI file; it does not contain information about
+the cell, therefore the periodicity is assumed with the fixed cell,
+as read in from the .XV file.
+With respect to writing, the arbitrary "output box" is defined by its origin 
+and three spanning vectors (not necessarily orthogonal), similarly to
+how his is done for rho2xsf and vib2xsf. The idea behind this is that
+one may wish to show more atoms in the animation than there are in
+the unit cell, or, on the contrary, to select just a small portion of
+a large unit cell. If one chooses the output box, all information
+about the original unit cell is lost in the output AXSF file, so that
+the resulting animation would look like one for a finite "molecule",
+even if - technically - the output box is preserved in AXSF, as if
+it would be for a periodic structure. Of course a user-chosen
+output box does not necessarily possess true lattice periodicity.
+
+Each MD record bears a step number, so that cumulative MD file can be 
+an agglomerate of several MS runs.
+Therefore md2axsf asks the user to select the first and last step
+and the increment of those present in MD to be passed to AXSF. 
+This is necessary because the AXSF format demands a throughout numeration 
+of MD steps. After reading in all MD information, the program asks:
+
+   Cleanly read in          NNN   MD steps
+ You may wish to keep only some of these steps,
+ MDfirst, MDfirst+MDstep, MDfirst+2*MDstep etc. till (not exceeding) MDlast
+ from the list above. Specify three numbers MDfirst, MDlast, MDstep -
+ or 0 for any of them as default : 
+
+and if you pass e.g. 10 0 3
+this would mean that you want the MD records from 10 to the last available one,
+with the step 3. That is, the MD records 10, 13, 16, 19 etc. will be
+extracted and written into AXSF numbered as 1, 2, 3, 4 etc.
+
+-----------------  TASK 6 (Vizualization of phonons) ----------------------
+The "vibrator" package dumps phonon eigenvalues and eigenvectors
+into the (readable) file <Taskname>.vectors 
+This information is visualized by the script vib2xsf in two ways:
+1) as a static .XSF file, with displacement pattern shown by arrows,
+make use of a provision in XCrySDen to allow plotting forces.
+The displacements of atoms within a particular phonon mode
+are therefore written in the .XSF file as if they were forces;
+2) as a animation, assuming a harmonic displacement of atoms within each
+given mode, and performing a desirable number of simulation steps
+over the full period of vibration.
+As the <Taskname>.vectors contains information about all vibration modes,
+which can be numerous, with only several being of interest, the script asks
+about first and last modes to vizualize, and for each one of them, NN,
+two separate files will be created, named
+<Taskname>.Mode_NN.XSF   (with arrows), and
+<Taskname>.Mode_NN.AXSF  (with animation).
+It would have been straightforward to write these information over
+all atoms in the cell. However, the result is not always satisfactory,
+especially in the animation, as some atoms disappear at one edge
+of the unit cell and enter from the opposite one. I find it more
+user-friendly to define an "output box", similarly to
+how it is done in rho2xsf. All atoms whose positions fall within it
+(taking into account lattice translations) will be retained in the animation. 
+The use of a box allows to select a small region of interest within a large 
+supercell, or, on the contrary, take large box, in order to show the vibrations 
+of translated atoms from several unit cells. 
+
+The execution of  vib2xsf  is iterative; the program asks for
+1) SystemLabel of Siesta calculation (to read the file <SystemLabel>.XV );
+2) the origin and three spanning vectors of the plotting box;
+3) SystemLabel of vibrator calculation (to read the file <SystemLabel>.vectors;
+   this SystemLabel may be the same as for Siesta, or different)
+4) the first and the last mode to vizualised among those found
+   in the <SystemLabel>.vectors;
+5) the magnitude of maximal displacement in terms of minimal
+   iteratomic distance. This will affect both arrow lengths in .XSF
+   and the magnitude of vibration in .AXSF. However, the length of
+   arrows (and their other attributes) can be modified in XCrySDen;
+6) the number of animation steps over the 2*pi period of vibration.
+   Note that the vibration FREQUENCY plays no role, and this number
+   of steps will be taken for each of selected modes, whatever their
+   frequencies. Therefore if you want to record down the animation,
+   underlying different frequencies for different modes, you should either
+   explicitly choose different number of steps in separate runs of
+   vib2xsf for these modes, or tune the settings in XCrySDen when
+   playing the animation.
+
+Control within the XCrySDen:
+For vibration pattern with arrows:
+  File -> Open Structure -> Open XSF
+  Display -> Forces (select box)
+  Modify -> Forces Setting, and their e.g. "Length Factor" etc.
+For animations, invoke from the XCrySDen Menu: 
+  File -> Open Structure -> Open XSF
+or launch 
+xcrysden --axsf < AXSF file >
+
+---------------------------------------------------------------------------
+
+Enjoy, and please pass bug reports/criticisms to 
+apostnik@uos.de

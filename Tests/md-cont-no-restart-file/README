@@ -1,0 +1,10 @@
+In this test, the h2o.VERLET_RESTART file is removed before attempting
+to re-start the calculation. Only the information in the h2o.XV is
+read, and the simulation effectively re-takes the last point computed
+in the previous run (instead of moving on to the "following point", as
+it is possible with the restart file). When comparing this
+concatenation of runs with the one in the md-single-run directory,
+care should be taken to remove these "repeated" points.
+
+The easiest is to edit the .MDE file and remove all the "1-numbered"
+steps except the first.

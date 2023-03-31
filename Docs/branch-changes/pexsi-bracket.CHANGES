@@ -1,0 +1,218 @@
+-------------------------------------------------------------------
+November 25, 2013   Alberto Garcia    trunk-447--pexsi-54--bracket-6
+Extra parameter for PEXSI "annealing"
+
+Use larger PEXSI temperatures when dDmax is far from convergence.
+This can remove instabilities for problematic systems.
+
+Options:
+
+  PEXSI.use-annealing T
+
+  PEXSI.annealing-preconditioner  {number} (default 1)
+  PEXSI.annealing-target-factor   {number} (default 10)
+
+  The effective PEXSI temperature (for solver and inertia-counts processing) is computed
+  as:
+
+   T = T_0 * ( 1 + precond* log(prevDmax/(target_factor*Dtol))  
+
+        (with maximum of T_0)
+
+  where 'Dtol' is the scf tolerance, 'prevDmax' is the previous iteration's maximum
+  deviation in DM (or H), 'target_factor' determines the level at which the nominal
+  temperature is reached in relation to the scf tolerance, and 'precond' is a scale
+  factor for the increase in temperature.
+
+  After the second iteration, the temperature decreases monotonically, regardless of
+  any large fluctuations in prevDmax, to avoid convergence oscillations.
+
+modified:
+  Src/m_pexsi_solver.F90
+
+-------------------------------------------------------------------
+November 22, 2013   Alberto Garcia    trunk-447--pexsi-54--bracket-5
+Implement PEXSI "annealing"
+
+Use larger PEXSI temperatures when dDmax is far from convergence.
+This can remove instabilities for problematic systems.
+
+Option:
+
+  PEXSI.use-annealing T
+  PEXSI.annealing-preconditioner  {number}
+
+  See code for details.
+
+modified:
+  Src/m_pexsi_solver.F90
+
+-------------------------------------------------------------------
+November 21, 2013   Alberto Garcia    trunk-447--pexsi-54--bracket-4
+Add more heuristics for bracketting
+
+Clarification of the workflow. Many more options to control the number
+of inertia count steps, the bracketting convergence, and the use of
+the information about the shift in Ef:
+
+
+* In numInertiaCounts is negative, it indicates a minimum number of ic
+  steps. There can be more, if the dDmax in the previous iteration is
+  above:
+
+  safe_dDmax_NoInertia = fdf_get("PEXSI.safe-dDmax-no-inertia",0.05)
+
+* Use of Ef shift:
+
+  If the dDmax in the previous iteration is above:
+
+  safe_dDmax_Ef_Inertia = fdf_get("PEXSI.safe-dDmax-ef-inertia",0.1)
+  safe_dDmax_Ef_solver = fdf_get("PEXSI.safe-dDmax-ef-solver",0.05)
+
+  the bracketting for IC and solver steps is controlled by
+
+  safe_width_ic = fdf_get("PEXSI.safe-width-ic-bracket",4.0_dp*eV,"Ry")
+ 
+  (half that width on either side of muLower and muUpper from the latest
+   inertia count step)
+
+  safe_width_solver = fdf_get("PEXSI.safe-width-solver-bracket",2.0_dp*eV,"Ry")
+
+  (half that width on either side of mu from the latest solver step)
+
+  If the dDmax is below the tolerance, the shift in Ef is used to move the
+  previous brackets for IC and the solver
+
+* Cosmetics
+
+  The flow is now more clear.
+
+  See the code for a complete rundown of the changes. There are too many
+  to list at this stage.
+
+* New version of "memory" routine with basic MPI awareness.
+
+  The routine memory_all prints the maximum and minimum values of the
+  peak working set size accross the processors in the
+  communicator. Used only in the PEXSI routines for now.
+
+added:
+  Src/memory_all.F90
+modified:
+  Src/Makefile
+  Src/m_pexsi_solver.F90
+
+-------------------------------------------------------------------
+November 18, 2013   Alberto Garcia    trunk-447--pexsi-54--bracket-3
+Implement Ef shift estimation
+
+Using H for the current and the previous iterations, and the most recent DM,
+the program estimates the change in the band-structure energy, and from it
+(assuming a rigid shift), the change in Fermi level. This is passed to
+the PEXSI solver to modify the inherited brackets.
+
+added:
+  Src/compute_ebs_shift.F90
+modified:
+  Src/Makefile
+  Src/compute_dm.F
+  Src/m_pexsi_solver.F90
+  Src/setup_hamiltonian.F
+  Src/siesta_forces.F
+  Src/sparse_matrices.F
+  Src/state_init.F
+
+-------------------------------------------------------------------
+November 18, 2013   Alberto Garcia    trunk-447--pexsi-54--bracket-2
+Sync to trunk-pexsi-54
+
+Deallocate buffers in write_mat.
+
+(+ comment out initial memory snapshot in siesta.F -- no ionode yet)
+
+modified:
+  Src/m_matio.F90
+  Src/siesta.F
+
+-------------------------------------------------------------------
+November 16, 2013   Alberto Garcia    trunk-447--pexsi-53--bracket-2
+Monitoring of memory peaks by calls to getrusage()
+
+A simple, and crude for now, method to display the maximum resident
+size so far at several points in the program has been implemented, with
+file rusage.f90 (an interface to the C routine getrusage()) and 
+memory_snapshot.f90. This is not completely portable.
+
+added:
+  Src/memory_snapshot.f90
+  Src/rusage.f90
+modified:
+  Src/Makefile
+  Src/m_pexsi_solver.F90
+  Src/siesta.F
+  Src/siesta_forces.F
+
+-------------------------------------------------------------------
+November 6, 2013   Alberto Garcia    trunk-447--pexsi-53--bracket-1
+Implement an "expert" inertia-count driver and mu bracket heuristics
+
+(Work in progress)
+
+With the option
+
+  PEXSI.inertia-expert-driver T
+
+the program will call the inertia-count routine requesting a single
+iteration, and use the results in a loop to increase the number of
+criteria for convergence:
+
+-- Electron tolerance in the base interval.
+
+This reflects the basic heuristic that the integrated DOS should be more
+precise as the interval gets shorter.
+
+    PEXSI.inertia-num-electron-tolerance  [default 20]
+
+-- Workable electron tolerance in the base interval.
+
+    PEXSI.inertia-min-num-electron-tolerance  [default 10]
+
+There can be problems with the algorithm if the interval is too small. Hence this termination criterion.
+
+-- Mu tolerance
+
+If the chemical potential has changed by less than
+
+    PEXSI.inertia-mu-tolerance  [default a very small number] unit
+
+from one inertia-count iteration to the next, the cycle ends, and mu is passed
+on to the PEXSI solver.
+
+-- Energy width of the interval (deprecated, as it does not make sense
+   for gapped systems)
+
+
+When the inertia-count cycle ends, the bracket passed to the PEXSI solver is:
+
+  [muMinInertia, muMaxInertia]  (the refined interval)
+
+unless the user uses the option 
+
+   PEXSI.UseFixedMuBracket T
+
+in which case the bracket is
+
+ [muLower - delta/2, muUpper + delta/2]
+
+where delta is controlled by
+
+   PEXSI.FixedMuBracket [default 0.4 eV]
+
+added:
+  Src/m_interpolate.F90
+modified:
+  Src/Makefile
+  Src/m_pexsi_solver.F90
+
+
+

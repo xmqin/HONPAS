@@ -1,0 +1,984 @@
+Siesta Version  : v4.1-b4-351
+Architecture    : x86_64-linux-n-62-26-19
+Compiler version: GNU Fortran (GCC) 9.3.0
+Compiler flags  : mpifort -m64 -fPIC -O3 -march=native -ftree-vectorize -fexpensive-optimizatioons -funroll-loops -fprefetch-loop-arrays -fno-second-underscore  -flto
+PP flags        : -I/dtu/sw/dcc/SL73/2020-aug/generic/build-tools/1.0/include -I/dtu/sw/dcc/SL773/2020-aug/generic/gcc/9.3.0/include -I/dtu/sw/dcc/SL73/2020-aug/generic/gcc/9.3.0/include -I/dtu/sw/dcc/SL73/2020-aug/XeonE5-2660v3/gnu/9.3.0/zlib/1.2.11/include -I/dtu/sw/dcc/SL73/2020-aug/generic/numactl/2.0.12/include -I/dtu/sw/dcc/SL73/2020-aug/XeonE5-2660v3/gnu/9.3.0/libxml2/2.9.10/include -I/dtu/sw/dcc/SL73/2020-aug/XeonE5-2660v3/gnu/9.3.0/hwloc/2.2.0/include -I/dtu/sw/dcc/SL73/2020-aug/XeonE5-2660v3/gnu/9.3.0/knem/1.1.4/include -I/dtu/sw/dcc/SL73/2020-aug/XeonE5-2660v3/gnu/9.3.0/ucx/1.8.1/include -I/dtu/sw/dcc/SL73/2020-aug/XeonE5-2660v3/gnu/9.3.0/openmpi/4.0.4/include -I/dtu/sw/dcc/SL73/2020-aug/XeonE5-2660v3/gnu/9.3.0/szip/2.1.1/include -I/dtu/sw/dcc/SL73/2020-aug/XeonE5-2660v3/gnu/9.3.0/hdf5/1.12.0/include -I/dtu/sw/dcc/SL73/2020-aug/XeonE5-2660v3/gnu/9.3.0/pnetcdf/1.12.1/include -I/dtu/sw/dcc/SL73/2020-aug/generic/gen-zlib/1.2.11/include -I/dtu/sw/dcc/SL73/2020-aug/generic/openssl/1.1.1/include -I/dtu/sw/dcc/SL73/2020-aug/generic/libssh2/1.8.2/include -I/dtu/sw/dcc/SL73/2020-aug/generic/curl/7.65.1/include -I/dtu/sw/dcc/SL73/2020-aug/XeonE5-2660v3/gnu/9.3.0/netcdf/4.7.4/include -I/dtu/sw/dcc/SL73/2020-aug/XeonE5-2660v3/gnu/9.3.0/flook/0.8.1/include -I/dtu/sw/dcc/SL73/2020-aug/XeonE5-2660v3/gnu/9.3.0/fftw/3.3.8/include -I/dtu/sw/dcc/SL73/2020-aug/XeonE5-2660v3/gnu/9.3.0/parmetis/4.0.3/include -I/dtu/sw/dcc/SL73/2020-aug/XeonE5-2660v3/gnu/9.3.0/scalapack/2.1.0/include -I/dtu/sw/dcc/SL73/2020-aug/XeonE5-2660v3/gnu/9.3.0/lapack/3.9.0/include -I/dtu/sw/dcc/SL73/2020-aug/XeonE5-2660v3/gnu/9.3.0/blis/0.7.0/include -I/dtu/sw/dcc/SL73/2020-aug/XeonE5-2660v3/gnu/9.3.0/scotch/6.0.9/include -I/dtu/sw/dcc/SL73/2020-aug/XeonE5-2660v3/gnu/9.3.0/mumps/5.3.3/include -I/dtu/sw/dcc/SL73/2020-aug/XeonE5-2660v3/gnu/9.3.0/elpa/2020.05.001/include -DSIESTA__ELPA -DMPI -DFC_HAVE_FLUSH -DFC_HAVE_ABORT -DCDF -DCDF4 -DSIESTA__FLOOK  -DNCDF -DNCDF_4 -DNCDF_PARALLEL -DTS_NOCHECKS -DSIESTA__METIS -DSIESTA__MUMPS -DSIESTA__MRRR -I/dtu/sw/dcc/SL73/2020-aug/XeonE5-2660v3/gnu/9.3.0/elpa/2020.05.001/include/elpa
+Libraries       : libncdf.a libfdict.a -lnetcdff -lnetcdf -lpnetcdf -lhdf5_hl -lhdf5 -lz  -lzmuumps -lmumps_common -lesmumps -lscotch -lscotcherr -lpord -lparmetis -lmetis -lelpa -lscalapack -llapack -lblis  -L/dtu/sw/dcc/SL73/2020-aug/XeonE5-2660v3/gnu/9.3.0/flook/0.8.1/lib -Wl,-rpath=/dtu/sw/dcc/SL73/2020-aug/XeonE5-2660v3/gnu/9.3.0/flook/0.8.1/lib -lflookall -ldl  -flto -fuse-linker-plugin  -lmetis
+PARALLEL version
+NetCDF support
+NetCDF-4 support
+NetCDF-4 MPI-IO support
+METIS ordering support
+Lua support
+
+* Running on 8 nodes in parallel
+>> Start of run:  22-JAN-2021  23:16:21
+
+                           ***********************       
+                           *  WELCOME TO SIESTA  *       
+                           ***********************       
+
+reinit: Reading from ../OMM_si.fdf
+
+reinit: -----------------------------------------------------------------------
+reinit: System Name: OMM_si
+reinit: -----------------------------------------------------------------------
+reinit: System Label: OMM_si
+reinit: -----------------------------------------------------------------------
+
+initatom: Reading input for the pseudopotentials and atomic orbitals ----------
+Species number:   1 Atomic number:   14 Label: Si
+
+Ground state valence configuration:   3s02  3p02
+Reading pseudopotential information in formatted form from Si.psf
+
+Valence configuration for pseudopotential generation:
+3s( 2.00) rc: 1.89
+3p( 2.00) rc: 1.89
+3d( 0.00) rc: 1.89
+4f( 0.00) rc: 1.89
+For Si, standard SIESTA heuristics set lmxkb to 3
+ (one more than the basis l, including polarization orbitals).
+Use PS.lmax or PS.KBprojectors blocks to override.
+
+<basis_specs>
+===============================================================================
+Si                   Z=  14    Mass=  28.090        Charge= 0.11629    
+Lmxo=2 Lmxkb= 3    BasisType=split      Semic=F
+L=0  Nsemic=0  Cnfigmx=3
+          i=1  nzeta=2  polorb=0  (3s)
+            splnorm:   0.15000    
+               vcte:    47.722    
+               rinn:    5.1518    
+               qcoe:    0.0000    
+               qyuk:    0.0000    
+               qwid:   0.10000E-01
+                rcs:    8.0000      1.8157    
+            lambdas:    1.0000      1.0000    
+L=1  Nsemic=0  Cnfigmx=3
+          i=1  nzeta=2  polorb=0  (3p)
+            splnorm:   0.15000    
+               vcte:    16.480    
+               rinn:    5.1082    
+               qcoe:    0.0000    
+               qyuk:    0.0000    
+               qwid:   0.10000E-01
+                rcs:    8.0000      4.0539    
+            lambdas:    1.0000      1.0000    
+L=2  Nsemic=0  Cnfigmx=3
+          i=1  nzeta=1  polorb=0  (3d)
+            splnorm:   0.15000    
+               vcte:    9.5015    
+               rinn:   0.18000E-03
+               qcoe:    0.0000    
+               qyuk:    0.0000    
+               qwid:   0.10000E-01
+                rcs:    4.4469    
+            lambdas:    1.0000    
+-------------------------------------------------------------------------------
+L=0  Nkbl=1  erefs: 0.17977+309
+L=1  Nkbl=1  erefs: 0.17977+309
+L=2  Nkbl=1  erefs: 0.17977+309
+L=3  Nkbl=1  erefs: 0.17977+309
+===============================================================================
+</basis_specs>
+
+atom: Called for Si                    (Z =  14)
+
+read_vps: Pseudopotential generation method:
+read_vps: ATM3      Troullier-Martins                       
+Valence charge for ps generation:    4.00000
+
+xc_check: Exchange-correlation functional:
+xc_check: Ceperley-Alder
+V l=0 = -2*Zval/r beyond r=  2.5494
+V l=1 = -2*Zval/r beyond r=  2.5494
+V l=2 = -2*Zval/r beyond r=  2.5494
+V l=3 = -2*Zval/r beyond r=  2.5494
+All V_l potentials equal beyond r=  1.8652
+This should be close to max(r_c) in ps generation
+All pots = -2*Zval/r beyond r=  2.5494
+Using large-core scheme for Vlocal
+
+atom: Estimated core radius    2.54944
+
+atom: Including non-local core corrections could be a good idea
+atom: Maximum radius for 4*pi*r*r*local-pseudopot. charge    2.85303
+atom: Maximum radius for r*vlocal+2*Zval:    2.58151
+GHOST: No ghost state for L =  0
+GHOST: No ghost state for L =  1
+GHOST: No ghost state for L =  2
+GHOST: No ghost state for L =  3
+
+KBgen: Kleinman-Bylander projectors: 
+   l= 0   rc=  1.936440   el= -0.796617   Ekb=  4.661340   kbcos=  0.299756
+   l= 1   rc=  1.936440   el= -0.307040   Ekb=  1.494238   kbcos=  0.301471
+   l= 2   rc=  1.936440   el=  0.002313   Ekb= -2.808672   kbcos= -0.054903
+   l= 3   rc=  1.936440   el=  0.003402   Ekb= -0.959059   kbcos= -0.005513
+
+KBgen: Total number of  Kleinman-Bylander projectors:   16
+atom: -------------------------------------------------------------------------
+
+atom: SANKEY-TYPE ORBITALS:
+atom: Selected multiple-zeta basis: split     
+
+atom: basis set generated (by rescaling the valence charge)
+atom: for a cation of charge   0.1163
+
+SPLIT: Orbitals with angular momentum L= 0
+
+SPLIT: Basis orbitals for state 3s
+
+   izeta = 1
+                 lambda =    1.000000
+                     rc =    8.052001
+                 energy =   -0.880603
+                kinetic =    0.521474
+    potential(screened) =   -1.402076
+       potential(ionic) =   -3.764519
+
+   izeta = 2
+                 rmatch =    1.841990
+              splitnorm =    1.106433
+                 energy =    5.410922
+                kinetic =    4.223643
+    potential(screened) =    1.187279
+       potential(ionic) =   -1.853088
+
+SPLIT: Orbitals with angular momentum L= 1
+
+SPLIT: Basis orbitals for state 3p
+
+   izeta = 1
+                 lambda =    1.000000
+                     rc =    8.052001
+                 energy =   -0.377399
+                kinetic =    0.856566
+    potential(screened) =   -1.233964
+       potential(ionic) =   -3.404940
+
+   izeta = 2
+                 rmatch =    4.099641
+              splitnorm =    0.346377
+                 energy =   -0.117443
+                kinetic =    1.651168
+    potential(screened) =   -1.768612
+       potential(ionic) =   -4.245213
+
+SPLIT: Orbitals with angular momentum L= 2
+
+SPLIT: Basis orbitals for state 3d
+
+   izeta = 1
+                 lambda =    1.000000
+                     rc =    4.530823
+                 energy =    0.710805
+                kinetic =    3.090474
+    potential(screened) =   -2.379669
+       potential(ionic) =   -4.824413
+atom: Total number of Sankey-type orbitals: 13
+
+atm_pop: Valence configuration (for local Pseudopot. screening):
+ 3s( 2.00)                                                            
+ 3p( 2.00)                                                            
+ 3d( 0.00)                                                            
+Vna: chval, zval:    4.00000   4.00000
+
+Vna:  Cut-off radius for the neutral-atom potential:   8.052001
+
+atom: _________________________________________________________________________
+
+prinput: Basis input ----------------------------------------------------------
+
+PAO.BasisType split     
+
+%block ChemicalSpeciesLabel
+    1   14 Si                      # Species index, atomic number, species label
+%endblock ChemicalSpeciesLabel
+
+%block PAO.Basis                 # Define Basis set
+Si                    3   0.116            # Label, l-shells, ionic net charge
+ n=3   0   2                         # n, l, Nzeta 
+   8.052      1.842   
+   1.000      1.000   
+ n=3   1   2                         # n, l, Nzeta 
+   8.052      4.100   
+   1.000      1.000   
+ n=3   2   1                         # n, l, Nzeta 
+   4.531   
+   1.000   
+%endblock PAO.Basis
+
+prinput: ----------------------------------------------------------------------
+
+Dumping basis to NetCDF file Si.ion.nc
+coor:   Atomic-coordinates input format  =     Fractional
+
+siesta: Atomic coordinates (Bohr) and species
+siesta:      0.00000   0.00000   0.00000  1        1
+siesta:      2.56530   2.56530   2.56530  1        2
+siesta:      5.13061   5.13061   0.00000  1        3
+siesta:      7.69591   7.69591   2.56530  1        4
+siesta:      5.13061   0.00000   5.13061  1        5
+siesta:      0.00000   5.13061   5.13061  1        6
+siesta:      7.69591   2.56530   7.69591  1        7
+siesta:      2.56530   7.69591   7.69591  1        8
+
+siesta: System type = bulk      
+
+initatomlists: Number of atoms, orbitals, and projectors:      8   104   128
+
+siesta: ******************** Simulation parameters ****************************
+siesta:
+siesta: The following are some of the parameters of the simulation.
+siesta: A complete list of the parameters used, including default values,
+siesta: can be found in file out.fdf
+siesta:
+redata: Spin configuration                          = none
+redata: Number of spin components                   = 1
+redata: Time-Reversal Symmetry                      = T
+redata: Spin spiral                                 = F
+redata: Long output                                 =   F
+redata: Number of Atomic Species                    =        1
+redata: Charge density info will appear in .RHO file
+redata: Write Mulliken Pop.                         = NO
+redata: Matel table size (NRTAB)                    =     1024
+redata: Mesh Cutoff                                 =   300.0000 Ry
+redata: Net charge of the system                    =     0.0000 |e|
+redata: Min. number of SCF Iter                     =        0
+redata: Max. number of SCF Iter                     =     1000
+redata: SCF convergence failure will abort job
+redata: SCF mix quantity                            = Hamiltonian
+redata: Mix DM or H after convergence               =   F
+redata: Recompute H after scf cycle                 =   F
+redata: Mix DM in first SCF step                    =   T
+redata: Write Pulay info on disk                    =   F
+redata: New DM Occupancy tolerance                  = 0.000000000001
+redata: No kicks to SCF
+redata: DM Mixing Weight for Kicks                  =     0.5000
+redata: Require Harris convergence for SCF          =   F
+redata: Harris energy tolerance for SCF             =     0.000100 eV
+redata: Require DM convergence for SCF              =   T
+redata: DM tolerance for SCF                        =     0.000100
+redata: Require EDM convergence for SCF             =   F
+redata: EDM tolerance for SCF                       =     0.001000 eV
+redata: Require H convergence for SCF               =   T
+redata: Hamiltonian tolerance for SCF               =     0.001000 eV
+redata: Require (free) Energy convergence for SCF   =   F
+redata: (free) Energy tolerance for SCF             =     0.000100 eV
+redata: Using Saved Data (generic)                  =   F
+redata: Use continuation files for DM               =   F
+redata: Neglect nonoverlap interactions             =   F
+redata: Method of Calculation                       = Orbital Minimization Method
+redata: Fix the spin of the system                  =   F
+redata: Dynamics option                             = Single-point calculation
+mix.SCF: Pulay mixing                            = Pulay
+mix.SCF:    Variant                              = stable
+mix.SCF:    History steps                        = 2
+mix.SCF:    Linear mixing weight                 =     0.250000
+mix.SCF:    Mixing weight                        =     0.250000
+mix.SCF:    SVD condition                        = 0.1000E-07
+redata: Save all siesta data in one NC              =   F
+redata: ***********************************************************************
+
+%block SCF.Mixers
+  Pulay
+%endblock SCF.Mixers
+
+%block SCF.Mixer.Pulay
+  # Mixing method
+  method pulay
+  variant stable
+
+  # Mixing options
+  weight 0.2500
+  weight.linear 0.2500
+  history 2
+%endblock SCF.Mixer.Pulay
+
+DM_history_depth set to one: no extrapolation allowed by default for geometry relaxation
+Size of DM history Fstack: 1
+Total number of electrons:    32.000000
+Total ionic charge:    32.000000
+
+* ProcessorY, Blocksize:    2  13
+
+
+* Orbital distribution balance (max,min):    13    13
+
+ Kpoints in:            4 . Kpoints trimmed:            4
+
+siesta: k-grid: Number of k-points =     4
+siesta: k-grid: Cutoff (effective) =     5.430 Ang
+siesta: k-grid: Supercell and displacements
+siesta: k-grid:    2   0   0      0.500
+siesta: k-grid:    0   2   0      0.500
+siesta: k-grid:    0   0   2      0.500
+
+diag: Algorithm                                     = D&C
+diag: Parallel over k                               =   F
+diag: Use parallel 2D distribution                  =   T
+diag: Parallel block-size                           = 13
+diag: Parallel distribution                         =     2 x     4
+diag: Used triangular part                          = Lower
+diag: Absolute tolerance                            =  0.100E-15
+diag: Orthogonalization factor                      =  0.100E-05
+diag: Memory factor                                 =  1.0000
+
+superc: Internal auxiliary supercell:     5 x     5 x     5  =     125
+superc: Number of atoms, orbitals, and projectors:   1000  13000  16000
+
+
+ts: **************************************************************
+ts: Save H and S matrices                           =    F
+ts: Save DM and EDM matrices                        =    F
+ts: Only save the overlap matrix S                  =    F
+ts: **************************************************************
+
+************************ Begin: TS CHECKS AND WARNINGS ************************
+************************ End: TS CHECKS AND WARNINGS **************************
+
+
+                     ====================================
+                        Single-point calculation
+                     ====================================
+
+superc: Internal auxiliary supercell:     5 x     5 x     5  =     125
+superc: Number of atoms, orbitals, and projectors:   1000  13000  16000
+
+outcell: Unit cell vectors (Ang):
+        5.430000    0.000000    0.000000
+        0.000000    5.430000    0.000000
+        0.000000    0.000000    5.430000
+
+outcell: Cell vector modules (Ang)   :    5.430000    5.430000    5.430000
+outcell: Cell angles (23,13,12) (deg):     90.0000     90.0000     90.0000
+outcell: Cell volume (Ang**3)        :    160.1030
+<dSpData1D:S at geom step 0
+  <sparsity:sparsity for geom step 0
+    nrows_g=104 nrows=13 sparsity=.8015 nnzs=8669, refcount: 7>
+  <dData1D:(new from dSpData1D) n=8669, refcount: 1>
+refcount: 1>
+new_DM -- step:     1
+Initializing Density Matrix...
+DM filled with atomic data:
+<dSpData2D:DM initialized from atoms
+  <sparsity:sparsity for geom step 0
+    nrows_g=104 nrows=13 sparsity=.8015 nnzs=8669, refcount: 8>
+  <dData2D:DM n=8669 m=1, refcount: 1>
+refcount: 1>
+No. of atoms with KB's overlaping orbs in proc 0. Max # of overlaps:      29     157
+New grid distribution:   1
+           1       1:   30    1:   15    1:    8
+           2       1:   30    1:   15    9:   16
+           3       1:   30    1:   15   17:   23
+           4       1:   30    1:   15   24:   30
+           5       1:   30   16:   30    1:    8
+           6       1:   30   16:   30    9:   16
+           7       1:   30   16:   30   17:   23
+           8       1:   30   16:   30   24:   30
+
+InitMesh: MESH =    60 x    60 x    60 =      216000
+InitMesh: (bp) =    30 x    30 x    30 =       27000
+InitMesh: Mesh cutoff (required, used) =   300.000   337.446 Ry
+ExtMesh (bp) on 0 =   126 x   111 x   104 =     1454544
+New grid distribution:   2
+           1       1:   15   16:   30   16:   30
+           2      16:   30    1:   15    1:   15
+           3      16:   30    1:   15   16:   30
+           4      16:   30   16:   30    1:   15
+           5       1:   15    1:   15   16:   30
+           6       1:   15    1:   15    1:   15
+           7      16:   30   16:   30   16:   30
+           8       1:   15   16:   30    1:   15
+New grid distribution:   3
+           1       1:   15   16:   30   16:   30
+           2      16:   30    1:   15    1:   15
+           3      16:   30    1:   15   16:   30
+           4      16:   30   16:   30    1:   15
+           5       1:   15    1:   15   16:   30
+           6       1:   15    1:   15    1:   15
+           7      16:   30   16:   30   16:   30
+           8       1:   15   16:   30    1:   15
+Setting up quadratic distribution...
+ExtMesh (bp) on 0 =   111 x   111 x   111 =     1367631
+PhiOnMesh: Number of (b)points on node 0 =                 3375
+PhiOnMesh: nlist on node 0 =               306923
++---------------------------------------------+
+| OMM (Cholesky factorization)                |
++---------------------------------------------+
+| k point      1 of      4                    |
++---------------------------------------------+
+|             E_OMM            E_diff         |
+|     1     1  8.4263036E-005  1.4828057E+000 |
+|     1     2 -2.1654531E-004  4.5479767E+000 |
+|     1     3 -2.2337181E+000  1.9996123E+000 |
+|     1     4 -2.2339311E+000  9.5331407E-005 |
+|     1     5 -5.7967226E+000  8.8729802E-001 |
+|     1     6 -7.8549532E+000  3.0153523E-001 |
+|     1     7 -9.3004486E+000  1.6851781E-001 |
+|     1     8 -1.0247652E+001  9.6910055E-002 |
+|     1     9 -1.0708724E+001  4.4002980E-002 |
+|     1    10 -1.1092784E+001  3.5232469E-002 |
+|     1    11 -1.1476329E+001  3.3988447E-002 |
+|     1    12 -1.1821452E+001  2.9627167E-002 |
+|     1    13 -1.1995561E+001  1.4620502E-002 |
+|     1    14 -1.2039929E+001  3.6919159E-003 |
+|     1    15 -1.2060042E+001  1.6691279E-003 |
+|     1    16 -1.2090719E+001  2.5404305E-003 |
+|     1    17 -1.2104002E+001  1.0980004E-003 |
+|     1    18 -1.2107401E+001  2.8079494E-004 |
+|     1    19 -1.2108615E+001  1.0023520E-004 |
+|     1    20 -1.2109539E+001  7.6351921E-005 |
+|     1    21 -1.2110298E+001  6.2620646E-005 |
+|     1    22 -1.2110665E+001  3.0297020E-005 |
+|     1    23 -1.2110821E+001  1.2904466E-005 |
+|     1    24 -1.2110905E+001  6.9825071E-006 |
+|     1    25 -1.2110947E+001  3.4349338E-006 |
+|     1    26 -1.2110962E+001  1.2722381E-006 |
+|     1    27 -1.2110971E+001  7.4182780E-007 |
+|     1    28 -1.2110977E+001  4.3567042E-007 |
+|     1    29 -1.2110979E+001  1.8136588E-007 |
+|     1    30 -1.2110980E+001  6.2559900E-008 |
+|     1    31 -1.2110980E+001  2.5047876E-008 |
+|     1    32 -1.2110980E+001  1.3727306E-008 |
+|     1    33 -1.2110980E+001  7.3205397E-009 |
+|     1    34 -1.2110980E+001  3.9792739E-009 |
+|     1    35 -1.2110980E+001  2.3608311E-009 |
+|     1    36 -1.2110980E+001  1.3275007E-009 |
+|     1    37 -1.2110980E+001  6.6664327E-010 |
++---------------------------------------------+
+| minim: icg             =    37              |
+| minim: 2*Tr[(2*I-S)*S] =    32.0000000      |
++---------------------------------------------+
+| k point      2 of      4                    |
++---------------------------------------------+
+|             E_OMM            E_diff         |
+|     1     1 -1.0516318E+001  3.1144519E-001 |
+|     1     2 -1.1388271E+001  7.9613655E-002 |
+|     1     3 -1.1767254E+001  3.2733771E-002 |
+|     1     4 -1.1915351E+001  1.2506802E-002 |
+|     1     5 -1.2004830E+001  7.4814752E-003 |
+|     1     6 -1.2052859E+001  3.9928244E-003 |
+|     1     7 -1.2078377E+001  2.1149153E-003 |
+|     1     8 -1.2094481E+001  1.3324158E-003 |
+|     1     9 -1.2102710E+001  6.8016941E-004 |
+|     1    10 -1.2106639E+001  3.2458613E-004 |
+|     1    11 -1.2108572E+001  1.5961085E-004 |
+|     1    12 -1.2109680E+001  9.1486488E-005 |
+|     1    13 -1.2110260E+001  4.7933577E-005 |
+|     1    14 -1.2110606E+001  2.8587400E-005 |
+|     1    15 -1.2110795E+001  1.5546106E-005 |
+|     1    16 -1.2110897E+001  8.4209903E-006 |
+|     1    17 -1.2110944E+001  3.9012210E-006 |
+|     1    18 -1.2110964E+001  1.6323627E-006 |
+|     1    19 -1.2110972E+001  6.9997810E-007 |
+|     1    20 -1.2110976E+001  3.1678074E-007 |
+|     1    21 -1.2110978E+001  1.5775921E-007 |
+|     1    22 -1.2110979E+001  9.1730309E-008 |
+|     1    23 -1.2110980E+001  4.4673969E-008 |
+|     1    24 -1.2110980E+001  2.1878239E-008 |
+|     1    25 -1.2110980E+001  1.4436269E-008 |
+|     1    26 -1.2110980E+001  7.5329933E-009 |
+|     1    27 -1.2110980E+001  4.2661364E-009 |
+|     1    28 -1.2110980E+001  2.0886900E-009 |
+|     1    29 -1.2110980E+001  1.0565052E-009 |
+|     1    30 -1.2110980E+001  4.2541212E-010 |
++---------------------------------------------+
+| minim: icg             =    30              |
+| minim: 2*Tr[(2*I-S)*S] =    32.0000000      |
++---------------------------------------------+
+| k point      3 of      4                    |
++---------------------------------------------+
+|             E_OMM            E_diff         |
+|     1     1 -1.0511812E+001  3.0893042E-001 |
+|     1     2 -1.1379227E+001  7.9248365E-002 |
+|     1     3 -1.1762588E+001  3.3131428E-002 |
+|     1     4 -1.1913398E+001  1.2739536E-002 |
+|     1     5 -1.2002569E+001  7.4570022E-003 |
+|     1     6 -1.2050163E+001  3.9574834E-003 |
+|     1     7 -1.2076453E+001  2.1793299E-003 |
+|     1     8 -1.2093372E+001  1.4000308E-003 |
+|     1     9 -1.2102103E+001  7.2169284E-004 |
+|     1    10 -1.2106350E+001  3.5085957E-004 |
+|     1    11 -1.2108380E+001  1.6770002E-004 |
+|     1    12 -1.2109575E+001  9.8667263E-005 |
+|     1    13 -1.2110205E+001  5.1978477E-005 |
+|     1    14 -1.2110580E+001  3.1011237E-005 |
+|     1    15 -1.2110781E+001  1.6616791E-005 |
+|     1    16 -1.2110890E+001  8.9925907E-006 |
+|     1    17 -1.2110941E+001  4.2061125E-006 |
+|     1    18 -1.2110962E+001  1.7522636E-006 |
+|     1    19 -1.2110972E+001  7.6240186E-007 |
+|     1    20 -1.2110976E+001  3.2808966E-007 |
+|     1    21 -1.2110978E+001  1.7079845E-007 |
+|     1    22 -1.2110979E+001  1.0084612E-007 |
+|     1    23 -1.2110980E+001  5.0259558E-008 |
+|     1    24 -1.2110980E+001  2.6025239E-008 |
+|     1    25 -1.2110980E+001  1.5667739E-008 |
+|     1    26 -1.2110980E+001  8.2789078E-009 |
+|     1    27 -1.2110980E+001  4.6195754E-009 |
+|     1    28 -1.2110980E+001  2.2526292E-009 |
+|     1    29 -1.2110980E+001  1.1889272E-009 |
+|     1    30 -1.2110980E+001  4.8579721E-010 |
++---------------------------------------------+
+| minim: icg             =    30              |
+| minim: 2*Tr[(2*I-S)*S] =    32.0000000      |
++---------------------------------------------+
+| k point      4 of      4                    |
++---------------------------------------------+
+|             E_OMM            E_diff         |
+|     1     1 -1.0419881E+001  3.1058374E-001 |
+|     1     2 -1.1318799E+001  8.2702142E-002 |
+|     1     3 -1.1747072E+001  3.7134742E-002 |
+|     1     4 -1.1921046E+001  1.4701180E-002 |
+|     1     5 -1.2010044E+001  7.4378116E-003 |
+|     1     6 -1.2054885E+001  3.7267188E-003 |
+|     1     7 -1.2080646E+001  2.1346730E-003 |
+|     1     8 -1.2096514E+001  1.3126662E-003 |
+|     1     9 -1.2104250E+001  6.3929499E-004 |
+|     1    10 -1.2107884E+001  3.0016236E-004 |
+|     1    11 -1.2109405E+001  1.2565390E-004 |
+|     1    12 -1.2110132E+001  5.9958413E-005 |
+|     1    13 -1.2110480E+001  2.8754123E-005 |
+|     1    14 -1.2110702E+001  1.8355448E-005 |
+|     1    15 -1.2110834E+001  1.0911898E-005 |
+|     1    16 -1.2110910E+001  6.2828477E-006 |
+|     1    17 -1.2110947E+001  3.0635329E-006 |
+|     1    18 -1.2110964E+001  1.4112691E-006 |
+|     1    19 -1.2110973E+001  7.1343194E-007 |
+|     1    20 -1.2110977E+001  2.9229874E-007 |
+|     1    21 -1.2110978E+001  1.4919038E-007 |
+|     1    22 -1.2110979E+001  8.2712366E-008 |
+|     1    23 -1.2110980E+001  3.1476332E-008 |
+|     1    24 -1.2110980E+001  1.7082817E-008 |
+|     1    25 -1.2110980E+001  8.3408568E-009 |
+|     1    26 -1.2110980E+001  4.2644808E-009 |
+|     1    27 -1.2110980E+001  2.8055948E-009 |
+|     1    28 -1.2110980E+001  1.7006788E-009 |
+|     1    29 -1.2110980E+001  9.6576811E-010 |
++---------------------------------------------+
+| minim: icg             =    29              |
+| minim: 2*Tr[(2*I-S)*S] =    32.0000000      |
++---------------------------------------------+
+
+siesta: Program's energy decomposition (eV):
+siesta: Ebs     =      -318.366277
+siesta: Eions   =      1523.208495
+siesta: Ena     =       467.239233
+siesta: Ekin    =       336.401830
+siesta: Enl     =       110.115462
+siesta: Eso     =         0.000000
+siesta: Edftu   =         0.000000
+siesta: DEna    =         6.908615
+siesta: DUscf   =         1.925483
+siesta: DUext   =         0.000000
+siesta: Exc     =      -261.969447
+siesta: eta*DQ  =         0.000000
+siesta: Emadel  =         0.000000
+siesta: Emeta   =         0.000000
+siesta: Emolmec =         0.000000
+siesta: Ekinion =         0.000000
+siesta: Eharris =      -853.853872
+siesta: Etot    =      -862.587320
+siesta: FreeEng =      -862.587320
+
+siesta: iscf =    1
+Eharris(eV) =       -853.8539  E_KS(eV) =       -862.5873  dDmax =   0.779104
+
+timer: Routine,Calls,Time,% = IterSCF        1       1.101  33.27
++---------------------------------------------+
+| OMM (Cholesky factorization)                |
++---------------------------------------------+
+| k point      1 of      4                    |
++---------------------------------------------+
+|             E_OMM            E_diff         |
+|     1     1 -1.2008339E+001  1.5838919E-005 |
+|     1     2 -1.2008380E+001  3.4242571E-006 |
+|     1     3 -1.2008388E+001  6.8151849E-007 |
+|     1     4 -1.2008392E+001  3.5479409E-007 |
+|     1     5 -1.2008394E+001  1.1439644E-007 |
+|     1     6 -1.2008394E+001  4.4967497E-008 |
+|     1     7 -1.2008394E+001  2.6323705E-008 |
+|     1     8 -1.2008394E+001  8.9009741E-009 |
+|     1     9 -1.2008395E+001  4.9041353E-009 |
+|     1    10 -1.2008395E+001  1.6713322E-009 |
+|     1    11 -1.2008395E+001  3.7533891E-010 |
++---------------------------------------------+
+| minim: icg             =    11              |
+| minim: 2*Tr[(2*I-S)*S] =    32.0000000      |
++---------------------------------------------+
+| k point      2 of      4                    |
++---------------------------------------------+
+|             E_OMM            E_diff         |
+|     1     1 -1.2008339E+001  1.5837437E-005 |
+|     1     2 -1.2008380E+001  3.4149039E-006 |
+|     1     3 -1.2008388E+001  6.8660981E-007 |
+|     1     4 -1.2008392E+001  3.5662278E-007 |
+|     1     5 -1.2008394E+001  1.1309761E-007 |
+|     1     6 -1.2008394E+001  4.6208743E-008 |
+|     1     7 -1.2008394E+001  2.6410808E-008 |
+|     1     8 -1.2008394E+001  8.7741780E-009 |
+|     1     9 -1.2008395E+001  5.0877993E-009 |
+|     1    10 -1.2008395E+001  1.6743045E-009 |
+|     1    11 -1.2008395E+001  3.7513107E-010 |
++---------------------------------------------+
+| minim: icg             =    11              |
+| minim: 2*Tr[(2*I-S)*S] =    32.0000000      |
++---------------------------------------------+
+| k point      3 of      4                    |
++---------------------------------------------+
+|             E_OMM            E_diff         |
+|     1     1 -1.2008339E+001  1.5837208E-005 |
+|     1     2 -1.2008380E+001  3.4132999E-006 |
+|     1     3 -1.2008388E+001  6.8785175E-007 |
+|     1     4 -1.2008392E+001  3.5696273E-007 |
+|     1     5 -1.2008394E+001  1.1302786E-007 |
+|     1     6 -1.2008394E+001  4.6265111E-008 |
+|     1     7 -1.2008394E+001  2.6423915E-008 |
+|     1     8 -1.2008395E+001  8.7884535E-009 |
+|     1     9 -1.2008395E+001  5.0672528E-009 |
+|     1    10 -1.2008395E+001  1.6720757E-009 |
+|     1    11 -1.2008395E+001  3.7501007E-010 |
++---------------------------------------------+
+| minim: icg             =    11              |
+| minim: 2*Tr[(2*I-S)*S] =    32.0000000      |
++---------------------------------------------+
+| k point      4 of      4                    |
++---------------------------------------------+
+|             E_OMM            E_diff         |
+|     1     1 -1.2008339E+001  1.5838907E-005 |
+|     1     2 -1.2008380E+001  3.4211783E-006 |
+|     1     3 -1.2008388E+001  6.8133736E-007 |
+|     1     4 -1.2008392E+001  3.5492247E-007 |
+|     1     5 -1.2008394E+001  1.1344643E-007 |
+|     1     6 -1.2008394E+001  4.5930308E-008 |
+|     1     7 -1.2008394E+001  2.6347242E-008 |
+|     1     8 -1.2008395E+001  8.7771029E-009 |
+|     1     9 -1.2008395E+001  5.1045688E-009 |
+|     1    10 -1.2008395E+001  1.6795335E-009 |
+|     1    11 -1.2008395E+001  3.8818009E-010 |
++---------------------------------------------+
+| minim: icg             =    11              |
+| minim: 2*Tr[(2*I-S)*S] =    32.0000000      |
++---------------------------------------------+
+
+siesta: iscf =    2
+Eharris(eV) =       -862.6747  E_KS(eV) =       -862.6321  dDmax =   0.015220
+
++---------------------------------------------+
+| OMM (Cholesky factorization)                |
++---------------------------------------------+
+| k point      1 of      4                    |
++---------------------------------------------+
+|             E_OMM            E_diff         |
+|     1     1 -1.1799522E+001  6.7049709E-005 |
+|     1     2 -1.1799686E+001  1.3858627E-005 |
+|     1     3 -1.1799726E+001  3.4264152E-006 |
+|     1     4 -1.1799746E+001  1.6860864E-006 |
+|     1     5 -1.1799752E+001  4.9373220E-007 |
+|     1     6 -1.1799754E+001  2.1651614E-007 |
+|     1     7 -1.1799756E+001  1.1828223E-007 |
+|     1     8 -1.1799756E+001  3.8226662E-008 |
+|     1     9 -1.1799757E+001  2.6345279E-008 |
+|     1    10 -1.1799757E+001  7.7294303E-009 |
+|     1    11 -1.1799757E+001  1.8212329E-009 |
+|     1    12 -1.1799757E+001  1.0491509E-009 |
+|     1    13 -1.1799757E+001  3.7924811E-010 |
++---------------------------------------------+
+| minim: icg             =    13              |
+| minim: 2*Tr[(2*I-S)*S] =    32.0000000      |
++---------------------------------------------+
+| k point      2 of      4                    |
++---------------------------------------------+
+|             E_OMM            E_diff         |
+|     1     1 -1.1799522E+001  6.7049442E-005 |
+|     1     2 -1.1799686E+001  1.3856463E-005 |
+|     1     3 -1.1799726E+001  3.4283764E-006 |
+|     1     4 -1.1799746E+001  1.6864930E-006 |
+|     1     5 -1.1799752E+001  4.9361587E-007 |
+|     1     6 -1.1799754E+001  2.1669679E-007 |
+|     1     7 -1.1799756E+001  1.1829132E-007 |
+|     1     8 -1.1799756E+001  3.8213196E-008 |
+|     1     9 -1.1799757E+001  2.6400154E-008 |
+|     1    10 -1.1799757E+001  7.7250199E-009 |
+|     1    11 -1.1799757E+001  1.8239368E-009 |
+|     1    12 -1.1799757E+001  1.0519627E-009 |
+|     1    13 -1.1799757E+001  3.7715949E-010 |
++---------------------------------------------+
+| minim: icg             =    13              |
+| minim: 2*Tr[(2*I-S)*S] =    32.0000000      |
++---------------------------------------------+
+| k point      3 of      4                    |
++---------------------------------------------+
+|             E_OMM            E_diff         |
+|     1     1 -1.1799522E+001  6.7049480E-005 |
+|     1     2 -1.1799686E+001  1.3856802E-005 |
+|     1     3 -1.1799726E+001  3.4280613E-006 |
+|     1     4 -1.1799746E+001  1.6864261E-006 |
+|     1     5 -1.1799752E+001  4.9363563E-007 |
+|     1     6 -1.1799754E+001  2.1666976E-007 |
+|     1     7 -1.1799756E+001  1.1829334E-007 |
+|     1     8 -1.1799756E+001  3.8217392E-008 |
+|     1     9 -1.1799757E+001  2.6384718E-008 |
+|     1    10 -1.1799757E+001  7.7244448E-009 |
+|     1    11 -1.1799757E+001  1.8237806E-009 |
+|     1    12 -1.1799757E+001  1.0518351E-009 |
+|     1    13 -1.1799757E+001  3.7705788E-010 |
++---------------------------------------------+
+| minim: icg             =    13              |
+| minim: 2*Tr[(2*I-S)*S] =    32.0000000      |
++---------------------------------------------+
+| k point      4 of      4                    |
++---------------------------------------------+
+|             E_OMM            E_diff         |
+|     1     1 -1.1799522E+001  6.7049534E-005 |
+|     1     2 -1.1799686E+001  1.3857113E-005 |
+|     1     3 -1.1799726E+001  3.4275608E-006 |
+|     1     4 -1.1799746E+001  1.6864309E-006 |
+|     1     5 -1.1799752E+001  4.9361806E-007 |
+|     1     6 -1.1799754E+001  2.1666397E-007 |
+|     1     7 -1.1799756E+001  1.1828413E-007 |
+|     1     8 -1.1799756E+001  3.8213337E-008 |
+|     1     9 -1.1799757E+001  2.6409671E-008 |
+|     1    10 -1.1799757E+001  7.7301270E-009 |
+|     1    11 -1.1799757E+001  1.8234869E-009 |
+|     1    12 -1.1799757E+001  1.0501623E-009 |
+|     1    13 -1.1799757E+001  3.7935454E-010 |
++---------------------------------------------+
+| minim: icg             =    13              |
+| minim: 2*Tr[(2*I-S)*S] =    32.0000000      |
++---------------------------------------------+
+
+siesta: iscf =    3
+Eharris(eV) =       -862.6963  E_KS(eV) =       -862.6688  dDmax =   0.030634
+
++---------------------------------------------+
+| OMM (Cholesky factorization)                |
++---------------------------------------------+
+| k point      1 of      4                    |
++---------------------------------------------+
+|             E_OMM            E_diff         |
+|     1     1 -1.1798808E+001  7.5440689E-009 |
+|     1     2 -1.1798808E+001  2.8060594E-009 |
+|     1     3 -1.1798808E+001  5.5752722E-010 |
++---------------------------------------------+
+| minim: icg             =     3              |
+| minim: 2*Tr[(2*I-S)*S] =    32.0000000      |
++---------------------------------------------+
+| k point      2 of      4                    |
++---------------------------------------------+
+|             E_OMM            E_diff         |
+|     1     1 -1.1798808E+001  7.5449319E-009 |
+|     1     2 -1.1798808E+001  2.8074380E-009 |
+|     1     3 -1.1798808E+001  5.5793402E-010 |
++---------------------------------------------+
+| minim: icg             =     3              |
+| minim: 2*Tr[(2*I-S)*S] =    32.0000000      |
++---------------------------------------------+
+| k point      3 of      4                    |
++---------------------------------------------+
+|             E_OMM            E_diff         |
+|     1     1 -1.1798808E+001  7.5449361E-009 |
+|     1     2 -1.1798808E+001  2.8074662E-009 |
+|     1     3 -1.1798808E+001  5.5794621E-010 |
++---------------------------------------------+
+| minim: icg             =     3              |
+| minim: 2*Tr[(2*I-S)*S] =    32.0000000      |
++---------------------------------------------+
+| k point      4 of      4                    |
++---------------------------------------------+
+|             E_OMM            E_diff         |
+|     1     1 -1.1798808E+001  7.5439362E-009 |
+|     1     2 -1.1798808E+001  2.8064805E-009 |
+|     1     3 -1.1798808E+001  5.5775922E-010 |
++---------------------------------------------+
+| minim: icg             =     3              |
+| minim: 2*Tr[(2*I-S)*S] =    32.0000000      |
++---------------------------------------------+
+
+siesta: iscf =    4
+Eharris(eV) =       -862.6688  E_KS(eV) =       -862.6688  dDmax =   0.000356
+
++---------------------------------------------+
+| OMM (Cholesky factorization)                |
++---------------------------------------------+
+| k point      1 of      4                    |
++---------------------------------------------+
+|             E_OMM            E_diff         |
+|     1     1 -1.1795637E+001  5.7814231E-008 |
+|     1     2 -1.1795637E+001  1.9842964E-008 |
+|     1     3 -1.1795637E+001  3.9068694E-009 |
+|     1     4 -1.1795637E+001  1.1433709E-009 |
+|     1     5 -1.1795637E+001  6.2795996E-010 |
++---------------------------------------------+
+| minim: icg             =     5              |
+| minim: 2*Tr[(2*I-S)*S] =    32.0000000      |
++---------------------------------------------+
+| k point      2 of      4                    |
++---------------------------------------------+
+|             E_OMM            E_diff         |
+|     1     1 -1.1795637E+001  5.7812958E-008 |
+|     1     2 -1.1795637E+001  1.9843440E-008 |
+|     1     3 -1.1795637E+001  3.9074052E-009 |
+|     1     4 -1.1795637E+001  1.1437873E-009 |
+|     1     5 -1.1795637E+001  6.2816176E-010 |
++---------------------------------------------+
+| minim: icg             =     5              |
+| minim: 2*Tr[(2*I-S)*S] =    32.0000000      |
++---------------------------------------------+
+| k point      3 of      4                    |
++---------------------------------------------+
+|             E_OMM            E_diff         |
+|     1     1 -1.1795637E+001  5.7812862E-008 |
+|     1     2 -1.1795637E+001  1.9843463E-008 |
+|     1     3 -1.1795637E+001  3.9074448E-009 |
+|     1     4 -1.1795637E+001  1.1438226E-009 |
+|     1     5 -1.1795637E+001  6.2817591E-010 |
++---------------------------------------------+
+| minim: icg             =     5              |
+| minim: 2*Tr[(2*I-S)*S] =    32.0000000      |
++---------------------------------------------+
+| k point      4 of      4                    |
++---------------------------------------------+
+|             E_OMM            E_diff         |
+|     1     1 -1.1795637E+001  5.7814123E-008 |
+|     1     2 -1.1795637E+001  1.9842808E-008 |
+|     1     3 -1.1795637E+001  3.9070462E-009 |
+|     1     4 -1.1795637E+001  1.1434051E-009 |
+|     1     5 -1.1795637E+001  6.2803390E-010 |
++---------------------------------------------+
+| minim: icg             =     5              |
+| minim: 2*Tr[(2*I-S)*S] =    32.0000000      |
++---------------------------------------------+
+
+siesta: iscf =    5
+Eharris(eV) =       -862.6688  E_KS(eV) =       -862.6688  dDmax =   0.001008
+
++---------------------------------------------+
+| OMM (Cholesky factorization)                |
++---------------------------------------------+
+| k point      1 of      4                    |
++---------------------------------------------+
+|             E_OMM            E_diff         |
+|     1     1 -1.1795246E+001  2.1251577E-010 |
++---------------------------------------------+
+| minim: icg             =     1              |
+| minim: 2*Tr[(2*I-S)*S] =    32.0000000      |
++---------------------------------------------+
+| k point      2 of      4                    |
++---------------------------------------------+
+|             E_OMM            E_diff         |
+|     1     1 -1.1795246E+001  2.1252074E-010 |
++---------------------------------------------+
+| minim: icg             =     1              |
+| minim: 2*Tr[(2*I-S)*S] =    32.0000000      |
++---------------------------------------------+
+| k point      3 of      4                    |
++---------------------------------------------+
+|             E_OMM            E_diff         |
+|     1     1 -1.1795246E+001  2.1252119E-010 |
++---------------------------------------------+
+| minim: icg             =     1              |
+| minim: 2*Tr[(2*I-S)*S] =    32.0000000      |
++---------------------------------------------+
+| k point      4 of      4                    |
++---------------------------------------------+
+|             E_OMM            E_diff         |
+|     1     1 -1.1795246E+001  2.1252541E-010 |
++---------------------------------------------+
+| minim: icg             =     1              |
+| minim: 2*Tr[(2*I-S)*S] =    32.0000000      |
++---------------------------------------------+
+
+siesta: iscf =    6
+Eharris(eV) =       -862.6688  E_KS(eV) =       -862.6688  dDmax =   0.000035
+
+
+SCF Convergence by DM+H criterion
+max |DM_out - DM_in|         :     0.0000353528
+max |H_out - H_in|      (eV) :     0.0009687445
+SCF cycle converged after 6 iterations
+
+stepf: Fermi-Dirac step function
+
+Using DM_out to compute the final energy and forces
+No. of atoms with KB's overlaping orbs in proc 0. Max # of overlaps:      29     157
+
+siesta: E_KS(eV) =             -862.6688
+
+siesta: E_KS - E_eggbox =      -862.6688
+
+siesta: Atomic forces (eV/Ang):
+----------------------------------------
+   Tot    0.000000   -0.000000    0.000000
+----------------------------------------
+   Max    0.000002
+   Res    0.000001    sqrt( Sum f_i^2 / 3N )
+----------------------------------------
+   Max    0.000002    constrained
+
+Stress tensor Voigt[x,y,z,yz,xz,xy] (kbar):       17.59       17.59       17.59        0.00        0.00        0.00
+(Free)E + p*V (eV/cell)     -864.4269
+Target enthalpy (eV/cell)     -862.6688
+
+siesta: Program's energy decomposition (eV):
+siesta: Ebs     =      -320.942401
+siesta: Eions   =      1523.208495
+siesta: Ena     =       467.239233
+siesta: Ekin    =       332.635280
+siesta: Enl     =       108.758040
+siesta: Eso     =         0.000000
+siesta: Edftu   =         0.000000
+siesta: DEna    =        11.198969
+siesta: DUscf   =         1.611093
+siesta: DUext   =         0.000000
+siesta: Exc     =      -260.902927
+siesta: eta*DQ  =         0.000000
+siesta: Emadel  =         0.000000
+siesta: Emeta   =         0.000000
+siesta: Emolmec =         0.000000
+siesta: Ekinion =         0.000000
+siesta: Eharris =      -862.668808
+siesta: Etot    =      -862.668808
+siesta: FreeEng =      -862.668808
+
+siesta: Final energy (eV):
+siesta:  Band Struct. =    -320.942401
+siesta:       Kinetic =     332.635280
+siesta:       Hartree =      59.917261
+siesta:       Edftu   =       0.000000
+siesta:       Eso     =       0.000000
+siesta:    Ext. field =       0.000000
+siesta:   Exch.-corr. =    -260.902927
+siesta:  Ion-electron =    -433.214693
+siesta:       Ion-ion =    -561.103729
+siesta:       Ekinion =       0.000000
+siesta:         Total =    -862.668808
+siesta:         Fermi =      -4.297006
+
+siesta: Stress tensor (static) (eV/Ang**3):
+siesta:     0.010981    0.000000    0.000000
+siesta:     0.000000    0.010981    0.000000
+siesta:     0.000000    0.000000    0.010981
+
+siesta: Cell volume =        160.103007 Ang**3
+
+siesta: Pressure (static):
+siesta:                Solid            Molecule  Units
+siesta:          -0.00011960         -0.00011960  Ry/Bohr**3
+siesta:          -0.01098113         -0.01098113  eV/Ang**3
+siesta:         -17.59390438        -17.59390102  kBar
+(Free)E+ p_basis*V_orbitals  =        -855.154435
+(Free)Eharris+ p_basis*V_orbitals  =        -855.154435
+
+cite: Please see "OMM_si.bib" for an exhaustive BiBTeX file.
+cite: Please clearly indicate Siesta version in published work: v4.1-b4-351
+cite: This calculation has made use of the following articles
+cite: which are encouraged to be cited in a published work.
+        Primary SIESTA paper
+          DOI: www.doi.org/10.1088/0953-8984/14/11/302
+
+>> End of run:  22-JAN-2021  23:16:27
+Job completed
+[1611353787.955402] [n-62-21-35:18317:0]          mpool.c:42   UCX  WARN  object 0x2e99700 was not returned to mpool ucp_requests

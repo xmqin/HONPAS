@@ -1,0 +1,509 @@
+# Superficie Si(100)-2x1
+# Oscar Paz, Enero 2002
+
+
+
+##### GENERAL SYSTEM DESCRIPTORS ###############################################
+
+SystemName		si2x1.gga.vpsgga.sp.9l.sym.af-f
+ # Default value: blank
+
+SystemLabel		si111-spinpol
+ # Default value: siesta
+
+NumberOfAtoms		22
+
+NumberOfSpecies	2
+
+%block ChemicalSpeciesLabel
+	1	14	Si
+	2	1	H
+%endblock ChemicalSpeciesLabel
+
+#%block PhononLabels
+#%endblock PhononLabels
+
+#%block AtomicMass
+#%endblock AtomicMass
+ # Default: (Block absent or empty) Natural masses assumed
+ #  For ghost atoms (floating orbitals), a default of 1.d30 a.u. is assigned
+
+#NetCharge
+# Default value: 0.0
+
+
+
+##### BASIS DEFINITION #########################################################
+
+PAO.BasisType		split
+ # Default value: split
+ #  * split: Split-valence scheme for multiple-zeta
+ #  * splitgauss: Same as split but using gaussian functions
+ #  * nodes: Generalized PAO's
+ #  * nonodes: The original PAO's are used
+
+PAO.BasisSize		SZP
+ # Default value: STANDARD
+ #  * SZ or MINIMAL: minimal or single-zeta basis
+ #  * DZ: Double zeta basis, in the scheme defined by PAO.BasisType
+ #  * SZP: Single-zeta basis plus polarization orbitals
+ #  * DZP or STANDARD: Like DZ plus polarization orbitals
+
+#%block PAO.BasisSizes
+#%endblock PAO.BasisSizes
+
+PAO.EnergyShift	200 meV
+ # Default value: 0.02 Ry
+
+PAO.SplitNorm		0.20
+ # Default value: 0.15
+
+#%block PS.lmax
+#%endblock PS.lmax
+ # Default: (Block absent or empty). Maximum angular momentum of the basis
+ #  orbitals plus one
+
+#%block PS.KBprojectors
+#%endblock PS.KBprojectors
+ # Default: (Block absent or empty). Only one KB projector, constructed from
+ #  the nodeless eigenfunction, used for each angular momentum
+
+%block PAO.Basis
+	H	1
+	0	1
+	0.
+	0.75
+%endblock PAO.Basis
+ # Define Basis set
+ #  Label, l_shells, type (opt), ionic_charge (opt)
+ #  n (opt if not using semicore levels), l, Nzeta
+ #      rc(izeta=1,Nzeta)(Bohr)
+ #      scaleFactor(izeta=1,Nzeta) (opt)
+ #  l, Nzeta, PolOrb (opt), NzetaPol (opt)
+ #      rc(izeta=1,Nzeta)(Bohr)
+
+
+
+##### LATTICE, COORDINATES, k-SAMPLING #########################################
+
+LatticeConstant	3.882016 Ang	# Bulk 5.49 Ang
+ # Default value: Minimum size to include the system without intercell
+ #  interactions, plus 10%
+
+%block LatticeParameters
+	1.0	2.0	9.5	90.	90.	90.
+%endblock LatticeParameters
+ # Default value: 1.0  1.0  1.0  90.  90.  90.
+
+#%block LatticeVectors
+#%endblock LatticeVectors
+ # Default value:
+ #  1.0  0.0  0.0 
+ #  0.0  1.0  0.0 
+ #  0.0  0.0  1.0
+
+AtomicCoordinatesFormat	ScaledCartesian
+ # Default value: NotScaledCartesianBohr
+ #  * Bohr or NotScaledCartesianBohr
+ #  * Ang or NotScaledCartesianAng
+ #  * ScaledCartesian
+ #  * Fractional or ScaledByLatticeVectors
+
+#AtomCoorFormatOut
+ # Default value: value of AtomicCoordinatesFormat
+
+#AtomicCoordinatesOrigin
+ # Default value: 0.000  0.000  0.000
+
+
+%block AtomicCoordinatesAndAtomicSpecies
+    0.00000041    0.20165728    0.08212876   1  Si        1
+    0.00000557    0.79834210    0.08212876   1  Si        2
+    0.49999992    0.02145368    0.36263553   1  Si        3
+    0.49999722    0.97855287    0.36264235   1  Si        4
+    0.49999851    0.49999916    0.74970455   1  Si        5
+    0.50001930    1.49999916    0.68492868   1  Si        6
+    0.00000849    0.50000179    1.09496075   1  Si        7
+   -0.00000336    1.49998803    1.04760947   1  Si        8
+    0.00004366   -0.01155657    1.42424719   1  Si        9
+    0.00005371    1.01157604    1.42426949   1  Si       10
+    0.50002980   -0.00933792    1.77615172   1  Si       11
+    0.50001391    1.00933408    1.77611812   1  Si       12
+    0.50000291    0.49999931    2.12034679   1  Si       13
+    0.50011505    1.50002573    2.13662611   1  Si       14
+    0.00000006    0.49999949    2.47735636   1  Si       15
+    0.00006776    1.50000282    2.48609396   1  Si       16
+    0.00000000    0.00000000    2.82840000   1  Si       17
+    0.00000000    1.00000000    2.82840000   1  Si       18
+   -0.29280000    0.00000000    3.07230000   2  H        19
+    0.29280000    0.00000000    3.07230000   2  H        20
+   -0.29280000    1.00000000    3.07230000   2  H        21
+    0.29280000    1.00000000    3.07230000   2  H        22
+%endblock AtomicCoordinatesAndAtomicSpecies
+#%block AtomicCoordinatesAndAtomicSpecies
+#%endblock AtomicCoordinatesAndAtomicSpecies
+
+#%block SuperCell
+#%endblock SuperCell
+
+%block GeometryConstraints
+	position from	17 to	22
+	routine constr
+%endblock GeometryConstraints
+ # Default value: No constraints
+
+#kgrid_cutoff		16.5 Ang
+ # Default value: 0.0 Bohr
+
+%block kgrid_Monkhorst_Pack
+	3	0	0	0.0
+	0	3	0	0.0
+	0	0	1	0.0
+%endblock kgrid_Monkhorst_Pack
+ # Default value: Gamma point
+
+#BandLinesScale
+ # Default value: pi/a
+
+#%block BandLines
+#%endblock BandLines
+ # Default value: No band energies calculated
+
+
+
+##### DFT, GRID, SCF ###########################################################
+
+#Harris_functional	.true.
+ # Default value: .false.
+
+XC.functional		GGA
+ # Default value: LDA
+ #  * LDA
+ #  * GGA
+
+XC.authors		PBE
+ # Default value: PZ
+ #  * CA equivalent to PZ. Local density approx.
+ #  * PW92. Local density approximation.
+ #  * PBE. Generalized gradients approximation.
+
+SpinPolarized		.true.
+ # Default value: .false.
+
+#NonCollinearSpin	.true.
+ # Default value: .false.
+
+#FixSpin		.true.
+ # Default value: .false.
+
+#TotalSpin
+ # Default value: 0.0
+
+MeshCutoff		100. Ry
+ # Default value: 50 Ry
+
+DM.MixingWeight	0.1
+ # Default value: 0.25
+
+DM.NumberPulay	3
+ # Default value: 0
+
+#DM.PulayOnFile	.true.
+ # Default value: .false.
+
+#DM.NumberKick  5
+ # Default value: 0
+
+#DM.KickMixingWeight
+ # Default value: 0.50
+
+#DM.MixSCF1		.true.
+ # Default value: .false.
+
+#DM.Tolerance		1.0d-6
+ # Default value: 10**-4
+
+#DM.InitSpinAF		.true.
+ # Default value: .false.
+
+%block DM.InitSpin
+	1	+
+	2	-
+%endblock DM.InitSpin
+ # Atom index, spin, theta, phi (deg)
+
+#NeglNonOverlapInt	.true.
+ # Default value: .false.
+
+#%block ExternalElectricField
+#%endblock ExternalElectricField
+
+#%block PolarizationGrids
+#%endblock PolarizationGrids
+
+#%block GridCellSampling
+#%endblock GridCellSampling
+
+
+
+##### EIGENVALUE PROBLEM: DIAGONALIZATION OR ORDER-N ###########################
+
+SolutionMethod	diagon
+ # Default value: diagon for 100 atoms or less,
+ #  Order-N for more than 100 atoms
+
+ElectronicTemperature	5 meV
+ # Default value: 300 K
+
+#ON.functional
+ # Default value: Kim
+ #  * Kim
+ #  * Ordejon-Mauri
+ #  * files
+
+#ON.MaxNumIter
+ # Default value: 1000
+
+#ON.etol
+ # Default value: 10**-8
+
+#ON.eta
+ # Default value: 0.0 eV
+
+#ON.RcLWF
+ # Default value: 9.5 Bohr
+
+#ON.ChemicalPotential	.true.
+ # Default value: .false.
+
+#ON.ChemicalPotentialUse	.true.
+ # Default value: .false.
+
+#ON.ChemicalPotentialRc
+ # Default value: 9.5 Bohr
+
+#ON.ChemicalPotentialTemperature
+ # Default value: 0.05 Ry
+
+#ON.ChemicalPotentialOrder
+ # Default value: 100
+
+
+
+##### MOLECULAR DYNAMICS AND RELAXATIONS #######################################
+
+MD.TypeOfRun		CG
+ # Default value: Verlet (CG for one atom systems)
+ #  * CG
+ #  * Verlet
+ #  * Nose
+ #  * ParrinelloRahman
+ #  * NoseParrinelloRahman
+ #  * Anneal
+ #  * FC
+ #  * Phonon
+
+#MD.VariableCell	.true.
+ # Default value: .false.
+
+MD.NumCGsteps		0
+ # Default value: 0
+
+MD.MaxCGDispl		0.02 Ang
+ # Default value: 0.2 Bohr
+
+#MD.PreconditionVariableCell	
+ # Default value: 5.0 Ang
+
+MD.MaxForceTol	0.02 eV/Ang
+ # Default value: 0.04 eV/Ang
+
+#MD.MaxStressTol
+ # Default value: 1.0 GPa
+
+#MD.InitialTimeStep
+ # Default value: 1
+
+#MD.FinalTimeStep
+ # Default value: 1
+
+#MD.LengthTimeStep
+ # Default value: 1.0 fs
+
+#MD.InitialTemperature
+ # Default value: 0.0 K
+
+#MD.Quench		.true.
+ # Default value: .false.
+
+#MD.TargetTemperature
+ # Default value: 0.0 K
+
+#MD.TargetPressure
+ # Default value: 0.0 GPa
+
+#%block MD.TargetStress
+#%endblock MD.TargetStress
+ # Default value: Hydrostatic target pressure:
+ #  -1., -1., -1., 0., 0., 0.
+
+#MD.NoseMass
+ # Default value: 100.0 Ry*fs**2
+
+#MD.ParrinelloRahmanMass
+ # Default value: 100.0 Ry*fs**2
+
+#MD.AnnealOption
+ # Default value: TemperatureAndPressure
+ #  * Temperature
+ #  * Pressure
+ #  * TemperatureandPressure
+
+#MD.TauRelax
+ # Default value: 100.0 fs
+
+#MD.BulkModulus
+ # Default value: 100.0 Ry/Bohr**3
+
+#MD.FCDispl
+ # Default value: 0.04 Bohr
+
+#MD.FCfirst
+ # Default value: 1
+
+#MD.FClast
+ # Default value: Same as NumberOfAtoms
+
+#%block MD.ATforPhonon
+#%endblock MD.ATforPhonon
+
+
+
+##### PARALLEL OPTIONS #########################################################
+
+
+
+##### EFFICIENCY OPTIONS #######################################################
+
+#DirectPhi		.true.
+ # Default value: .false.
+
+#SaveMemory		.true.
+ # Default value: .false.
+
+
+
+##### OUTPUT OPTIONS ###########################################################
+
+#LongOutput		.true.
+ # Default value: .false.
+ #  * WriteCoorStep:  .true.
+ #  * WriteForces: .true.
+ #  * WriteKpoints: .true.
+ #  * WriteEigenvalues: .true.
+ #  * WriteKbands: .true.
+ #  * WriteBands: .true.
+ #  * WriteMullikenPop 1
+
+#WriteCoorInitial	.false.
+ # Default value: .true.
+
+WriteCoorStep		.true.
+ # Default value: .false.
+
+WriteForces		.true.
+ # Default value: .false.
+
+#WriteKpoints		.true.
+ # Default value: .false.
+
+#WriteEigenvalues	.true.
+ # Default value: .false.
+
+#WriteDM		.false.
+ # Default value: .true.
+
+#WriteKbands		.true.
+ # Default value: .false.
+
+#WriteBands		.true.
+ # Default value: .false.
+
+WriteMullikenPop	1
+ # Default value: 0
+ #  * 0 = None
+ #  * 1 = atomic and orbital charges
+ #  * 2 = 1 + atomic overlap pop
+ #  * 3 = 2 + orbital overlap pop
+
+WriteCoorXmol		.true.
+ # Default value: .false.
+
+#WriteCoorCerius	.true.
+ # Default value: .false.
+
+WriteMDXmol		.true.
+ # Default value: .false. if WriteCoorStep is .true. and vice-versa
+
+WriteMDhistory	.true.
+ # Default value: .false.
+
+#WarningMinimumAtomicDistance
+ # Default value: 1.0 Bohr
+
+#AllocReportLevel	2
+# Default value: 0
+#  * level 0 : no report at all (the default)
+#  * level 1 : only total memory peak and where it occurred
+#  * level 2 : detailed report printed only at normal program termination
+#  * level 3 : detailed report printed at every new memory peak
+#  * level 4 : print every individual (re)allocation or deallocation
+
+
+
+##### OPTIONS FOR SAVING/READING INFORMATION ###################################
+
+#UseSaveData		.true.
+ # Default value: .false.
+
+#DM.UseSaveDM		.true.
+ # Default value: .false.
+
+#ON.UseSaveLWF		.true.
+ # Default value: .false.
+
+#MD.UseSaveXV		.true.
+ # Default value: .false.
+
+#MD.UseSaveCG		.true.
+ # Default value: .false.
+
+#SaveHS			.true.
+ # Default value: .false.
+
+SaveRho		.true.
+ # Default value: .false.
+
+SaveDeltaRho		.true.
+ # Default value: .false.
+
+SaveElectrostaticPotential	.true.
+ # Default value: .false.
+
+SaveTotalPotential	.true.
+ # Default value: .false.
+
+#%block LocalDensityOfStates
+#%endblock LocalDensityOfStates
+ # Default value: LDOS not calculated nor written.
+
+#%block ProjectedDensityOfStates
+#%endblock ProjectedDensityOfStates
+ # Default value: PDOS not calculated nor written.
+
+
+
+##### USER-PROVIDED BASIS ORBITALS #############################################
+
+#User.Basis
+#User.Basis.NetCDF

@@ -1,0 +1,14 @@
+#!/bin/sh
+#$ -pe mpich-gm 2
+#$ -cwd
+#$ -j y
+#$ -S /bin/sh
+#$ -V
+#           qsub /path/to/sge_run.sh  command
+prog=../../../siesta
+#
+echo This job runs on the following nodes:
+echo `cat $TMP/machines`
+#
+make SIESTA="/opt/64/mpich-gm-pgi/bin/mpirun -np $NSLOTS -machinefile $TMPDIR/machines  -nolocal $prog"
+

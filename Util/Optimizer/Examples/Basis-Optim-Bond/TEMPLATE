@@ -1,0 +1,47 @@
+SystemName          Water molecule
+SystemLabel         h2o
+NumberOfAtoms       3
+NumberOfSpecies     2
+
+Reparametrize.Pseudos T       # Options for more accuracy
+Restricted.Radial.Grid F
+
+MeshCutoff  200 Ry
+
+%block ChemicalSpeciesLabel
+ 1  8  O      # Species index, atomic number, species label
+ 2  1  H
+%endblock ChemicalSpeciesLabel
+
+AtomicCoordinatesFormat  Ang
+%block AtomicCoordinatesAndAtomicSpecies
+ 0.000  0.000  0.000  1
+ 0.757  0.586  0.000  2
+-0.757  0.586  0.000  2
+%endblock AtomicCoordinatesAndAtomicSpecies
+
+DM.Number.Broyden 4
+
+#
+# Full template for Basis parameters
+#
+Basis.Pressure 0.2 GPa         # As in Anglada et al
+#
+PAO.BasisType    split
+PAO.EnergyShift $eshift meV
+%block PAO.Basis                                   # Define Basis set
+O     2
+ n=2    0    2  S $spl_s_O
+   0.0   0.0
+   1.000   1.000
+ n=2    1    2  P 1 S $spl_p_O
+   0.0   0.0
+   1.000   1.000  
+H     1
+ n=1    0    2  P 1 S $spl_s_H
+   0.0  0.0
+   1.000   1.000  
+%endblock PAO.Basis
+
+MD.TypeOfRun CG
+MD.NumCGSteps 20

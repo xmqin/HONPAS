@@ -1,0 +1,53 @@
+SystemName          OMM_si
+SystemLabel         OMM_si
+NumberOfAtoms       8
+NumberOfSpecies     1
+
+SolutionMethod OMM
+OMM.UseCholesky .true.
+OMM.Use2D .true.
+OMM.Eigenvalues .true.
+OMM.LongOutput .true.
+
+%block kgrid_Monkhorst_Pack
+2 0 0 0.5
+0 2 0 0.5
+0 0 2 0.5
+%endblock kgrid_Monkhorst_Pack
+
+%block ChemicalSpeciesLabel
+ 1  14  Si
+%endblock ChemicalSpeciesLabel
+
+PAO.BasisType split
+%Block PAO.Basis
+Si   3      0.11629
+ n=3   0   2   E    47.72154     5.15176
+     8.00000     1.81575
+     1.00000     1.00000
+ n=3   1   2   E    16.47985     5.10819
+     8.00000     4.05391
+     1.00000     1.00000
+ n=3   2   1   E     9.50149     0.00018
+     4.44687
+     1.00000
+%EndBlock PAO.Basis
+
+LatticeConstant 5.43 Ang
+%block LatticeVectors
+1.0 0.0 0.0
+0.0 1.0 0.0
+0.0 0.0 1.0
+%endblock LatticeVectors
+
+AtomicCoordinatesFormat Fractional
+%block AtomicCoordinatesAndAtomicSpecies
+  0.000000000000000       0.000000000000000       0.000000000000000     1
+  0.250000000000000       0.250000000000000       0.250000000000000     1
+  0.500000000000000       0.500000000000000       0.000000000000000     1
+  0.750000000000000       0.750000000000000       0.250000000000000     1
+  0.500000000000000       0.000000000000000       0.500000000000000     1
+  0.000000000000000       0.500000000000000       0.500000000000000     1
+  0.750000000000000       0.250000000000000       0.750000000000000     1
+  0.250000000000000       0.750000000000000       0.750000000000000     1
+%endblock AtomicCoordinatesAndAtomicSpecies

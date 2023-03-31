@@ -1,0 +1,71 @@
+SystemLabel gate_G_charge
+
+
+# Add charge gate of 0.002 electrons
+# At a plane 20 Ang below the graphene plane
+%block Geometry.Charge
+ plane -0.002 charge
+  gauss 1. 2. Ang
+   0. 0. 5. Ang
+   0. 0. 1. Ang
+%endblock Geometry.Charge
+
+
+LatticeConstant 1. Ang
+%block LatticeVectors
+ 2.1675 1.25140670847 0.0
+ 2.1675 -1.25140670847 0.0
+ 0.0 0.0 100.0
+%endblock LatticeVectors
+
+NumberOfAtoms 2
+AtomicCoordinatesFormat Ang
+%block AtomicCoordinatesAndAtomicSpecies
+ 0.00000 0.00000 25.00000 1 # 1
+ 1.44500 0.00000 25.00000 1 # 2
+%endblock AtomicCoordinatesAndAtomicSpecies
+
+NumberOfSpecies 1
+%block ChemicalSpeciesLabel
+ 1 6 C.pbe
+%endblock ChemicalSpeciesLabel
+
+
+SlabDipoleCorrection T
+
+# For the small unit-cells with large k
+# This is MUCH faster!
+Diag.ParallelOverK T
+
+PAO.BasisSize     DZP
+PAO.BasisType   split
+%block PS.lmax
+   C.pbe 2
+%endblock PS.lmax
+
+%block kgrid_Monkhorst_Pack
+    44    0    0    0.0
+     0   44    0    0.0
+     0    0    1    0.0
+%endblock kgrid_Monkhorst_Pack
+
+MeshCutoff        200.000000 Ry
+MinSCFIterations  3
+
+SCF.Mixer.Weight 0.1
+SCF.Mixer.History 20
+
+MullikenInSCF T
+
+xc.functional GGA           # Exchange-correlation functional
+xc.authors    PBE           # Exchange-correlation versio
+
+MD.UseSaveXV        false
+MD.TypeOfRun        CG
+MD.NumCGsteps       0
+MD.UseSaveCG        false
+WriteCoorXmol       true
+WriteMDXmol         true
+MD.FinalTimeStep 1
+
+XML.Write F

@@ -1,0 +1,62 @@
+SystemLabel graphite_c6_full
+NumberOfAtoms        4
+
+NumberOfSpecies      1
+%block ChemicalSpeciesLabel
+    1   6 C.pbe
+%endblock ChemicalSpeciesLabel
+
+%block PS.lmax
+   C.pbe 2
+%endblock PS.lmax
+
+LatticeConstant 1.0 Ang
+%block LatticeParameters
+    2.4610    2.4610    6.7080   90.0000   90.0000  120.0000
+%endblock LatticeParameters
+
+AtomicCoordinatesFormat Fractional
+%block AtomicCoordinatesAndAtomicSpecies
+    0.000000000    0.000000000    0.000000000     1
+    0.000000000    0.000000000    0.500000000     1
+    0.333333333    0.666666667    0.000000000     1
+    0.666666667    0.333333333    0.500000000     1
+%endblock AtomicCoordinatesAndAtomicSpecies
+
+MM.Cutoff 20.0 Ang
+%block MM.Potentials
+1 1 C6 15.19 1.56
+%endblock MM.Potentials
+
+XC.functional GGA
+XC.authors PBE
+
+PAO.EnergyShift  0.0025 Ry 
+PAO.SplitNorm    0.30
+PAO.SplitNormH   0.50
+
+PAO.SoftDefault true
+PAO.SoftPotential 50.0 Ry
+PAO.SoftInnerRadius 0.80
+
+kgrid_cutoff 16.0 Ang
+
+PAO.BasisSize TZ2P
+
+ElectronicTemperature 0 K
+
+%block GridCellSampling
+ 0.5    0.5    0.5
+%endblock GridCellSampling
+
+DM.MixingWeight      0.30
+DM.NumberPulay       5
+
+MD.TypeofRun CG
+MD.VariableCell true
+MD.NumCGsteps 100       
+MD.MaxForceTol 0.01 eV/Ang
+MD.MaxStressTol 200 bar
+
+LongOutput true
+UseSaveData true

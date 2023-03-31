@@ -1,0 +1,388 @@
+------------------------------------------------------------
+August 4, 2016      A. Garcia  trunk-537--pexsi-v0.8-spin-15
+Use SIESTA__PEXSI as symbol, and .LDOS. instead of .localdos.
+
+Updated "ifdefs" to use SIESTA__PEXSI as flag. 
+
+PEXSI local DOS routines now use  .LDOS. fdf flags. Updated test files.
+
+(+ make previous 2D-array MPI "gather" interface changes in .lit files)
+
+------------------------------------------------------------
+August 3, 2016      A. Garcia  trunk-537--pexsi-v0.8-spin-14
+Cleaner fix for init_spin behavior
+
+The nspin, spinor_dim, et al integer pointers in 'm_init' have now
+been initialized to 'null()', and the 'init_spin' routine is now
+called by all processes in 'siesta_init'.  This is the cleanest way to
+fix the problem described in the previous commit.
+
+Note that the PEXSI routines still use the 'nspin' variable internally
+to refer to both 'spinor_dim' and 'h_spin_dim'. This will be changed when
+mixed-spin solving is implemented.
+
+modified:
+  Src/m_spin.F90
+  Src/siesta_init.F
+
+------------------------------------------------------------
+July 31, 2016       A. Garcia  trunk-537--pexsi-v0.8-spin-13
+Fix bug related to init_spin behavior
+
+The PEXSI-only processes do not call 'init_spin', and rely on a
+broadcast from the Siesta_worker nodes to get certain information. As
+nspin, spinor_dim, et al were integer pointers in 'm_init', they were
+undefined on entry to the PEXSI interface routines, causing segfaults.
+They have been converted to plain integers for now, pending a review
+of other possible ways to fix the problem. 
+
+Some pointers in sparse_matrices have been initialized to null().
+
+A test to catch non-collinear or spin-orbit cases has been added
+before the call to the PEXSI solver.
+
+Note that the PEXSI routines still use the 'nspin' variable internally
+to refer to both 'spinor_dim' and 'h_spin_dim'. This will be changed when
+mixed-spin solving is implemented.
+
+Added Tests/sih-pexsi-spin.
+
+modified:
+  Src/compute_dm.F
+  Src/m_spin.F90
+  Src/siesta_analysis.F
+  Src/sparse_matrices.F
+added:
+  Tests/sih-pexsi-spin
+
+
+
+
+
+------------------------------------------------------------
+July 30, 2016       A. Garcia  trunk-537--pexsi-v0.8-spin-12
+Put back the MPI interfaces
+
+The custom MPI interfaces in Src/MPI are now compiled
+by default, except if the preprocessor option
+
+ -DNO_MPI_INTERFACES
+
+is specified.
+
++ 2D arrays have to be passed as a(1,1) in the
+  mpi_(all)gather calls in the pexsi modules...
+
++ Update pexsi arch.makes in Src/Sys
+
+------------------------------------------------------------
+July 30, 2016       A. Garcia  trunk-537--pexsi-v0.8-spin-11
+Wrap PEXSI code within preprocessor blocks
+
+The mechanism is similar to that used for TranSiesta.
+
+(Also wrapped ELPA code within MPI preprocessor blocks)
+
+------------------------------------------------------------
+July 29, 2016       A. Garcia  trunk-537--pexsi-v0.8-spin-10
+Remove old pexsi code
+
+removed:
+  Src/OldPEXSI/
+  Src/dummy_pexsi/
+  Src/m_pexsi_solver.F90_old
+
+------------------------------------------------------------
+July 29, 2016       A. Garcia   trunk-537--pexsi-v0.8-spin-9
+Sync to trunk-537 (removal of fdf_global_get + fixes)
+
+------------------------------------------------------------
+July 29, 2016       A. Garcia   trunk-535--pexsi-v0.8-spin-9
+Sync to trunk-535 (after ELPA/MRRR merge + fdict changes)
+
+------------------------------------------------------------
+July 28, 2016       A. Garcia   trunk-531--pexsi-v0.8-spin-9
+Add flag to turn off calculation of forces
+
+With the fdf setting 'compute-forces F' the program will skip the call
+to 'post_scf_work' in 'siesta_forces'. This is for debugging purposes
+only.
+
+modified:
+  Src/siesta_forces.F
+  
+------------------------------------------------------------
+July 26, 2016       A. Garcia   trunk-531--pexsi-v0.8-spin-8
+Clarify the options and filenames to output H and DM
+
+For backwards compatibility, a single SystemLabel.DM file
+is produced by default. If the blocked-format option
+
+    Write.Blocked.Matrix T
+
+is used, a variety of files with the '.blocked' suffix might be
+produced. See the manual for a full explanation.
+
+Note that the above performance-enhancing option is NOT enabled
+by default.
+
+modified:
+  Docs/siesta.tex
+  Src/m_iodm_old.F
+  Src/save_density_matrix.F
+
+------------------------------------------------------------
+July 22, 2016       A. Garcia   trunk-531--pexsi-v0.8-spin-7
+Sync to trunk-531
+
+Still to test: the NCDF_4 interoperability.
+
+------------------------------------------------------------
+July 21, 2016       A. Garcia   trunk-525--pexsi-v0.8-spin-7
+Sync to trunk-525 (after TS merge + few revs)
+
+NOTES: Work in progress.
+Tests run. Some differences still to be explored
+
+write_dm interface: For now, files of the form SystemLabel.DM_MIXED
+and SystemLabel.DM_OUT are produced by Nick's new routine.
+
+Files such as DM_OUT and DM_MIXED (as well as H_DMGEN and H_MIXED) are
+produced by AG's write_spmatrix.
+
+------------------------------------------------------------
+July 21, 2016       A. Garcia   trunk-508--pexsi-v0.8-spin-7
+Sync to trunk-508 (after spin-orbit)
+
+------------------------------------------------------------
+July 11, 2016       A. Garcia   trunk-507--pexsi-v0.8-spin-7
+Sync to trunk-507 (after LDA+U and a few fixes)
+
+(+ fix change in timer label: itermd-->itergeom)
+
+------------------------------------------------------------
+July 10, 2016       A. Garcia   trunk-492--pexsi-v0.8-spin-7
+Sync to trunk-492 (after GPL and a few fixes)
+
+------------------------------------------------------------
+July 10, 2016       A. Garcia   trunk-476--pexsi-v0.8-spin-7
+Sync to trunk-476 (after Fix the geometry and DM and H logic)
+
+Note that the logic in the PEXSI branch's siesta_forces.F
+was already more complete than in the trunk, so it has
+been kept unchanged, with minor additions for documentation.
+
+The sparse matrix format is "blocked" by default.
+
+------------------------------------------------------------
+July 10, 2016       A. Garcia   trunk-475--pexsi-v0.8-spin-7
+Sync to trunk-475 (after Wannier and sockets)
+
+------------------------------------------------------------
+July 10, 2016       A. Garcia   trunk-472--pexsi-v0.8-spin-7
+Sync to trunk-472
+
+------------------------------------------------------------
+November 10, 2015  A. Garcia   trunk-464--pexsi-v0.8-spin-7
+Fix communicator bug in LDOS routine
+
+The full spatial communicator must be used for the plan, even
+if we use only a pole's worth of processors.
+
+Insert note in the manual regarding the mandatory divisibility of
+the number of MPI processes by PEXSI.npPerPole.
+
+modified:
+  Src/pexsi-ldos.lit
+  Src/m_pexsi_local_dos.F90
+  Docs/siesta.tex
+  Docs/LitCode/pexsi-ldos.html
+
+------------------------------------------------------------
+November 5, 2015  A. Garcia   trunk-464--pexsi-v0.8-spin-6
+Avoid stopping the program when the solver does not converge. Update documentation.
+
+Rather than stopping the program immediately, we allow the
+density-matrix normalization step to try to recover the correct number
+of electrons. This is non-optimal but can recover from occassional
+instabilities.
+
+Update the manual.
+
+Create Docs/LitCode to hold the .html files produced (manually for now) from
+the .lit files in Src.
+
+added:
+  Docs/LitCode/
+  Docs/LitCode/README
+  Docs/LitCode/pexsi-dos.html
+  Docs/LitCode/pexsi-ldos.html
+  Docs/LitCode/pexsi-lit.html
+  Docs/LitCode/pexsi-solver.html
+  Docs/LitCode/redist-spmatrix.html
+renamed:
+  Src/redist-spmatrix.org => Src/redist-spmatrix.lit
+modified:
+  Docs/siesta.tex
+  Src/Makefile
+  Src/m_pexsi_driver.F90
+  Src/makefile.lit
+  Src/pexsi-solver.lit
+  Src/redist-spmatrix.lit
+
+------------------------------------------------------------
+November 2, 2015  A. Garcia   trunk-464--pexsi-v0.8-spin-5
+Implemented DOS and LDOS routines with spin-polarization
+
+------------------------------------------------------------
+October 26, 2015  A. Garcia   trunk-464--pexsi-v0.8-spin-4
+Update interval when falling back to IC in solver
+
+When the Newton step in the solver falls outside the bracket a new one
+is chosen which includes the jump point. Then a new inertia-count
+cycle begins.
+
+(+ added .make files for MN and Edison)
+
+added:
+  Src/Sys/edison-pexsi.make
+  Src/Sys/marenostrum-pexsi.make
+modified:
+  Src/m_pexsi_driver.F90
+  Src/pexsi-lit.org
+
+------------------------------------------------------------
+October 20, 2015  A. Garcia   trunk-464--pexsi-v0.8-spin-3
+Better support for PEXSI versions
+
+The file f_ppexsi_interface.f90 now "include"s the actual interface
+file from the PEXSI distribution directory. See the new file
+Src/Sys/pexsi-gfortran-openmpi.make for an example of arch.make.
+
+Cosmetics: minimize debugging output.
+
+Some rough edges still remaining:
+
+- Update of estimated mu in inertia-count?
+
+- Treatment of the "large jump" in the Newton method
+  (diagnosis criteria and re-bracketing for inertia-count)
+  
+- Centralization and documentation of options.
+
+- Cosmetics for output
+
+- Option to treat spin serially in PEXSI
+
+added:
+ Src/Sys/pexsi-gfortran-openmpi.make
+modified:
+ Src/Makefile
+ Src/class_Distribution.F90
+ Src/f_ppexsi_interface.f90
+ Src/m_pexsi_driver.F90
+ Src/m_redist_spmatrix.F90
+ Src/pexsi-lit.org
+ Src/redist-spmatrix.org
+
+------------------------------------------------------------
+October 19, 2015  A. Garcia   trunk-464--pexsi-v0.8-spin-2
+Simplify class_Distribution
+
+Some constructs were F2003 only (notably the "allocate on assignment").
+There is now a single distribution module with dispatching based on
+the type of distribution.
+
+Some rough edges still remaining:
+
+- Treatment of the "large jump" in the Newton method
+  (diagnosis criteria and re-bracketing for inertia-count)
+  
+- Centralization and documentation of options.
+
+- Cosmetics for output
+
+- Option to treat spin serially in PEXSI
+
+------------------------------------------------------------
+October 19, 2015  A. Garcia   trunk-464--pexsi-v0.8-spin-1
+First working version for spin-polarization
+
+This version splits the PEXSI communicator to deal
+with spins completely in parallel. Note that the SIESTA
+side still does them serially.
+
+Some rough edges still remaining:
+
+- Treatment of the "large jump" in the Newton method
+  (diagnosis criteria and re-bracketing for inertia-count)
+  
+- Centralization and documentation of options.
+
+- Cosmetics for output
+
+- Option to treat spin serially in PEXSI
+
+
+------------------------------------------------------------
+October 13, 2015  A. Garcia        trunk-464--pexsi-v0.8-5
+Refine the expert interface for spinless case (work in progress)
+
+Some rough edges still remaining:
+
+- Treatment of the "large jump" in the Newton method
+  (diagnosis criteria and re-bracketing for inertia-count)
+  
+- Centralization and documentation of options.
+
+modified:
+  Src/m_pexsi_driver.F90
+  Src/pexsi-lit.org
+
+------------------------------------------------------------
+October 11, 2015  A. Garcia        trunk-464--pexsi-v0.8-4
+Use an expert interface instead of the simple driver
+
+Call and handle the inertia-count routine and the "Fermi operator"
+calculator.
+Some rough edges regarding termination conditions and tolerance sizes
+(particularly the "energy width" criterion for inertia-count).
+
+modified:
+  Src/Makefile
+  Src/m_pexsi_driver.F90
+  Src/pexsi-lit.org
+      
+------------------------------------------------------------
+October 11, 2015  A. Garcia        trunk-464--pexsi-v0.8-3
+Use org-mode for tangling pexsi sources
+
+added:
+  Src/pexsi-lit.org
+  Src/tangle.sh
+modified:
+  Src/m_pexsi.f90
+  Src/m_pexsi_driver.F90
+
+------------------------------------------------------------
+June 18, 2015  A. Garcia        trunk-464--pexsi-v0.8-2
+Fix timing hierarchy in pexsi driver. Manual update
+
+* A timing section was wrongly enclosed in another.
+
+* Document the default values for the DM and H writing options.
+
+modified:
+  Docs/siesta.tex
+  Src/m_pexsi_driver.F90
+
+------------------------------------------------------------
+June 18, 2015  A. Garcia        trunk-464--pexsi-v0.8-1
+Update interface to pexsi-v0.8.0
+
+modified:
+  Src/f_ppexsi_interface.f90
+  Src/m_pexsi.f90
+  Src/m_pexsi_dos.F90
+  Src/m_pexsi_local_dos.F90
+

@@ -1,0 +1,65 @@
+#
+# MgCO3 in primitive cell. SZ. Parrinello-Rahman
+#
+SystemName	MgCo3 R-3c -- SZ, 50 R -- PR at 10 Gpa
+SystemLabel	md_pr
+NumberOfSpecies		3
+NumberOfAtoms	       10
+%block ChemicalSpeciesLabel
+      1      12     Mg
+      2       6     C
+      3       8     O
+%endblock ChemicalSpeciesLabel
+
+PAO.BasisSize  SZ
+Diag.Divide-and-Conquer F
+
+# Rhombohedral primitive cell
+# (HEX 3-fold cell had A=4.635 and C=15.023, so alpha=48.179 degrees
+#  and a=5.67783 Ang)
+
+LatticeConstant     5.67783 Ang
+%block LatticeParameters   
+1.0 1.0 1.0 48.179 48.179 48.179
+%endblock LatticeParameters   
+
+AtomicCoordinatesFormat    Fractional
+
+%block AtomicCoordinatesAndAtomicSpecies
+  0.0         0.0         0.0      1
+  0.5         0.5         0.5      1
+  0.25        0.25        0.25     2
+ -0.25       -0.25       -0.25     2
+  0.5274     -0.0274      0.25     3
+  0.25        0.5274     -0.0274   3
+ -0.0274      0.25        0.5274   3
+ -0.5274      0.0274     -0.25     3
+ -0.25       -0.5274      0.0274   3
+  0.0274     -0.25       -0.5274   3
+%endblock AtomicCoordinatesAndAtomicSpecies
+
+kgrid_cutoff 2.0 Ang
+
+Solution.Method       diagon
+MeshCutoff             50 Ry
+DM.NumberBroyden       4
+DM.UseSaveDM           T
+DM.MixingWeight        0.1         # New DM amount for next SCF cycle
+DM.Tolerance           1.d-3       # Tolerance in maximum difference
+                                   # between input and output DM
+WriteCoorStep      .true.
+WriteForces        .true.
+
+WriteMDHistory     .true.
+MD.UseSaveXV       T
+
+#####MD.Initial.temperature 300 K
+MD.TypeOfRun         ParrinelloRahman
+MD.Target-pressure   10.0 GPa
+MD.Initial.Time.Step      1
+MD.Final.Time.Step        50
+MD.Length.Time.Step       0.3 fs
+
+
+
+

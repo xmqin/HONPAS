@@ -1,0 +1,236 @@
+ Copyright (c) Universite de Montreal:
+ M-A.Malouin and F.El-Mellouhi, 2005
+
+ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT
+ OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+--------------------------------------------------
+Contact information:
+
+marc.andre.malouin@umontreal.ca
+f.el.mellouhi@umontreal.ca
+ --------------------------------------------------
+
+We would like to thank Michel Côté and his group for the fruitful discussions about OpenDx 
+visualization program, in particular  Vladimir Timoshevskii  for providing his preliminary  DxFormat code.
+Thanks also to  the team behind the code of the grid2cube utility in the Siesta 
+distribution from which the translation in DxFormat was inspired...
+
+-----------------------------------------------------------------------------------------------------------------------------
+This package utility can be used to view atoms and or isosurface informations, produced from 
+a run of Siesta, with the OpenDx visualization program
+
+README      The present file ;-)
+DxFormat.f    Conversion tool to create the .dx file for OpenDx from Siesta output
+DxView.net	OpenDx main visualization program
+DxView.cfg    DxView.net configuration file...MUST be in the same folder as DxView.net
+		(if not, OpenDx will create one by default...the program will still work but all
+ 	 	 options will be scaterred in the program and hard to find and use...)
+
+See below for known issues and future developments...
+
+-----------------------------------------------------------------------------------------------------------------------------
+Instructions:
+
+Before using this package, you must have already a Siesta and OpenDx distribution installed 
+on your system (OpenDx requires an X Server).
+
+Note: This program has been tested and used with Siesta version 1.3 and OpenDx version 4.3.2 
+
+1) Compile the conversion tool DxFormat.f with the same compiler and on the same 
+     system architecture you use for your Siesta distribution. This warranties you that
+     unformatted binary files produced by  siesta are read correctly.
+
+    Note: DxFormat.f is writen in fortran 90/95 and has been succesfully compiled
+	   with the xlf95 on Mac Os X (xlf90 should work also but xlf doesn't) 
+    	   
+	   For Linux users:  use ifort  ( to have it compiling correctly you must change  the source file extension from .f to .f90 )      
+
+2) Go in the directory where you have your siesta output files for isosurfaces and atoms 
+
+     The program DxFromat will search for the following files produced by Siesta:
+     (Actually, you must tell Siesta to create them, as it is not done by default...see the Siesta User Guide
+      for explanations about how to use the given options in parentheses)
+
+     systemLabel.RHO	(Set option 'SaveRho' to true)
+     systemLabel.DRHO	(Set option 'SaveDeltaRho' to true)
+     systemLabel.VH		(Set option 'SaveElectrostaticPotential' to true)
+     systemLabel.VT		(Set option 'SaveTotalPotential' to true)
+     systemLabel.IOCH	(Set option 'SaveIonicCharge' to true)
+     systemLabel.TOCH	(Set option 'SaveTotalCharge' to true)
+     systemLabel.LDOS	(Use block option '%LocalDensityOfStates' correctly with your simulation)
+     systemLabel.XV             (Mean to be write by default...no option necessary...but sometimes it's missing for
+                                                obscure reasons...maybe memory...it might be  a bug in Siesta)
+     systemLabel.xyz          (Set option 'WriteCoorXmol' to true)
+
+    If any of this files is found,  it will be automatically incorporated into  the final .dx file. 
+    None of these files is mandatory, you can simply apply DxFormat for the one you are interested in (.RHO and/or .VH ... etc). 
+    If no file is found, then your '.dx' file will only give you a black screen in OpenDx.
+
+    Note: The systemLabel.xyz file is a special one, which will only be used to read  atom labels, if found. 
+               These labels will then be used in the legend instead of the species id code number (see point #4-1 below)
+
+3) Create the file systemLabel.dx using the DxFormat utility you've just compiled
+     (Hint: Use DxFormat alone to see synopsis and program options description)
+
+    Note: Options  (1) and (2) refer to the known issues mentioned below
+               (Option 1 apply to all Siesta output except for the .XV file which is only for atoms...)
+
+	   If you want to get differences   between two Siesta  files use the  third option (3)...
+               Use 'diff_label' as in step 2 above...for each  corresponding file found, 
+               the option is applied, if not, it is skipped...with a print message during execution...
+               (The same thing is done when an error occured while reading the difference file) 
+
+4) Launch the visualization program DxView.net...this will launch OpenDx...
+
+    You should see the visual program editor with the DxView program and 
+    the 'Visualization Options' window 
+    (if not, go to menu 'Window-->Open All Control Panels')
+
+     In the 'Visualization window" select the "systemLabel.dx"  file you just generated 
+     with DxFormat in the top of  dialog box,  and there you go.
+
+    All the visualization options are put in the same panel for convenience...
+    ...for dynamic change in the visualization window, you should select 
+    'Execute on Change' from the execute menu or use the keyboard shortcut below
+
+    Note: 'Execute on change' is not set at OpendDx start
+
+    Warning:  OpenDx does not always realize changes in options, especially when they depend of other ones.
+                      So please before askig for help, make sure that your options are set correctly. 
+
+                      You can try the following : 1) Make sure  that 'execute on change' is activated...as mentionned above 
+ 						 (Even if it is already set, because it can desactivate itself sometimes:
+						  when changes are made in the visual program editor for example)
+					          2) Change similar options, reset value, switch box, toggle buttons, etc.
+         						  (e.g: When you change isosurface type, the old isosurface 
+						   value sticks in the corresponding option box, so be sure to reset it properly)
+					          3) If nothing works, close and save OpenDx and re-open your save DxView.net for changes to apply...
+					          4) OpenDx start with the last saved options (in file .cfg as well as all panels configuration and options, so be sure to keep it) 
+                                       			   But because 'execute on change' is not set at start, options are not always read properly, so you may try to reset or 
+						   re-activate it if it does not work (e.g: The isosurface type is set to .RHO but is seen as NONE by OpenDx...set it as none 
+						   and then back at .RHO for it to work....)
+
+		Note: 'execute on change' be set before any of the above operations
+	
+    1) The atoms legend labels correspond to species number defined in the .fdf input file 
+         used in siesta (in the block '%Chemical_Species_Label' together with atom labels and atomic numbers)
+
+         Note: If the file systemLabel.xyz is found, atomic labels will be used instead of atoms numbers
+
+    2) Atoms have relative size base on their atomic number, but you might want to adjust the
+         size yourself as it's absolute value is in itself not absolute at all...
+
+   3)   Isosurface options are common to all Siesta outputs (except atoms in file .XV of course), 
+          but only one can be seen at a time. If none is set, all options in the box 'Isosurfaces' will be invisible
+         The panel with isosurface types acts as a switch between different computed quantities by Siesta
+         (i.e: The ones within each file that were found by DxFormat and added to the .dx file)
+
+        Note: The default for 'isosurface value' is the data mean (the same default as OpenDx isosurface module)
+
+   4) Color option (for isosurface, atoms and others) use the internal representation in OpenDx...
+        The value is the first color assigned....0 is red...0,66 is blue...and 0.33 is green (actually it's a cyclic 
+        system with 1 folding back onto red)...after that, OpenDx assigned other color by himself from this point
+        ensuring a complete color space covering for distincs colors
+
+        (For extra cell, vectors and box colors, the same thing is mimic manually to reduce the number of options to set, which
+         can become very boring and fastidious...)
+
+        Note: For screen capture, printing of snapshots and the likes, you can try to change the background color to white
+                   instead of black for better result (and much less ink...)
+
+-----------------------------------------------------------------------------------------------------------------------------
+Some OpenDx useful keyboardshortcut: 	
+
+ctrl+E (Execute once)
+ctrl+;  (Execute on change)
+ctrl+.  (End Execution)
+
+You must click in the visualization window for the following to work
+ctrl+R (Change view to rotation)
+ctrl+F (Reset camera)
+ctrl+shift+space (Change view to zoom)							
+ctrl+N (Change view to navigate)
+
+Note: When OpenDx sucessfully reads a ".dx "file, it remembers it until it is closed. 
+           So changes made to ".dx" file , by Dxformat for example, 
+           will not be noticed when re-executing the program (with ctrl+E or ctrl+;) unless 
+           you close OpenDx and re-open it (wih DxView.net in the present case)
+
+-----------------------------------------------------------------------------------------------------------------------------
+Known issues and program limitations
+  
+-1) Isosurface shifting correction has been seen to be somewhat incorrect for unknown reasons
+  with some systems (one molecule alone like Al or Fe....) when the isosurface without correction was
+  already centered...
+
+  This bug happen because siesta uses periodic cell representation,  the molecule then looks split  
+  because the origin is somewhat folded around the eight corners
+  of the cell causing wrap around effects. This is why we added a translation correction, folding, option
+  for reorganizing consistently the isosurface. 
+
+  But if your system seem already fine by itself, it migth cause the inverse effects (even if it should not     
+  when the origin is in the center of cell ???)
+
+-2) Because Siesta writes atoms coordinates and isourfaces data in different coordinates systems,
+  the translation correction for atoms does not work for non-orthogonal cell
+
+  However this does not mean that the representation is wrong...but you should keep in mind that
+  atoms and isosurface (see 'View Options' in the 'Visualization Options' panel of DxView) can not be
+  superposed in a single view in DxView and should not be seen together with other 'View Options'
+  int this case (for orthogonal cells, it's should work relatively fine)
+
+  In such case, wether you use atoms translations or not, it does not change anything because atoms  
+  are meant to be visualized independently of other 'View Options'
+
+ See DxFormat program description (call DxFormat alone...) and usage for more detail about using these
+ two options
+
+-3) -Using formatted ascii  for systemLabel.dx file can lead to pretty huge file sizes, as well as lengthy and slow opening in OpenDx, this depends on  the power of the machine you use, alternatively binary file format can be used (see below).
+
+ -----------------------------------------------------------------------------------------------------------------------------
+Features that migth be add in the future...
+     
+-Bonds visualization between atoms...it requires to compute distances between atoms with macros as Siesta doesn't create
+ output for that...but having generality and portability in mind, we kept OpenDx free of any macros.
+
+ Neverthless, if you want to see the bonds, just use Jmol molecule visualization tool (works with   
+ systemLabel.xyz...which is write by Siesta only if option 'WriteCoorXmol' is specified in siesta .fdf input file; see instructions above)
+
+ Note: This package utility was designed first to view isosurface properties...atoms visualization was added in
+            the process for functionnality only...jmol does already a far more better job regarding atoms and
+            molecule visualization;  so you should keep using it if that's all you want to see...
+
+-systemLabel.dx file in binary format...the DX format allows data to be written in binary instead of formatted ascii
+ (only headers defining objects and data then remains at the beginnning of the file). 
+
+ For the moment ascii file are preferred for potability concerns (work on different platforms and systems). 
+ Also, because  It can be very useful to change some data by hand (for testing, making customed legend labels, ...)
+
+ Note: OpenDx can read files written in NetCDF format (binarry formatted files) and Siesta can be compiled with
+            this extra package... Then,  the present Dx format can be modified to read this file formats. As  OpenDx can read ASCII , 
+            NetCDF as well as many other file formats .
+           
+            For The moment we did not judge it urgent to recompile SIESTA with NetCDF , as our tool is  designed to be used by large community and we wanted to make      
+            it as portable as possible,  but maybe this will be done in the future...
+
+-spin information...files containing isosurface data also contains information about spin density, but at the moment, 
+ it is completely ignored by DxFormat because of lack of information about how to use this extra data correctly with 
+ OpenDx, if it can be done at all.
+ For now we do not use it,  but if need it may be add in the future
+
+ -----------------------------------------------------------------------------------------------------------------------------
+One last note...feel free to explore and change the visualization program interface and or options
+bound value to fit your style and mood ;-)
+
+Have fun and gook work !
+

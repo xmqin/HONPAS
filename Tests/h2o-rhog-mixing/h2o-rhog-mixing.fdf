@@ -1,0 +1,34 @@
+SystemName          Water molecule -- Charge mixing
+SystemLabel         h2o-rhog-mixing
+NumberOfAtoms       3
+NumberOfSpecies     2
+
+MixCharge T
+#SCF.Kerker.q0sq 
+DM.MixingWeight 0.5
+SCF.Rhog-DIIS-Depth 3
+MeshCutoff  50 Ry
+SCF.DebugRhogMixing T
+#
+DM.Require.Energy.Convergence T   # default 1.e-5 eV
+DM.Tolerance 0.1   # Will look at the free Energy as a criterion
+                   # The above default might be a bit coarse
+		   # Remember that forces converge more slowly than E
+
+%block ChemicalSpeciesLabel
+ 1  8  O      # Species index, atomic number, species label
+ 2  1  H
+%endblock ChemicalSpeciesLabel
+
+AtomicCoordinatesFormat  Ang
+%block AtomicCoordinatesAndAtomicSpecies
+ 0.000  0.000  0.000  1
+ 0.757  0.586  0.000  2
+-0.757  0.586  0.000  2
+%endblock AtomicCoordinatesAndAtomicSpecies
+
+save-rho T
+save-delta-rho T
+save-total-potential T
+save-neutral-atom-potential T
+save-hs T

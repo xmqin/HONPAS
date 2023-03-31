@@ -1,0 +1,219 @@
+! ---
+! Copyright (C) 1996-2016	The SIESTA group
+!  This file is distributed under the terms of the
+!  GNU General Public License: see COPYING in the top directory
+!  or http://www.gnu.org/copyleft/gpl.txt .
+! See Docs/Contributors.txt for a list of contributors.
+! ---
+
+  use alloc, only: re_alloc, de_alloc
+
+  implicit none
+
+  character(len=*), parameter :: mod_name="class_"//STR_TYPE_NAME//".F90"
+
+  integer, parameter :: sp = selected_real_kind(5,10)
+  integer, parameter :: dp = selected_real_kind(10,100)
+
+  type TYPE_NAME_
+     integer :: refCount = 0
+     character(len=36)   :: id = "null_id"
+     !----------------------
+     character(len=256)  :: name = "null "//STR_TYPE_NAME
+#ifdef PREC
+     VAR_TYPE(PREC), pointer :: val(:) => null() ! Nonzero-element values
+#else
+     VAR_TYPE, pointer       :: val(:) => null() ! Nonzero-element values
+#endif
+  end type
+
+  type TYPE_NAME
+     type(TYPE_NAME_), pointer :: data => null()
+  end type
+
+! Note that "basic_type.inc" adds the PRIVATE directive
+! This will also release the requirement to change the local names.
+! Only those through public statements should potentially be altered.
+
+  public :: NEW_TYPE, print_type, val, init_val, size
+
+  interface NEW_TYPE
+     module procedure newData1DfromDimensions
+     module procedure newData1DfromNakedArray
+  end interface
+  
+  interface val
+     module procedure valData1D
+     module procedure valData1D_Idx
+  end interface
+
+  interface size
+     module procedure sizeData1D
+  end interface
+
+  interface init_val
+     module procedure initializeData1D
+  end interface
+
+  interface print_type
+     module procedure printData1D
+  end interface
+
+
+!========================
+#include "basic_type.inc"
+!========================
+
+  subroutine delete_Data(a1d_data)
+    type(TYPE_NAME_) :: a1d_data
+    if ( associated(a1d_data%val) ) then
+       call de_alloc( a1d_data%val, & 
+            name="val "//trim(a1d_data%name),routine=STR_TYPE_NAME)	
+    end if
+  end subroutine delete_Data
+  
+  
+  subroutine newData1DFromDimensions(this,n,name)
+    ! This could be implemented also as an assignment 
+    ! (see below)
+
+    type(TYPE_NAME), intent(inout)  :: this
+    integer, intent(in)           :: n
+    character(len=*), intent(in), optional  :: name
+
+    ! We release the previous incarnation
+    ! This means that we relinquish access to the previous
+    ! memory location. It will be deallocated when nobody
+    ! else is using it.
+   
+    call init(this)
+
+    if (present(name)) then
+       this%data%name = trim(name)
+    else
+       this%data%name = "("//STR_TYPE_NAME//" from n)"
+    endif
+!    if ( n < 1 ) then
+!       call die('Size invalid. Data1D, must be larger than 0')
+!    end if
+
+    call re_alloc(this%data%val,1,n, &
+         name="val "//trim(this%data%name),routine=STR_TYPE_NAME) 
+! We have removed initialization.
+!#ifdef PREC
+!#define CCAT(x,y) x##y
+!    this%data%val(:) = CCAT(0.0_,PREC)
+!#else
+!    this%data%val(:) = .FALSE. ! It MUST be a logical
+!#endif
+
+    call tag_new_object(this)
+
+  end subroutine newData1DFromDimensions
+
+  subroutine newData1DfromNakedArray(this, val, name)
+    !..................................................................
+    !...................................................................
+    type(TYPE_NAME), intent(inout) :: this
+#ifdef PREC
+    VAR_TYPE(PREC), intent(in)     :: val(:)
+#else
+    VAR_TYPE,       intent(in)     :: val(:)
+#endif
+    character(len=*), intent(in), optional  :: name
+
+    integer :: n
+
+    call init(this)
+
+    n = size(val,dim=1)
+
+    if (present(name)) then
+       this%data%name = trim(name)
+    else
+       this%data%name = "("//STR_TYPE_NAME//" from naked array)"
+    endif
+
+    call re_alloc(this%data%val,1,n, &
+        name="val "//trim(this%data%name),routine=STR_TYPE_NAME)	
+    this%data%val(:) = val(:)
+
+    call tag_new_object(this)
+    
+  end subroutine newData1DfromNakedArray
+
+
+  function valData1D(this) result(p)
+    type(TYPE_NAME), intent(in) :: this
+#ifdef PREC
+    VAR_TYPE(PREC), pointer     :: p(:) !=> null()
+#else
+    VAR_TYPE, pointer     :: p(:) !=> null()
+#endif
+    
+    p => this%data%val
+  end function valData1D
+
+  function valData1D_Idx(this,idx) result(v)
+    type(TYPE_NAME), intent(in) :: this
+    integer,         intent(in) :: idx
+#ifdef PREC
+    VAR_TYPE(PREC)              :: v
+#else
+    VAR_TYPE                    :: v
+#endif	
+    
+    v = this%data%val(idx)
+
+  end function valData1D_Idx
+
+
+  function sizeData1D(this,dim) result(n)
+    type(TYPE_NAME), intent(in) :: this
+    integer,         intent(in), optional :: dim
+    integer :: n
+    
+    n = size(this%data%val)
+
+  end function sizeData1D
+
+  subroutine printData1D(this)
+    type(TYPE_NAME), intent(in)  :: this
+    
+    integer :: n
+    
+    if (.not. initialized(this) ) then
+       print "(a)", STR_TYPE_NAME//" Not Associated"
+       RETURN
+    endif
+    
+    n = size(this%data%val,dim=1)
+    
+    print "(a,i0,a,i0,a)", "  <"//STR_TYPE_NAME//":" // trim(this%data%name) // &
+                                " n=",  n,   &
+                                ", refcount: ", refcount(this),">"
+  end subroutine printData1D
+
+ subroutine initializeData1D(this)
+   type(TYPE_NAME), intent(inout)  :: this
+#ifdef PREC
+   VAR_TYPE(PREC), pointer :: p(:) !=> null()
+#else
+   VAR_TYPE, pointer       :: p(:) !=> null()
+#endif
+    
+   p => val(this)
+   p(:) = VAR_INIT
+
+ end subroutine initializeData1D
+
+
+#undef TYPE_NAME
+#undef STR_TYPE_NAME
+#undef TYPE_NAME_
+#undef NEW_TYPE
+#undef VAR_TYPE
+#ifdef PREC
+#undef PREC
+#endif
+#undef VAR_INIT

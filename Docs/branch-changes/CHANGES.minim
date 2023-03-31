@@ -1,0 +1,426 @@
+2013-18-03 17:30 Fabiano Corsetti <fcorsetti@nanogune.eu>  trunk-432--minim-10
+Bug fix and two tests added
+
+* Bug fix for change of nhmax between MD steps that affects parallel runs with
+  sparse algebra
+* Two tests have been added to the Tests directory, one for m_dminim and one for
+  m_zminim
+
+added:
+  Tests/OMM_h2o/
+  Tests/OMM_h2o/Makefile
+  Tests/OMM_h2o/OMM_h2o.fdf
+  Tests/OMM_h2o/OMM_h2o.pseudos
+  Tests/OMM_si/
+  Tests/OMM_si/Makefile
+  Tests/OMM_si/OMM_si.fdf
+  Tests/OMM_si/OMM_si.pseudos
+modified:
+  Docs/siesta.tex
+  Src/m_dminim.F90
+  Src/m_zminim.F90
+  Tests/Makefile
+
+2013-15-03 17:00 Fabiano Corsetti <fcorsetti@nanogune.eu>  trunk-432--minim-9
+Merge with trunk-432 and manual updated
+
+removed:
+  Docs/siesta.ind
+  Src/fdf/tags
+  Src/m_ts_contour.F
+added:
+  Docs/Makefile
+  Docs/TS-npa.CHANGES
+  Docs/TranSiestaUpdate.pdf
+  Src/kpoint_convert.f90
+  Src/m_glob_sparse.F90
+  Src/m_hs_matrix.f90
+  Src/m_partial_charges.F
+  Src/m_ts_cctype.f90
+  Src/m_ts_contour.f90
+  Src/m_ts_gf.F90
+  Src/m_ts_voltage.F90
+  Src/ts_init.F90
+  Src/ts_show_regions.f90
+  Tests/Reference-xml/si_fatbands.xml
+  Tests/Reference/TranSiesta-TBTrans/ts_au_100/
+  Tests/Reference/TranSiesta-TBTrans/ts_au_100/au_100.TRANS
+  Tests/Reference/TranSiesta-TBTrans/ts_au_100/au_100.out
+  Tests/Reference/TranSiesta-TBTrans/ts_au_100/elec_au_100.out
+  Tests/Reference/TranSiesta-TBTrans/ts_au_100/tbt_au_100.out
+  Tests/Reference/TranSiesta-TBTrans/ts_au_100_0.25V/
+  Tests/Reference/TranSiesta-TBTrans/ts_au_100_0.25V/au_100.TRANS
+  Tests/Reference/TranSiesta-TBTrans/ts_au_100_0.25V/au_100.out
+  Tests/Reference/TranSiesta-TBTrans/ts_au_100_0.25V/elec_au_100.out
+  Tests/Reference/TranSiesta-TBTrans/ts_au_100_0.25V/tbt_au_100.out
+  Tests/Reference/TranSiesta-TBTrans/ts_au_100_repetition/
+  Tests/Reference/TranSiesta-TBTrans/ts_au_100_repetition/au_100.TRANS
+  Tests/Reference/TranSiesta-TBTrans/ts_au_100_repetition/au_100.out
+  Tests/Reference/TranSiesta-TBTrans/ts_au_100_repetition/elec_au_100.out
+  Tests/Reference/TranSiesta-TBTrans/ts_au_100_repetition/tbt_au_100.out
+  Tests/Reference/TranSiesta-TBTrans/ts_au_100_repetition_0.25V/
+  Tests/Reference/TranSiesta-TBTrans/ts_au_100_repetition_0.25V/au_100.TRANS
+  Tests/Reference/TranSiesta-TBTrans/ts_au_100_repetition_0.25V/au_100.out
+  Tests/Reference/TranSiesta-TBTrans/ts_au_100_repetition_0.25V/elec_au_100.out
+  Tests/Reference/TranSiesta-TBTrans/ts_au_100_repetition_0.25V/tbt_au_100.out
+  Tests/Reference/TranSiesta-TBTrans/ts_au_repetition/
+  Tests/Reference/TranSiesta-TBTrans/ts_au_repetition/au_111_capacitor.AVTRANS
+  Tests/Reference/TranSiesta-TBTrans/ts_au_repetition/au_111_capacitor.TEIG
+  Tests/Reference/TranSiesta-TBTrans/ts_au_repetition/au_111_capacitor.TRANS
+  Tests/Reference/TranSiesta-TBTrans/ts_au_repetition/au_111_capacitor.out
+  Tests/Reference/TranSiesta-TBTrans/ts_au_repetition/elec_au_111_abc.out
+  Tests/Reference/TranSiesta-TBTrans/ts_au_repetition/tbt_au_111_capacitor.out
+  Tests/Reference/si_fatbands.out
+  Tests/TranSiesta-TBTrans/ts_au_100/
+  Tests/TranSiesta-TBTrans/ts_au_100/Au.psf
+  Tests/TranSiesta-TBTrans/ts_au_100/au_100.fdf
+  Tests/TranSiesta-TBTrans/ts_au_100/elec_au_100.fdf
+  Tests/TranSiesta-TBTrans/ts_au_100/makefile
+  Tests/TranSiesta-TBTrans/ts_au_100/script.sh
+  Tests/TranSiesta-TBTrans/ts_au_100_0.25V/
+  Tests/TranSiesta-TBTrans/ts_au_100_0.25V/Au.psf
+  Tests/TranSiesta-TBTrans/ts_au_100_0.25V/au_100.fdf
+  Tests/TranSiesta-TBTrans/ts_au_100_0.25V/elec_au_100.fdf
+  Tests/TranSiesta-TBTrans/ts_au_100_0.25V/makefile
+  Tests/TranSiesta-TBTrans/ts_au_100_0.25V/script.sh
+  Tests/TranSiesta-TBTrans/ts_au_100_repetition/
+  Tests/TranSiesta-TBTrans/ts_au_100_repetition/Au.psf
+  Tests/TranSiesta-TBTrans/ts_au_100_repetition/au_100.fdf
+  Tests/TranSiesta-TBTrans/ts_au_100_repetition/elec_au_100.fdf
+  Tests/TranSiesta-TBTrans/ts_au_100_repetition/makefile
+  Tests/TranSiesta-TBTrans/ts_au_100_repetition/script.sh
+  Tests/TranSiesta-TBTrans/ts_au_100_repetition_0.25V/
+  Tests/TranSiesta-TBTrans/ts_au_100_repetition_0.25V/Au.psf
+  Tests/TranSiesta-TBTrans/ts_au_100_repetition_0.25V/au_100.fdf
+  Tests/TranSiesta-TBTrans/ts_au_100_repetition_0.25V/elec_au_100.fdf
+  Tests/TranSiesta-TBTrans/ts_au_100_repetition_0.25V/makefile
+  Tests/TranSiesta-TBTrans/ts_au_100_repetition_0.25V/script.sh
+  Tests/TranSiesta-TBTrans/ts_au_repetition/
+  Tests/TranSiesta-TBTrans/ts_au_repetition/Au.psf
+  Tests/TranSiesta-TBTrans/ts_au_repetition/au_111_capacitor.fdf
+  Tests/TranSiesta-TBTrans/ts_au_repetition/elec_au_111_abc.fdf
+  Tests/TranSiesta-TBTrans/ts_au_repetition/makefile
+  Tests/TranSiesta-TBTrans/ts_au_repetition/script.sh
+  Tests/h2o-pop/
+  Tests/h2o-pop/h2o-pop.fdf
+  Tests/h2o-pop/h2o-pop.pseudos
+  Tests/h2o-pop/makefile
+  Tests/md-anneal-cont/
+  Tests/md-anneal-cont/README
+  Tests/md-anneal-cont/makefile
+  Tests/md-anneal-cont/script.sh
+  Tests/md-cont/
+  Tests/md-cont-no-restart-file/
+  Tests/md-cont-no-restart-file/README
+  Tests/md-cont-no-restart-file/makefile
+  Tests/md-cont-no-restart-file/script.sh
+  Tests/md-cont/README
+  Tests/md-cont/makefile
+  Tests/md-cont/script.sh
+  Tests/md-single-run/
+  Tests/md-single-run/README
+  Tests/md-single-run/makefile
+  Tests/md-single-run/script.sh
+  Tests/si_fatbands/
+  Tests/si_fatbands/makefile
+  Tests/si_fatbands/si_fatbands.fdf
+  Tests/si_fatbands/si_fatbands.pseudos
+  Util/Bands/
+  Util/Bands/Makefile
+  Util/Bands/README
+  Util/Bands/eigfat2plot.f90
+  Util/Bands/f2kcli.F90
+  Util/Bands/fat.gplot
+  Util/Bands/m_getopts.f90
+  Util/Bands/new.gnubands.f90
+  Util/COOP/Tests/si_fatbands/
+  Util/COOP/Tests/si_fatbands/README
+  Util/COOP/Tests/si_fatbands/fatbands.mpr
+  Util/COOP/fat.f90
+  Util/Denchar/Examples/2dplot.py
+  Util/Denchar/Examples/FullExample.fdf
+  Util/Denchar/Examples/Si.psf
+  Util/Denchar/Examples/surf.py
+  Util/Denchar/Src/readwavesx.f
+  Util/JobList/
+  Util/JobList/Examples/
+  Util/JobList/Examples/Ice/
+  Util/JobList/Examples/Ice/H.psf
+  Util/JobList/Examples/Ice/O.psf
+  Util/JobList/Examples/Ice/defaults.fdf
+  Util/JobList/Examples/Ice/dzp.fdf
+  Util/JobList/Examples/Ice/filter100.fdf
+  Util/JobList/Examples/Ice/iceChecks.jobs
+  Util/JobList/Examples/Ice/iceVIII.fdf
+  Util/JobList/Examples/Ice/iceXI.fdf
+  Util/JobList/Examples/Ice/meshCutoff.gplot
+  Util/JobList/Examples/Ice/meshCutoff.jobs
+  Util/JobList/Examples/Ice/pseudoLMKLL.fdf
+  Util/JobList/Examples/Ice/pseudoPBE.fdf
+  Util/JobList/Examples/Ice/pseudoVV.fdf
+  Util/JobList/Examples/Ice/queue.sh
+  Util/JobList/Examples/Ice/qzp.fdf
+  Util/JobList/Examples/Ice/tzp.fdf
+  Util/JobList/README
+  Util/JobList/Src/
+  Util/JobList/Src/Makefile
+  Util/JobList/Src/countJobs.f90
+  Util/JobList/Src/getResults.f90
+  Util/JobList/Src/horizontal.f90
+  Util/JobList/Src/jobList.f90
+  Util/JobList/Src/runJobs.f90
+  Util/TBTrans_rep/
+  Util/TBTrans_rep/Makefile
+  Util/TBTrans_rep/atompdos.F90
+  Util/TBTrans_rep/coop.F90
+  Util/TBTrans_rep/m_lowdin.f90
+  Util/TBTrans_rep/m_tbt_iotshs.F90
+  Util/TBTrans_rep/m_tbt_kpoints.F90
+  Util/TBTrans_rep/m_tbt_options.F90
+  Util/TBTrans_rep/m_tbt_out.f90
+  Util/TBTrans_rep/m_tbt_read_tshs.F90
+  Util/TBTrans_rep/tbt_init.F90
+  Util/TBTrans_rep/tbt_reinit.F90
+  Util/TBTrans_rep/tbtrans.F90
+  Util/TBTrans_rep/transmission.f90
+  Util/TBTrans_rep/tt_eig.f90
+renamed:
+  Util/gnubands.f => Util/Bands/gnubands.f
+modified:
+  Docs/CHANGES
+  Docs/CHANGES.minim
+  Docs/README
+  Docs/siesta.tex
+  Pseudo/atom/pseudoXML.f
+  Src/MPI/Makefile
+  Src/MPI/mpi.F
+  Src/MPI/mpi_siesta.f90
+  Src/Makefile
+  Src/SiestaXC/mesh1d.f90
+  Src/automatic_cell.f
+  Src/bands.F
+  Src/basis_io.F
+  Src/basis_specs.f
+  Src/compute_dm.F
+  Src/configure
+  Src/dhscf.F
+  Src/diagk.F
+  Src/diagkp.F
+  Src/domain_decom.F
+  Src/dynamics.f
+  Src/fdf/fdf.F90
+  Src/fdf/fdf.Standard
+  Src/fdf/makefile
+  Src/find_kgrid.F
+  Src/grdsam.F
+  Src/iomd.f
+  Src/iopipes.F90
+  Src/kpoint_grid.F90
+  Src/kpoint_pdos.F90
+  Src/m_ts_aux_rout.F
+  Src/m_ts_electrode.F90
+  Src/m_ts_in_siesta.F
+  Src/m_ts_io.F90
+  Src/m_ts_kpoints.F90
+  Src/m_ts_options.F90
+  Src/m_ts_scattering.F
+  Src/meshsubs.F
+  Src/mixer.F
+  Src/new_dm.F
+  Src/optical.F
+  Src/parallel.F
+  Src/precision.F
+  Src/reinit.F
+  Src/scfconvergence_test.F
+  Src/setup_hamiltonian.F
+  Src/siesta_analysis.F
+  Src/siesta_end.F
+  Src/siesta_forces.F
+  Src/siesta_init.F
+  Src/siesta_options.F90
+  Src/struct_init.F
+  Src/transition_rate.F
+  Src/version.F90
+  Src/write_subs.F
+  Src/writewave.F
+  Tests/Makefile
+  Tests/TranSiesta-TBTrans/README
+  Tests/md_anneal/md_anneal.fdf
+  Tests/script_ts.mk
+  Util/COOP/Makefile
+  Util/COOP/README
+  Util/COOP/Tests/README
+  Util/COOP/dm_creator.F90
+  Util/COOP/main_vars.f90
+  Util/COOP/mprop.f90
+  Util/COOP/subs.f90
+  Util/Denchar/Docs/CHANGES
+  Util/Denchar/Docs/denchar.tex
+  Util/Denchar/Src/Makefile
+  Util/Denchar/Src/denchar.f
+  Util/Eig2DOS/Eig2DOS.f90
+  Util/Grid/grid2cube.f
+  Util/README
+  Util/SiestaSubroutine/README
+  Util/TBTrans/Makefile
+  Util/pseudo-xml/xml2psf_helper.f
+  version.info
+
+2013-15-03 17:00 Fabiano Corsetti <fcorsetti@nanogune.eu>  trunk-409--minim-8
+Major update (addition of many different features and keywords)
+
+* The module has been expanded to include many different versions of the OMM
+  algorithm, and several additional useful features. Keywords for the SIESTA
+  fdf input file have also been added to allow for detailed user control of the
+  module.
+* Versions of the minimization procedure now available:
+  +-----------------------------------------------------+
+  | Gamma (G)/k points (K)* G G G G G G G G K K K K K K |
+  | Preconditioning         F T F T F F F T F T F T F F |
+  | 2D data decomposition   F F T T F T F F F F T T F T |
+  | Cholesky factorizarion  F F F F T T F F F F F F T T |
+  | Sparse algebra          F F F F F F T T F F F F F F |
+  +-----------------------------------------------------+
+  | * (selected automatically)                          |
+  +-----------------------------------------------------+
+  Furthermore, all versions support spin polarized calculations (for fixed
+  integer number of electrons per spin). Extended k grid calculations also
+  require a fixed number of electrons at each k point.
+* Additional features:
+  - select level of output detail
+  - write/read WF coeffs. to/from file
+  - input ScaLAPACK blocking factor for distributing the WF coeffs. matrix
+  - input number of SCF steps for which to use preconditioning (for first MD
+    step, and subsequent MD steps)
+  - input kinetic energy scale for the preconditioning
+  - input number of SCF steps to solve with diagonalization (for first MD step,
+    and subsequent MD steps)
+  - input convergence tolerance of CG minimization
+  - choose whether to diagonalize at end of MD step to find eigenvalues
+
+removed:
+  Src/m_minim.F90
+added:
+  Src/m_dminim.F90
+  Src/m_zminim.F90
+modified:
+  Docs/CHANGES.minim
+  Src/Makefile
+  Src/compute_dm.F
+  Src/local_DOS.F
+  Src/post_scf_work.F
+  Src/projected_DOS.F
+  Src/siesta_analysis.F
+  Src/siesta_options.F90
+  Src/write_subs.F
+  version.info
+
+2012-20-11  17:00 Fabiano Corsetti <fcorsetti@nanogune.eu>  trunk-409--minim-7
+Bug fix
+
+* Bug fixed in m_minim.F90 (incorrect number of elements declared for listhptr
+  and listh). Strangely, however, the bug does not appear to cause any errors in
+  the execution of the code.
+
+modified:
+  Docs/CHANGES.minim
+  Src/m_minim.F90
+  version.info
+
+2012-11-07  19:00 Fabiano Corsetti <fcorsetti@nanogune.eu>  trunk-409--minim-6
+Added preconditioning to the CG algorithm
+
+* The iterative conjugate gradients (CG) algorithm has been modified by
+  introducing a preconditioner that premultiplies the standard gradient
+  expression. This preconditioning matrix is given by the inverse of (s+t/tau),
+  where s is the overlap matrix for the underlying SIESTA basis set, and t is
+  the corresponding kinetic energy matrix; tau is a scaling factor for the
+  kinetic energy preconditioning. Note that the preconditioner transforms the
+  gradient from covariant to contravariant (although only for the index related
+  to the underlying non-orthogonal basis), thus *partially* fixing the tensorial
+  inconsistencies of the algorithm.
+
+modified:
+  Docs/CHANGES.minim
+  Src/compute_dm.F
+  Src/m_minim.F90
+  Src/post_scf_work.F
+  version.info
+
+2012-29-06  17:00 Fabiano Corsetti <fcorsetti@nanogune.eu>  trunk-409--minim-5
+Added coefficients rescaling to prevent crashes
+
+* In certain regions of the coeffs. space the line search gives no minimum. This
+  occurs when there are positive eigenvalues in the eigenspecturm which are
+  significantly occupied by our coeffs. matrix. The only known cure,
+  unfortunately, is to scale down the entire matrix, thus returning to a safe
+  region of the coeffs. space.
+
+modified:
+  Docs/CHANGES.minim
+  Src/m_minim.F90
+  version.info
+
+2012-18-06  16:00 Fabiano Corsetti <fcorsetti@nanogune.eu>  trunk-409--minim-4
+Fixed deallocation of arrays bug
+
+* The bug was introduced by separating the calculation of the energy-density
+  matrix from the rest of the module
+
+modified:
+  Docs/CHANGES.minim
+  Src/m_minim.F90
+  version.info
+
+2012-15-06  17:00 Fabiano Corsetti <fcorsetti@nanogune.eu>  trunk-409--minim-3
+Changed initial guess for orbital coefficients
+
+* Empirical testing suggests that starting with an initial guess close to zero
+  can reduce the number of line searches in the initial SCF step by a factor of
+  2; however, if the initial guess is too small the algorithm is numerically
+  unstable
+* The impact of the initial guess on the number of line searches needs to be
+  investigated further!
+
+modified:
+  Docs/CHANGES.minim
+  Src/m_minim.F90
+  version.info
+
+2012-15-06  16:00 Fabiano Corsetti <fcorsetti@nanogune.eu>  trunk-409--minim-2
+Added documentation of changes
+
+added:
+  Docs/CHANGES.minim
+modified:
+  version.info
+
+2012-15-06  16:00 Fabiano Corsetti <fcorsetti@nanogune.eu>  trunk-409--minim-1
+Implemented the non-O(N) version of the Ordejon-Mauri functional
+
+* The functional is contained in a new module m_minim
+* The m_minim module replaces the m_ordern module and so can be called with
+  "SolutionMethod OrderN" in the SIESTA input file--note, however, that it
+  is *not* an O(N) functional, since there is no localization imposed on the
+  orbitals
+* "ON.eta" can be specified in the SIESTA input file to control the shift of
+  the eigenspectrum, in order to ensure that all of the occupied states (at
+  least) have a negative energy
+* The module works in serial with LAPACK, or in parallel with MPI and
+  ScaLAPACK
+* For efficiency, only the density matrix is computed at each SCF step,
+  while the energy-density matrix is computed once we have reached the end of
+  the SCF loop
+* By changing the assignment of CallDiagon in m_compute_dm, it is possible to
+  perform one or more of the SCF cycles at the beginning of each MD/geometry
+  optimization step by diagonalization instead of minimization; the
+  eigenfunctions are then used as the initial guess for the next minimization
+  call
+
+added:
+  Src/m_minim.F90
+modified:
+  Src/Makefile
+  Src/compute_dm.F
+  Src/post_scf_work.F
+  version.info

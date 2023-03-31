@@ -1,0 +1,75 @@
+-----------------------------------------------------------------
+October 24, 2013   Alberto Garcia    trunk-445--pexsi-50--matio-6
+Fix bug in dmbs2dm. Change name of argument to write_mat
+
+* A record was missing in the conversion to classic DM format by
+Util/DensityMatrix/dmbs2dm.
+
+* The optional argument to signal blocked operation in write_mat in
+module m_matio has been changed from "historical" to "compatible".
+
+modified:
+  Src/m_iodm.F
+  Src/m_matio.F90
+  Src/overlap.f
+  Src/save_density_matrix.F
+  Util/DensityMatrix/dmbs2dm.F90
+
+-----------------------------------------------------------------
+October 23, 2013   Alberto Garcia    trunk-445--pexsi-50--matio-5
+Write converter from blocked to non-blocked and deploy
+
+The newly re-organized DM and H information is now written
+to file in "blocked format" by default, unless the option
+
+       Use.Blocked.WriteMat F
+
+is used.
+
+The new format is not backwards compatible. A converter
+program (Util/DensityMatrix/dmbs2dm.F90) has been written
+to post-process those files intended for further analysis
+or re-use in Siesta. This is the best option for now, since
+it allows liberal checkpointing with a much smaller time
+consumption, and only incurs costs when re-using or analyzing
+files.
+
+Note that TranSiesta will continue to produce .DM files,
+in the old format (See save_density_matrix.F)
+
+( To test the new features, the option
+
+ S.Only T
+
+can be used. It will produce three files: a standard one,
+another one with optimized MPI communications, and a third,
+blocked one.
+)
+
+
+added:
+  Util/DensityMatrix/dmbs2dm.F90
+  Util/DensityMatrix/f2kcli.F90
+  Util/DensityMatrix/m_getopts.f90
+modified:
+  Src/Makefile
+  Src/m_iodm.F
+  Src/save_density_matrix.F
+  Util/DensityMatrix/makefile
+
+-----------------------------------------------------------------
+October 22, 2013   Alberto Garcia    trunk-445--pexsi-50--matio-4
+Use larger chunks for file writes
+
+The information in a whole "blocksize"-worth of data is now
+written to a single record on disk. This speeds up the I/O
+significantly.
+
+The new format is not backwards compatible. A new reading routine
+(possibly with on-the-fly blocksize changes) has to be written.
+
+modified:
+  Src/Makefile
+  Src/m_matio.F90
+  Src/overlap.f
+  Src/siesta_forces.F

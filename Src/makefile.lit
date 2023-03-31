@@ -1,0 +1,18 @@
+.SUFFIXES:
+.SUFFIXES: .f .F .f90 .F90 .c .lit
+#
+TANGLED_SOURCES= m_pexsi_dos.F90 m_pexsi.f90 m_pexsi_driver.F90 m_pexsi_local_dos.F90 \
+                 m_redist_spmatrix.F90
+#
+dist: $(TANGLED_SOURCES)
+#
+m_pexsi_dos.F90: pexsi-dos.lit
+	sh tangle.sh pexsi-dos.lit
+m_pexsi_local_dos.F90: pexsi-ldos.lit
+	sh tangle.sh pexsi-ldos.lit
+m_pexsi.f90 m_pexsi_driver.F90: pexsi-solver.lit
+	sh tangle.sh pexsi-solver.lit
+#
+m_redist_spmatrix.F90: redist-spmatrix.lit
+	sh tangle.sh redist-spmatrix.lit
+

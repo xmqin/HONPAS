@@ -1,0 +1,29 @@
+<simulation verbosity="high">
+   <output prefix='h2o_output'>
+      <properties stride='1' filename='out'>  [ time{femtosecond}, conserved, temperature{kelvin}, kinetic_cv, potential, pressure_cv{bar} ] </properties>
+      <trajectory stride='1' filename='pos' cell_units="angstrom"> positions{angstrom} </trajectory>
+      <trajectory stride='1' filename='for' cell_units="angstrom"> forces </trajectory>
+      <checkpoint stride='20'/>
+   </output>
+   <total_steps>1000</total_steps>
+   <prng><seed>3141</seed></prng>
+      <ffsocket mode="unix" name="siesta">
+         <address>localhost</address>   <port>12345</port>   <timeout>30</timeout>   <latency> 0.01</latency>
+      </ffsocket>
+  <system>
+    <forces><force> siesta </force> </forces>
+    <initialize nbeads='4'>
+      <file mode='pdb'> h2o-init.pdb </file>
+      <velocities mode='thermal' units="kelvin"> 150 </velocities>
+   </initialize>
+  <ensemble mode='nvt'>
+      <thermostat mode='pile_l'>
+         <tau units="femtosecond">100</tau>
+         <pile_lambda> 0.2 </pile_lambda>
+      </thermostat>
+      <timestep units="femtosecond">0.5</timestep>
+      <fixcom>True</fixcom>
+      <temperature units="kelvin">250</temperature>
+   </ensemble>
+  </system>
+</simulation>

@@ -1,0 +1,152 @@
+-------------------------------------------------------------
+June 19, 2015  Alberto Garcia   siesta-trunk-438-radfunc-6
+Add lcut and rcut fields to registered objects. Cosmetics
+
+To avoid dispatching overheads, the registered objects
+have new lcut and rcut fields, initialized at registration
+time.
+
+Removed print statements.
+
+modified:
+  Src/matel_registry.F90
+  Src/register_rfs.F90
+
+-------------------------------------------------------------
+June 27, 2013  Alberto Garcia   siesta-trunk-438-radfunc-5
+Use new matel interface in the whole program
+
+Changed all calls to use two global indexes and the new matel
+routine. 
+
+Modified the sign of the second index ("io") in the kbproj_gindex
+function to be compatible with the traditional usage in the program.
+
+removed:
+  Src/radfunc_registry.F90
+modified:
+  Src/Makefile
+  Src/atmfuncs.f
+  Src/kinefsm.f
+  Src/naefs.f
+  Src/nlefsm.f
+  Src/overfsm.f
+  Src/overlap.f
+  Src/phirphi.f
+  Src/phirphi_opt.f
+  Src/register_rfs.F90
+
+
+-------------------------------------------------------------
+June 27, 2013  Alberto Garcia   siesta-trunk-438-radfunc-4
+Added support for two kinds of functions in registry
+
+Added support for "wannier trial orbitals", as defined in 
+Richard Korytar's code to interface with Wannier90. This is
+proof-of-concept only for now. It will become useful upon
+the merge of the updated interface code being developed by
+Javier Junquera.
+
+added:
+  Src/matel_registry.F90
+  Src/trialOrbitalClass.f90
+modified:
+  Src/Makefile
+  Src/new_matel.f
+  Src/overlap.f
+  Src/register_rfs.F90
+
+-------------------------------------------------------------
+June 19, 2013  Alberto Garcia   siesta-trunk-438-radfunc-3
+Sync to trunk-438
+
+-------------------------------------------------------------
+June 19, 2013  Jose Soler   siesta-trunk-376-radfunc-3
+Re-use information in new_matel tables. Clarification of Lcut
+
+J. Soler has re-activated the code to search in matel's tables to
+avoid recomputation in case the matrix element combination has
+appeared before.
+
+Also, lofio should really be considered as an "angular momentum cutoff",
+as matel is ready to handle functions which include several values of l.
+
+evaluate, rcut, and lcut are now first-class symbols in new_matel.
+
+modified:
+  Src/new_matel.f
+  Src/radfunc_registry.F90
+
+
+-------------------------------------------------------------
+March 30, 2011  Alberto Garcia   siesta-trunk-376-radfunc-2
+Fix division by zero in evaluate routine
+
+A small number is added to rmod to avoid division
+by zero when r(:) = 0 in "evaluate".
+
+Wrapped the output of the testing routine for MPI.
+
+modified:
+  Src/radfunc_registry.F90
+  Src/register_rfs.F90
+
+-------------------------------------------------------------
+March 29, 2011  Alberto Garcia   siesta-trunk-376-radfunc-1
+Prototype implementation of radial-function registry
+
+A new framework for dealing with arbitrary kinds of radial functions
+(as long as they can be represented by the existing "radfunc" data
+type as defined in module "radial". The indexing problem is solved
+by registering each function in a global pool, which keeps a pointer
+to the relevant data associated to a global index. The mappings
+between the global and the user-level indexes can be made transparent
+without effort.
+
+Any new kind of function can be added. This framework can coexist
+with the old one for as long as needed.
+
+Full documentation will follow.
+
+See complete example of usage in:
+
+register_rfs.F90  -- How to register any kind of radial function
+                     (This file does it for the standard functions
+                      already in Siesta)
+
+atmfuncs.F        -- One way to implement user-level helper functions
+                     for indexing (look for "gindex")
+
+overlap.f         -- How to use the new version of matel (which can
+                     coexist with the old one)
+
+Relevant new code:
+
+radfunc_registry.F90 -- The new registry and evaluators.
+
+new_matel.f          -- Basically the same, with just one global index
+                        per function. Still need to figure out how to
+                        re-use any radial info, if available.
+
+                        If the two versions of matel coexist there might
+                        be some missing opportunities to reuse tables.
+
+spher_harm.f         -- Offers two implementations of YLMEXP.
+
+
+Based in part on ideas contributed by Jose Soler.
+
+added:
+  Docs/radfunc.CHANGES
+  Src/new_matel.f
+  Src/radfunc_registry.F90
+  Src/register_rfs.F90
+modified:
+  Src/Makefile
+  Src/atm_types.f
+  Src/atmfuncs.f
+  Src/matel.f
+  Src/overlap.f
+  Src/parallel.F
+  Src/siesta_init.F
+  Src/spher_harm.f

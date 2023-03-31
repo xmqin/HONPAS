@@ -1,0 +1,201 @@
+----------------------------------------------------------
+Mar 16 2013  Tristana Sondon  trunk-434--atom-filt+qconf-3
+Synch to trunk 343
+
+added:
+  Docs/CHANGES.minim
+  Docs/timing.CHANGES
+  Src/die.F
+  Src/m_dminim.F90
+  Src/m_zminim.F90
+  Src/timer_tree.f90
+  Tests/OMM_h2o/
+  Tests/OMM_h2o/Makefile
+  Tests/OMM_h2o/OMM_h2o.fdf
+  Tests/OMM_h2o/OMM_h2o.pseudos
+  Tests/OMM_si/
+  Tests/OMM_si/Makefile
+  Tests/OMM_si/OMM_si.fdf
+  Tests/OMM_si/OMM_si.pseudos
+  Tests/Reference-xml/OMM_h2o.xml
+  Tests/Reference-xml/OMM_si.xml
+  Tests/Reference/OMM_h2o.out
+  Tests/Reference/OMM_si.out
+  Tests/Reference/TranSiesta-TBTrans/ts_au_100/
+  Tests/Reference/TranSiesta-TBTrans/ts_au_100/au_100.TRANS
+  Tests/Reference/TranSiesta-TBTrans/ts_au_100/au_100.out
+  Tests/Reference/TranSiesta-TBTrans/ts_au_100/elec_au_100.out
+  Tests/Reference/TranSiesta-TBTrans/ts_au_100/tbt_au_100.out
+  Tests/Reference/TranSiesta-TBTrans/ts_au_100_0.25V/
+  Tests/Reference/TranSiesta-TBTrans/ts_au_100_0.25V/au_100.TRANS
+  Tests/Reference/TranSiesta-TBTrans/ts_au_100_0.25V/au_100.out
+  Tests/Reference/TranSiesta-TBTrans/ts_au_100_0.25V/elec_au_100.out
+  Tests/Reference/TranSiesta-TBTrans/ts_au_100_0.25V/tbt_au_100.out
+  Tests/Reference/TranSiesta-TBTrans/ts_au_100_repetition/
+  Tests/Reference/TranSiesta-TBTrans/ts_au_100_repetition/au_100.TRANS
+  Tests/Reference/TranSiesta-TBTrans/ts_au_100_repetition/au_100.out
+  Tests/Reference/TranSiesta-TBTrans/ts_au_100_repetition/elec_au_100.out
+  Tests/Reference/TranSiesta-TBTrans/ts_au_100_repetition/tbt_au_100.out
+  Tests/Reference/TranSiesta-TBTrans/ts_au_100_repetition_0.25V/
+  Tests/Reference/TranSiesta-TBTrans/ts_au_100_repetition_0.25V/au_100.TRANS
+  Tests/Reference/TranSiesta-TBTrans/ts_au_100_repetition_0.25V/au_100.out
+  Tests/Reference/TranSiesta-TBTrans/ts_au_100_repetition_0.25V/elec_au_100.out
+  Tests/Reference/TranSiesta-TBTrans/ts_au_100_repetition_0.25V/tbt_au_100.out
+  Tests/TranSiesta-TBTrans/ts_au_100/
+  Tests/TranSiesta-TBTrans/ts_au_100/Au.psf
+  Tests/TranSiesta-TBTrans/ts_au_100/au_100.fdf
+  Tests/TranSiesta-TBTrans/ts_au_100/elec_au_100.fdf
+  Tests/TranSiesta-TBTrans/ts_au_100/makefile
+  Tests/TranSiesta-TBTrans/ts_au_100/script.sh
+  Tests/TranSiesta-TBTrans/ts_au_100_0.25V/
+  Tests/TranSiesta-TBTrans/ts_au_100_0.25V/Au.psf
+  Tests/TranSiesta-TBTrans/ts_au_100_0.25V/au_100.fdf
+  Tests/TranSiesta-TBTrans/ts_au_100_0.25V/elec_au_100.fdf
+  Tests/TranSiesta-TBTrans/ts_au_100_0.25V/makefile
+  Tests/TranSiesta-TBTrans/ts_au_100_0.25V/script.sh
+  Tests/TranSiesta-TBTrans/ts_au_100_repetition/
+  Tests/TranSiesta-TBTrans/ts_au_100_repetition/Au.psf
+  Tests/TranSiesta-TBTrans/ts_au_100_repetition/au_100.fdf
+  Tests/TranSiesta-TBTrans/ts_au_100_repetition/elec_au_100.fdf
+  Tests/TranSiesta-TBTrans/ts_au_100_repetition/makefile
+  Tests/TranSiesta-TBTrans/ts_au_100_repetition/script.sh
+  Tests/TranSiesta-TBTrans/ts_au_100_repetition_0.25V/
+  Tests/TranSiesta-TBTrans/ts_au_100_repetition_0.25V/Au.psf
+  Tests/TranSiesta-TBTrans/ts_au_100_repetition_0.25V/au_100.fdf
+  Tests/TranSiesta-TBTrans/ts_au_100_repetition_0.25V/elec_au_100.fdf
+  Tests/TranSiesta-TBTrans/ts_au_100_repetition_0.25V/makefile
+  Tests/TranSiesta-TBTrans/ts_au_100_repetition_0.25V/script.sh
+  Util/JobList/
+  Util/JobList/Examples/
+  Util/JobList/Examples/Ice/
+  Util/JobList/Examples/Ice/H.psf
+  Util/JobList/Examples/Ice/O.psf
+  Util/JobList/Examples/Ice/defaults.fdf
+  Util/JobList/Examples/Ice/dzp.fdf
+  Util/JobList/Examples/Ice/filter100.fdf
+  Util/JobList/Examples/Ice/iceChecks.jobs
+  Util/JobList/Examples/Ice/iceVIII.fdf
+  Util/JobList/Examples/Ice/iceXI.fdf
+  Util/JobList/Examples/Ice/meshCutoff.gplot
+  Util/JobList/Examples/Ice/meshCutoff.jobs
+  Util/JobList/Examples/Ice/pseudoLMKLL.fdf
+  Util/JobList/Examples/Ice/pseudoPBE.fdf
+  Util/JobList/Examples/Ice/pseudoVV.fdf
+  Util/JobList/Examples/Ice/queue.sh
+  Util/JobList/Examples/Ice/qzp.fdf
+  Util/JobList/Examples/Ice/tzp.fdf
+  Util/JobList/README
+  Util/JobList/Src/
+  Util/JobList/Src/Makefile
+  Util/JobList/Src/countJobs.f90
+  Util/JobList/Src/getResults.f90
+  Util/JobList/Src/horizontal.f90
+  Util/JobList/Src/jobList.f90
+  Util/JobList/Src/runJobs.f90
+modified:
+  Docs/CHANGES
+  Docs/TS-npa.CHANGES
+  Docs/TranSiestaUpdate.pdf
+  Docs/siesta.tex
+  Src/MPI/mpi.F
+  Src/MPI/mpi_siesta.f90
+  Src/Makefile
+  Src/SiestaXC/makefile
+  Src/compute_dm.F
+  Src/fdf/fdf.F90
+  Src/fdf/fdf.Standard
+  Src/fft.F
+  Src/iopipes.F90
+  Src/local_DOS.F
+  Src/m_glob_sparse.F90
+  Src/m_hs_matrix.f90
+  Src/m_hsx.F
+  Src/m_iodm.F
+  Src/m_timer.F90
+  Src/m_ts_electrode.F90
+  Src/m_ts_gf.F90
+  Src/m_ts_in_siesta.F
+  Src/m_ts_scattering.F
+  Src/m_walltime.f90
+  Src/matel.f
+  Src/mixer.F
+  Src/molecularmechanics.F90
+  Src/post_scf_work.F
+  Src/projected_DOS.F
+  Src/reinit.F
+  Src/setup_H0.F
+  Src/setup_hamiltonian.F
+  Src/siesta_analysis.F
+  Src/siesta_end.F
+  Src/siesta_forces.F
+  Src/siesta_init.F
+  Src/siesta_options.F90
+  Src/timer.F90
+  Src/ts_init.F90
+  Src/write_subs.F
+  Tests/Makefile
+  Util/README
+  Util/TBTrans_rep/m_tbt_options.F90
+  Util/TBTrans_rep/tbtrans.F90
+
+----------------------------------------------------------
+Nov 27 2012  Alberto Garcia   trunk-426--atom-filt+qconf-3
+Added chargeconf-h2o test and reference outputs
+
+Added Emilio's test. 
+Updated the reference output for filteret test.
+
+added:
+  Docs/CHANGES.charconf
+  Tests/Reference/chargeconf-h2o.out
+  Tests/chargeconf-h2o/
+  Tests/chargeconf-h2o/chargeconf-h2o.fdf
+  Tests/chargeconf-h2o/chargeconf-h2o.pseudos
+  Tests/chargeconf-h2o/makefile
+modified:
+  Tests/Reference/h2o_filteret_basis.out
+
+----------------------------------------------------------
+Nov 27 2012  Alberto Garcia   trunk-426--atom-filt+qconf-2
+Merged Emilio's charge-confinement code
+
+Pending to investigate the initialization of the
+qcoe, qyuk, and qwid variables.
+
+added:
+  Docs/CHANGES.charconf
+  Tests/chargeconf-h2o/
+  Tests/chargeconf-h2o/chargeconf-h2o.fdf
+  Tests/chargeconf-h2o/chargeconf-h2o.pseudos
+  Tests/chargeconf-h2o/makefile
+modified:
+  Docs/siesta.tex
+  Src/atom.F
+  Src/basis_specs.f
+  Src/basis_types.f
+  Src/initatom.f
+
+----------------------------------------------------------
+Nov 26 2012  Alberto Garcia   trunk-426--atom-filt+qconf-1
+Merged Julian's filteret basis code
+
+There are some cosmetic changes, but it would be too difficult to
+disentangle them from the relevant changes.
+
+added:
+  Tests/Reference/h2o_filteret_basis.out
+  Tests/h2o_filteret_basis/
+  Tests/h2o_filteret_basis/h2o_filteret_basis.fdf
+  Tests/h2o_filteret_basis/h2o_filteret_basis.pseudos
+  Tests/h2o_filteret_basis/makefile
+modified:
+  Docs/siesta.tex
+  Src/atm_transfer.f
+  Src/atm_types.f
+  Src/atmparams.f
+  Src/atom.F
+  Src/basis_specs.f
+  Src/basis_types.f
+  Src/initatom.f
+  Src/m_filter.f90
+  Src/old_atmfuncs.f

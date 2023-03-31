@@ -1,0 +1,266 @@
+** CHANGES (fixes only) on rc-4.0 branch
+
+----------------------------------------------------------------------
+2015-06-02                                              rc-4.0-pl-16
+Remove mentions of NR in the manual. Fix siestaxc makefile
+
+The routines replacing those from NR were not properly accounted
+for in the SiestaXC makefile. Thanks to Nick P. Andersen.
+
+Remove the mention of NR in the manual. Fix the FFT attribution.
+
+modified:
+  Docs/siesta.tex
+  Src/SiestaXC/makefile
+
+----------------------------------------------------------------------
+2015-05-28                                              rc-4.0-pl-15
+Bugfix for soft confinement charge
+
+* The shell belogning to the orbital setups did not initialize
+  properly if the PAO.Basis block was not defined.
+
+  Now the initialization routine is called before setting up the
+  orbital.
+
+  Also changed the comments about the magnitude of the charge
+  confinement width.
+
+  (Nick P. Andersen)
+
+modified:
+  Src/basis_specs.f
+  Src/basis_types.f
+
+----------------------------------------------------------------------
+2015-05-27                                              rc-4.0-pl-14
+The cdf_fft program now uses Temperton's GPFA package
+
+The cdf_fft program in Util/Grid now uses Temperton's GPFA package.
+
+removed:
+  Util/Grid/libfft.f
+added:
+  Util/Grid/fft3d.f
+  Util/Grid/local_die.f90
+modified:
+  Util/Grid/cdf_fft.F90
+  Util/Grid/makefile
+
+----------------------------------------------------------------------
+2015-05-27                                              rc-4.0-pl-13
+Replaced FFT routine by a version based on Temperton's GPFA
+
+Calls to the 'four1' routine have been replaced by calls to
+'fft_gpfa_ez' with the same arguments. This routine lives
+in a new module in 'm_fft_gpfa.F', which also contains the
+legacy code by Temperton and the original entry points.
+
+removed:
+  Src/m_recipes.f
+  Util/Macroave/Src/recipes.f
+added:
+  Src/m_fft_gpfa.F
+modified:
+  Src/Makefile
+  Src/radfft.f
+  Util/Macroave/Src/Makefile
+  Util/Macroave/Src/macroave.f
+
+----------------------------------------------------------------------
+2015-05-26                                              rc-4.0-pl-12
+Replaced tred2/tqli by Lapack calls in m_filter
+
+modified:
+  Src/Makefile
+  Src/m_filter.f90
+  Src/m_recipes.f
+
+----------------------------------------------------------------------
+2015-05-26                                              rc-4.0-pl-11
+Replaced derf/derfc by Netlib versions
+
+added:
+  Src/errorf.f
+modified:
+  Src/Makefile
+  Src/fermid.F
+  Src/m_recipes.f
+  Src/matel.f
+
+----------------------------------------------------------------------
+2015-05-26                                              rc-4.0-pl-10
+Replaced random number routine
+
+removed:
+  Src/ran3.f
+added:
+  Src/randomg.f90
+modified:
+  Src/Makefile
+  Src/atomlwf.F
+  Src/chempot.F
+  Src/vmb.F
+
+----------------------------------------------------------------------
+2015-05-26                                              rc-4.0-pl-9
+Some routines from Numerical Recipes reimplemented
+
+Some routines from Numerical Recipes have been reimplemented with
+(mostly) the same algorithms.
+
+(Jose Soler, with minor changes by A. Garcia)
+
+  - spline interpolation routines rewritten and moved to interpolation module
+  - polint Lagrange interpolation rewritten and moved to interpolation module
+  - ordix subroutine recoded
+  - chebfd re-styled to remove remaining similarities with NR chebft
+  - choldc and cholsl fully re-styled and renamed as cholDcmp and cholLinSys
+  - zbrent substituted by a simple bisection root finder
+  - amoeba method re-implemented
+
+(+ Interface to external routine 'die' simplified: it now
+   requires a string argument) (A. Garcia)
+
+added:
+  Util/Macroave/Src/local_die.f
+renamed:
+  Src/flib_spline.f90 => Src/interpolation.f90
+modified:
+  Src/Makefile
+  Src/SiestaXC/lib-makefile
+  Src/SiestaXC/makefile
+  Src/SiestaXC/mesh1d.f90
+  Src/SiestaXC/siestaXC.files
+  Src/SiestaXC/siestaxc.F90
+  Src/SiestaXC/vdwxc.F90
+  Src/SiestaXC/vv_vdwxc.F90
+  Src/atom.F
+  Src/bonds.f
+  Src/chempot.F
+  Src/die.F
+  Src/electrostatic.f
+  Src/m_recipes.f
+  Src/m_rhog.F90
+  Src/matel.f
+  Src/pseudopotential.f
+  Src/radial.f
+  Src/sorting.f
+  Util/Denchar/Src/Makefile
+  Util/Macroave/Src/Makefile
+  Util/Macroave/Src/macroave.f
+  Util/Macroave/Src/paste.f
+  Util/Macroave/Src/recipes.f
+  Util/Optimizer/amoeba.f
+  Util/Optimizer/simplex.f90
+  Util/VCA/Makefile
+  Util/VCA/fractional.f
+  Util/VCA/mixps.f
+  version.info
+  Src/interpolation.f90
+
+----------------------------------------------------------------------
+2015-05-25                                              rc-4.0-pl-8
+Include feature in trunk-463 -- Restart file for annealing runs
+  
+* Added the writing and reading of an .ANNEAL_RESTART file, along the
+  same lines of the .VERLET_RESTART file. This fixes a small problem
+  for restarting annealing calculations when a continuous smooth run
+  is desired.
+  
+(Fabiano Corsetti)
+
+added:
+  Tests/anneal-cont/
+  Tests/anneal-cont/README
+  Tests/anneal-cont/makefile
+  Tests/anneal-cont/script.sh
+modified:
+  Docs/siesta.tex
+  Src/dynamics.f
+
+----------------------------------------------------------------------
+2015-05-25                                              rc-4.0-pl-7
+Cosmetic: declare variable, remove unused export
+
+modified:
+  Src/Fstack.T90
+  Src/m_convergence.f90
+
+----------------------------------------------------------------------
+2015-03-04                                              rc-4.0-pl-6
+Fix import of idyn in save_density_matrix
+
+* The idyn variable was not imported from siesta_options 
+  in standard "siesta" mode
+
+(thanks to J. Junquera)
+
+modified:
+  Src/save_density_matrix.F
+
+----------------------------------------------------------------------
+2015-02-03                                              rc-4.0-pl-5
+Fixed IO statements for molecularmechanics module
+
+(Nick .P. Andersen)
+
+* IO print-outs was still abundant in parallel runs.
+  Now only the IO node will print out.
+
+* The manual has been corrected to correctly state
+  that any unit is allowed in the MM.* block.
+
+modified:
+  Docs/siesta.tex
+  Src/molecularmechanics.F90
+
+----------------------------------------------------------------------
+2015-01-07                                              rc-4.0-pl-4
+Fix MPI tag in SiestaXC/mesh3d
+
+* The variable Mpitag was not initialized, leading to problems whenever
+  its value was not zero or considered as MPI_ANY_TAG in a Recv operation.
+
+(Nick P. Andersen)
+
+modified:
+  Src/SiestaXC/mesh3d.F90
+
+----------------------------------------------------------------------
+2014-11-08                                              rc-4.0-pl-3
+Fix output to show constrained forces
+
+* Changed the calling of the iofa and ofc routines inside write_subs,
+  so that the forces with constraints are written to file in each case
+  instead of the uncorrected forces. 
+
+(Fabiano Corsetti)
+
+modified:
+  Src/write_subs.F
+
+
+----------------------------------------------------------------------
+2014-10-07  9:40:00 GMT                                 rc-4.0-pl-2
+Fix 'clean' rule in  MPI Makefile
+
+The interface library libmpi_f90.a was not removed when issuing a
+'make clean', possibly leading to strange errors if the MPI
+compilation environment was later changed.
+
+modified:
+  Src/MPI/Makefile
+
+----------------------------------------------------------------------
+2014-10-07  9:35:00 GMT                                 rc-4.0-pl-1
+Fix shortcomings in reading of empirical potential block
+
+* The number of potential lines is now arbitrary.
+* Units handling has been improved, to allow arbitrary
+  length and energy units.
+
+(Nick P. Andersen)
+
+modified:
+  Src/molecularmechanics.F90

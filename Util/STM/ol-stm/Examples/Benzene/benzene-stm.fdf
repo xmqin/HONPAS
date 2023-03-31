@@ -1,0 +1,54 @@
+use-struct-file T
+write-denchar T
+COOP-write T
+SaveElectrostaticPotential      .true.
+SaveTotalPotential      .true.
+#
+WFS.Energy.Min -10.0 eV
+WFS.Energy.Max  10.0 eV
+#
+# This is not really needed, but provides
+# a comparison of the 'wfs route' with the
+# Siesta LDOS generation
+#
+%block LocalDensityOfStates
+ -6.0  -3.0   eV
+%endblock LocalDensityOfStates
+
+SystemName benzene-stm
+SystemLabel benzene-stm
+
+NumberOfSpecies 2
+NumberOfAtoms   12
+
+%block ChemicalSpeciesLabel
+1    1 H
+2    6 C
+%endblock ChemicalSpeciesLabel
+
+MD.TypeOfRun CG
+MD.NumCGsteps 0
+
+MeshCutoff 120 Ry
+PAO.EnergyShift 0.01 Ry
+DM.NumberPulay 5
+DM.MixingWeight 0.3
+
+#-------------------- STM/STS section
+#
+STM.DensityUnits   Ele/Ang**3   # Units of Charge Density
+                                     # Ele/bohr**3
+                                     # Ele/Ang**3
+                                     # Ele/UnitCell
+
+STM.MinZ       5.1 Ang     # Minimum coordinate of the window in Z-dir
+STM.MaxZ       8.0 Ang     # Maximum coordinate of the window in Z-dir
+STM.RefZ       5.0 Ang     # Reference plane to propagate wf into vacuum
+STM.VacZ       6.0 Ang     # Position at which the potential is "flat"
+
+STM.Emin         -6.3 eV   # Energy window
+STM.Emax         -3.0 eV
+
+STM.NumberPointsX       48         # Number of points in X-axis
+STM.NumberPointsY       48         # Number of points in Y-axis
+STM.NumberPointsZ       30         # Number of points in Z-axis

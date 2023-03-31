@@ -1,0 +1,1566 @@
+------------------------------------------------------------
+April 25, 2014  A. Garcia        trunk-459--pexsi-59
+Implement new PEXSI solver dynamical-tolerance algorithm
+
+The on-the-fly tolerance for the number of electrons can now be
+fine-tuned on the basis of the ratio dDmax/dDtol (i.e., how far from
+convergence we are), instead of through the absolute value of dDmax.
+
+Here dDmax is the measure of last step's deviation in SCF convergence and
+dDtol is the tolerance for SCF convergence.
+
+Parameters:
+
+PEXSI.dynamical-tolerance   (default .false.)
+
+toggles the new algorithm. The default, for compatibility, is to use
+the old one.
+
+The algorithm itself is:
+
+      tolerance_exp = log10(dDmax/(tolerance_target_factor*dDtol))
+      tolerance_exp = max(tolerance_exp,0.0_dp)*tolerance_preconditioner
+      tolerance = PEXSINumElectronToleranceMin * 10.0_dp**tolerance_exp
+      tolerance = min(tolerance,PEXSINumElectronToleranceMax)
+
+and the parameters are set by the following keywords and default
+values:
+
+ tolerance_target_factor = fdf_get("PEXSI.tolerance-target-factor",5.0_dp)
+ tolerance_preconditioner = fdf_get("PEXSI.tolerance-preconditioner",1.0_dp)
+
+For reference, the old algorithm is:
+
+   tolerance = Max(PEXSINumElectronToleranceMin, &
+                              Min(dDmax*1.0, PEXSINumElectronToleranceMax))
+and
+
+PEXSINumElectronToleranceMin = 
+            fdf_get("PEXSI.num-electron-tolerance-lower-bound",0.01_dp)
+PEXSINumElectronToleranceMax = 
+            fdf_get("PEXSI.num-electron-tolerance-upper-bound",0.5_dp)
+
+The tolerance will not move up, only down.
+
+The computed tolerance can still be overridden if an absolute
+tolerance is explicitly specified in the fdf file
+
+   PEXSINumElectronTolerance =  fdf_get("PEXSI.num-electron-tolerance",&
+                                        tolerance)
+
+modified:
+  Src/m_pexsi_solver.F90
+
+------------------------------------------------------------
+April 25, 2014  A. Garcia        trunk-459--pexsi-58
+Sync to trunk-459
+
+459: Fix bug when reading spin-polarized deformation charge
+458: Fixes and new features in fdf
+457: Fix printed charges for transiesta...
+
+See CHANGES file for more details
+
+------------------------------------------------------------
+February 20, 2014  A. Garcia        trunk-456--pexsi-58
+Sync to trunk-456 [charge-density mixing update]
+
+See CHANGES file for more details
+
+------------------------------------------------------------
+February 20, 2014  A. Garcia        trunk-455--pexsi-58
+Add thermal broadening to inherited bracketing intervals
+
+* When inheriting a bracketing inertia-count interval, the next
+inertia-count or solver steps start with a slightly larger interval,
+broadened by 2kT.
+
+* When the PEXSI solver does not converge, the bracketing interval
+expansion for the subsequent inertia-count step is based on the current
+solver interval, not on the latest inertia-count step's.
+
+modified:
+  Src/m_pexsi_solver.F90
+
+
+------------------------------------------------------------
+February 12, 2014  G. Huhs        trunk-455--pexsi-57
+Added functionality for tracing with extrae
+
+(Georg Huhs)
+
+('extrae' is part of the BSC tracing tools)
+
+For each timing event a user function with the same name is
+registered.  At the end of the run the file 'siesta_user_labels.pcf'
+containing the labels needed for later analysis is created. The
+content of this file needs to be appended to the *.pcf file generated
+by the tracing.
+
+For activating this functionality the code has to be compiled with the
+option 
+
+-DTRACING 
+
+and linked with the 'extrae' library.
+
+The file Src/extrae_module.f90 is taken from extrae 2.4 and might need
+to be updated when using later versions of extrae.
+
+
+When compiling with 
+
+  -DTRACING_SOLVEONLY
+
+the tracing is deactivated after initializing Siesta and activated
+again before starting the first pexsi-solve phase.  This ensures that
+for some time the pexsi-solve is not corrupted by tracing-IO. If this
+time-window is too short, the event buffer size can be increased in
+extrae.xml
+
+added:
+  Src/extrae_eventllist.F90
+  Src/extrae_module.f90
+modified:
+  Src/Makefile
+  Src/SiestaXC/makefile
+  Src/m_pexsi_solver.F90
+  Src/siesta.F
+  Src/siesta_end.F
+  Src/timer.F90
+  Src/Sys/marenostrum-III-extrae.make 
+
+------------------------------------------------------------
+February 10, 2014  A. Garcia       trunk-455--pexsi-56
+Sync to trunk-455
+
+455:  [merge] Charge-density mixing
+454:  [merge] Allow the handling of ghosts of synthetic atoms
+453:  Added a simple ps-->inp converter for ATOM
+452:  Fixed a wrong threshold for the bias for transiesta...
+
+See CHANGES file for more details
+
+------------------------------------------------------------
+December 13, 2013  A. Garcia       trunk-451--pexsi-56
+Add option to read a starting Hamiltonian for the scf cycle
+
+When mixing the Hamiltonian, the option
+
+  Read-H-from-file T
+
+will use a starting Hamiltonian read from file H_IN. 
+
+(Note that the same option, when used with 'MaxSCFIterations 0', will
+read H to be used in post-processing, such as in (L)DOS calculation.)
+
+modified:
+  Src/Makefile
+  Src/m_iodm.F
+  Src/siesta_forces.F
+
+------------------------------------------------------------
+December 4, 2013  A. Garcia       trunk-451--pexsi-55
+Sync to trunk-451
+
+* Use electronic entropy from current scf step. 
+* Do not update EHarris after scf step.
+* Added message detailing which DM is used in 'post_scf_work'
+ 
+(See CHANGES file)
+
+modified:
+  Src/Makefile
+  Src/compute_dm.F
+  Src/final_H_f_stress.F
+  Src/local_DOS.F
+  Src/m_energies.F90
+  Src/post_scf_work.F
+  Src/scfconvergence_test.F
+  Src/setup_hamiltonian.F
+  Src/siesta_init.F
+  Src/write_md_record.F
+  Src/write_subs.F
+
+------------------------------------------------------------
+December 3, 2013  A. Garcia       trunk-450--pexsi-55
+Sync to trunk-450
+
+* Fix SiestaXC/mesh3d to avoid overflow of distributions and/or tasks
+* Fix Tbtrans runs at Gamma when using Transiesta k-point data
+* Minor fixes in XC library (JMS)
+
+(See CHANGES file)
+
+modified:
+  Src/SiestaXC/cellxc.F90
+  Src/SiestaXC/makefile
+  Src/SiestaXC/mesh3d.F90
+  Src/SiestaXC/vdwxc.F90
+  Src/SiestaXC/vv_vdwxc.F90
+  Util/TBTrans_rep/tbtrans.F90
+
+------------------------------------------------------------
+November 25, 2013  A. Garcia       trunk-447--pexsi-55
+More hooks for PEXSI steering during scf-loop
+
+** Implement an "expert" inertia-count driver and mu bracket heuristics
+
+With the option
+
+  PEXSI.inertia-expert-driver T
+
+the program will call the inertia-count routine requesting a single
+iteration, and use the results in a loop to increase the number of
+criteria for convergence:
+
+-- Electron tolerance in the base interval.
+
+This reflects the basic heuristic that the integrated DOS should be more
+precise as the interval gets shorter. (This was the only criterion up to now.)
+
+    PEXSI.inertia-num-electron-tolerance  [default 20]
+
+-- Workable electron tolerance in the base interval.
+
+    PEXSI.inertia-min-num-electron-tolerance  [default 10]
+
+There can be problems with the algorithm if the interval is too
+small. Hence this termination criterion.
+
+-- Mu tolerance
+
+If the chemical potential has changed by less than
+
+    PEXSI.inertia-mu-tolerance  [default a very small number] unit
+
+from one inertia-count iteration to the next, the cycle ends, and mu is passed
+on to the PEXSI solver.
+
+-- Energy width of the interval (deprecated, as it does not make sense
+   for gapped systems)
+
+
+When the inertia-count cycle ends, the bracket passed to the PEXSI solver is:
+
+  [muMinInertia, muMaxInertia]  (the refined interval)
+
+** Implement Ef shift estimation
+
+Using H for the current and the previous iterations, and the most recent DM,
+the program estimates the change in the band-structure energy, and from it
+(assuming a rigid shift), the change in Fermi level. This is passed to
+the PEXSI solver to modify the inherited brackets.
+
+
+** Add more heuristics for bracketting
+
+Clarification of the workflow. More options to control the number
+of inertia count steps, the bracketting convergence, and the use of
+the information about the shift in Ef:
+
+* In numInertiaCounts is negative, it indicates a minimum number of ic
+  steps. There can be more, if the dDmax in the previous iteration is
+  above:
+
+  safe_dDmax_NoInertia = fdf_get("PEXSI.safe-dDmax-no-inertia",0.05)
+
+* Use of Ef shift:
+
+  If the dDmax in the previous iteration is above, respectively:
+
+  safe_dDmax_Ef_Inertia = fdf_get("PEXSI.safe-dDmax-ef-inertia",0.1)
+  safe_dDmax_Ef_solver = fdf_get("PEXSI.safe-dDmax-ef-solver",0.05)
+
+  the bracketting for IC and solver steps is controlled by
+
+  safe_width_ic = fdf_get("PEXSI.safe-width-ic-bracket",4.0_dp*eV,"Ry")
+ 
+  (half that width on either side of muLower and muUpper from the latest
+   inertia count step)
+
+  and
+
+  safe_width_solver = fdf_get("PEXSI.safe-width-solver-bracket",2.0_dp*eV,"Ry")
+
+  (half that width on either side of mu from the latest solver step)
+
+  If the dDmax is below the above tolerance(s), the shift in Ef is used to move the
+  previous brackets for IC and/or the solver
+
+
+**  Monitoring of memory peaks by calls to getrusage()
+
+A simple, and crude for now, method to display the maximum resident
+size reached at several points in the program has been implemented,
+with file rusage.f90 (an interface to the C routine getrusage()),
+memory_snapshot.f90, and memory_all.f90. This is not completely
+portable.
+
+'Memory_snapshot' prints the peak working set size reached in the root node.
+
+The routine 'memory_all' prints the maximum and minimum values of the
+peak working set size accross the processors in the communicator. Used
+only in the PEXSI routines for now.
+
+**  Implement PEXSI "Annealing"
+
+Use larger PEXSI temperatures when dDmax is far from convergence.
+This can remove instabilities for problematic systems.
+
+Options:
+
+  PEXSI.use-annealing T
+
+  PEXSI.annealing-preconditioner  {number} (default 1)
+  PEXSI.annealing-target-factor   {number} (default 10)
+
+  The effective PEXSI temperature (for solver and inertia-counts processing) is computed
+  as:
+
+   T = T_0 * ( 1 + precond* log(prevDmax/(target_factor*Dtol))  
+
+        (with maximum of T_0)
+
+  where 'Dtol' is the scf tolerance, 'prevDmax' is the previous iteration's maximum
+  deviation in DM (or H), 'target_factor' determines the level at which the nominal
+  temperature is reached in relation to the scf tolerance, and 'precond' is a scale
+  factor for the increase in temperature.
+
+  After the second iteration, the temperature decreases monotonically, regardless of
+  any large fluctuations in prevDmax, to avoid convergence oscillations.
+
+
+
+------------------------------------------------------------
+November 18, 2013  A. Garcia       trunk-447--pexsi-54
+Deallocate auxiliary buffers in write_mat
+
+Some buffers were not deallocated at the end of the routine.
+
+modified:
+  Src/m_matio.F90
+
+------------------------------------------------------------
+October 30, 2013  A. Garcia       trunk-447--pexsi-53
+Avoid opening .alloc file when not needed
+
+For alloc-report-level == 0, the SystemLabel.alloc file
+was still opened. This has been fixed.
+
+modified:
+  Src/alloc.F90
+
+------------------------------------------------------------
+October 28, 2013  A. Garcia       trunk-447--pexsi-52
+Fix boundary bug in SiestaXC's vdW code
+
+An erratic misbehavior of the vdW XC code has been traced
+to an improper initialization of an array. It has been fixed.
+
+(Thanks to G. Huhs and J.M. Soler)
+
+modified:
+  Src/SiestaXC/mesh1d.f90
+
+------------------------------------------------------------
+October 28, 2013  A. Garcia       trunk-447--pexsi-51
+Speedup the I/O for DM and H writes
+
+By using blocks of orbitals (according to the underlying default
+block-cyclic distribution), the sparse-matrix I/O can be speeded-up
+significantly, both by saving MPI communication and by reducing the
+number of file accesses. This is essential for large systems, for
+which the I/O could take a significant fraction of the total
+computation time.
+
+The newly re-organized DM and H information is now written to file in
+"blocked format" by default, unless the option
+
+       Use.Blocked.WriteMat F
+
+is used.
+
+The new format is not backwards compatible. A converter program
+(Util/DensityMatrix/dmbs2dm.F90) has been written to post-process
+those files intended for further analysis or re-use in Siesta. This is
+the best option for now, since it allows liberal checkpointing with a
+much smaller time consumption, and only incurs costs when re-using or
+analyzing files.
+
+Note that TranSiesta will continue to produce .DM files, in the old
+format (See save_density_matrix.F)
+
+( To test the new features, the option
+
+ S.Only T
+
+can be used. It will produce three files: a standard one, another one
+with optimized MPI communications, and a third, blocked one.
+)
+
+added:
+  Docs/pexsi-matio.CHANGES
+  Src/m_matio.F90
+  Util/DensityMatrix/dmbs2dm.F90
+  Util/DensityMatrix/f2kcli.F90
+  Util/DensityMatrix/m_getopts.f90
+modified:
+  Src/Makefile
+  Src/m_iodm.F
+  Src/overlap.f
+  Src/save_density_matrix.F
+  Src/siesta_forces.F
+  Util/DensityMatrix/makefile
+
+------------------------------------------------------------
+October 22, 2013  A. Garcia       trunk-447--pexsi-50
+Sync to trunk-447
+
+* Improve the estimation of the orbital distribution blocksize
+* Output file names for dhscf packed in a derived type (JMS)
+
+See the CHANGES file.
+
+modified:
+  Docs/CHANGES
+  Docs/siesta.tex
+  Src/Makefile
+  Src/dhscf.F
+  Src/files.f
+  Src/grdsam.F
+  Src/initparallel.F
+  Src/local_DOS.F
+  Src/m_dminim.F90
+  Src/m_pexsi_local_dos.F90
+  Src/m_zminim.F90
+  Src/parallelsubs.F
+  Src/setup_hamiltonian.F
+  Src/siesta_analysis.F
+  Src/siesta_options.F90
+
+------------------------------------------------------------
+October 17, 2013  A. Garcia       trunk-445--pexsi-50
+Do not time 'matel' to avoid overheads
+
+For large systems, there are too many calls to matel, and
+the timer overhead is noticeable. Timing calls have been
+disabled in matel.f
+
+modified:
+  Src/matel.f
+
+------------------------------------------------------------
+October 17, 2013  A. Garcia       trunk-445--pexsi-49
+Disable parallel timer by default
+
+When large numbers of processors are used, the "parallel" timer
+(producing the TIMES file) might be inefficient, and introduce
+inbalances in the "tree_timer" (based on walltime on the root node).
+
+The "parallel" timer has been disabled by default. It can be 
+enabled by
+
+  Use.Parallel.Timer T
+
+(The "tree_timer" is on by default. It can be disabled by
+
+  Use.Tree.Timer F
+)
+
+modified:
+  Src/siesta_init.F
+  Src/timer.F90
+
+
+
+------------------------------------------------------------
+October 16, 2013  A. Garcia       trunk-445--pexsi-48
+Wrap timing call. Simplify DOS routine. Add output to unit 6.
+
+* A timing call for IterMD was performed by all processors. It has
+  been wrapped so that only the SIESTA-workers perform it.
+
+* The new DOS routine now makes a single call to the raw-inertia-count
+  routine, with the entire interval and set of shifts.
+
+* A number of output statements have been changed from "write(*, )"
+  to "write(6, )" form, and viceversa. If the command-line option
+  " -o OUTfile" is used, output to unit 6 will be redirected to
+  OUTfile. The rest will end up in the default standard output stream.
+  
+modified:
+  Src/m_iodm.F
+  Src/m_pexsi_dos.F90
+  Src/m_pexsi_local_dos.F90
+  Src/m_pexsi_solver.F90
+  Src/siesta_forces.F
+  Src/timer_tree.f90
+
+------------------------------------------------------------
+October 14, 2013  A. Garcia       trunk-445--pexsi-47
+Richer matrix I/O to facilitate analysis
+
+* Save Hamiltonian and/or DM with proper filenames
+
+New file names:
+
+DM_MIXED: Useful for checkpointing
+DM_OUT:   Last DM computed
+
+H_MIXED:  Useful for checkpointing
+H_DMGEN:  Last H from which the electronic structure was computed
+
+The "mixed" files are produced only in the appropriate runs (MixDM
+(default), or MixHamiltonian).
+
+Other options affecting which files are written:
+
+- Checkpointing options:
+
+WriteDM
+WriteH
+
+- Analysis options:
+
+WriteDM.end.of.cycle
+WriteH.end.of.cycle
+
+- Backwards compatibility:
+
+SCF.MixAfterConvergence
+
+
+* With the option
+
+   read-H-from-file T
+
+the program will attempt to read H from the file "H_IN". This is
+useful when performing analyses which only need H (and S), but not
+the DM. 
+
+For example, to compute bands, or (p)DOS:
+
+(... options for bands or (p)DOS...)
+max-scf-iterations 0
+read-H-from-file T
+
+Optionally, since the Fermi level is not computed in these cases, it
+can be set directly in the fdf file:
+
+   manual-fermi-level -3.05 eV
+
+The program might still attempt to initialize the DM, and print messages
+mentioning DM input. These are cosmetic issues, but the user should be
+aware that this options are to be used with care.
+
+(+ Place timing call for Analysis in the correct place)
+
+modified:
+  Src/Makefile
+  Src/m_iodm.F
+  Src/m_pexsi_dos.F90
+  Src/save_density_matrix.F
+  Src/siesta_analysis.F
+  Src/siesta_forces.F
+  Src/siesta_options.F90
+
+------------------------------------------------------------
+October 14, 2013  A. Garcia       trunk-445--pexsi-46
+Implement cumulative DOS calculation based on raw inertia counts. H flow.
+
+* A new routine (in m_pexsi_dos) can now compute the cumulative DOS
+in a certain enery range using the inertia-count interface.
+
+The routine is activated by
+
+PEXSI.DOS T
+
+and the energy range is specified by:
+
+PEXSI.DOS.emin Energy unit
+PEXSI.DOS.emax Energy unit
+
+If the option
+
+   PEXSI.DOS.Ef.Reference   [ T | F ]
+
+is true, the above energies are referred to the Fermi level.
+
+The program produces a file called PEXSI_INTDOS, which contains a
+first line with the Fermi level and the number of electrons, and then
+a number of lines with an energy value (in eV) and the inertia count
+for that value.
+
+The number of energy values (shifts) used can be controlled by the option
+
+    PEXSI.DOS.npoints    [ default 200 ]
+
+The actual number will be increased if it is not a multiple of
+nNodes/npPerPole.
+
+The cumulative DOS can be post-processed in a number of ways. One
+option is to generate a file with "approximate eigenvalues" located at
+the points at which there are jumps in the cumulative DOS. This is
+implemented in Util/PEXSI/intdos2eig, which produces a file suitable
+for treatment with Util/Eig2DOS.
+
+* Automated the compilation of the dummy PEXSI library, including
+an option to consider only the new raw-inertia-counts routine.
+See Src/dummy_pexsi.
+
+* final_H_f_stress does not update H (nor S) (even though it writes out
+  updated versions to the .HS and .TSHS files...), unless the option
+
+     	 UpdateHamiltonianAfterSCF  T
+
+  is used (S is still not updated).
+
+  The final H going through to the analysis section is then:
+ 
+  -- If mixing the DM, the last H generated and used to compute the DM
+
+  -- If mixing H, a mixed version if performing a final mix after convergence.
+     If not mixing after convergence, the H used to compute the DM (i.e., Hold).
+
+     (To avoid mixing after convergence, use "SCF.MixAfterConvergence F". This
+      should be made the default soon).
+
+  This should be made more explicit at the argument level.
+
+------------------------------------------------------------
+October 9, 2013  A. Garcia        trunk-445--pexsi-45
+Re-organize some timing labels
+
+The timing label 'IterMD' now corresponds explicitly to 'siesta_forces',
+and there is a separate label 'SiestaMove' for the 'siesta_move' routine.
+
+These, together with "Setup", and "Analysis", complete the four main
+blocks of timing information.
+
+Additionally, timing calls for the "cellxc" routine(s) have been added.
+
+modified:
+  Src/dhscf.F
+  Src/siesta_forces.F
+  Src/siesta_move.F
+  Src/state_init.F
+
+------------------------------------------------------------
+October 7, 2013  A. Garcia        trunk-445--pexsi-44
+Add option to write the DM at the end of the SCF loop
+
+For cases in which the DM checkpointing during the scf cycle is not
+desirable, the option
+
+WriteDM.End.Of.Cycle  T
+
+allows one final saving at the end of the cycle.
+By default, this option is turned on if the more general option
+
+WriteDM T
+
+is in effect. 
+
+The conditions upon which the DM (whether mixed or 'dm_out') are saved
+are now spelled out through an explicit argument to the saving
+routine. The end-of-cycle saving section in 'siesta_forces' has been
+moved to an internal routine.
+
+( + Add timing call for 'siesta_analysis')
+
+modified:
+  Src/save_density_matrix.F
+  Src/siesta_analysis.F
+  Src/siesta_forces.F
+  Src/siesta_options.F90
+
+------------------------------------------------------------
+September 30, 2013  A. Garcia        trunk-445--pexsi-43
+Sync to trunk-445
+
+"New mixing options and simplification of scf loop"
+
+See the CHANGES file for a complete description of the latest features
+merged:
+
+Fixes for TranSiesta continuation and scf loop logic.
+Normalize the DM in the routines that handle it.
+Optionally avoid mixing DM or H after scf-convergence.
+Implement Hamiltonian mixing
+More options for Pulay mixing
+
+(Note that the option to mix the Hamiltonian was already present in
+the PEXSI branch)
+
+------------------------------------------------------------
+September 30, 2013  A. Garcia        trunk-444--pexsi-43
+Merge new mixing options
+
+The new mixing options were merged from a side branch first.
+An upcoming revision will sync with the trunk and pick up
+the CHANGES file.
+
+------------------------------------------------------------
+September 13, 2013  A. Garcia        trunk-444--pexsi-42
+Sync to trunk-444
+
+[merge] Bug fixes to the preconditioner in the OMM modules
+
+------------------------------------------------------------
+September 6, 2013  A. Garcia        trunk-443--pexsi-42
+New PEXSI interface blocks based on ISO_C_BINDING
+
+This new mechanism, implemented by most compilers, guarantees datatype
+consistency and future-proofs the interface against a repeat of problems
+such as the passing of assumed-shape arrays.
+
+A set of dummy C routines have been created to test the interface in
+the absence of the library itself.
+
+removed:
+  Src/pexsi_inertia.h
+  Src/pexsi_interface.F90
+  Src/pexsi_localdos.h
+  Src/pexsi_solve.h
+added:
+  Src/dummy_pexsi/
+  Src/dummy_pexsi/README
+  Src/dummy_pexsi/dummy_pexsi.c
+  Src/m_pexsi_interface.f90
+modified:
+  Src/Makefile
+  Src/m_pexsi_local_dos.F90
+  Src/m_pexsi_solver.F90
+
+------------------------------------------------------------
+September 4, 2013  A. Garcia        trunk-443--pexsi-41
+Changes for compilation on Edison
+
+* The interface files were using the "assumed shape" array
+  specification, instead of the "assumed size" one needed for
+  interfacing to C. Apparently the PGI and gfortran compilers did not
+  care about this, but the Intel compiler does. The array
+  specifications have been changed from "(:)" to "(*)".
+
+* In m_redist_spmatrix, use "only" clauses for import of mpi symbols, to
+  work around some name pollution.
+
+modified:
+  Src/m_redist_spmatrix.F90
+  Src/pexsi_inertia.h
+  Src/pexsi_localdos.h
+  Src/pexsi_solve.h
+
+-----------------------------------------------------------
+August 29, 2013  A. Garcia        trunk-443--pexsi-40
+Fix code for the case of H mixing.
+
+* Note that when mixing H the column dDmax no longer refers to DM_out -
+DM_in, but to "dHmax" (change of H with respect to the previous step).
+
+* Update Hold in compute_dm.
+
+* With the option
+
+  MonitorForcesInSCF T
+
+the program prints the maximum absolute value of F_i - F_i(previous step)
+for the forces. When mixing the hamiltonian, extra code has to be inserted
+to preserve H.
+
+modified:
+  Src/compute_dm.F
+  Src/siesta_forces.F
+  Docs/siesta.tex
+
+------------------------------------------------------------
+August 28, 2013  A. Garcia        trunk-443--pexsi-39
+Implement Hamiltonian mixing
+
+Ported first basic patch from trunk-scf branch. Use the option
+
+  MixHamiltonian T
+
+to enable mixing of H instead of the DM.
+
+Note that the convergence criterion is still based on the DM, i.e.,
+on || DM_out - DM_in || < tolerance.
+
+There is as yet no provision for input of H or re-use of H across
+geometries.
+
+modified:
+  Docs/siesta.tex
+  Src/Makefile
+  Src/compute_dm.F
+  Src/m_ts_global_vars.f90
+  Src/m_ts_options.F90
+  Src/mixer.F
+  Src/setup_hamiltonian.F
+  Src/siesta_forces.F
+  Src/siesta_options.F90
+  Src/sparse_matrices.F
+  Src/state_init.F
+
+------------------------------------------------------------
+August 28, 2013  A. Garcia        trunk-443--pexsi-38
+Compute explicitly the electronic entropy in PEXSI
+
+* Modified the computation of the electronic free energy
+to pass back the entropy to the caller routine.
+
+* For completeness, added a print statement for the entropy
+in diagonalization runs.
+
+modified:
+  Src/compute_dm.F
+  Src/m_pexsi_solver.F90
+
+------------------------------------------------------------
+August 1, 2013  A. Garcia        trunk-443--pexsi-37
+Update interface to v0.4.6 (npSymbFact)
+
+* Updated PEXSI calls to take into account the new parameter to
+optionally set the number of processors used for the symbolic
+factorization. The relevant fdf symbol is
+
+PEXSI.np-SymbFact
+
+* Added timing calls to the PEXSI solver and inertia-count sections.
+
+modified:
+  Src/m_pexsi_local_dos.F90
+  Src/m_pexsi_solver.F90
+  Src/pexsi_inertia.h
+  Src/pexsi_localdos.h
+  Src/pexsi_solve.h
+
+------------------------------------------------------------
+July 31, 2013  A. Garcia        trunk-443--pexsi-36
+Sync to trunk-443
+
+New patches:
+
+* Update to gnubands program.
+* Cosmetic fixes to please Cray compiler. PRACE arch.make files.
+* Siesta as subroutine using MPI. Vydrov-VanVoorhis vdW functional.
+  (Note: The MPI version of the "server/subroutine" option does not
+   yet work with PEXSI)
+* Bug fixes in constraints routine.
+* New option for KB projector generation
+* Charge confinement and filteret basis sets.
+* Compilation fixes for tbtrans. Cosmetic changes.
+
+------------------------------------------------------------
+July 4, 2013   G. Huhs, A. Garcia        trunk-434--pexsi-36
+Use alloc module in pexsi. New 'matrix' mode. Fix index arrays
+
+(Georg Huhs, A. Garcia)
+
+* To facilitate the memory accounting, simple "allocate" statements
+  have been replaced by calls to the alloc module in the PEXSI section.
+
+* A new "SolutionMethod", "matrix", has been implemented. This option
+  makes the program stop after creating two ASCII files, H.matrix and
+  S.matrix, containing H and S and the appropriate index arrays. For the
+  format, see the routine write_hs_formatted in m_hsx.F
+
+* Some auxiliary index arrays intended only for O(N) calculations were
+  allocated unconditionally. This has been fixed.
+  
+modified:
+  Docs/pexsi.CHANGES
+  Src/Makefile
+  Src/compute_dm.F
+  Src/initparallel.F
+  Src/m_hsx.F
+  Src/m_pexsi_solver.F90
+  Src/m_redist_spmatrix.F90
+  Src/siesta_options.F90
+
+
+
+------------------------------------------------------------
+June 7, 2013   Alberto Garcia            trunk-434--pexsi-35
+Command-line option to specify output file. More timings
+
+* Experimental support for command-line arguments has been added.
+Currently only one option is in effect:
+
+    siesta -o OUTFILE
+
+will write output to "OUTFILE" instead of to standard output.
+This is done by closing and re-opening unit 6. 
+It is useful to avoid unwanted output to stdout by some libraries.
+
+* Add timer calls for the new re-distribution routines.
+
+* Use the tree timer by default.
+
+modified:
+  Src/Makefile
+  Src/m_pexsi_solver.F90
+  Src/siesta_init.F
+
+------------------------------------------------------------
+June 5, 2013   Alberto Garcia            trunk-434--pexsi-34
+Units in energy options. Better output. Rationalize debug output
+
+Full set of options and defaults for PEXSI (note energy units now):
+
+npPerPole  = fdf_get("PEXSI.np-per-pole",4)
+numPole    = fdf_get("PEXSI.num-poles",20)
+
+! Hardly used?
+gap        = fdf_get("PEXSI.gap",0.0_dp,"Ry")
+deltaE     = fdf_get("PEXSI.delta-E",3.0_dp,"Ry")
+
+Tolerance heuristics:
+
+PEXSINumElectronToleranceMin = fdf_get("PEXSI.num-electron-tolerance-lower-bound",0.01_dp)
+PEXSINumElectronToleranceMax = fdf_get("PEXSI.num-electron-tolerance-upper-bound",0.5_dp)
+
+(Heuristics overriden by 
+    PEXSINumElectronTolerance = fdf_get("PEXSI.num-electron-tolerance",...) )
+
+
+muMaxIter  = fdf_get("PEXSI.mu-max-iter",10)
+
+! For feedback in case of wrong interval
+lateral_expansion_solver = fdf_get("PEXSI.lateral-expansion-solver",0.2_dp,"Ry")
+lateral_expansion_inertia = fdf_get("PEXSI.lateral-expansion-inertia",0.2_dp,"Ry")
+
+mu = fdf_get("PEXSI.mu",-0.60_dp,"Ry")
+muMin0           = fdf_get("PEXSI.mu-min",-1.0_dp,"Ry")
+muMax0           = fdf_get("PEXSI.mu-max", 0.0_dp,"Ry")
+
+isInertiaCount = fdf_get("PEXSI.inertia-count",1)
+numInertiaCounts = fdf_get("PEXSI.inertia-counts",3)
+inertiaMaxIter   = fdf_get("PEXSI.inertia-max-iter",5)
+inertiaNumElectronTolerance = fdf_get("PEXSI.inertia-num-electron-tolerance",10)
+numMinICountShifts = fdf_get("PEXSI.inertia-min-num-shifts", 10)
+
+ordering = fdf_get("PEXSI.ordering",1)
+
+modified:
+  Src/m_pexsi_solver.F90
+  Src/m_redist_spmatrix.F90
+
+------------------------------------------------------------
+June 4, 2013   Alberto Garcia            trunk-434--pexsi-33
+New strategies for number of shifts and electron tolerance (G. Huhs)
+
+   * the number of shifts for inertia count
+   * adapting numElectronTolerance in PEXSI depending on dmax
+  
+  New fdf parameters: 
+  PEXSI.inertia-min-num-shifts
+  PEXSI.num-electron-tolerance-upper-bound 
+  PEXSI.num-electron-tolerance-lower-bound  
+
+(With minor changes over Georg's version by Alberto Garcia)
+
+modified:
+  Src/m_pexsi_solver.F90
+  Src/siesta_forces.F
+
+------------------------------------------------------------
+June 4, 2013   Alberto Garcia            trunk-434--pexsi-32
+Assorted fixes to redistribution routines. LDOS redistribution
+
+Fixed some subtle bugs in the routines.
+Enabled re-distribution for the PEXSI-LDOS calculation.
+
+modified:
+  Src/Makefile
+  Src/m_pexsi_local_dos.F90
+  Src/m_pexsi_solver.F90
+  Src/m_redist_spmatrix.F90
+  Src/m_transfers.F90
+  Src/parallel.F
+  Src/siesta_init.F
+
+------------------------------------------------------------
+June 3, 2013   Alberto Garcia            trunk-434--pexsi-31
+Implemented redistribution routines
+
+Siesta can now work with its own arbitrary number of processors
+(specified through the fdf variable MPI.Nprocs.SIESTA), which can
+be different from the number of processors per pole in PEXSI  (specified
+through PEXSI.np-per-pole).
+
+A few rough edges and debug statements might remain.
+Yet to be implemented: redistribution before and after the LDOS routine.
+
+added:
+  Src/basic_type.inc
+  Src/class_BlockCyclicDist.F90
+  Src/class_Dist.F90
+  Src/class_PEXSIDist.F90
+  Src/m_comm.F90
+  Src/m_object_debug.F90
+  Src/m_redist_spmatrix.F90
+  Src/m_transfers.F90
+  Src/m_uuid.f90
+renamed:
+  Src/m_pexsi_local_DOS.F90 => Src/m_pexsi_local_dos.F90
+modified:
+  Src/Makefile
+  Src/compute_dm.F
+  Src/initparallel.F
+  Src/m_pexsi_solver.F90
+  Src/parallel.F
+  Src/siesta.F
+  Src/siesta_analysis.F
+  Src/siesta_end.F
+  Src/siesta_forces.F
+  Src/siesta_init.F
+  Src/m_pexsi_local_dos.F90
+
+------------------------------------------------------------
+May 22, 2013   Alberto Garcia            trunk-434--pexsi-30
+Fix units in fdf input for LDOS-Selected-Inversion interface
+
+Relevant fdf variables:
+
+PEXSI.LocalDOS         (true or false, to enable LDOS-SI)
+PEXSI.LocalDOS.Energy  ENERGY unit          
+PEXSI.LocalDOS.Broadening  BROADENING unit    (i.e., must specify unit)
+
+modified:
+  Src/m_pexsi_local_DOS.F90
+
+------------------------------------------------------------
+May 15, 2013   Alberto Garcia            trunk-434--pexsi-29
+First implementation of LDOS-Selected-Inversion interface
+
+Relevant fdf variables:
+
+PEXSI.LocalDOS
+PEXSI.LocalDOS.Energy
+PEXSI.LocalDOS.Broadening
+
+added:
+  Src/m_pexsi_local_DOS.F90
+  Src/pexsi_localdos.h
+modified:
+  Src/Makefile
+  Src/pexsi_interface.F90
+  Src/siesta.F
+  Src/siesta_analysis.F
+
+------------------------------------------------------------
+May 15, 2013   Alberto Garcia            trunk-434--pexsi-28
+Fix a bug in fallback loop for inertia count bracketting. scf prefix
+
+I was using "npPerPole" instead of "numPole" as the size of the
+inertiaList and shiftList arrays. 
+
+Replaced "siesta:" by "scf:" as the output prefix of the scf step
+information.
+
+modified:
+  Src/m_pexsi_solver.F90
+  Src/write_subs.F
+
+------------------------------------------------------------
+May 10, 2013   Alberto Garcia            trunk-434--pexsi-27
+Implement fallback loops for inertia count and solver bracketting
+
+On error conditions, try to expand the bracketting interval and
+re-compute the inertia-counts. This is also done if the solver
+call returns with a non-correct number of electrons.
+
+By default, an scf step inherits the latest (muMin,muMax) interval
+from an inertia-count calculation.
+
+modified:
+  Src/m_mpi_utils.F
+  Src/m_pexsi_solver.F90
+
+------------------------------------------------------------
+May  7, 2013   Alberto Garcia            trunk-434--pexsi-26
+Fix a bug, clarify the flow, and add placeholders
+
+The meaning of the "tolerance" parameter for inertia counts
+was misunderstood, and set to a very low value.
+
+The flow of control in siesta_forces has been clarified, with
+broadcast of iscf and better sectioning.
+
+A placeholder for the handling of the mu interval has been
+created.
+
+modified:
+  Src/m_pexsi_solver.F90
+  Src/siesta_forces.F
+  Src/siesta_init.F
+
+------------------------------------------------------------
+May  2, 2013   Alberto Garcia            trunk-434--pexsi-25
+Add 'info' parameter to PEXSI interface
+
+modified:
+  Src/m_pexsi_solver.F90
+  Src/pexsi_inertia.h
+  Src/pexsi_interface.F90
+  Src/pexsi_solve.h
+
+------------------------------------------------------------
+Apr 26, 2013   Alberto Garcia            trunk-434--pexsi-24
+Remove poleTolerance from the interface. Finite T inertia count
+
+Lin made some changes to the PEXSI interface. The new update includes, 
+in his words:
+
+1) Inertia count.  The "finite temperature inertia count" strategy is
+  now implemented (as given by a note I sent on 04/01).  With finite
+  temperature taken into account, I expect that the code is going to
+  be more accurate and more stable, especially for metallic systems or
+  odd-number electron systems (such as SiH).  The number of
+  mu-iterations should also be more reasonable.
+
+2) Pole expansion.  The parameter poleTolerance is now removed.  The
+  reason is that I think there is really no way to realistically
+  adjust this parameter from users' point of view.  On the other hand,
+  we know about 1/3 of the poles in the pole expansion has very tiny
+  weight, due to the nature of the Fermi-Dirac distribution.  I have
+  implemented a strategy to dynamically adjust the number of poles
+  given the numElectronTolerance as well as numPole.  As a result, all
+  numPoles will have significant contributions to the computation.
+  That means no poles will be skipped in the calculation.  This should
+  also improve the load balancing.  This change also means that the
+  number of poles used (numPole) parameter can be chosen to be less
+  than before.
+
+3) Error estimate of the pole expansion.  I implemented a way to
+  roughly estimate the error of the pole expansion in terms of the
+  relative accuracy for computing the number of electrons.  You can
+  search in logPEXSIxxx and find sentences like
+
+
+"Pole expansion indicates that the relative error of numElectron is
+bounded by 6.769894e-09 Required relative accuracy:
+numElectronTolerance / numElectronExact is 4.0950041e-06"
+
+It provides some rough idea how accurate the pole expansion is.
+
+modified:
+  Src/m_pexsi_solver.F90
+  Src/pexsi_solve.h
+
+
+
+------------------------------------------------------------
+Apr 25, 2013   Alberto Garcia            trunk-434--pexsi-23
+First implementation of interface with smarter mu intervals
+
+This is basically the implementation by Georg Huhs of the new interface,
+with some modifications by A. Garcia (notably, the scf step number (iscf)
+is passed to the PEXSI solver directly).
+
+There are now two entry points to PEXSI:
+
+f_ppexsi_inertiacount_interface
+f_ppexsi_solve_interface
+
+together with new parameters to determine the behavior of the code.
+Full documentation will be produced at the time of final merging.
+
+removed:
+  Src/pexsi.h
+added:
+  Docs/pexsi-gh-richer.CHANGES
+  Src/pexsi_inertia.h
+  Src/pexsi_solve.h
+modified:
+  Src/Makefile
+  Src/compute_dm.F
+  Src/m_pexsi_solver.F90
+  Src/pexsi_interface.F90
+  Src/siesta_init.F
+
+------------------------------------------------------------
+Apr 1, 2013   Alberto Garcia             trunk-434--pexsi-22
+New option to estimate chemical potential in PEXSI
+
+PEXSI.inertia-count 1
+
+(set by default) will tell the interface to estimate the initial
+chemical potential by the method of "inertia counts" (determination of
+the number of eigenvalues to the left of a given real number, by LDL^T
+factorization of the shifted Hamiltonian).
+
+modified:
+  Src/m_pexsi_solver.F90
+  Src/pexsi.h
+  Src/pexsi_interface.F90
+
+------------------------------------------------------------
+Apr 1, 2013   Alberto Garcia             trunk-434--pexsi-21
+New header file to consolidate interface
+
+Created file pexsi.h to hold the header information for the
+PEXSI interface routine. It is 'included' in m_pexsi_solver
+and in pexsi_interface.
+
+Moved files from previous stages to new directory OldPEXSI.
+
+added:
+  Src/OldPEXSI/
+  Src/pexsi.h
+renamed:
+  Src/pexsi.F90 => Src/OldPEXSI/pexsi.F90
+  Src/pexsi_dump.F90 => Src/OldPEXSI/pexsi_dump.F90
+  Src/pexsi_exchange.F90 => Src/OldPEXSI/pexsi_exchange.F90
+modified:
+  Src/Makefile
+  Src/m_pexsi_solver.F90
+  Src/pexsi_interface.F90
+
+------------------------------------------------------------
+Apr 1, 2013   Alberto Garcia             trunk-434--pexsi-20
+Interface block for PEXSI. Mu history additions. Comments for distribution
+
+Added an interface block for the pexsi interface.  The routine is
+added to a library, which is linked if needed (specified in COMP_LIBS
+in the arch.make file).
+
+The dummy pexsi routine prints its arguments, and sets a few dummy
+output variables.  Currently the DM is not set, so the program crashes
+in the normalization test.
+
+New parameters implemented by Lin to monitor the history of mu
+convergence.
+
+removed:
+  Src/pexsi_interface_true.inc
+added:
+  Src/m_pexsi_solver.F90
+  Src/pexsi_interface.F90
+modified:
+  Src/Makefile
+  Src/compute_dm.F
+
+------------------------------------------------------------
+Apr 1, 2013   Alberto Garcia             trunk-434--pexsi-19
+Sync to trunk-434
+
+- OMM method
+- Tree timer
+
+------------------------------------------------------------
+Mar 7, 2013   Alberto Garcia    trunk-432--timing-6--pexsi-19
+Added rank translation. Abstracted modules.
+
+In case the groups involve ranks not starting at zero and
+monotonic, added rank translation to the transfer routine.
+
+This routine is now part of a new module, which defines the
+'comm' type and provides transfer functions for arrays.
+
+Abstracted also the 'redist' routine.
+
+added:
+  Util/MPI_test/m_matrix.F90
+  Util/MPI_test/m_redist.F90
+  Util/MPI_test/m_transfers.F90
+modified:
+  Util/MPI_test/Makefile
+  Util/MPI_test/dist.F90
+
+------------------------------------------------------------
+Mar 6, 2013   Alberto Garcia    trunk-432--timing-6--pexsi-18
+Fix a bug in node_handling_element for pexsi dists.
+
+Sometimes the last node handles *a lot* of elements,
+and in those cases the naive algorithm was wrong.
+
+Fixed it in the prototype, and also in the current code.
+
+modified:
+  Src/parallelsubs.F
+  Util/MPI_test/class_PEXSIDist.F90
+
+------------------------------------------------------------
+Mar 3, 2013   Alberto Garcia    trunk-432--timing-6--pexsi-17
+Abstracted the distribution kind
+
+New class_Dist encompasses both block-cyclic and PEXSI-type
+distributions.
+
+added:
+  Util/MPI_test/class_Dist.F90
+modified:
+  Util/MPI_test/Makefile
+  Util/MPI_test/dist.F90
+
+------------------------------------------------------------
+Mar 1, 2013   Alberto Garcia    trunk-432--timing-6--pexsi-16
+Abstracted routine for distribution changes
+
+Clarified the logic of group memberships.
+Still, only groups starting at 0 in group_world are
+supported (no rank translation yet).
+
+modified:
+  Util/MPI_test/dist.F90
+
+------------------------------------------------------------
+Feb 28, 2013   Alberto Garcia    trunk-432--timing-6--pexsi-15
+Advanced prototype for distribution changes
+
+It can now transfer an actual example of sparse matrix.
+Two subsets are symmetric (except for distribution type).
+
+modified:
+  Util/MPI_test/dist.F90
+  Util/MPI_test/class_BlockCyclicDist.F90
+
+------------------------------------------------------------
+Feb 28, 2013   Alberto Garcia    trunk-432--timing-6--pexsi-14
+Fifth prototype for distribution changes
+
+Used 'comm' derived type to hold communication information.
+Isolated the transfers in a subroutine.
+
+modified:
+  Util/MPI_test/dist.F90
+
+------------------------------------------------------------
+Feb 28, 2013   Alberto Garcia    trunk-432--timing-6--pexsi-13
+Fourth prototype for distribution changes
+
+Cleaner logic for local storage of requests.
+Smaller output for large cases.
+
+modified:
+  Util/MPI_test/dist.F90
+
+------------------------------------------------------------
+Feb 28, 2013   Alberto Garcia    trunk-432--timing-6--pexsi-12
+Third prototype for distribution changes
+
+Grouped consecutive orbitals into larger communications.
+Used mpi_waitall instead of explicit loops.
+
+modified:
+  Util/MPI_test/dist.F90
+
+------------------------------------------------------------
+Feb 27, 2013   Alberto Garcia    trunk-432--timing-6--pexsi-11
+Second prototype for distribution changes
+
+Second group is a proper subgroup of the first.
+Implemented non-blocking communications.
+
+modified:
+  Util/MPI_test/class_BlockCyclicDist.F90
+  Util/MPI_test/class_PEXSIDist.F90
+  Util/MPI_test/dist.F90
+
+------------------------------------------------------------
+Feb 27, 2013   Alberto Garcia    trunk-432--timing-6--pexsi-10
+First prototype for distribution changes
+
+Added program 'dist' to Util/MPI_test, to explore strategies for
+changes in the matrix distributions. Work in progress.
+
+added:
+  Util/MPI_test/basic_type.inc
+  Util/MPI_test/class_BlockCyclicDist.F90
+  Util/MPI_test/class_PEXSIDist.F90
+  Util/MPI_test/dielocal.F90
+  Util/MPI_test/dist.F90
+  Util/MPI_test/m_uuid.f90
+  Util/MPI_test/object_debug.F90
+modified:
+  Util/MPI_test/Makefile
+
+------------------------------------------------------------
+Feb 21, 2013   Alberto Garcia    trunk-432--timing-6--pexsi-9
+Proper estimation of free energy. Monitor Ebs in two ways
+
+There was an extra term of mu*N_e in the definition of the free energy
+in PEXSI. This is now taken into account. Added the PEXSI case in the
+copying of entropy in "setup_hamiltonian" (strange place...).
+
+The band-structure energy is computed in two ways: Tr(H*DM) and Tr(S*DM)
+to monitor slight differences.
+
+modified:
+  Src/pexsi.F90
+  Src/setup_hamiltonian.F
+
+------------------------------------------------------------
+Feb 18, 2013   Alberto Garcia    trunk-432--timing-6--pexsi-8
+Add computation of Free Energy. Pass Ef and electronic temp
+
+The electronic temperature is now passed to PEXSI by Siesta.
+The fermi level is passed back, as is an estimate of the difference
+between F and E, from which the 'entropy' can be calculated.
+
+'write_siesta_energies' now supports PEXSI.
+
+(+ bug and typos fixes)
+
+modified:
+  Src/MPI/mpi_siesta.F90
+  Src/Makefile
+  Src/compute_dm.F
+  Src/pexsi.F90
+  Src/siesta_end.F
+  Src/siesta_init.F
+  Src/write_subs.F
+
+------------------------------------------------------------
+Feb 15, 2013   Alberto Garcia    trunk-432--timing-6--pexsi-7
+Simplification of MPI interface
+
+In the interest of expediency, the MPI interface has been
+stripped down to the bare minimum:
+
+-- The "grid" types
+-- The "overloaded" mpi_comm_world
+
+No routines are now included. The "use" statements have been modified
+accordingly.
+
+renamed:
+  Src/MPI/mpi_siesta.f90 => Src/MPI/mpi_siesta.F90
+modified:
+  Src/SiestaXC/mesh3d.F90
+  Src/alloc.F90
+  Src/cdiag.F
+  Src/diagon.F
+  Src/ioxv.F
+  Src/m_mpi_utils.F
+  Src/m_timer.F90
+  Src/m_ts_electrode.F90
+  Src/m_ts_gf.F90
+  Src/m_ts_in_siesta.F
+  Src/m_ts_kpoints.F90
+  Src/m_ts_scattering.F
+  Src/moreParallelSubs.F90
+  Src/optical.F
+  Src/setup_ordern_indexes.F90
+  Src/MPI/mpi_siesta.F90
+
+------------------------------------------------------------
+Feb 15, 2013   Alberto Garcia    trunk-432--timing-6--pexsi-6
+Third stage of PEXSI interface. Subset communicator for Siesta
+
+Based on the value of PEXSI.np-per-pole, Siesta now uses a subset
+communicator for most of the work. When PEXSI is entered, all
+the processors participate.
+
+This is implemented by:
+
+ -- Creating a new communicator and storing its value in the
+    (now variable) mpi_comm_world.
+
+ -- Setting a boolean flag "worker" to .true. in those processes
+    that are supposed to participate in Siesta work.
+
+ -- Broadcasting on true_mpi_comm_world any flow-determining variables
+    (such as 'last'), so that all processors call the relevant sections.
+
+ -- Making most of the code conditional to "worker" being .true., except
+    those sections that are meant to be executed by every processor.
+
+added:
+  Src/pexsi_interface_true.inc
+  Util/MPI_test/newcomm.F
+modified:
+  Src/MPI/mpi_siesta.f90
+  Src/cdiag.F
+  Src/compute_dm.F
+  Src/parallel.F
+  Src/pexsi.F90
+  Src/rdiag.F
+  Src/siesta.F
+  Src/siesta_end.F
+  Src/siesta_forces.F
+  Src/siesta_init.F
+  Src/timer_tree.f90
+  Util/MPI_test/Makefile
+
+
+------------------------------------------------------------
+Feb 7, 2013   Alberto Garcia    trunk-432--timing-6--pexsi-5
+Second stage of interface. PEXSI-specific distribution
+
+Implemented the interface by replacing the distribution
+routines in Siesta (in parallelsubs) to use Lin's distribution.
+This is conceptually simpler for now.
+
+added:
+  Src/pexsi_exchange.F90
+modified:
+  Src/Makefile
+  Src/compute_dm.F
+  Src/initparallel.F
+  Src/parallelsubs.F
+  Src/pexsi.F90
+  Src/siesta_init.F
+
+------------------------------------------------------------
+Feb 6, 2013   Alberto Garcia    trunk-432--timing-6--pexsi-4
+Second stage of interface. Block-cyclic plus 0<->LastNode exchange
+
+Lin's distribution is very similar to block-cyclic, except that the
+last node instead of the first one keeps the slack orbitals.
+
+Implemented the interface by setting the Siesta blocksize to Norbs/NNodes
+and by exchanging information between the first and last nodes. This has
+the advantage (theoretical) of being able to call scalapack if needed...
+
+added:
+  Src/pexsi_dump.F90
+modified:
+  Src/Makefile
+  Src/compute_dm.F
+  Src/initparallel.F
+  Src/pexsi.F90
+
+------------------------------------------------------------
+Feb 5, 2013   Alberto Garcia    trunk-432--timing-6--pexsi-3
+Fix extra item in first line of .matrix files
+
+Remove the spin multiplicity, as Lin did not take it
+into account.
+
+modified:
+  Src/pexsi.F90
+
+------------------------------------------------------------
+Feb 4, 2013   Alberto Garcia    trunk-432--timing-6--pexsi-2
+Second prototype of PEXSI interface
+
+Called the interface.
+
+renamed:
+  Src/pexsi.f90 => Src/pexsi.F90
+modified:
+  Src/Makefile
+  Src/compute_dm.F
+  Src/pexsi.F90
+
+------------------------------------------------------------
+Feb 4, 2013   Alberto Garcia    trunk-432--timing-6--pexsi-1
+First prototype of PEXSI interface
+
+Created a routine to write H and S in formatted (!) form to 
+file.
+
+Added new solution method "pexsi".
+
+added:
+  Src/pexsi.f90
+modified:
+  Src/Makefile
+  Src/compute_dm.F
+  Src/m_hsx.F
+  Src/siesta_options.F90
+  Src/sys.F

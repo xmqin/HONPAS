@@ -1,0 +1,35 @@
+SystemName          Water molecule using a filteret basis set
+SystemLabel         h2o_filteret_basis
+NumberOfAtoms       3
+NumberOfSpecies     2
+
+%block ChemicalSpeciesLabel
+ 1  8  O      # Species index, atomic number, species label
+ 2  1  H
+%endblock ChemicalSpeciesLabel
+
+AtomicCoordinatesFormat  Ang
+%block AtomicCoordinatesAndAtomicSpecies
+ 0.000  0.000  0.000  1
+ 0.757  0.586  0.000  2
+-0.757  0.586  0.000  2
+%endblock AtomicCoordinatesAndAtomicSpecies
+
+PAO.BasisType filteret
+PAO.EnergyCutoff 25.0 Ry
+
+MeshCutoff 150 Ry
+
+FilterCutoff 150 Ry
+
+MD.RunType CG
+MD.NumCGSteps 0
+
+LongOutput true
+UseSaveData false
+
+PAO.SoftDefault true
+PAO.SoftPotential 100.0 Ry
+PAO.SoftInnerRadius 0.95
+
+

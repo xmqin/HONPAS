@@ -1,0 +1,52 @@
+SystemName          Water molecule layer with dipole AND compensating field
+SystemLabel         h2o_dipole_layer_field
+NumberOfAtoms       3
+NumberOfSpecies     2
+
+SCF.Mix DM
+DM.NumberPulay 6
+DM.MixingWeight 0.02
+
+MeshCutoff  50 Ry
+
+%block ChemicalSpeciesLabel
+ 1  8  O      # Species index, atomic number, species label
+ 2  1  H
+%endblock ChemicalSpeciesLabel
+
+LatticeConstant 1.0 Ang
+%block LatticeVectors
+3.0 0.0 0.0
+0.0 2.0 0.0
+0.0 0.0 10.0
+%endblock LatticeVectors
+
+#
+# This value was obtained by trial and error, until the
+# profile was flat outside the slab.
+#
+# If you set SlabDipoleCorrection to TRUE
+# the resulting dipole field will be the same as written below (with
+# the opposite sign)
+SlabDipoleCorrection F
+%block ExternalElectricField
+  0.000  0.000  0.003444  Ry/Bohr/e
+%endblock ExternalElectricField
+
+#
+# The change in origin is for cosmetic purposes, so that
+# the slab is centered along Z.
+#
+%block AtomicCoordinatesOrigin
+0.0 0.0 5.0
+%endblock AtomicCoordinatesOrigin
+
+AtomicCoordinatesFormat  Ang
+%block AtomicCoordinatesAndAtomicSpecies
+ 0.000  0.000  0.000  1
+ 0.757  0.000  0.586  2
+-0.757  0.000  0.586  2
+%endblock AtomicCoordinatesAndAtomicSpecies
+
+save-delta-rho T
+save-electrostatic-potential T

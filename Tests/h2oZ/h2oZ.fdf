@@ -1,0 +1,42 @@
+SystemName h2oZ
+SystemLabel h2oZ
+
+NumberOfSpecies 2
+NumberOfAtoms   3
+
+%block ChemicalSpeciesLabel
+1    8 O
+2    1 H
+%endblock ChemicalSpeciesLabel
+
+AtomicCoordinatesFormat NotScaledCartesianAng
+
+ZM.ForceTolLength 0.04 eV/Ang
+ZM.ForceTolAngle 0.0001 eV/deg
+ZM.MaxDisplLenght 0.1 Ang
+ZM.MaxDisplAngle 20.0 deg
+
+%block Zmatrix
+molecule_cartesian
+  1 0 0 0   0.0 0.0 0.0 0 0 0
+  2 1 0 0   HO1 90.0 37.743919 1 0 0
+  2 1 2 0   HO2 HOH 90.0 1 1 0
+variables
+    HO1 0.956997
+    HO2 0.956997
+    HOH 104.0
+%endblock Zmatrix
+
+ZM.UnitsLength Ang
+ZM.UnitsAngle deg
+
+xc.functional GGA
+xc.authors PBE
+
+MD.TypeOfRun CG
+MD.NumCGsteps 200
+
+MeshCutoff 120 Ry
+PAO.EnergyShift 0.01 Ry
+DM.NumberPulay 5
+DM.MixingWeight 0.3

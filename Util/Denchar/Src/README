@@ -1,0 +1,29 @@
+Please see the manual in ../Docs
+
+CAVEATS
+
+* The specification of the 3D box for plotting is limited. Only a
+  "base plane" (originally implemented for the 2D capability) can be
+  fully specified with the options given in the manual. Within it, the
+  a and b axes are chosen to be perpendicular to each other. The third
+  dimension of the box is forced to be perpendicular to the
+  plane. Hence, only orthorhombic boxes are allowed.
+
+  Notably for wf plotting, it might be advantageous to provide an
+  option for using the *original cell* as 3D box, or an arbitrary box.
+
+* Many files can be produced for each wavefunction. It might be more
+  economical to generate a single 'gridfunc' file with an extra
+  dimension holding the (up to four, for spinors) components of the
+  wavefunction. Then, a special version of the 'grid2cube' program
+  could be generate a cube file with the desired incantation of the
+  data (real or imaginary part, phase, modulus, etc).
+
+* Atoms are not correctly replicated to the whole extent of the
+  plotting box. This might be fixed automatically by the above
+  two-step generation of cube files, as the "new generation" grid2cube
+  program (g2c_ng) already treats atoms correctly.
+  
+
+
+

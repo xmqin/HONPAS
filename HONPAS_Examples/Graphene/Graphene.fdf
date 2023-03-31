@@ -1,0 +1,70 @@
+SystemName      Graphene
+SystemLabel     Graphene
+NumberOfSpecies	        1
+NumberOfAtoms           2
+%block ChemicalSpeciesLabel
+  1  6 C
+%endblock ChemicalSpeciesLabel
+
+LatticeConstant      1.00 Ang
+
+%block LatticeVectors
+     2.4600000000000000    0.0000000000000000    0.0000000000000000
+    -1.2300000000000000    2.1304224933097191    0.0000000000000000
+     0.0000000000000000    0.0000000000000000   20.0000000000000000
+%endblock LatticeVectors
+
+AtomicCoordinatesFormat   Fractional
+%block AtomicCoordinatesAndAtomicSpecies
+  0.3333333333333357  0.6666666666666643  0.0000000000000000   1
+  0.6666666666666643  0.3333333333333357  0.0000000000000000   1
+%endblock AtomicCoordinatesAndAtomicSpecies
+
+PAO.BasisSize DZP
+
+%block PS.lmax
+C  2
+%endblock PS.lmax
+
+xc.functional      GGA    # Default vaxc.authors         HSE    # Default value
+xc.authors        HSE06    # Default value
+
+ElectronicTemperature  25 meV
+
+#DM.UseSaveDM            T
+MeshCutoff              250. Ry     # Equivalent planewave cutoff for the grid
+MaxSCFIterations        50         # Maximum number of SCF iterations per step
+DM.MixingWeight         0.1         # New DM amount for next SCF cycle
+DM.Tolerance            1.d-4       # Tolerance in maximum difference
+                                    # between input and output DM
+DM.NumberPulay          6          # Number of SCF steps between pulay mixing
+
+# Eigenvalue problem: order-N or diagonalization
+
+SolutionMethod          diagon      # OrderN or Diagon
+
+%block kgrid_Monkhorst_Pack
+   18  0  0  0.5
+   0  18  0  0.5
+   0  0   1 0.5
+%endblock kgrid_Monkhorst_Pack
+
+MD.TypeOfRun            cg          # Type of dynamics:
+MD.NumCGsteps  0
+#MD.VariableCell   .true.
+MD.MaxForceTol  0.01 eV/Ang
+#WriteMDXmol   .true.
+WriteForces  .true.
+WriteCoorStep
+
+BandLinesScale ReciprocalLatticeVectors
+%block BandLines
+1  0.5  0.0  0.0
+20 0.0  0.0  0.0
+20 0.33333333 0.33333333 0.000
+20 0.5  0.0  0.0
+%endblock BandLines
+HFX.UseFittedNAOs .true.
+HFX.Dynamic_parallel   .false.
+HFX.UseFittedNAOs .true.
+HFX.Dynamic_parallel   .false.

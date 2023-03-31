@@ -1,0 +1,65 @@
+SystemName          Linear Fe chain with spin-spiral
+SystemLabel         fe_noncol_spiral
+NumberOfAtoms       3
+NumberOfSpecies     1
+
+Spin NC
+Spin.Spiral.Scale ReciprocalLatticeVectors
+%block Spin.Spiral
+   # Pitch wave vector
+   0.0 0.1 0.1
+%endblock
+
+%block ChemicalSpeciesLabel
+ 1  26  fe_nc      # Species index, atomic number, species label
+%endblock ChemicalSpeciesLabel
+
+LatticeConstant    1.0 Bohr
+%block LatticeVectors
+ 15.000   0.000   0.000
+  0.000  15.000   0.000
+  0.000   0.000  10.500
+%endblock LatticeVectors
+
+# Just to test k-points
+%block kgrid_Monkhorst_Pack
+   1  0  0  0.
+   0  1  0  0.
+   0  0  51 0.
+%endblock kgrid_Monkhorst_Pack
+
+AtomicCoordinatesFormat  NotScaledCartesianBohr
+%block AtomicCoordinatesAndAtomicSpecies
+  0.000   0.000   0.0  1
+  0.000   0.000   3.5  1
+  0.000   0.000   7.0  1
+%endblock AtomicCoordinatesAndAtomicSpecies
+
+PAO.BasisType    split
+PAO.SplitNorm    0.15
+%block PAO.BasisAndPSlmax
+  1   26   2   3
+    0    2
+      5.30   0.00
+      1.00   1.00
+    1    1
+      5.30   0.00
+      1.00   1.00
+    2    2
+      4.50   0.00
+      1.00   1.00
+%endblock PAO.BasisAndPSlmax
+
+MeshCutoff        200. Ry
+
+ElectronicTemperature   0.1 eV
+DM.MixingWeight         0.01
+DM.NumberPulay          4
+
+WriteMullikenPop  1
+
+%block DM.InitSpin
+ 1  +1.50    90.   0.   # atom,spin,theta,phi (deg)
+ 2  +1.50    90.   0.
+ 3  +1.50   90.   0.
+%endblock DM.InitSpin

@@ -1,0 +1,33 @@
+The old HS format was highly inefficient, as each piece of data was
+written to its own record. In addition, it only contained information
+about the inter-orbital vectors Xij if k-points were used in the
+calculation.
+
+The new HSX file format was introduced at the time of the first
+COOP/COHP implementation. It is more tightly packed, and the real
+arrays (H, S, and Xij) are written in single-precision.
+
+The HSX format is now the default in Siesta (TranSiesta has its own
+format).
+
+The programs hsx2hs and hs2hsx are provided to facilitate the
+transition. Note however that an HS file written by Siesta during a
+Gamma-only calculation will not contain information about the
+inter-orbital vectors Xij, and hs2hsx will refuse to create an HSX
+file.
+
+hsx2hs and hs2hsx work in serial mode, and read the whole file in
+memory before dumping it. This might pose a problem if huge files are
+processed in low-memory machines.
+
+In future it might be possible to extract the Xij information from
+another file and graft it to the old H and S information, in order to
+create a complete HSX file.
+
+The derived type hsx_t might be useful to encapsulate H, S, and X
+information in other contexts. 
+
+The file iohs.F has been moved here from the main source directory.
+
+
+

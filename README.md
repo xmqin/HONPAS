@@ -1,31 +1,29 @@
-# HONPAS
+SIESTA is a program for efficient electronic structure calculations
+and ab initio molecular dynamics simulations of molecules and
+solids in the framework of Density-Functional Theory (DFT).
+SIESTA's efficiency stems from the use of a basis set of
+strictly-localized atomic orbitals. A very important feature of the
+code is that its accuracy and cost can be tuned in a wide range, from
+quick exploratory calculations to highly accurate simulations matching
+the quality of other approaches, such as plane-wave methods.
 
-HONPAS comes with a source tarball of the libint library in the Obj/
-subdirectory of the SIESTA source tree, e.g. libint-1.1.5.tar.gz. In the
-following, we will suppose that you want to install it within the SIESTA build
-tree with MPI support and compiled with INTEL::
+The main web page for the project is at [icmab.es/siesta](https://icmab.es/siesta).
 
-    cd ~honpas/Obj
-    sh ../Src/obj_setup.sh
+Further information:
 
-    tar xvzf libint-1.1.5.tar.gz
-    cd libint-1.1.5
-    ../configure --prefix="$PWD/../libint_install" \
-       CC=icc CXX=icpc F77=ifort
-    make -j8 install
-    cd ..
+* Siesta development is multi-pronged, with stable, beta, and various
+other branches with the latest features. A guide to the different
+versions can be found
+[in the project wiki](https://gitlab.com/siesta-project/siesta/-/wikis/Guide-to-Siesta-versions).
 
+* TranSiesta is now part of the executable, see the documentation for details.
 
-INSTALL HONPAS with libint call
+* The LaTeX source for the manual is in Docs/siesta.tex. Assuming you have
+a working Tex/LaTeX installation, you can type `make final` to generate a pdf file.
+Alternatively, manuals in pdf can be found in the Documentation section of the main web page.
 
-    cd ~honpas/Obj
+* Tutorial material can be found also in the Documentation section of the main web page.
 
-    ln -s ../ARCH-HONPAS/honpas-intel-mpi.make arch.make
-    vi arch.make ## according your system
-
-    make -j8
-
-TESTS ::  Sibulk Diamond  Graphene
-   cd ~honpas/HONPAS_Examples
-You can run following honpas.pbs for torque
+For bug reports, and other code suggestions, please follow the guidelines
+in the file Docs/REPORTING_BUGS
 

@@ -1,0 +1,58 @@
+SIGPOS -- SImple General-Purpose Optimization System
+Version 0.55
+Alberto Garcia, 2007, 2008, 2009
+
+Alpha version -- Functional, but with some details of the user-interface
+still subject to change.
+
+This program drives the optimization of an arbitrary function of an
+arbitrary number of (real) variables. It is implemented using only Fortran and
+the Unix shell. Some of the ideas were inspired by the Nimrod/O optimization
+framework (see http://www.csse.monash.edu.au/~davida/nimrod/nimrodo.htm ).
+
+Its basic ingredients are:
+
+* A VAR file listing the variables over which to optimize, and their ranges
+of variability. Optionally, a third number can be used to specify the
+starting value. If this starting value is missing, a random starting point
+in the appropriate range is chosen.
+
+* A "run_script.sh" file which defines the operations that are to be carried out
+to compute the value of the objective function.
+
+The script is called by the driver program when it needs to compute
+the objective function for a certain set of values of the
+variables. The program first generates a sed file $name.sed holding
+values of the variables in "sed" format. Then it calls the script with
+$name as a parameter. Thus the script can perform substitutions on
+suitable template files. At the end, the script must have produced a
+file called "OPTIM_OUTPUT" with the value of the objective function.
+
+Subject to these constraints, the script can be arbitrarily complex.
+
+* A PARAMS or SWARM_PARAMS file containing operational parameters for
+the optimization algorithm. There are currently two algorithms
+implemented:
+
+- The Nelder-Mead "amoeba/simplex" algorithm.
+- The "particle-swarm-optimization" (PSO) algorithm.
+  ( see http://en.wikipedia.org/wiki/Particle_swarm )
+
+The program can run in parallel (via OpenMP) if the underlying system
+supports it. The PSO algorithm is trivially parallelizable. The amoeba
+algorithm has a more limited degree of concurrency.
+
+* To compile, edit the Makefile to suit your needs, and type:
+
+make swarm simplex
+
+* See examples of pseudopotential and basis-set generation in Examples
+
+Please report bugs and suggestions to Alberto Garcia <albertog@icmab.es>
+
+TODO:
+
+* More optimization algorithms.
+* Further modularization.
+* Extra dispatch mechanisms (queuing, GRID, etc)
+

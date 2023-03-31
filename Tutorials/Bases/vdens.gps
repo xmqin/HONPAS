@@ -1,0 +1,49 @@
+#
+set terminal postscript enhanced color
+set output "vdens.ps"
+#
+there_is_core=`test -f CHCORE && echo 1 || echo 0`
+zps2=`head -2 RED_VLOCAL | tail -1 | awk '{print $2}'`
+print "zps2=", zps2
+
+set multiplot
+set size 0.5,0.5
+set origin 0.0,0.5
+set title "VNA"
+plot "VNA" using 1:2  notitle with lines,\
+     0.0 notitle with lines lt 0
+
+set origin 0.5,0.5
+set title "rV_{local} + 2*Z_{ps}"
+plot  "RED_VLOCAL" using 1:2 notitle with lines,\
+     0.0 notitle with lines lt 0
+
+set origin 0.0,0.0
+set title "Chlocal"
+plot "CHLOCAL" using 1:2  notitle with lines,\
+     0.0 notitle with lines lt 0
+
+set origin 0.5,0.0
+#
+# CHCORE is boring
+#if (there_is_core == 1) \
+#set title "ChCore" ; \
+#plot "CHCORE" using 1:2  notitle with lines,\
+#     0.0 notitle with lines lt 0
+
+##if (there_is_core == 0) \
+set title "V_{local}" ; \
+plot "RED_VLOCAL" using 1:((($2)-zps2)/($1)) notitle with lines,\
+     0.0 notitle with lines lt 0
+
+set nomultiplot
+
+#
+print " ==> Postscript output in vdens.ps"
+
+
+
+
+
+
+

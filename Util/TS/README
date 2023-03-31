@@ -1,0 +1,53 @@
+This directory contains several utilities related to TranSIESTA.
+Scripts to help generate input fdf files and do transmission
+analysis are located here.
+
+Unless otherwise stated all programs/utilities have been developed
+by:
+  Nick Papior, nickpapior<at>gmail.com
+
+- tselecs.sh
+  This small scripts eases the creation of several electrodes
+  input. It can also be used to initialize a script for TranSIESTA.
+  Call with:
+    tselecs.sh -2
+  to generate a default input FDF for TranSIESTA which defaults
+  to the old versions implementation.
+
+- TBtrans
+  this directory contains the TBtrans utility which is used for 
+  calculating the transmission and other quantities from the 
+  TSHS files output from TranSIESTA.
+
+  It also reads NetCDF4 files created by the community utility:
+
+    www.github.com/zerothi/sisl
+
+
+- ts2ts
+  A small utility which takes an old input file for TranSIESTA
+  and converts it into the new input format.
+  First make the utility in the folder and then you can utilise it as:
+    ts2ts <fdf-file> 
+  and it will print out a converted fdf-input file.
+  It is made for piping directly into another file.
+
+  Easy usage will append to the FDF file:
+    ts2ts run.fdf >> run.fdf
+
+  REMARK: It will only read in TranSIESTA/TBtrans options and thus
+          also only print TranSIESTA/TBtrans options. 
+	  It will not copy any other FDF-flags.
+
+- tshs2tshs
+  Converts TSHS files to other version files.
+  Currently there exists two file versions:
+   0 : old TSHS format (compatible with all programs)
+   1 : new TSHS format (not compatible with all programs), but 
+       have a drastic memory decrease  
+
+- Tight-binding
+  To use tight-binding parameters compatible with TBtrans
+  you can use the utility created here:
+
+     www.github.com/zerothi/sisl

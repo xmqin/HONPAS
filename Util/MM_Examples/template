@@ -1,0 +1,53 @@
+SystemName He fcc  with vdw
+SystemLabel he_ALAT
+
+NumberOfSpecies 1
+NumberOfAtoms   1
+
+%block ChemicalSpeciesLabel
+1    2  He.gga
+%endblock ChemicalSpeciesLabel
+%block PS.lmax
+ He.gga 1
+%endblock PS.lmax
+
+PAO.BasisSize   DZP
+MeshCutoff      150 Ry
+PAO.EnergyShift 0.001 Ry
+
+kgrid_cutoff 10.0 Ang
+
+# DFT, Grid, SCF
+
+XC.functional           GGA
+XC.authors              revPBE
+MaxSCFIterations        40
+DM.MixingWeight         0.150
+DM.Tolerance            1.d-4
+DM.NumberPulay          4     # Number of SCF steps between pulay mixing
+
+# Relaxation, smearing, etc.
+ElectronicTemperature   500 K
+
+MD.TypeOfRun            Broyden     # Type of dynamics
+MD.NumCGsteps           0
+
+#
+LatticeConstant ALAT Ang
+%block LatticeVectors
+0.5 0.5 0.0
+0.5 0.0 0.5
+0.0 0.5 0.5
+%endblock LatticeVectors
+
+AtomicCoordinatesFormat Ang
+%block AtomicCoordinatesAndAtomicSpecies
+0.0   0.0 0.0        1
+%endblock AtomicCoordinatesAndAtomicSpecies
+
+# Damping factor is in inverse Ang
+%block MM.Potentials
+1 1 C6 25.0 2.0
+%endblock MM.Potentials
+
+

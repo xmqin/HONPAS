@@ -1,0 +1,187 @@
+-----------------------------------------------------------------------
+2013-09-30  Alberto Garcia                          trunk-444--mixing-6
+Document latest features
+
+* Update manual with the latest features.
+
+* Change the name of one of the new Pulay mixing options to
+
+    SCF.MixingWeightAfterPulay
+
+* Print warning in the case of a failure of the DIIS extrapolation when
+using matrix inversion (preprocessor option no longer needed).
+
+modified:
+  Docs/siesta.tex
+  Src/m_pulay.F90
+
+-----------------------------------------------------------------------
+2013-09-18  Alberto Garcia                          trunk-444--mixing-5
+Fixes for TranSiesta continuation and scf loop logic
+
+The check for a possible continuation of the loop in TranSiesta's GF
+mode (TSrun = .true.) was wrongly placed, and a number of TS symbols
+were missing in mixer.F.
+
+* The loop logic in 'siesta_forces' has been revised to make it more
+clear, maintaining the old behavior with the exception of:
+
+-- The maximum number of scf iterations is that set by the user,
+instead of one less, since the final forces phase is not counted as an
+iteration.
+
+-- Upon the beginning of a GF TranSiesta run, the variable "first"
+will be reset to 'true' in the first iteration. This will lead to a
+recomputation of the initial hamiltonian when mixing H, instead of
+inheriting H from the previous normal Siesta initialization. Also,
+the Harris and Etot energies will be reset.
+
+* The body of the loop has been made lighter by the use of internal
+routines in a few places.
+
+modified:
+  Src/Makefile
+  Src/m_ts_options.F90
+  Src/mixer.F
+  Src/scfconvergence_test.F
+  Src/siesta_forces.F
+  Src/siesta_options.F90
+
+-----------------------------------------------------------------------
+2013-09-16  Alberto Garcia                          trunk-444--mixing-4
+Normalize the DM in the routines that handle it
+
+Up to now the DM was normalized in 'setup_hamiltonian' (and in
+'final_H_f_stress'). Now it is normalized (optionally, depending on
+the setting of DM.NormalizeDuringSCF) in 'compute_dm' and 'new_dm'.
+
+The DM is thus "intent(in)" in 'setup_hamiltonian' and
+'final_H_f_stress'.
+
+modified:
+  Src/Makefile
+  Src/compute_dm.F
+  Src/final_H_f_stress.F
+  Src/new_dm.F
+  Src/normalize_dm.F
+  Src/post_scf_work.F
+  Src/setup_hamiltonian.F
+  Src/siesta_options.F90
+
+-----------------------------------------------------------------------
+2013-09-13  Alberto Garcia                          trunk-444--mixing-3
+Optionally avoid mixing DM or H after scf-convergence
+
+* If the option
+
+   SCF.MixAfterConvergence F
+
+is used, the program will exit the scf loop without a final mixing.
+
+The DM coming out of the cycle will then be DM_out (regardless of whether
+we are mixing H or the DM).
+
+The hamiltonian coming out of the cycle is H_out (generated with
+DM_out), but H_in ("Hold" in the code) is also kept if the option is
+set, so it could be reset if needed in the future.
+
+This feature will have an effect on the quality of the final E_KS energy
+and of the forces when mixing the DM.
+
+* The DM is saved during the scf cycle for restarting purposes (unless
+overridden by the user). If there is no mix after convergence, the
+final DM_out is saved.
+
+(+ replaced the "siesta:" prefix by "scf:" in the relevant scf cycle output)
+
+(+ changed the order of the monitor_forces_in_scf block, so that it is executed
+before mixing).
+
+(+ Dold is now saved in compute_dm, and Hold in setup_hamiltonian)
+(+ Removed Dold code in final_H_f_stress )
+
+added:
+  Src/compute_max_diff.F
+  Src/save_density_matrix.F
+modified:
+  Docs/Mixing.CHANGES
+  Src/Makefile
+  Src/compute_dm.F
+  Src/final_H_f_stress.F
+  Src/m_pulay.F90
+  Src/mixer.F
+  Src/scfconvergence_test.F
+  Src/setup_hamiltonian.F
+  Src/siesta_forces.F
+  Src/siesta_options.F90
+  Src/write_subs.F
+
+-----------------------------------------------------------------------
+2013-09-12  Alberto Garcia                          trunk-444--mixing-2
+Implement Hamiltonian mixing
+
+If the option
+
+   MixHamiltonian T
+
+is used, the program will mix the Hamiltonian instead of the density matrix
+to achieve self-consistency.
+
+modified:
+  Docs/siesta.tex
+  Src/Makefile
+  Src/compute_dm.F
+  Src/m_ts_global_vars.f90
+  Src/m_ts_options.F90
+  Src/mixer.F
+  Src/setup_hamiltonian.F
+  Src/siesta_forces.F
+  Src/siesta_options.F90
+  Src/sparse_matrices.F
+  Src/state_init.F
+
+-----------------------------------------------------------------------
+2013-09-12  Alberto Garcia                          trunk-444--mixing-1
+More options for Pulay mixing
+
+A number of options have been added to control the behavior of the
+Pulay mixer:
+
+* Pulay mixing might kick in only after a specified number of history
+steps have been built up:
+
+    pulay_minimum_history = fdf_get("SCF.PulayMinimumHistory",2)
+
+* Pulay mixing might not work well if far from the fixed point. This option
+will avoid inserting the current X_in, X_out pair in the history stack if
+the maximum difference is above the specified number.
+
+    max_dmax_for_pulay = fdf_get("SCF.PulayDmaxRegion",1000.0_dp) 
+
+There is no effect by default.
+
+* The "damping" term applied after the DIIS minimization can be
+different from that used for linear mixing:
+
+    alpha_pulay = fdf_get("SCF.Pulay.Damping",-1.0_dp) 
+
+By default, alpha_pulay would be set to the linear-mixing parameter.
+
+* The damping of the DIIS-predicted X_in is done to avoid introducing
+linear dependencies into the Pulay history stack. Alternatively (or
+simultaneously) one can use the most recent X_in, X_out pair in a
+linear mixing step, and use a possibly different mixing
+parameter. This would be akin to a "kick", but without removing all
+the history information.
+
+    linear_mixing_after_pulay = fdf_get("SCF.LinearMixingAfterPulay",.false.)
+    alpha_after_pulay = fdf_get("SCF.MixingAfterPulay",0.5_dp)
+
+* Instead of brute-force inversion, the more robust SVD algorithm can
+be used to perform the DIIS extrapolation:
+
+    use_svd_in_pulay = fdf_get("SCF.Pulay.UseSVD",.false.)
+    debug_svd_in_pulay = fdf_get("SCF.Pulay.DebugSVD",.true.)
+    ! Note that 1.0e-6 seems too conservative
+    rcond_svd_pulay = fdf_get("SCF.Pulay.RcondSVD",1.0e-8_dp)
+

@@ -1,0 +1,31 @@
+#!/bin/sh
+#PBS -N tests
+#PBS -joe
+#PBS -l nodes=8
+#-----------------------------------------------------------
+# Script for running tests on nano with PBS.
+# The 8 processors are probably wasteful. You could also use 4
+# or 2 and stay in the master node (watch out for PBS_O_WORKDIR
+# below)
+#
+echo Running on `hostname`
+echo This jobs runs on the following processors:
+echo `cat $PBS_NODEFILE`
+NSLOTS=`wc -l < $PBS_NODEFILE`
+echo This job has allocated $NSLOTS nodes
+#
+
+cd $PBS_O_WORKDIR
+
+pwd
+date
+echo "-----------"
+
+prog=../../../siesta
+PATH=/opt/intel/impi/3.1/bin64:$PATH
+make SIESTA="mpirun -r ssh -np $NSLOTS --mpd=/opt/intel/impi/3.1/bin64/mpd  $prog"
+
+echo "-----------"
+date
+
+

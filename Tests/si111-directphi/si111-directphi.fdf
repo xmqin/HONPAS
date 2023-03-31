@@ -1,0 +1,110 @@
+# Superficie Si(100)-2x1, direct-phi (no-polarization)
+
+
+
+##### GENERAL SYSTEM DESCRIPTORS ###############################################
+
+SystemName		si2x1.gga.vpsgga.sp.9l.sym.af-f
+ # Default value: blank
+
+SystemLabel		si111-directphi
+
+NumberOfAtoms		22
+
+NumberOfSpecies	2
+
+%block ChemicalSpeciesLabel
+	1	14	Si
+	2	1	H
+%endblock ChemicalSpeciesLabel
+
+PAO.BasisType		split
+
+PAO.BasisSize		SZP
+
+PAO.EnergyShift	200 meV
+
+PAO.SplitNorm		0.20
+
+%block PAO.Basis
+	H	1
+	0	1
+	0.
+	0.75
+%endblock PAO.Basis
+
+LatticeConstant	3.882016 Ang	# Bulk 5.49 Ang
+
+%block LatticeParameters
+	1.0	2.0	9.5	90.	90.	90.
+%endblock LatticeParameters
+
+AtomicCoordinatesFormat	ScaledCartesian
+
+%block AtomicCoordinatesAndAtomicSpecies
+    0.00000041    0.20165728    0.08212876   1  Si        1
+    0.00000557    0.79834210    0.08212876   1  Si        2
+    0.49999992    0.02145368    0.36263553   1  Si        3
+    0.49999722    0.97855287    0.36264235   1  Si        4
+    0.49999851    0.49999916    0.74970455   1  Si        5
+    0.50001930    1.49999916    0.68492868   1  Si        6
+    0.00000849    0.50000179    1.09496075   1  Si        7
+   -0.00000336    1.49998803    1.04760947   1  Si        8
+    0.00004366   -0.01155657    1.42424719   1  Si        9
+    0.00005371    1.01157604    1.42426949   1  Si       10
+    0.50002980   -0.00933792    1.77615172   1  Si       11
+    0.50001391    1.00933408    1.77611812   1  Si       12
+    0.50000291    0.49999931    2.12034679   1  Si       13
+    0.50011505    1.50002573    2.13662611   1  Si       14
+    0.00000006    0.49999949    2.47735636   1  Si       15
+    0.00006776    1.50000282    2.48609396   1  Si       16
+    0.00000000    0.00000000    2.82840000   1  Si       17
+    0.00000000    1.00000000    2.82840000   1  Si       18
+   -0.29280000    0.00000000    3.07230000   2  H        19
+    0.29280000    0.00000000    3.07230000   2  H        20
+   -0.29280000    1.00000000    3.07230000   2  H        21
+    0.29280000    1.00000000    3.07230000   2  H        22
+%endblock AtomicCoordinatesAndAtomicSpecies
+
+%block GeometryConstraints
+	position from	17 to	22
+	routine constr
+%endblock GeometryConstraints
+
+%block kgrid_Monkhorst_Pack
+	3	0	0	0.0
+	0	3	0	0.0
+	0	0	1	0.0
+%endblock kgrid_Monkhorst_Pack
+
+
+##### DFT, GRID, SCF ###########################################################
+
+XC.functional		GGA
+XC.authors		PBE
+
+MeshCutoff		100. Ry
+
+DM.MixingWeight	0.1
+DM.NumberPulay	3
+
+##### EIGENVALUE PROBLEM: DIAGONALIZATION OR ORDER-N ###########################
+
+SolutionMethod	diagon
+
+ElectronicTemperature	5 meV
+
+##### MOLECULAR DYNAMICS AND RELAXATIONS #######################################
+
+MD.TypeOfRun		CG
+MD.NumCGsteps		0
+MD.MaxCGDispl		0.02 Ang
+
+DirectPhi		.true.
+
+WriteCoorStep		.true.
+WriteForces		.true.
+WriteMullikenPop	1
+WriteCoorXmol		.true.
+WriteMDXmol		.true.
+WriteMDhistory	.true.

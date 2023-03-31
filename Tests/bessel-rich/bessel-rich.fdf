@@ -1,0 +1,45 @@
+#
+# Needs new feature: handling of fewer rc's than nzetas in PAO.Basis block
+#
+write-ion-plot-files T
+#
+SystemName          Water molecule with various Bessel Orbitals
+SystemLabel         bessel-rich
+NumberofAtoms   7
+NumberOfSpecies 4
+%block ChemicalSpeciesLabel
+ 1  8  O      # Species index, atomic number, species label
+ 2  1  H
+ 3  -100 Bessel
+ 4  -100 J
+%endblock ChemicalSpeciesLabel
+
+AtomicCoordinatesFormat  Ang
+%block AtomicCoordinatesAndAtomicSpecies
+ 0.000  0.000  0.000  1
+ 0.757  0.586  0.000  2
+-0.757  0.586  0.000  2
+ 0.3785 0.293  0.000  3
+-0.3785 0.293  0.000  3
+ 0.3785 0.293  0.000  4
+-0.3785 0.293  0.000  4
+%endblock AtomicCoordinatesAndAtomicSpecies
+
+%block PAO.Basis
+Bessel    3
+ n=1    0    1   
+   2.0
+   1.0
+ n=2    0    1   
+   2.5
+   1.0
+ n=3    1    1   
+   3.5
+   1.0
+J         2  # l-shells
+n=2   0   7    # Note new feature: fewer rc's than zetas
+  4.5 
+n=2   1   3
+  4.5 4.5 5.0
+%endblock PAO.Basis
+  

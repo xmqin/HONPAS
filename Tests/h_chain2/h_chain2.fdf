@@ -1,0 +1,34 @@
+SystemName          H chain (2 atoms per cell, SZ basis)
+SystemLabel         h_chain2
+NumberOfAtoms       2
+NumberOfSpecies     1
+
+MeshCutoff  50 Ry
+
+%block ChemicalSpeciesLabel
+ 1  1  H
+%endblock ChemicalSpeciesLabel
+
+#
+PAO.BasisSize SZ
+
+LatticeConstant 1.0 Ang
+%block LatticeVectors
+8.0 0.0 0.0
+0.0 8.0 0.0
+0.0 0.0 4.0
+%endblock LatticeVectors
+
+%block kgrid_Monkhorst_Pack
+1 0 0  0.0
+0 1 0  0.0
+0 0 20 0.0
+%endblock kgrid_Monkhorst_Pack 
+
+AtomicCoordinatesFormat  Ang
+%block AtomicCoordinatesAndAtomicSpecies
+ 0.000  0.000  1.000  1
+ 0.000  0.000  3.000  1
+%endblock AtomicCoordinatesAndAtomicSpecies
+
+COOP.Write T

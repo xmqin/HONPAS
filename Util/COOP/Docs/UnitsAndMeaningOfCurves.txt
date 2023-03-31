@@ -1,0 +1,72 @@
+Units and structure of the DOS, COOP, and COHP curves.
+
+**NOTE: The support for full-spinor wavefunctions (non-collinear spin,
+spin-orbit coupling) has necessitated a (backwards compatible)
+cosmetic change in the output of the curves.
+
+Non-spin-polarized curves show three columns: the first two are
+identical (formally: "spin up = spin down"), and the third contains the total
+(doubled, or sum) value.
+
+Collinear spin-polarized curves show three columns: the first two are
+for "spin up" and "spin down", and the third contains their sum.
+
+Non-collinear curves (new feature) contain a single column with the
+total value, as it is not possible to talk about "spin-channels" in
+this case.
+
+## DOS curves
+
+They come out in (eV)^(-1). 
+
+(**NOTE that in previous versions of the program the extra factor of
+2 for non-spin cases was NOT really applied, despite statements to the
+contrary in a previous version of these notes :-( ).
+
+## COOP curves
+
+They come out in (eV)^(-1).  If the last column is integrated up to
+the Fermi level, (including all the interactions for all orbitals,
+even those on-site (for this, specify a minimum distance of 0.0 in the
+.mpr file and a big enough maximum distance)), the result is N (the
+number of electrons in the unit cell). Spin-channel columns will
+integrate to N/2.
+
+
+## COHP curves
+
+They come out in Ry * (eV)^(-1) (the Ry part comes from the
+Hamiltonian factor -- THIS SHOULD BE CHANGED).  If the last column is
+integrated up to the Fermi level, (including all the interactions for
+all orbitals, even those on-site (for this, specify a minimum distance
+of 0.0 in the .mpr file and a big enough maximum distance)), the
+result is E_bs (the band-structure energy).  Spin-channel columns will
+integrate to E_bs/2.
+
+It is important to note that E_bs is *not* the Kohn-Sham energy, but
+the sum of KS eigenvalues up to the Fermi level (with the appropriate
+k-point weights). E_bs is now computed by Siesta as Tr(DM*H), where DM
+is the density matrix (see the Siesta paper) and output as Ebs.
+
+E_bs can also be computed integrating the DOS curves:
+
+E_bs = Integral (DOS(E)*E*dE)
+
+up to the Fermi level.
+
+Mprop now includes a third column in the Filename.intdos file showing
+the integrated E_bs(E). By reading the entry for a value of E close to
+the Fermi level E_bs can estimated. This is useful to get Ebs for
+legacy calculations performed with versions of Siesta that did not
+compute E_bs.
+
+In order for mprop to estimate the Fermi level accurately (to match
+Siesta's own value), it is advisable to use a small smearing. By using
+a relatively high number of sampling points ( -n option), and an
+energy upper limit that matches E_fermi, the COOP and COHP curves can
+be easily integrated by a simple sum (and a factor of the spacing).
+
+For example:
+
+mprop -s 0.1 -n 1000  -M E_fermi  Filename ( no .mpr extension)
+

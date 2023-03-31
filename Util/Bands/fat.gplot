@@ -1,0 +1,19 @@
+#
+# Generate fatband info with the "fat" program in Util/COOP
+#
+# Then, process the .bands file with the "eigfat2plot" program,
+#
+# eigfat2plot -b 1 -B 8 fatbands.fatbands_Si_3s.EIGFAT  > fat3s.dat
+#
+# (the band index selection is optional)
+# 
+# Then, plot with commands like:
+#
+plot "fat3s.dat" using 1:2:(4*$3) with points pt 6 ps variable  
+replot "fat3p.dat" using 1:2:(4*$3) with points pt 6 ps variable 
+replot "fat3d.dat" using 1:2:(4*$3) with points pt 6 ps variable 
+#
+# The point type (pt) is explicitly set, and the point size (ps) is based on 
+# the value of the third column in the .dat files, with a scale factor for
+# more resolution (4 in this case). Use your own criteria for style.
+#

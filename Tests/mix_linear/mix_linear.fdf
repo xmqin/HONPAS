@@ -1,0 +1,89 @@
+# Default stuff...
+%block SCF.Mixers
+  linear-1
+  linear-2
+  linear-3
+%endblock
+
+%block SCF.Mixer.linear-1
+  method linear
+  weight 0.01
+  iterations 200
+  next linear-2
+%endblock
+%block SCF.Mixer.linear-2
+  method linear
+  weight 0.02
+  iterations 100
+  next linear-3
+%endblock
+%block SCF.Mixer.linear-3
+  method linear
+  weight 0.03
+%endblock
+
+
+SystemName          Linear Fe3 cluster.
+SystemLabel         mix_linear
+NumberOfAtoms       3
+NumberOfSpecies     1
+
+%block ChemicalSpeciesLabel
+ 1  26  fe_nc      # Species index, atomic number, species label
+%endblock ChemicalSpeciesLabel
+
+LatticeConstant    1.0 Bohr
+%block LatticeVectors
+ 12.000   0.000   0.000
+  0.000  12.000   0.000
+  0.000   0.000  20.000
+%endblock LatticeVectors
+
+AtomicCoordinatesFormat  NotScaledCartesianBohr
+%block AtomicCoordinatesAndAtomicSpecies
+  0.000   0.000   3.644  1
+  0.000   0.000   0.000  1
+  0.000   0.000  -3.644  1
+%endblock AtomicCoordinatesAndAtomicSpecies
+%block AtomicCoordinatesOrigin
+  0.000   0.000   0.000
+%endblock AtomicCoordinatesOrigin
+
+PAO.BasisType    split
+PAO.SplitNorm    0.15
+%block PAO.BasisAndPSlmax
+  1   26   2   3
+    0    2
+      5.30   0.00
+      1.00   1.00
+    1    1
+      5.30   0.00
+      1.00   1.00
+    2    2
+      4.50   0.00
+      1.00   1.00
+%endblock PAO.BasisAndPSlmax
+
+MeshCutoff        150. Ry
+
+ElectronicTemperature   0.1 eV
+
+MaxSCFIterations 2000
+
+MD.TypeOfRun      CG
+MD.NumCGsteps     0
+
+WriteMullikenPop  1
+
+SpinPolarized     yes
+NonCollinearSpin  yes 
+
+DM.UseSaveDM      yes
+
+%block DM.InitSpin
+ 1  +3.00     0.   0.   # atom,spin,theta,phi (deg)
+ 2  +1.50    90.   0.
+ 3  +3.00   180.   0.
+%endblock DM.InitSpin
+
+

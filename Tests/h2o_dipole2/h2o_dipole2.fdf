@@ -1,0 +1,39 @@
+# This test is based on the dipole correction
+# paper by:
+# Bengtsson, PRB, 1999
+# DOI: 10.1103/PhysRevB.59.12301
+
+SystemName          Water molecule
+SystemLabel         h2o_dipole2
+NumberOfAtoms       6
+NumberOfSpecies     2
+
+SlabDipoleCorrection
+
+MeshCutoff  200 Ry
+
+%block ChemicalSpeciesLabel
+ 1  8  O      # Species index, atomic number, species label
+ 2  1  H
+%endblock ChemicalSpeciesLabel
+
+LatticeConstant 1.0 Ang
+%block LatticeVectors
+3.0 0.0 0.0
+0.0 12.0 0.0
+0.0 0.0 5.0
+%endblock LatticeVectors
+
+AtomicCoordinatesFormat  Ang
+%block AtomicCoordinatesAndAtomicSpecies
+ 0.000  0.000  0.000  1
+ 0.757  0.586  0.000  2
+-0.757  0.586  0.000  2
+ 0.000  6.000  0.000  1
+ 0.757  5.414  0.000  2
+-0.757  5.414  0.000  2
+%endblock AtomicCoordinatesAndAtomicSpecies
+
+save-delta-rho T
+save-electrostatic-potential T
+save-hs T

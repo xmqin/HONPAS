@@ -1,0 +1,52 @@
+#!/bin/bash
+#$ -pe mpi 8
+#$ -l num_proc=1
+#$ -l s_rt=04:00:00
+#$ -l s_vmem=2G
+#$ -l h_fsize=2G
+#$ -cwd
+#$ -j y
+#$ -S /bin/bash
+#$ -V
+#
+# Example of SGE script for CESGA's Finisterrae
+# Unfortunately, the system administrators have rigged
+# the qsub command, and the options above might not be
+# seen. Use a command-line similar to:
+#
+# qsub -l num_proc=1,s_rt=04:00:00,s_vmem=2G,h_fsize=2G -pe mpi 8 script.sge
+#
+timestamp=`date +"%F--%H.%M.%S"`
+echo $timestamp
+#
+jobname=some_job_name
+#
+date
+pwd
+echo "Host file:"
+cat $TMPDIR/machines
+echo "Temp dir: $TMPDIR"
+#
+HOST=`hostname`
+echo Executing on $HOST
+#
+prog=siesta-2.5-ag-41
+prog_path="$HOME/bin/compute/$prog"
+#
+# Make sure that your HOMESFS directory has been created by the
+# administrators.
+#
+SCR=$HOMESFS/$jobname.$timestamp
+#
+mkdir $SCR
+#
+cp -p *.psf $SCR
+cp -p $prog_path $SCR
+cp -p $jobname.fdf $SCR
+#
+ln -sf $SCR ./$jobname.$timestamp
+#
+cd $SCR
+#
+mpirun -np $NSLOTS -hostfile $TMPDIR/machines $prog < $jobname.fdf > jobname.out
+#

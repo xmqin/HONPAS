@@ -1,0 +1,319 @@
+! ---
+! Copyright (C) 1996-2016	The SIESTA group
+!  This file is distributed under the terms of the
+!  GNU General Public License: see COPYING in the top directory
+!  or http://www.gnu.org/copyleft/gpl.txt .
+! See Docs/Contributors.txt for a list of contributors.
+! ---
+
+!=========================== begin template --- 
+!
+! The basic data structure is an array which can be cyclically shifted,
+! and whose individual elements can be indexed.
+! The most recent item is the highest-numbered one.
+!
+! Parameters: FSTACK_NAME
+!             _T_
+!===============================================
+
+
+type Fstack_
+    integer            :: refCount = 0
+    character(len=36)  :: id = "null_id"
+    !-------------------------------------
+    character(len=256) :: name = "(null Fstack_)"
+    !> See [[_T_(type)]]
+    type(_T_), pointer :: val(:) => null()
+    integer            :: size = 0
+    integer            :: nvals = 0
+end type Fstack_
+
+type FSTACK_NAME
+   type(Fstack_), pointer :: data => null()
+end type FSTACK_NAME
+
+public :: new, push, pop, get, get_pointer, reset
+public :: n_items, max_size, print_type
+
+interface new
+ module procedure new__
+end interface
+interface push
+ module procedure push__
+end interface
+interface pop
+ module procedure pop__
+ module procedure pop_delete__
+ module procedure pop_delete_idx_
+end interface
+interface get
+ module procedure get__
+end interface
+interface get_pointer
+ module procedure get_pointer__
+end interface
+
+interface reset
+ module procedure reset__
+end interface
+
+interface print_type
+ module procedure print__
+end interface
+
+interface n_items
+ module procedure n_items__
+end interface
+interface max_size
+ module procedure max_size__
+end interface
+
+!==============================
+#define TYPE_NAME FSTACK_NAME
+#include "basic_type.inc"
+!==============================
+
+     subroutine delete_Data(data)
+      type(Fstack_) :: data
+      integer :: i
+      if (associated(data%val)) then
+        do i = 1, data%size
+           call delete(data%val(i))
+        enddo
+        deallocate(data%val)	
+      endif
+      ! Reset data
+      data%size = 0
+      data%nvals = 0
+     end subroutine delete_Data
+!=============================================================
+
+!---------------------------------------------
+function max_size__(this) result (n)
+type(FSTACK_NAME), intent(in) :: this
+integer                     :: n
+if (.not. associated(this%data)) then
+  n = 0
+else
+  n = this%data%size
+end if
+end function max_size__
+
+!---------------------------------------------
+function n_items__(this) result (n)
+type(FSTACK_NAME), intent(in) :: this
+integer                    :: n
+if (.not. associated(this%data)) then
+  n = 0
+else
+  n = this%data%nvals
+end if
+
+end function n_items__
+
+!---------------------------------------------
+subroutine new__(this,nsize,name)
+type(FSTACK_NAME), intent(inout) :: this
+integer, intent(in)  :: nsize
+character(len=*), intent(in), OPTIONAL :: name
+
+integer :: i
+
+call init(this)
+this%data%size = nsize
+this%data%nvals = 0
+
+if (present(name)) then
+   this%data%name = name
+else
+   this%data%name = "Fstack"
+endif
+
+allocate(this%data%val(nsize))
+call tag_new_object(this)
+
+end subroutine new__
+
+!---------------------------------------------
+! The most recent item is the highest-numbered
+!
+subroutine push__(this,item)
+type(FSTACK_NAME), intent(inout) :: this
+type(_T_),      intent(in)    :: item
+
+if (max_size(this) == 0) RETURN
+
+if (this%data%nvals == this%data%size) then
+   !! print *, "cycling fstack..."
+   this%data%val = cshift(this%data%val,+1)
+   call delete(this%data%val(this%data%nvals))
+   this%data%val(this%data%nvals) = item    ! Assignment
+else
+   this%data%nvals = this%data%nvals + 1
+   this%data%val(this%data%nvals) = item
+endif
+end subroutine push__
+
+
+!---------------------------------------------
+! Returns and pops the latest element
+!
+subroutine pop__(this,item)
+type(FSTACK_NAME), intent(inout) :: this
+type(_T_),      intent(inout)    :: item
+
+if (max_size(this) == 0) RETURN
+if (n_items(this) == 0) then
+   call delete(item)
+   RETURN
+endif
+
+! retrieve the latest value
+item = this%data%val(this%data%nvals)
+! Delete the local and decrease counter
+call delete(this%data%val(this%data%nvals))
+this%data%nvals = this%data%nvals - 1
+
+end subroutine pop__
+
+subroutine pop_delete__(this)
+type(FSTACK_NAME), intent(inout) :: this
+
+if (max_size(this) == 0) RETURN
+if (n_items(this) == 0) RETURN
+
+! Delete the local item and decrease counter
+call delete(this%data%val(this%data%nvals))
+this%data%nvals = this%data%nvals - 1
+
+end subroutine pop_delete__
+
+subroutine pop_delete_idx_(this, index)
+type(FSTACK_NAME), intent(inout) :: this
+integer, intent(in) :: index
+integer :: lidx, i, n
+
+if (max_size(this) == 0) RETURN
+n = n_items(this) 
+if (n == 0) RETURN
+
+if ( index > 0 ) then
+   lidx = index
+else
+   lidx = n + index + 1
+end if
+
+! Delete the local item and decrease counter
+do i = lidx , n - 1
+   this%data%val(i) = this%data%val(i+1)
+end do
+call delete(this%data%val(n))
+this%data%nvals = this%data%nvals - 1
+
+end subroutine pop_delete_idx_
+
+!---------------------------------------------
+subroutine get__(this,i,value)
+type(FSTACK_NAME), intent(in) :: this
+integer,         intent(in) :: i
+type(_T_), intent(inout)    :: value
+
+if (i > this%data%nvals) then
+   call die("wrong index in get__  FSTACK_NAME")
+endif
+value = this%data%val(i)
+end subroutine get__
+
+!---------------------------------------------
+function get_pointer__(this,i) result(valuep)
+type(FSTACK_NAME), intent(in) :: this
+integer,        intent(in)  :: i
+type(_T_),          pointer :: valuep
+
+if (i > this%data%nvals) then
+   call die("wrong index in get_pointer__  FSTACK_NAME")
+endif
+valuep => this%data%val(i)
+end function get_pointer__
+
+!---------------------------------------------
+! reset oldest history by cyclic shifts and deleting top values
+! Defaults to resetting the entire history
+! If n < 0, keeps min(-n,n_items) history segments
+! If n > 0, deletes min(n,n_items) history segments
+! If n == 0, deletes entire history
+!
+subroutine reset__(this,n)
+type(FSTACK_NAME), intent(inout) :: this
+! Number of elements to keep
+integer, intent(in), optional :: n
+integer :: i, ns, ln
+
+if (.not. associated(this%data)) return
+
+ns = n_items(this)
+ln = ns
+if ( present(n) ) ln = n
+
+! There are three options
+
+if ( ln > 0 ) then
+  ! We will delete the oldest 'ln' entries
+  ln = min(ln,ns)
+
+  ! 'ln' is now the number of elements deleted  
+
+else if ( ln < 0 ) then
+  ! We will keep the latest '-ln' entries
+  ln = min(-ln,ns)
+
+  ! Calculate the number of oldest elements to be deleted
+  ln = ns - ln
+  if ( ln == 0 ) return
+
+else
+  ! Delete entire history
+  ln = ns
+end if
+
+ns = max_size(this)
+if ( ln /= ns ) then
+  ! Cyclic shifts
+  this%data%val = cshift(this%data%val,+ln)
+end if
+
+! delete back values as the cycling puts them
+! in the back
+do i = 1 , ln
+  call delete(this%data%val(ns))
+  ns = ns - 1
+  this%data%nvals = this%data%nvals - 1
+end do
+
+end subroutine reset__
+ 
+
+!---------------------------------------------
+subroutine print__(this)
+type(FSTACK_NAME), intent(in) :: this
+
+integer :: i
+
+if (.not. associated(this%data)) then
+   print *, "<Fstack not initialized>"
+   return
+endif
+
+print "(a,i0,a,i0,a)", "<" // trim(this%data%name) // ". Slots: ", &
+                this%data%size, " Nvals: ", this%data%nvals, ">"
+do i=1,this%data%nvals
+ call print_type(this%data%val(i))
+enddo
+print "(a,i0,a)", "<refcount: ", this%data%refCount, ">"
+
+end subroutine print__
+
+!=========================== end of template
+
+#undef _T_
+#undef FSTACK_NAME

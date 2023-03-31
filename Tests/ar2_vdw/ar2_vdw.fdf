@@ -1,0 +1,64 @@
+##### GENERAL SYSTEM DESCRIPTORS ##############################################
+
+SystemName	Argon dimer. VDW-DF. Unconverged test.
+SystemLabel	ar2_vdw
+
+NumberOfAtoms     2
+NumberOfSpecies   1
+%block ChemicalSpeciesLabel
+  1    18    Ar.vdw
+%endblock ChemicalSpeciesLabel
+
+##### INITIAL GEOMETRY ########################################################
+
+LatticeConstant	1.00000 Ang
+%block LatticeVectors
+	15.0000     0.0000    0.0000
+	 0.0000    10.0000    0.0000
+	 0.0000     0.0000   10.0000
+%endblock LatticeVectors
+
+AtomicCoordinatesFormat Ang 
+%block AtomicCoordinatesAndAtomicSpecies  
+	0.0000    0.0000    0.0000   1  Ar         1
+	4.0000    0.0000    0.0000   1  Ar         2
+%endblock AtomicCoordinatesAndAtomicSpecies
+
+##### FUNCTIONAL ##############################################################
+
+XC.functional		VDW
+XC.authors		DRSLL
+
+##### BASIS DEFINITION ########################################################
+
+PAO.BasisType		split
+PAO.BasisSize		DZP
+PAO.EnergyShift	        100 meV 
+
+##### PRECISION PARAMETERS ####################################################
+
+%block Ps.lmax
+    Ar.vdw 	  2
+%endblock Ps.lmax
+
+FilterCutoff             80 Ry
+MeshCutoff		100 Ry
+
+##### TASK SPECIFIERS #########################################################
+
+SolutionMethod	        diagon
+DM.UseSaveDM		no
+DM.MixingWeight		0.1
+DM.NumberPulay		5
+DM.Tolerance		1.0d-4
+
+MD.TypeOfRun		CG
+MD.NumCGsteps		10
+MD.MaxCGDispl		0.1 Ang
+MD.MaxForceTol	        0.03 eV/Ang
+MD.UseSaveXV		no
+ 
+##### OUTPUT OPTIONS ##########################################################
+
+alloc_report_level      2
+timer_report_threshold  1.e-4

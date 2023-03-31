@@ -1,0 +1,125 @@
+Full restructure of the TeX documentation method.
+
+This will accommodate a complete environment in TeX for more stringent
+formatting of the documentation.
+This will be a work-in-progress as not all flags are transferred but
+will be eventually.
+
+# Splitting of siesta and tbtrans documentation #
+
+The documentation also splits the tbtrans and siesta manual in two.
+This is to accommodate the tbtrans as a stand-alone program (which it
+now is).
+The siesta manual links to the tbtrans manual (if it is in the same folder).
+
+
+## fdf-options ##
+
+The fdf-options should be documented as these examples:
+
+  \begin{fdfentry}{FDF.Name!SubName}[real]<$0.1$>
+  \end{fdfentry}
+
+  \begin{fdflogicalT}{FDF.Name!Logical.Default.True}
+  \end{fdflogicalT}
+
+  \begin{fdflogicalF}{FDF.Name!Logical.Default.False}
+  \end{fdflogicalF}
+
+For instance
+
+  \begin{fdfentry}{FDF.Name!SubName}[real]<$0.1$> 
+
+    Description of the FDF flag.
+  
+  \end{fdfentry}
+
+To make examples of fdf flags, use this enviroment (which is a VERBATIM environment
+in disguise):
+
+   \begin{fdfexample}
+
+   \end{fdfexample}
+
+Similarly for shell examples:
+
+   \begin{shellexample}
+
+   \end{shellexample}
+
+Note that the internals of the commands will automatically convert:
+FDF.Name!SubName into FDF.Name.SubName but will use the ! when adding the
+flag to the index files. One may reference fdf flags in the text via:
+  \fdf{FDF.Name!SubName} which will 1) add the place in the file to the index (for back-referencing),
+and 2) transform the shown text as a link to the block where it is created.
+This will make reading the manual much easier as one may press the flags
+and automatically be moved to the location in the PDF (if the viewer supports it).
+If one does not wish to create a link, one may use the starred variant of the
+\fdf* command.
+
+
+## Files ##
+
+Files in the manual may be referenced using: \file{full-file-name} and/or
+\sysfile{file-ending}, where the latter is a shorthand for \file{<SystemLabel>.file-ending}.
+
+
+## Manual indices ##
+
+The new siesta documentation now splits the index into 3, 1) contains generic
+index entries, 2) all fdf-flags, and 3) the siesta files.
+
+To add specific entries in the regular index, simply use the \index command. To add to the
+fdf index, use \fdfindex. For adding to the file index, use \fileindex.
+
+
+# release script #
+
+This branch introduces the release.sh script which enables an
+easy release tarball creation.
+We encourage that it is called with these options:
+  ./Docs/release.sh --prev-tag v3.2 --tag v4.0
+To create the release of version 4.0.
+The script will create a siesta-releases folder in your main shared
+directory with sub-folders with the appropriate files.
+By default will the release.sh script try and sign the files using your
+default GPG key. 
+The previous tag is used to generate a CHANGES and CHANGES_DETAILED file
+which contain the entire log of the commit messages.
+
+
+## Tags ##
+
+The release script of siesta requires certain strictness in the tags.
+All tags should be named according to this scheme:
+
+  s<>
+
+for new series on launchpad.
+
+  v<>
+
+for released versions
+
+  v<>-b<>
+
+for beta releases.
+This enables the release.sh script to automatically retrieve the correct
+versions.
+Note that all previous tags has been deleted. Older branches may still have them
+and they will likely enter the trunk again during the next couple of merges.
+Until new branches are formed from _after_ this merge there will be old tags re-entering
+again and again.
+In the mean time one may use this shell script to delete the tags (remotely and locally)
+
+#!/bin/bash
+for t in 3.0-beta-root 3.0-root 4.0-b1 4.0-b2 4.0-release 4.0-root siesta-3.2
+do
+bzr tag --delete -d lp:siesta $t
+bzr tag --delete $t
+done
+for t in 5.0 6.1 6.2 6.3 6.4 6.8 6.9
+do
+bzr tag --delete -d lp:siesta siesta-2.$t
+bzr tag --delete siesta-2.$t
+done

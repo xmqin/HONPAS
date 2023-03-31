@@ -1,0 +1,289 @@
+2016-5-23   Nick Papior  <nickpapior@gmail.com>  trunk-so
+Re-added SOC tests and updated running tests
+
+- The SpinOrbit tests are now in a proper location
+  although they are linked together.
+
+- Fixed Makefile for tests to enable direct directory
+  calling:
+	make h2o
+  will run the test in h2o directory.
+
+  This makes it easier to run the tests.
+
+- Currently the References hasn't been made.
+
+2016-4-21   22:50   Nick Papior  <nickpapior@gmail.com>  trunk-so
+Dies when trying Harris functional for NC/SO
+
+- Harris functional is not defined for
+  NC spin configuration.
+  An error message has been inserted.
+  
+modified:
+  Src/read_options.F90
+
+2016-4-21   19:02   Nick Papior  <nickpapior@gmail.com>  trunk-so
+Fixed parallel mulliken for NC
+
+- Parallel calculation of the mulliken charges
+  now work.
+  The parallelization is not optimal as it
+  introduces a reduction.
+  However, to circumvent one still requires
+  reductions on each node. Hence, this choice
+  is obvious.
+  Furthermore it is very easy to implement.
+  
+modified:
+  Src/mulliken.F
+
+
+2016-4-18   11:33   Nick Papior  <nickpapior@gmail.com>  trunk-so
+Beautification of the mulliken output
+
+- Small change to the printing routine of
+  mulliken for NC spin.
+  
+modified:
+  Src/mulliken.F
+
+
+2016-4-18   11:07   Nick Papior  <nickpapior@gmail.com>  trunk-so
+Changed DM-minimum from polarization (+eps) to max(eps)
+
+- The GGAXC fix in r509 introduced a + 1e-12 which
+  has now been changed to max(1e-12).
+  This should only affect mesh points with densities
+  comparable to 1e-12.
+  Perhaps an even smaller quantity is needed in this
+  routine?
+
+- Aligned coding style with Jose Soler style.
+
+- Removed erroneous added log file
+
+removed:
+  log
+modified:
+  Src/SiestaXC/ggaxc.f
+
+
+
+2016-4-14   15:21   Ramon Cuadrado  <ramon.cuadrado@icn2.cat>  trunk-so
+
+* The first SC step won't be huge as was previously tested for older versions. 
+See explanation bellow:
+
+- At some mesh points, the diagonal spin density matrix components are 
+exactly the same: D(1) = D(2). In principle, this does not happen at any mesh 
+point when we have bulk, but it is possible to have it when we have vaccum 
+(slab/clusters). These two components are used to calculate DPOL in the subroutine 
+SiestaXC/ggaxc.f and its value will be zero. This variable is used afterwards 
+as divider in other parts throughout the subroutine and the tiny fortran function 
+(to avoid divisions by zero) s to be added to DPOL leading to a DPOL value of 10^-308.
+After use it in a division we will have a huge positive number, of order of 10^200 
+or so, it depends. Some of these values will be multiplied by "true" zero giving zero, 
+however, others won't be exactly zero, for example, 10^-20. If one multiply 
+10^-20 * 10^200 ~ 10^180 and the values calculated, to be used afterwars 
+along the code, will be eneormous! One way to fix the issue is to define 
+inside ggaxc.f a specific tiny parameter, say TINY=10^-12 that, in principle 
+it should work for the kind of multiplication written before: 10^-20 * 10^12 ~ 
+zero. In doing so the calculated variables inside ggaxc.f won't have huge output 
+values of dExcdGD(:,1:4), for example. 
+
+- Alternatively to the tiny(DPOL) line in ggaxc.f it has been added as a parameter: 
+TINY=10.0d-12.  
+
+Note: Probably the use of "bad" initial DM will lead in a well converged DM 
+after the SC but maybe starting with good initial DM the convergency will be 
+achieved before. 
+
+modified:
+  Docs/CHANGES.so-ramon 
+  Src/SiestaXC/ggaxc.f
+
+-----------------------------------------------------------------------------------------------
+2016-4-13   11:20   Ramon Cuadrado  <ramon.cuadrado@icn2.cat>  trunk-so
+
+* Alternative way to obtain in SiestaXC/ggaxc.f the derivatives of 
+E_XC with respect to rho: dEXCdD(1:4)
+
+* This fixes previous issue related with noncollinearity (only)  in slabs 
+where the first call in the SC loop did give huge values of Vxc, E_f, for example. 
+
+modified:
+  Docs/CHANGES.so-ramon
+  Src/SiestaXC/ggaxc.f
+  version.info
+
+-----------------------------------------------------------------------------------------------
+2016-3-11   10:15   Ramon Cuadrado  <ramon.cuadrado@icn2.cat>  siesta-trunk-479--so-ramon
+On-site implementation of the SO coupling in siesta-trunk-479 version
+
+* Adding Pt dimer and FePt-L1_0 anisotropy calculation tests for 
+the on-site Spin-Orbit. March 11th 2016 
+
+* Assumed-shape updating for some subroutines. There are however some of them 
+that have to be modified in order to be able to change the number of the arguments
+in the SO branch to have the same number as in trunk-479. (The subroutines are: 
+writewave, diagg, diagk, rhoofd)
+
+added:
+  Tests/SpinOrbit/
+  Tests/SpinOrbit/FePt-L1_0-so/
+  Tests/SpinOrbit/FePt-L1_0-so/README
+  Tests/SpinOrbit/FePt-L1_0-so/X-alignment/
+  Tests/SpinOrbit/FePt-L1_0-so/X-alignment/x-axis/
+  Tests/SpinOrbit/FePt-L1_0-so/X-alignment/x-axis/Fe.psf
+  Tests/SpinOrbit/FePt-L1_0-so/X-alignment/x-axis/Pt.psf
+  Tests/SpinOrbit/FePt-L1_0-so/X-alignment/x-axis/fept.fdf
+  Tests/SpinOrbit/FePt-L1_0-so/X-alignment/x-axis/fept.out
+  Tests/SpinOrbit/FePt-L1_0-so/X-alignment/y-axis/
+  Tests/SpinOrbit/FePt-L1_0-so/X-alignment/y-axis/Fe.psf
+  Tests/SpinOrbit/FePt-L1_0-so/X-alignment/y-axis/Pt.psf
+  Tests/SpinOrbit/FePt-L1_0-so/X-alignment/y-axis/fept.fdf
+  Tests/SpinOrbit/FePt-L1_0-so/X-alignment/y-axis/fept.out
+  Tests/SpinOrbit/FePt-L1_0-so/X-alignment/z-axis/
+  Tests/SpinOrbit/FePt-L1_0-so/X-alignment/z-axis/Fe.psf
+  Tests/SpinOrbit/FePt-L1_0-so/X-alignment/z-axis/Pt.psf
+  Tests/SpinOrbit/FePt-L1_0-so/X-alignment/z-axis/fept.fdf
+  Tests/SpinOrbit/FePt-L1_0-so/X-alignment/z-axis/fept.out
+  Tests/SpinOrbit/FePt-L1_0-so/Z-alignment/
+  Tests/SpinOrbit/FePt-L1_0-so/Z-alignment/x-axis/
+  Tests/SpinOrbit/FePt-L1_0-so/Z-alignment/x-axis/Fe.psf
+  Tests/SpinOrbit/FePt-L1_0-so/Z-alignment/x-axis/Pt.psf
+  Tests/SpinOrbit/FePt-L1_0-so/Z-alignment/x-axis/fept.fdf
+  Tests/SpinOrbit/FePt-L1_0-so/Z-alignment/x-axis/fept.out
+  Tests/SpinOrbit/FePt-L1_0-so/Z-alignment/y-axis/
+  Tests/SpinOrbit/FePt-L1_0-so/Z-alignment/y-axis/Fe.psf
+  Tests/SpinOrbit/FePt-L1_0-so/Z-alignment/y-axis/Pt.psf
+  Tests/SpinOrbit/FePt-L1_0-so/Z-alignment/y-axis/fept.fdf
+  Tests/SpinOrbit/FePt-L1_0-so/Z-alignment/y-axis/fept.out
+  Tests/SpinOrbit/FePt-L1_0-so/Z-alignment/z-axis/
+  Tests/SpinOrbit/FePt-L1_0-so/Z-alignment/z-axis/Fe.psf
+  Tests/SpinOrbit/FePt-L1_0-so/Z-alignment/z-axis/Pt.psf
+  Tests/SpinOrbit/FePt-L1_0-so/Z-alignment/z-axis/fept.fdf
+  Tests/SpinOrbit/FePt-L1_0-so/Z-alignment/z-axis/fept.out
+  Tests/SpinOrbit/FePt-L1_0-so/config
+  Tests/SpinOrbit/FePt-L1_0-so/makefile
+  Tests/SpinOrbit/FePt-L1_0-so/script-fept.sh
+  Tests/SpinOrbit/Pt2-so-bis/
+  Tests/SpinOrbit/Pt2-so-bis/README
+  Tests/SpinOrbit/Pt2-so-bis/X-alignment/
+  Tests/SpinOrbit/Pt2-so-bis/X-alignment/x-axis/
+  Tests/SpinOrbit/Pt2-so-bis/X-alignment/x-axis/Pt.psf
+  Tests/SpinOrbit/Pt2-so-bis/X-alignment/x-axis/pt2.fdf
+  Tests/SpinOrbit/Pt2-so-bis/X-alignment/x-axis/pt2.out
+  Tests/SpinOrbit/Pt2-so-bis/X-alignment/y-axis/
+  Tests/SpinOrbit/Pt2-so-bis/X-alignment/y-axis/Pt.psf
+  Tests/SpinOrbit/Pt2-so-bis/X-alignment/y-axis/pt2.fdf
+  Tests/SpinOrbit/Pt2-so-bis/X-alignment/y-axis/pt2.out
+  Tests/SpinOrbit/Pt2-so-bis/X-alignment/z-axis/
+  Tests/SpinOrbit/Pt2-so-bis/X-alignment/z-axis/Pt.psf
+  Tests/SpinOrbit/Pt2-so-bis/X-alignment/z-axis/pt2.fdf
+  Tests/SpinOrbit/Pt2-so-bis/X-alignment/z-axis/pt2.out
+  Tests/SpinOrbit/Pt2-so-bis/Z-alignment/
+  Tests/SpinOrbit/Pt2-so-bis/Z-alignment/x-axis/
+  Tests/SpinOrbit/Pt2-so-bis/Z-alignment/y-axis/
+  Tests/SpinOrbit/Pt2-so-bis/Z-alignment/z-axis/
+  Tests/SpinOrbit/Pt2-so-bis/config
+  Tests/SpinOrbit/Pt2-so-bis/makefile
+  Tests/SpinOrbit/Pt2-so-bis/script-pt2.sh
+modified:
+  Src/bands.F
+  Src/compute_dm.F
+  Src/compute_energies.F90
+  Src/compute_rhog.F
+  Src/dfscf.f
+  Src/dhscf.F
+  Src/diag2g.F
+  Src/diag2k.F
+  Src/diagg.F
+  Src/diagk.F
+  Src/diagon.F
+  Src/fermid.F
+  Src/final_H_f_stress.F
+  Src/grdsam.F
+  Src/iodm_netcdf.F90
+  Src/local_DOS.F
+  Src/m_broyden_mixing.f
+  Src/m_fire_mixing.f
+  Src/m_iodm.F
+  Src/new_dm.F
+  Src/pdos.F
+  Src/post_scf_work.F
+  Src/projected_DOS.F
+  Src/rhoofd.F
+  Src/setup_H0.F
+  Src/setup_hamiltonian.F
+  Src/siesta_analysis.F
+  Src/siesta_forces.F
+  Src/state_init.F
+  Src/vmat.F
+  Src/writewave.F
+unknown:
+  Src-so.save/
+  log
+  log.old
+  Obj/.siesta
+  Obj/FoX/
+  Obj/Libs/
+  Obj/MPI/
+  Obj/Makefile
+  Obj/SiestaXC/
+  Obj/Tests/
+  Obj/arch.make
+  Obj/arch.make.parallel
+  Obj/arch.make.serial
+  Obj/compinfo.F90
+  Obj/fdf/
+  Obj/psiesta-trunk+so
+  Obj/siesta
+  Obj/ssiesta-trunk+so
+  Obj/tmp.F90
+  Obj/work.pcl
+  Obj/wxml/
+  Obj/xmlparser/
+  Src/config.log
+  Src/config.status
+  Src/diag2k.F.ramonSO
+
+
+-----------------------------------------------------------------------------------------------
+2015-11-05   16:45   Ramon Cuadrado  <ramon.cuadrado@cin2.es>  siesta-trunk-479--so-ramon
+On-site implementation of the SO coupling in siesta-trunk-479 version
+
+* Updating the version.info file to siesta-trunk-479--so-ramon branch
+* Some on-site SO subroutines added and modified
+
+added:
+  Docs/CHANGES.so-ramon
+  Src/moments.F
+  Src/spinorbit.f
+modified:
+  Src/Makefile
+  Src/born_charge.F
+  Src/compute_dm.F
+  Src/dhscf.F
+  Src/diagon.F
+  Src/grdsam.F
+  Src/iodm_netcdf.F90
+  Src/local_DOS.F
+  Src/m_broyden_mixing.f
+  Src/m_fire_mixing.f
+  Src/m_iodm.F
+  Src/m_pulay.F90
+  Src/m_spin.F90
+  Src/mixer.F
+  Src/new_dm.F
+  Src/optical.F
+  Src/rhoofd.F
+  Src/save_density_matrix.F
+  Src/state_init.F
+  Src/vmat.F
+  Src/write_subs.F
+  Src/writewave.F
+  version.info
+
+

@@ -1,0 +1,40 @@
+SystemName          Water molecule with more basis generation options
+SystemLabel         h2o_basis
+NumberOfAtoms       3
+NumberOfSpecies     2
+
+MeshCutoff  50 Ry
+
+%block ChemicalSpeciesLabel
+ 1  8  O      # Species index, atomic number, species label
+ 2  1  H
+%endblock ChemicalSpeciesLabel
+
+PAO.BasisSize TZTP       # Default basis size
+PAO.SoftDefault T        # Trigger default soft-confinement options
+PAO.SoftInnerRadius 0.75 # Default fractional r_inner
+
+#
+# Specify H options completely. Defaults will aply only to O
+#
+%block PAO.Basis
+H    1  0.00
+n=1  0  2   S 0.35  P 2 E 30.0 -0.5     # Split norm, fractional r_inner
+    8.34 0.0
+    1.0 1.0
+O    2  0.00
+n=2  0  2  E 30.0 -0.5     # fractional r_inner
+    6.34 -0.8              # fractional second_zeta
+    1.0 1.0
+n=2  1  3  S 0.4 E 40.0 -0.7 P      #  Split_norm, fractional r_inner
+    0.0 0.0 -0.8     
+    1.0 1.0  1.0
+%endblock PAO.Basis
+
+AtomicCoordinatesFormat  Ang
+%block AtomicCoordinatesAndAtomicSpecies
+ 0.000  0.000  0.000  1
+ 0.757  0.586  0.000  2
+-0.757  0.586  0.000  2
+%endblock AtomicCoordinatesAndAtomicSpecies
+

@@ -1,0 +1,28 @@
+#
+#     Example of how to reproduce old results, before findp bug
+#
+PAO.Keep.Findp.Bug  T
+#
+SystemName          Water molecule
+SystemLabel         h2o_findp_bug
+NumberOfAtoms       3
+NumberOfSpecies     2
+
+MeshCutoff  50 Ry
+
+%block ChemicalSpeciesLabel
+ 1  8  O      # Species index, atomic number, species label
+ 2  1  H
+%endblock ChemicalSpeciesLabel
+
+AtomicCoordinatesFormat  Ang
+%block AtomicCoordinatesAndAtomicSpecies
+ 0.000  0.000  0.000  1
+ 0.757  0.586  0.000  2
+-0.757  0.586  0.000  2
+%endblock AtomicCoordinatesAndAtomicSpecies
+
+save-rho T
+save-delta-rho T
+save-total-potential T
+save-hs T

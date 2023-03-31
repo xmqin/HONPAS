@@ -1,0 +1,45 @@
+# A convoluted example of zmatrix input, for testing
+
+SystemName zmatrix
+SystemLabel zmatrix
+
+NumberOfSpecies 3
+NumberOfAtoms   8
+
+%block ChemicalSpeciesLabel
+1    8 O
+2    1 H
+3   14 Si
+%endblock ChemicalSpeciesLabel
+
+WriteCoor T
+WriteForces T
+
+LatticeConstant 1.0 Ang
+%block LatticeVectors
+8.0 2.0 1.0
+0.5 8 0.9
+1 2.5 8
+%endblock LatticeVectors
+
+ZM.ForceTolLength 0.04 eV/Ang
+ZM.ForceTolAngle 0.0001 eV/deg
+ZM.MaxDisplLength 0.5 Ang
+ZM.MaxDisplAngle 20.0 deg
+ZM.UnitsLength Ang
+ZM.UnitsAngle deg
+
+
+%block Zmatrix < Zmatrix.data
+
+xc.functional LDA
+xc.authors PZ
+
+MD.TypeOfRun CG
+MD.NumCGsteps 4
+MD.VariableCell T
+
+MeshCutoff 60 Ry
+PAO.EnergyShift 0.01 Ry
+DM.NumberPulay 5
+DM.MixingWeight 0.3

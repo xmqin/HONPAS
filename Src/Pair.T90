@@ -1,0 +1,167 @@
+! ---
+! Copyright (C) 1996-2016	The SIESTA group
+!  This file is distributed under the terms of the
+!  GNU General Public License: see COPYING in the top directory
+!  or http://www.gnu.org/copyleft/gpl.txt .
+! See Docs/Contributors.txt for a list of contributors.
+! ---
+
+!=========================== begin template --- 
+!
+! Pair derived type. Two boxed types: _T1_ _T2_
+!
+! Parameters:
+!
+!   PAIR_NAME
+!         _T1_
+!         _T2_
+!==============================================
+
+type Pair_
+    integer            :: refCount = 0
+    character(len=36)  :: id = "null_id"
+    !-------------------------------------
+    character(len=256) :: name = "(null Pair_)"
+    !> First component: [[_T1_(type)]]
+    type(_T1_)         :: first
+    !> Second component: [[_T2_(type)]]
+    type(_T2_)         :: second
+end type Pair_
+
+type PAIR_NAME
+   type(Pair_), pointer :: data => null()
+end type PAIR_NAME
+
+! Exported procedures and functions
+! (in addition to init, delete, and assignment(=) )
+
+public :: new, first, second, firstp, secondp, print_type
+
+interface new
+ module procedure new__
+end interface
+
+interface first
+ module procedure first__
+end interface
+
+interface second
+ module procedure second__
+end interface
+
+interface firstp
+ module procedure firstp__
+end interface
+
+interface secondp
+ module procedure secondp__
+end interface
+
+interface print_type
+   module procedure print__
+end interface
+
+#define TYPE_NAME PAIR_NAME
+!===================================
+#include "basic_type.inc"
+!===================================
+
+!
+! This routine takes care of deleting the 
+! type's storage
+
+  subroutine delete_Data(data)
+   type(Pair_) :: data
+   call delete(data%first)
+   call delete(data%second)
+  end subroutine delete_Data
+
+!=== TYPE functionality
+
+!---------------------------------------------
+subroutine new__(this, first, second, name)
+type(PAIR_NAME), intent(inout) :: this
+type(_T1_), intent(in)         :: first
+type(_T2_), intent(in)         :: second
+character(len=*), intent(in), OPTIONAL :: name
+
+call init(this)
+this%data%first = first
+this%data%second = second
+if (present(name)) then
+   this%data%name = name
+else
+   this%data%name = "(Pair of _T1_ _T2_)"
+endif
+call tag_new_object(this)
+
+end subroutine new__
+
+!------------------------------------------------
+subroutine print__(this)
+type(PAIR_NAME), intent(in) :: this
+
+if (.not. associated(this%data)) then
+   print *, "<Pair not initialized>"
+   return
+endif
+print "(a)", "<" // trim(this%data%name) // ">"
+call print_type(this%data%first)
+call print_type(this%data%second)
+print "(a,i0,a)", "<refcount: ", this%data%refcount, ">"
+end subroutine print__
+
+!---------------------------------------------
+subroutine first__(this,item)
+type(PAIR_NAME), intent(inout) :: this
+type(_T1_),      intent(inout) :: item
+
+if (.not. associated(this%data)) then
+   call die("Attempt to get first item of null pair")
+endif
+item = this%data%first
+
+end subroutine first__
+!---------------------------------------------
+subroutine second__(this,item)
+type(PAIR_NAME), intent(inout) :: this
+type(_T2_),      intent(inout) :: item
+
+if (.not. associated(this%data)) then
+   call die("Attempt to get second item of null pair")
+endif
+item = this%data%second
+
+end subroutine second__
+
+!---------------------------------------------
+subroutine firstp__(this,p)
+type(PAIR_NAME), intent(inout) :: this
+type(_T1_), pointer            :: p
+
+if (.not. associated(this%data)) then
+   call die("Attempt to get pointer to first item of null pair")
+endif
+p => this%data%first
+
+end subroutine firstp__
+
+!---------------------------------------------
+subroutine secondp__(this,p)
+type(PAIR_NAME), intent(inout) :: this
+type(_T2_), pointer            :: p
+
+if (.not. associated(this%data)) then
+   call die("Attempt to get pointer to second item of null pair")
+endif
+p => this%data%second
+
+end subroutine secondp__
+
+!=========================== end of template
+
+#undef PAIR_NAME
+#undef _T1_
+#undef _T2_
+
+

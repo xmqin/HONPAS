@@ -1,0 +1,88 @@
+-----------------------------------------------------------------------
+2014-05-28  13:45:00 CEST                                    .-463
+Reverted some changes in ldaxc and ggaxc (J.M.Soler)
+
+* Some of the changes and tolerances introduced in 460 produced
+  instabilities in the atomic program and have been reverted
+
+* The new functionals have been added in Pseudo/atom/pseudoXML.f
+
+* Label pg for PW91 in .inp has been changed to wp
+
+-----------------------------------------------------------------------
+2014-05-20  18:30:00 CEST                                    .-462
+New functionals added in pseudo-generation program (J.M.Soler)
+
+modified:
+  Pseudo/atom/Docs/atom.tex
+  Pseudo/atom/velect.f
+  Src/atom.F
+
+-----------------------------------------------------------------------
+2014-05-19  18:00:00 CEST                                    .-461
+Parenthesis eliminated from xc author labels (J.M.Soler)
+
+modified:
+  Docs/siesta.tex
+  Src/SiestaXC/Testers/test1.f90
+  Src/SiestaXC/Testers/test2.F90
+  Src/SiestaXC/Testers/test3.F90
+  Src/SiestaXC/Testers/test4.F90
+  Src/SiestaXC/Testers/test6.f90
+  Src/SiestaXC/ggaxc.f
+  Src/SiestaXC/siestaxc.F90
+  Src/SiestaXC/xcmod.f90
+
+-----------------------------------------------------------------------
+2014-05-13  16:30:00 CEST                                    .-460
+New GGA and VDW functionals (M.Fritz & J.M.Soler)
+
+* Added 4 GGA functionals by Capelle et al
+  Refs: L.S.Pedroza et al, PRB 79, 201106 (2009) and
+        M.M.Odashima et al, J. Chem. Theory Comp. 5, 798 (2009)
+
+* Added 2 VDW-DF functionals of 
+        V.R.Cooper, PRB 81, 161104(R) (2010)
+        K. Berland and P. Hyldgaard, PRB 89, 035412 (2014)
+
+* Fixed PW91 and BLYP GGA functionals 
+
+* Improved accuracy of relativistic LDA exchange
+
+* Corrected a minor bug in vdwxc.F90 (parameter nq->mq)
+
+* Updated and extended XC testers
+
+* Added some test outputs in SiestaXC/Testsers/Reference
+
+* m_timer.F90 has been added to SIESTA_SRCS in SiestaXC/makefile
+
+added:
+  Src/SiestaXC/Testers/Reference/
+  Src/SiestaXC/Testers/Reference/test1.out
+  Src/SiestaXC/Testers/Reference/test2.out
+  Src/SiestaXC/Testers/Reference/test3.out
+  Src/SiestaXC/Testers/Reference/test4.out
+  Src/SiestaXC/Testers/test6.f90
+  Src/SiestaXC/Testers/test6.m
+renamed:
+  Src/SiestaXC/Testers/test2.f90 => Src/SiestaXC/Testers/test2.F90
+modified:
+  Docs/CHANGES
+  Docs/siesta.tex
+  Src/SiestaXC/Testers/makefile
+  Src/SiestaXC/Testers/test1.f90
+  Src/SiestaXC/Testers/test2.F90
+  Src/SiestaXC/Testers/test3.F90
+  Src/SiestaXC/Testers/test4.F90
+  Src/SiestaXC/Testers/test5.f90
+  Src/SiestaXC/atomxc.F90
+  Src/SiestaXC/cellxc.F90
+  Src/SiestaXC/ggaxc.f
+  Src/SiestaXC/ldaxc.f
+  Src/SiestaXC/makefile
+  Src/SiestaXC/siestaxc.F90
+  Src/SiestaXC/vdwxc.F90
+  Src/SiestaXC/xcmod.f90
+  Src/xc.f
+

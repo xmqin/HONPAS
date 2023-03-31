@@ -1,0 +1,52 @@
+# -----------------------------------------------------------------------------
+# FDF for diamond-like silicon      
+#
+# -----------------------------------------------------------------------------
+
+SystemName       bulk silicon  
+SystemLabel            Si      
+
+
+NumberOfSpecies        1       
+NumberOfAtoms          2      
+
+#
+User-Basis  .true.
+#
+%block ChemicalSpeciesLabel
+  1  14  Si_sz
+%endblock ChemicalSpeciesLabel
+
+#Change the lattice constant to compute the energy versus the volume.
+LatticeConstant     5.43 Ang
+
+%block LatticeVectors
+  0.000  0.500  0.500
+  0.500  0.000  0.500
+  0.500  0.500  0.000
+%endblock LatticeVectors
+
+kgrid_cutoff        5 Ang
+
+
+MeshCutoff          200.0 Ry  # for better plotting
+
+MaxSCFIterations    50  
+DM.MixingWeight      0.3 
+DM.NumberPulay       3  
+DM.Tolerance         1.d-4
+DM.UseSaveDM
+
+AtomicCoordinatesFormat  ScaledCartesian
+%block AtomicCoordinatesAndAtomicSpecies
+    0.000    0.000    0.000   1 #  Si  1
+    0.250    0.250    0.250   1 #  Si  2
+%endblock AtomicCoordinatesAndAtomicSpecies
+
+WriteMullikenPop        1       
+Save-Rho	.true.
+
+Write-Coor-XMOL .true.
+Use-Save-CG   .true.
+Use-Save-XV   .true.
+

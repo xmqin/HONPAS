@@ -1,0 +1,211 @@
+-----------------------------------------------------------------------
+February 19, 2014  Alberto Garcia siesta-trunk-455--mixrho-4
+Use SVD in DIIS procedure for rho(G) mixing
+
+Use 
+
+debug-diis T
+
+to see debugging information. To turn off SVD, use
+
+  SCF.RhoG.DIIS.UseSVD F
+
+modified:
+  Src/Makefile
+  Src/m_diis.F90
+
+-----------------------------------------------------------------------
+February 19, 2014  Alberto Garcia siesta-trunk-455--mixrho-3
+Bug fixes and option changes in charge-density mixing
+
+* The criterion for participation of a node in the DIIS procedure
+was faulty.
+
+* For spin-polarized systems, the rho(G=0) components were not mixed,
+as they should.
+
+* Several option labels have changed:
+
+The "old"  ThomasFermiK2  option has been renamed to
+
+SCF.Kerker.q0sq  [ physical energy ]
+
+The default remains 0.0 Ry, although the program now prints several
+possible heuristic values:
+
+- The Thomas-Fermi wavevector squared
+- The square of 2*pi/L, where L is the length of the longest cell vector.
+
+SCF.RhoG.DIIS.Cutoff  (physical energy)
+
+determines the sub-set of G vectors which will undergo the DIIS
+procedure.  Default: 9 Ry.
+
+SCF.RhoG.DIIS.Depth
+
+determines the maximum number of previous steps considered in the DIIS
+procedure. Default: 0
+
+SCF.RhoG.Metric.Preconditioner.Cutoff (physical energy)
+
+determines the value of "q1^2" in the weighing of the different G
+components in the scalar products among residuals in the DIIS
+procedure. Following the KF ansatz, this parameter is chosen so that
+the smallest (non-zero) G has a weight 20 times larger than that of
+the smallest G vector in the DIIS set.  Default: The KF prescription.
+
+SCF.DebugRhogMixing
+
+controls the level of debugging output in the mixing procedure
+(basically whether the first few stars worth of Fourier components are
+printed). Default: False.  Note that this feature will only display
+the components in the master node...
+
+modified:
+  Docs/siesta.tex
+  Src/Makefile
+  Src/m_rhog.F90
+  Tests/h2o-rhog-mixing/h2o-rhog-mixing.fdf
+
+
+-----------------------------------------------------------------------
+February 10, 2014  Alberto Garcia siesta-trunk-454--mixrho-2
+Better output and consistency for scf termination options
+
+The program now prints a more accurate summary of the criterion used
+for scf cycle termination.
+
+Note that the criterion for total-energy convergence now uses the free
+electronic energy, which is the appropriate magnitude to monitor in
+the general case of possibly fractional occupancies.
+
+modified:
+  Docs/siesta.tex
+  Src/Makefile
+  Src/m_convergence.f90
+  Src/scfconvergence_test.F
+  Src/siesta_forces.F
+  Src/siesta_options.F90
+  Tests/h2o-rhog-mixing/h2o-rhog-mixing.fdf
+
+-----------------------------------------------------------------------
+February 7, 2014  Alberto Garcia siesta-trunk-454--mixrho-1
+Charge-density mixing
+
+With the fdf option
+
+    MixCharge T
+
+the self-consistent-field convergence acceleration will be carried out
+by mixing the charge density (actually the Fourier-components of the
+charge). Both a simple Kerker-preconditioning and a DIIS procedure with
+a subset of the Fourier components are implemented.
+
+Relvant parameters:
+
+  ThomasFermiK2   (physical energy)
+
+determines the Thomas-Fermi wavevector squared (in Ry) featuring in
+the Kerker mixing, which is always performed on all components of
+rho(G), even those treated with the DIIS scheme. Default: 0 Ry.
+
+
+  RhoGMixingCutoff  (physical energy)
+
+determines the sub-set of G vectors which will undergo the DIIS
+procedure.  Only those with kinetic energies below this cutoff will be
+considered.  The optimal extrapolation of the rho(G) elements will be
+replaced in the fourier series before performing the Kerker
+mixing. Default: 9 Ry.
+
+  RhoG-DIIS-Depth
+
+determines the maximum number of previous steps considered in the DIIS
+procedure. Default: 0
+
+  RhoG-SP-Preconditioner-Cutoff (physical energy)
+
+determines the value of "q1^2" in the weighing of the different G
+components in the scalar products among residuals in the DIIS
+procedure. Following the KF ansatz, this parameter is chosen so that
+the smallest (non-zero) G has a weight 20 times larger than that of
+the smallest G vector in the DIIS set.  Default: The KF prescription.
+
+  DebugDIIS
+
+controls the level of debugging output in the DIIS procedure. Default:
+False.
+
+  DebugRhogMixing
+
+controls the level of debugging output in the mixing procedure
+(basically whether the first few stars worth of Fourier components are
+printed). Default: False.  Note that this feature will only display
+the components in the master node...
+
+  SCF.MixCharge.SCF1
+
+controls whether mixing is done in the first scf step. Default: false. (This
+seems to speed up convergence in some cases. More data is needed.)
+
+ The information about rhog_in and rhog_out in first scf iteration is
+not added to the DIIS history. This seems to improve the convergence.
+
+* Added h2o-rhog-mixing test
+
+Note that the default convergence criteria remains based on the
+differences in the density matrix, but in this case the differences
+are from step to step, not the more fundamental DM_out-DM_in. Perhaps
+some other criterion should be made the default (max |Delta rho(G)|,
+convergence of the free-energy...)
+
+Note that with charge mixing the Harris energy as it is currently
+computed in Siesta loses its meaning, since there is no "DM_in". The
+program prints zeroes in the Harris energy field.
+
+Note that the KS energy is correctly computed throughout the scf cycle,
+as there is an extra step for the calculation of the charge stemming from
+DM_out, which also updates the energies. Forces and final energies are
+correctly computed with the final DM_out, regardless of the setting of 
+the option for mixing after scf convergence.
+
+The mixing flavor should be made into a first-class option variable, instead
+of being encoded in two separate logicals (mix_charge, mixH)...
+
+The new code uses a circular stack implemented using a "reference-counting"
+paradigm. 
+
+added:
+  Src/Fstack.T90
+  Src/Pair.T90
+  Src/basic_type.inc
+  Src/class_Fstack_Pair_Vectors.F90
+  Src/class_Pair_Vectors.F90
+  Src/class_Vector.F90
+  Src/compute_energies.F90
+  Src/compute_rhog.F
+  Src/m_diis.F90
+  Src/m_rhog.F90
+  Src/rhofft.F
+  Tests/h2o-rhog-mixing/
+  Tests/h2o-rhog-mixing/h2o-rhog-mixing.fdf
+  Tests/h2o-rhog-mixing/h2o-rhog-mixing.pseudos
+  Tests/h2o-rhog-mixing/makefile
+modified:
+  Docs/siesta.tex
+  Src/Makefile
+  Src/compute_dm.F
+  Src/dhscf.F
+  Src/final_H_f_stress.F
+  Src/m_energies.F90
+  Src/m_mpi_utils.F
+  Src/post_scf_work.F
+  Src/scfconvergence_test.F
+  Src/setup_hamiltonian.F
+  Src/siesta_end.F
+  Src/siesta_forces.F
+  Src/siesta_init.F
+  Src/siesta_options.F90
+
+
+

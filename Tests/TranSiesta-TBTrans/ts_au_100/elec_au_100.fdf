@@ -1,0 +1,124 @@
+
+SolutionMethod        diagon
+
+SystemName  Au electrode (100)
+SystemLabel elec_au_100
+
+
+
+==================================================
+==================================================
+# SPECIES AND BASIS
+
+# Number of species 
+NumberOfSpecies 1
+%block ChemicalSpeciesLabel
+  1  79 Au 
+%endblock ChemicalSpeciesLabel
+
+PAO.BasisSize    SZP
+PAO.EnergyShift  0.005 Ry
+XC.functional   GGA
+XC.authors      PBE
+
+
+==================================================
+==================================================
+# K-points
+
+%block kgrid_Monkhorst_Pack
+ 2    0    0    0.0
+ 0    2    0    0.0
+ 0    0    10   0.0
+%endblock kgrid_Monkhorst_Pack
+
+
+
+==================================================
+==================================================
+# Structure
+NumberOfAtoms 36
+NumberOfSpecies 1
+LatticeConstant 1.0 Ang
+%block LatticeVectors
+     8.65116      0.00000      0.00000 
+     0.00000      8.65116      0.00000 
+     0.00000      0.00000      8.15640 
+%endblock LatticeVectors
+AtomicCoordinatesFormat  Ang
+%block AtomicCoordinatesAndAtomicSpecies
+     0.00000      0.00000      0.00000 1
+     2.88372      0.00000      0.00000 1
+     5.76744      0.00000      0.00000 1
+     0.00000      2.88372      0.00000 1
+     2.88372      2.88372      0.00000 1
+     5.76744      2.88372      0.00000 1
+     0.00000      5.76744      0.00000 1
+     2.88372      5.76744      0.00000 1
+     5.76744      5.76744      0.00000 1
+     1.44186      1.44186      2.03910 1
+     4.32558      1.44186      2.03910 1
+     7.20930      1.44186      2.03910 1
+     1.44186      4.32558      2.03910 1
+     4.32558      4.32558      2.03910 1
+     7.20930      4.32558      2.03910 1
+     1.44186      7.20930      2.03910 1
+     4.32558      7.20930      2.03910 1
+     7.20930      7.20930      2.03910 1
+     0.00000      0.00000      4.07820 1
+     2.88372      0.00000      4.07820 1
+     5.76744      0.00000      4.07820 1
+     0.00000      2.88372      4.07820 1
+     2.88372      2.88372      4.07820 1
+     5.76744      2.88372      4.07820 1
+     0.00000      5.76744      4.07820 1
+     2.88372      5.76744      4.07820 1
+     5.76744      5.76744      4.07820 1
+     1.44186      1.44186      6.11730 1
+     4.32558      1.44186      6.11730 1
+     7.20930      1.44186      6.11730 1
+     1.44186      4.32558      6.11730 1
+     4.32558      4.32558      6.11730 1
+     7.20930      4.32558      6.11730 1
+     1.44186      7.20930      6.11730 1
+     4.32558      7.20930      6.11730 1
+     7.20930      7.20930      6.11730 1
+%endblock AtomicCoordinatesAndAtomicSpecies
+
+
+==================================================
+==================================================
+# SCF variables
+
+DM.MixSCF1   T
+MaxSCFIterations      300           # Maximum number of SCF iter
+DM.MixingWeight       0.05          # New DM amount for next SCF cycle
+DM.Tolerance          1.d-4         # Tolerance in maximum difference
+DM.UseSaveDM          true          # to use continuation files
+DM.NumberPulay        5
+
+==================================================
+==================================================
+# MD variables
+
+MD.FinalTimeStep 1
+MD.TypeOfRun CG
+MD.NumCGsteps     000
+MD.UseSaveXV      .true.
+
+==================================================
+==================================================
+# Output variables
+
+WriteMullikenPop                1
+WriteBands                      .false.
+SaveRho                         .false.
+SaveDeltaRho                    .false.
+SaveHS                          .false.
+SaveElectrostaticPotential      True 
+SaveTotalPotential              no
+WriteCoorXmol                   .true.
+WriteMDXmol                     .true.
+WriteMDhistory                  .false.
+WriteEigenvalues                yes
+

@@ -1,0 +1,29 @@
+SystemName          Molecule made up of ON hybrids (at x=0.3456)
+SystemLabel         oxyn
+NumberOfAtoms       2
+NumberOfSpecies     1
+
+MeshCutoff 200 Ry
+
+%block ChemicalSpeciesLabel
+ 1  201  ON-0.34560      # Species index, atomic number, species label
+%endblock ChemicalSpeciesLabel
+%block SyntheticAtoms
+ 1                           # Species index
+ 2 2 3 4	             # n quantum numbers for valence states with l=0,1,2,3
+ 2.0 3.3456 0.0 0.0          # occupations of valence states with l=0,1,2,3
+%endblock SyntheticAtoms
+
+DM.NumberPulay 4
+
+Spin.Polarized T
+
+AtomicCoordinatesFormat  Ang
+%block AtomicCoordinatesAndAtomicSpecies
+ 0.000  0.000  0.000  1
+ 0.000  0.000  1.200  1
+%endblock AtomicCoordinatesAndAtomicSpecies
+
+MD.TypeOfRun Broyden
+MD.NumCGSteps 4
+

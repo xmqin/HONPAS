@@ -1,0 +1,567 @@
+%vibra.tex
+%
+%   Manual for the VIBRA package
+
+
+%\documentstyle[twocolumn,prb,aps]{revtex}
+%\documentstyle[prb,aps]{revtex}
+\documentstyle[11pt]{article}
+%\documentstyle{article}
+
+\tolerance 10000
+\textheight 22cm
+\textwidth 16cm
+\oddsidemargin 1mm
+\topmargin -15mm
+
+\baselineskip=14pt
+\parskip 5pt
+\parindent 1em
+
+\begin{document}
+
+% TITLE PAGE --------------------------------------------------------------
+
+\begin{titlepage}
+
+\begin{center}
+
+\vspace{1cm}
+
+{\huge {\sc User's Guide}}
+
+\vspace{3cm}
+
+{\Huge {\bf VIBRA Package, Version 0.3}}
+
+\vspace{3cm}
+
+{\Large {\it July 2006}}
+
+\vspace{3cm}
+
+{\Large Pablo Ordej\'on}
+
+\vspace{5pt}
+
+{\it Institut de Ciencia de Materials de Barcelona, CSIC}
+
+{\it Camus de la UAB, 08193 Barcelona, Spain}
+
+\vspace{5pt}
+
+{\bf ordejon@icmab.es}
+
+
+\end{center}
+
+\end{titlepage}
+
+% END TITLE PAGE --------------------------------------------------------------
+
+%\tableofcontents
+%
+%\newpage
+
+
+
+\section{INTRODUCTION}
+
+\noindent
+The VIBRA package contains a series of programs to compute the
+phonon frequencies and modes of atomic systems. It contains two 
+programs:
+
+\begin{itemize}
+\item
+FCBUILD:  Builds a supercell to compute the dynamical matrix 
+by means of your favourite total energies and forces (TEF)
+program (typically SIESTA).
+\item
+VIBRA:  Reads the force constants calculated
+by your favourite total energies and forces
+program (typically SIESTA), and computes the phonon spectrum.
+\end{itemize}
+
+\noindent
+To calculate the phonons of a given system, you must follow
+several steps. 
+
+\noindent
+First of all, you need to build a supercell
+to compute the force constants matrix in real space.
+This is done with FCBUILD.
+The size of the supercell depends on several issues:
+
+\begin{itemize}
+
+\item[$\bullet$]  Whether  the phonons are to be
+computed in the $\Gamma$-point ({\bf q}=0), or at any other
+points in the Brillouin zone.
+For $\Gamma$-point phonons, the supercell can be 
+just the unit cell.
+
+\item[$\bullet$]  If non-$\Gamma$-point phonons are computed,
+the supercell depends on 
+whether there is periodicity in the direction
+of each lattice vector.  Only systems with periodicity need
+supercells in the direction of the periodicity.
+For instance, a cluster will not require any supercell (just the unit
+cell). A chain (like a polymer) will require 
+to construct a supercell in the direction of the chain
+(in the other two, directions, just use the unit cell).
+For a 3D crystal, a supercell should be built in all three
+directions. 
+
+
+\item[$\bullet$]  If a supercell (different from the unit cell)
+has to be built,
+it should be large enough so that it contains distant
+neighbors. The dynamical matrix will be computed 
+between the atoms in the unit cell in the center of
+the supercell, and all the other atoms of the supercell. The
+supercell should contain enough atoms so that all
+non-neglegible elements of the dynamical matrix
+are computed.   The range in real space in which
+the dynamical matrix decays to cero varies widely
+from system to system!!.
+
+\end{itemize}
+
+\noindent
+After the supercell is created, you must compute the
+force constants matrix between the atoms in the
+central unit cell in the supercell and all the other
+atoms of the supercell.  This should be done
+with your favourite TEF
+program (SIESTA, for instance).  It can be
+done with finite differences or with linear response.
+Your TEF program should provide a file with the
+calculated force constants, to be used by VIBRA to determine
+the phonon frequencies.
+
+\noindent
+Once the force constants are calculated, you can use
+the VIBRA program to build the dynamical matrix
+from the force constants, diagonalize it, and obtain
+the phonon frequencies and eigenmodes.
+
+\section{PROGRAMS DESCRIPTION}
+
+\begin{description}
+\itemsep 10pt
+\parsep 0pt
+
+\item[{\bf FCBUILD}]:
+
+\noindent
+This program prepares the coordinates of a Supercell 
+that will serve as input for your favourite Total Energies
+and Forces (TEF) program (typically SIESTA), that will
+compute the force constant matrix.
+
+\noindent
+It reads information on the unit cell of the system under
+consideration (lattice constant, lattice vectors, atomic
+coordinates, etc), and prepares a supercell with the
+dimensions defined by the user. 
+
+\noindent
+It serves for clusters, chains, slabs and crystals.
+The number of repetitions of the unit cell can
+be defined independently in the direction of each
+lattice vector. The suprecell is defined by
+repeating the unit cell in a given number of shells,
+in the directions of each unit vector.
+
+\noindent
+See the Examples section for tips on how to prepare
+the supercell, for different systems.
+
+\noindent
+FCBUILD generates an output file in FDF format,
+to be read directly by your favourite TEF
+program (like SIESTA). 
+
+\item[{\bf VIBRA}]:
+
+\noindent
+This program reads the Supercell information (the same
+input as fcbuild), and the force constants matrix
+generated by your favourite TEF
+program (typically SIESTA). With this information,
+vibra computes the phonon spectrum.
+
+\noindent
+The code allows to calculate phonon dispersion relations
+in any direction in the Brillouin zone.
+
+\end{description}
+
+
+
+\section{COMPILING THE PROGRAMS}
+
+\noindent
+The compilation of the programs is done using a Makefile
+that is provided with the code. Type 'make' after having
+compiled Siesta in the main Src directory, and everything
+should work.
+
+\noindent
+There is  one parameter file which contain
+parameters necessary for both codes in the package:
+
+\begin{itemize}
+
+\item[$\bullet$] {\bf vibra.h:}
+This file contains parameters which are used
+to define the maximum dimensions of the variables defined 
+by the codes of this package. 
+The parameters specified should be larger than
+those of the physical system under study.  However, if you 
+specify numbers smaller than needed, the code will stop, 
+and will give you an error message specifying the correct
+dimensions that you need to change in the vibra.h file.
+(This restriction will be lifted in future versions of
+the programs.)
+
+\end{itemize}
+
+
+\section{INPUT DATA FILES}
+
+\subsection{The Flexible Data Format (FDF) Input File}
+
+\noindent
+The main input file, which is read as the standard input (unit 5),
+contains all the physical data of the system and the parameters of 
+the simulation to be performed (the assignment of the standard
+input to this file is usually done by the rsiesta shell script).
+This file is written in a special format called FDF, developed by 
+Alberto Garcia and Jos\'e M. Soler. This format allows data to be 
+given in any order, or to be omitted in favor of default values.
+
+\noindent
+In the current version of VIBRA, data are 
+supplied in FDF-0.6 language.
+Please, refer to documentation in the top Src/fdf for details.
+
+\noindent
+The two programs in the VIBRA package (FCBUILD and VIBRA)
+share the same FDF input file. 
+Here follows a description of the variables that you can
+define in this file, with their data types and
+default values.
+
+\vspace{5pt}
+
+\begin{description}
+\itemsep 10pt
+\parsep 0pt
+
+\item[{\bf SystemName}] ({\it string}): 
+A string of one or several words containing a descriptive
+name of the system (max. 150 characters). 
+
+{\it Default value:} blank
+
+\item[{\bf SystemLabel}] ({\it string}): 
+A {\bf single} word (max. 20 characters {\bf without blanks})
+containing a nickname of the system, used to name output files.
+
+{\it Default value:} vibra
+
+\item[{\bf Vibra.FC}] ({\it filename}): 
+A filename for the force-constant matrix.
+
+{\it Default value:} \textbf{SystemLabel.FC}
+
+\item[{\bf NumberOfAtoms}] ({\it integer}):
+ Number of atoms in the unit cell.
+{\it Default value:} There is no default. You must supply this variable.
+
+\item[{\bf LatticeConstant}] ({\it real length}): Lattice constant
+of the unit cell.
+This is just to define the scale of the lattice vectors.
+
+{\it Default value:} There is no default. You must supply this variable.
+
+\item[{\bf LatticeParameters}] ({\it data block}):
+Crystallographic way of specifying the lattice vectors
+of the unit cell, by giving
+six real numbers: the three vector modules, $a$, $b$, and $c$, and
+the three angles $\alpha$ (angle between $\vec b$ and $\vec c$),
+$\beta$, and $\gamma$. The three modules are in units of 
+{\bf LatticeConstant}, the three angles are in degrees.
+
+{\it Default value:}
+\begin{verbatim}
+           1.0   1.0   1.0    90.   90.  90.
+\end{verbatim}
+\noindent
+(see the following)
+
+\item[{\bf LatticeVectors}] ({\it data block}): 
+The unit cell vectors are read 
+in units of the lattice constant defined above. 
+They are read as a matrix {\tt CELL(ixyz,ivector)}, each vector being
+one line.
+
+{\it Default value:} 
+\begin{verbatim}
+            1.0    0.0    0.0 
+            0.0    1.0    0.0 
+            0.0    0.0    1.0 
+\end{verbatim}
+\noindent
+If the {\bf LatticeConstant} default is used, the default of 
+{\bf LatticeVectors} is still diagonal but not necessarily cubic.
+
+
+\item[{\bf AtomicCoordinatesFormat}] ({\it string}): 
+Character string to specify the format of the atomic positions in
+input. These can be expressed in four forms:
+\begin{itemize}
+\item {\tt NotScaledCartesianBohr} (atomic positions are given directly in
+Bohr, in cartesian coordinates)
+\item {\tt NotScaledCartesianAng} (atomic positions are given directly in
+Angstrom, in cartesian coordinates)
+\item {\tt ScaledCartesian} (atomic positions are given 
+in cartesian coordinates, in units of the lattice constant)
+\item {\tt Fractional} or {\tt ScaledByLatticeVectors} (atomic positions 
+are given referred to the lattice vectors)
+\end{itemize}
+
+{\it Default value:} {\tt NotScaledCartesianBohr}
+
+
+
+\item[{\bf AtomicCoordinatesAndAtomicSpecies}] ({\it data block}): 
+The reading is done this way:
+\begin{verbatim}
+       From ia = 1 to natoms
+            read: xa(ix,ia), isa(ia), xmass(ia)
+\end{verbatim}
+where {\tt xa(ix,ia)} is the {\tt ix} coordinate of atom 
+{\tt iai}, {\tt isa(ia)} is the species index of atom {\tt ia}, and
+{\tt xmass(ia)} is the atomic mass  index of atom {\tt ia}.
+
+\item[{\bf SuperCell\_1}] ({\it integer}): 
+Defines the Supercell:
+number of shells in which the unit cell is repeated in the 
+direction of the first lattice vector (both left and right). For
+example, a value of 1 will result in a multiplication factor of 3
+(unit cell plus one more unit cell on each side).
+
+{\it Default value:} 0 (Supercell = unit cell)).
+
+\item[{\bf SuperCell\_2}] ({\it integer}): 
+Defines the Supercell:
+number of shells in which the unit cell is repeated in the 
+direction of the second lattice vector. (Same as above)
+
+{\it Default value:} 0 (Supercell = unit cell)).
+
+\item[{\bf SuperCell\_3}] ({\it integer}): 
+Defines the Supercell:
+number of shells in which the unit cell is repeated in the 
+direction of the third lattice vector.  (Same as above)
+
+{\it Default value:} 0 (Supercell = unit cell)).
+
+\item[{\bf AtomicDispl}] ({\it real length}): 
+Specifies the amount in which the atoms are displaced
+for the finite difference calculation of the dynamical
+matrix.
+
+{\it Default value:} {\tt 0.04 Bohr}
+
+\item[{\bf BandLinesScale}] ({\it string}): 
+Specifies the scale of the k vectors given in {\bf BandLines} below.
+The options are:
+\begin{itemize}
+\item {\tt pi/a} (k-vector coordinates are given in cartesian 
+coordinates, in units of $\pi/a$, where $a$ is the lattice constant)
+\item {\tt ReciprocalLatticeVectors} (k vectors are given in
+reciprocal-lattice-vector coordinates)
+\end{itemize}
+
+{\it Default value:} {\tt pi/a}
+
+
+\item[{\bf BandLines}] ({\it data block}): 
+Specifies the lines along which dispersion relations are calculated
+(usually along high-symmetry directions).
+An example for an FCC lattice is:
+
+\begin{verbatim}
+     %block BandLines
+       1  1.000  1.000  1.000  L        # Begin at L
+      20  0.000  0.000  0.000  \Gamma   # 20 points from L to gamma
+      25  2.000  0.000  0.000  X        # 25 points from gamma to X
+      30  2.000  2.000  2.000  \Gamma   # 30 points from X to gamma
+     %endblock BandLines
+\end{verbatim}
+
+where the last column is an optional LaTex label for use in the band plot.
+If only given points (not lines) are required, simply specify 1 in the
+first column of each line. The first column of the first line must be 
+always 1.
+
+{\it Default value:} {Only k=0 (Gamma) Point}
+
+\item[{\bf Eigenvectors}] ({\it logical}): If {\tt true} both eigenvalues
+and eigenvectors are computed. If {\tt false},  only eigenvalues
+are obtained.
+
+{\it Default value:} false
+
+\item[{\bf Intensities}] ({\it logical}): If {\tt true} then the Infra-Red
+intensities are computed. In order to do this the Born effective charges
+must have been computed along with the force constants and the .BC file
+must be present in the current directory. The intensities are estimated 
+according to formula (6) in the paper by Fernandez-Torre et al in J. Phys.
+Chem. A, 108, 10535-10541 (2004).
+
+{\it Default value:} false
+
+\end{description}
+
+
+\subsection{The Force Constants File}
+
+\noindent
+This file is needed to run VIBRA (it is not required for
+FCBUILD).  
+
+\noindent
+The file must contain the force constants matrix calculated
+by your TEF program. The contents of this file
+are the force constants between the atoms in the central
+unit cell of the supercell, and all the rest of the
+atoms in the cell. 
+
+\noindent
+The name of this file must be SysLabel.FC
+
+\noindent
+{\it Note:} Siesta provides this file with the appropriate
+format, with the name SysLabel.FC
+
+\section{OUTPUT FILES}
+
+The following are output files for FCBUILD and VIBRA:
+
+\subsection{Standard output}
+Information on the program execution is dumped to the standard
+output, as well as ERROR and WARNING messages.
+
+
+\subsection{Used parameters}
+The file {\it out.fdf} contains all the parameters used by FCBUILD
+or VIBRA
+in a given run, both those specified in the input fdf file and
+those taken by default. They are written in fdf format, so that
+you may reuse them as input directly. Input data blocks are 
+copied to the out.fdf file only if you specify the {\it dump} option
+for them.
+
+\subsection{Supercell Data}
+(file FC.fdf)
+This is the main output of FCBUILD. It contains the supercell
+information (in FDF format), to be used by your TEF program
+to calculate the force constants matrix.
+The information it contains is:
+
+\begin{description}
+\itemsep 10pt
+\parsep 0pt
+
+\item[{\bf NumberOfAtoms}]: 
+The number of atoms of the Supercell.
+
+\item[{\bf LatticeConstant}]: The Lattice constant
+of the Supercell.
+
+\item[{\bf LatticeVectors}]: 
+The supercell vectors 
+in units of the supercel lattice constant.
+
+\item[{\bf AtomicCoordinatesFormat}]:  To indicate the format
+in which the atomic coordinates of the supercell are printed.
+
+\item[{\bf AtomicCoordinatesAndAtomicSpecies}]: Atomic coordinates
+of the supercell
+
+\item[{\bf MD.TypeOfRun  FC}]: Indicates your TEF program to
+perform a Force Constant calculation (compatible with SIESTA input)
+
+\item[{\bf MD.FCfirst}]: Indicates your TEF program to
+the index of the first atom in the central unit cell
+of the supercell
+(compatible with SIESTA input)
+
+\item[{\bf MD.FClast}]: Indicates your TEF program to
+the index of the last atom in the central unit cell
+of the supercell
+(compatible with SIESTA input)
+
+\item[{\bf MD.FCdispl}]: Displacement of each atom,
+for finite difference calculation of force constant matrix
+(compatible with SIESTA input)
+
+\end{description}
+ 
+\subsection{Phonon Frequencies}
+(file SystemLabel.bands) 
+This is the main output file
+of VIBRA. It contains the mode frequencies (in cm-1) for each k-point.
+The format of this file is the same as the band output in SIESTA
+(so there have been included some extra lines for compatibility)
+
+\noindent
+0.0 (not used; included for compatibility with SIESTA)  \\
+kmin, kmax (along the k-lines path, i.e. range of k in the band plot) \\
+wmin, wmax (range of all frequencies) \\
+NumberOfBands, 1, NumberOfkPoints \\
+k1, ((ek(iband,ispin,1),iband=1,NumberOfBands),ispin=1,NumberOfSpins) \\
+k2, ek \\
+ . \\
+ . \\
+ . \\
+klast, ek \\
+NumberOfkLines \\
+kAtBegOfLine1, kPointLabel \\
+kAtEndOfLine1, kPointLabel \\
+  . \\
+  . \\
+  . \\
+kAtEndOfLastLine, kPointLabel \\
+
+\noindent
+See the {\bf BandLines} data descriptor above for more information.
+
+
+\subsection{Phonon Eigenvectors}
+(file SystemLabel.vectors) 
+It contains the eigenmodes for each k-point.
+The format of this file is  self-explanatory:
+for each k point, it provides:
+
+\noindent
+(from first to last k point:) \\
+   \indent k point (in bohr$^{-1}$) \\
+   \indent (from first to last eigenstate:) \\
+    \indent  \indent index of eigenstate; frequency \\
+     \indent \indent  real part of eigenvector (each line are the three
+       coordinates of each atom)\\
+     \indent \indent  imaginary part of eigenvector (each line are the three
+    coordinates of each atom)\\
+
+\end{document}
+
+
+
+      
+

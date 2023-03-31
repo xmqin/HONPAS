@@ -1,0 +1,26 @@
+SystemName          Water molecule -- Example of NetCDF DMHS history
+SystemLabel         h2o_netcdf
+NumberOfAtoms       3
+NumberOfSpecies     2
+
+Write.DM.History.Netcdf T
+Write.DMHS.History.Netcdf T
+
+MeshCutoff  50 Ry
+
+%block ChemicalSpeciesLabel
+ 1  8  O      # Species index, atomic number, species label
+ 2  1  H
+%endblock ChemicalSpeciesLabel
+
+AtomicCoordinatesFormat  Ang
+%block AtomicCoordinatesAndAtomicSpecies
+ 0.000  0.000  0.000  1
+ 0.757  0.586  0.000  2
+-0.757  0.586  0.000  2
+%endblock AtomicCoordinatesAndAtomicSpecies
+
+save-rho T
+save-delta-rho T
+save-total-potential T
+save-hs T

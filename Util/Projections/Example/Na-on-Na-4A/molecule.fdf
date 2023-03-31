@@ -1,0 +1,31 @@
+system-label molecule
+NumberOfSpecies  1
+%block ChemicalSpeciesLabel
+  1  11   Na
+%endblock ChemicalSpeciesLabel
+LatticeConstant 1.0 Ang
+%block LatticeVectors
+    11.95010460     0.00000000     0.00000000
+     0.00000000     8.45000000     0.00000000
+     0.00000000     0.00000000    23.90020920
+%endblock LatticeVectors
+NumberOfAtoms   1
+AtomicCoordinatesFormat Ang
+%block AtomicCoordinatesAndAtomicSpecies
+     5.97505230     4.22500000     4.00000000  1
+%endblock AtomicCoordinatesAndAtomicSpecies
+# ----- Options follow ---
+xc.functional LDA
+
+PAO.BasisSize SZP
+DM.NumberPulay         3
+
+Meshcutoff 100.0 Ry
+ElectronicTemperature  1000.0 K
+Use-New-Diagk T
+xc.authors CA
+SaveHS T
+
+%block WaveFuncKPoints              
+     0.000  0.000  0.000  from 1 to 2   # Gamma wavefuncs HOMO, LUMO
+%endblock WaveFuncKPoints

@@ -1,0 +1,21 @@
+Grid file utilities. User-specified mesh sizes
+
+Two new programs are available to generate grid files
+(density, potential):
+
+-- grid_rotate: cyclically rotates the coordinates of
+                a grid file.
+-- grid_supercell: generates the grid file appropriate
+                   for a supercell.
+
+The user can now specify the mesh sizes to be used
+by the program, by inserting a block definition in 
+the fdf file:
+
+%block Mesh-sizes
+  40 56 120
+%endblock Mesh-sizes
+
+This feature is useful when coupled to the above utilities,
+since the "magic" fft numbers might not be appropriate.
+

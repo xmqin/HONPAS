@@ -1,0 +1,36 @@
+# File for gnuplot's plotting of contours out of 2D grid
+#
+# set output 'cont.ps'
+#
+# for postscript
+#
+# set term postscript
+set size 8./10.,8./7.
+#
+# for latex
+# set term latex
+# set size 5./5.,5./3.
+#
+# surface and contour settings
+#
+set parametric
+set view 0, 0, 1, 1
+set nosurface
+set contour base
+set noclabel
+# set cntrparam linear
+set cntrparam bspline
+set cntrparam order 4
+set cntrparam points 20
+# set cntrparam levels incremental -.25,.025,.25
+set cntrparam levels auto 20
+#
+# miscellanea
+#
+set nokey
+set noxtics
+set noytics
+set noztics
+#
+splot 'file.2d' w l 1
+pause -1

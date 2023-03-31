@@ -1,0 +1,33 @@
+
+Automated tests for Siesta.
+
+**Please note that these are meant to execute quickly, and so in most
+cases use parameters which are not appropriate for a converged
+calculation.**
+
+
+A copy of the Tests directory is placed by the Src/obj_setup.sh script
+into the compilation directory (which by default is Obj, but any number of
+compilation directories can be created, as explained in the manual --
+we will refer to this compilation directory as OBJDIR). The original
+Tests directory should therefore be kept clean, and all the work done
+in the relevant copy.
+
+Assuming that Siesta has been compiled in OBJDIR, go into any test
+subdirectory of OBJDIR/Tests and type 'make'
+
+Reference output files can be found in directory Reference.
+
+To use a different Siesta executable (i.e., other than the default,
+which is the one compiled in OBJDIR), use:
+
+make SIESTA=/full/path/to/siesta
+
+This technique is also useful for other execution environments. For
+example, to run OBJDIR/siesta in parallel (assuming the right path
+and libraries for mpirun are set):
+
+make SIESTA="mpirun -np 2 ../../../siesta"
+
+
+The TranSiesta tests are grouped under the TranSiesta-TBTrans directory.

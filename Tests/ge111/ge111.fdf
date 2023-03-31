@@ -1,0 +1,606 @@
+# Slab de Germanio en la dirección (111), reconstrucción c(2x8)
+# Oscar Paz, Mayo 2004
+
+
+
+##### GENERAL SYSTEM DESCRIPTORS ###############################################
+
+SystemName		Slab Ge(111)-c(2x8)
+ # Default value: blank
+
+SystemLabel		ge111
+ # Default value: siesta
+
+NumberOfAtoms		74
+
+NumberOfSpecies	2
+
+%block ChemicalSpeciesLabel
+	1	32	Ge	# Species index, atomic number, species label
+	2	1	H
+%endblock ChemicalSpeciesLabel
+
+#%block PhononLabels
+#%endblock PhononLabels
+
+#%block AtomicMass
+#%endblock AtomicMass
+ # Default: (Block absent or empty) Natural masses assumed
+ #  For ghost atoms (floating orbitals), a default of 1.d30 a.u. is assigned
+
+#NetCharge
+# Default value: 0.0
+
+
+
+##### BASIS DEFINITION #########################################################
+
+PAO.BasisType		split
+ # Default value: split
+ #  * split: Split-valence scheme for multiple-zeta
+ #  * splitgauss: Same as split but using gaussian functions
+ #  * nodes: Generalized PAO's
+ #  * nonodes: The original PAO's are used
+
+PAO.BasisSize		SZ
+ # Default value: STANDARD
+ #  * SZ or MINIMAL: minimal or single-zeta basis
+ #  * DZ: Double zeta basis, in the scheme defined by PAO.BasisType
+ #  * SZP: Single-zeta basis plus polarization orbitals
+ #  * DZP or STANDARD: Like DZ plus polarization orbitals
+
+#%block PAO.BasisSizes
+#%endblock PAO.BasisSizes
+
+PAO.EnergyShift	200 meV
+ # Default value: 0.02 Ry
+
+#PAO.SplitNorm		0.30
+ # Default value: 0.15
+
+#%block PS.lmax
+#%endblock PS.lmax
+ # Default: (Block absent or empty). Maximum angular momentum of the basis
+ #  orbitals plus one
+
+#%block PS.KBprojectors
+#%endblock PS.KBprojectors
+ # Default: (Block absent or empty). Only one KB projector, constructed from
+ #  the nodeless eigenfunction, used for each angular momentum
+
+%Block PAO.Basis
+# Base optimizada para Ge volumen.
+# Equivalente a una base DZP con P=0.2 GPa.
+Ge   3      0.04954
+ n=4   0   2   E    97.22253     4.26445
+     5.11114     4.12202
+     1.00000     1.00000
+ n=4   1   2   E    45.45937     6.19584
+     6.89324     3.91858
+     1.00000     1.00000
+ n=4   2   1   E   125.63761     2.98993
+     3.88236
+     1.00000
+# Hidrogeno saturador de la capas del slab de Ge.
+# Base estandar para H.
+H   1
+ n=1   0   1
+     0.00000
+     0.75000
+%EndBlock PAO.Basis
+
+
+#%block PAO.Basis
+#%endblock PAO.Basis
+ # Define Basis set
+ #  Label, l_shells, type (opt), ionic_charge (opt)
+ #  n (opt if not using semicore levels), l, Nzeta
+ #      rc(izeta=1,Nzeta)(Bohr)
+ #      scaleFactor(izeta=1,Nzeta) (opt)
+ #  l, Nzeta, PolOrb (opt), NzetaPol (opt)
+ #      rc(izeta=1,Nzeta)(Bohr)
+
+
+
+##### LATTICE, COORDINATES, k-SAMPLING #########################################
+
+LatticeConstant	5.636 Ang
+ # Default value: Minimum size to include the system without intercell
+ #  interactions, plus 10%
+
+#%block LatticeParameters
+#%endblock LatticeParameters
+ # Default value: 1.0  1.0  1.0  90.  90.  90.
+
+%block LatticeVectors
+	2.449490	-0.707107	0.000000
+	0.000000	1.414214	0.000000
+	0.000000	0.000000	9.000000
+%endblock LatticeVectors
+ # Default value:
+ #  1.0  0.0  0.0 
+ #  0.0  1.0  0.0 
+ #  0.0  0.0  1.0
+
+AtomicCoordinatesFormat	Ang
+ # Default value: NotScaledCartesianBohr
+ #  * Bohr or NotScaledCartesianBohr
+ #  * Ang or NotScaledCartesianAng
+ #  * ScaledCartesian
+ #  * Fractional or ScaledByLatticeVectors
+
+#AtomCoorFormatOut
+ # Default value: value of AtomicCoordinatesFormat
+
+#AtomicCoordinatesOrigin
+ # Default value: 0.000  0.000  0.000
+
+%block AtomicCoordinatesAndAtomicSpecies
+    1.13306569    6.08759068    1.49572114   1  Ge         1
+    8.01257546    2.10731543    1.47086922   1  Ge         2
+    3.39198286    2.12488785    0.75483127   1  Ge         3
+   10.39132532   -1.88312730    0.74993955   1  Ge         4
+    0.00337891    7.95131558    0.09494128   1  Ge         5
+    3.31967651    6.10982121    0.08923652   1  Ge         6
+    0.00882013    4.22697222    0.09233780   1  Ge         7
+    6.90512463    4.03941459    0.11068118   1  Ge         8
+   10.12892225    2.09828939    0.01982515   1  Ge         9
+    6.91142637    0.20933071    0.08871520   1  Ge        10
+    1.14935031    6.09263126   -1.10667922   1  Ge        11
+    4.48108807    3.98821416   -0.45343168   1  Ge        12
+    1.21577368    2.10390483   -0.43584764   1  Ge        13
+    4.48665942    0.26019904   -0.44362379   1  Ge        14
+    7.91426016    2.13518745   -1.12392987   1  Ge        15
+   11.39363865    0.04219222   -0.46457712   1  Ge        16
+    8.20966044   -1.86593836   -0.45120560   1  Ge        17
+   11.38880541   -3.81489318   -0.46405942   1  Ge        18
+    1.11958328    6.08709717   -3.50473462   1  Ge        19
+    4.57569976    4.08741696   -2.96380295   1  Ge        20
+    1.14769939    2.10740060   -2.95202552   1  Ge        21
+    4.56895551    0.11538619   -2.95583797   1  Ge        22
+    8.03365765    2.10169048   -3.51821050   1  Ge        23
+   11.46999843    0.11047118   -2.97588333   1  Ge        24
+    8.05270639   -1.87905483   -2.96075119   1  Ge        25
+   11.47286399   -3.87640640   -2.97359825   1  Ge        26
+    1.10440000    2.10020000  -10.35730000   1  Ge        27
+   -1.19976181    2.10071383   -9.59034803   1  Ge        28
+   -1.21487822    2.10226505   -7.17848301   1  Ge        29
+   -0.04487390    4.06413862   -6.35056732   1  Ge        30
+   -0.07085792    4.01405071   -3.91155619   1  Ge        31
+    4.55570000    0.10760000  -10.35730000   1  Ge        32
+    2.25671427    0.10850355   -9.56325335   1  Ge        33
+    2.26873007    0.11424828   -7.12928279   1  Ge        34
+    3.41826958    2.10241582   -6.28508324   1  Ge        35
+    3.43346061    2.10079748   -3.83523804   1  Ge        36
+    8.00710000   -1.88500000  -10.35730000   1  Ge        37
+    5.70875243   -1.88528603   -9.61668791   1  Ge        38
+    5.71919052   -1.88092904   -7.21614802   1  Ge        39
+    6.85490939    0.08303024   -6.34971767   1  Ge        40
+    6.83123037    0.02933439   -3.90841386   1  Ge        41
+   11.45840000   -3.87770000  -10.35730000   1  Ge        42
+    9.15882270   -3.87651107   -9.56654665   1  Ge        43
+    9.17044904   -3.87345496   -7.13499557   1  Ge        44
+   10.31535561   -1.88414076   -6.29228547   1  Ge        45
+   10.33564073   -1.88447758   -3.84303241   1  Ge        46
+    1.10440000    6.08550000  -10.35730000   1  Ge        47
+   -1.18979553    6.08626008   -9.57864241   1  Ge        48
+   -1.15502001    6.08887260   -7.15718833   1  Ge        49
+   -0.04562788    8.11352895   -6.34466822   1  Ge        50
+   -0.06493808    8.16584663   -3.90349302   1  Ge        51
+    4.55570000    4.09280000  -10.35730000   1  Ge        52
+    2.25680395    4.09220944   -9.56386444   1  Ge        53
+    2.27135510    4.08937498   -7.13029135   1  Ge        54
+    3.45094910    6.08823445   -6.35622820   1  Ge        55
+    3.51006126    6.08576575   -3.91608637   1  Ge        56
+    8.00710000    2.10020000  -10.35730000   1  Ge        57
+    5.70700043    2.10049961   -9.56082248   1  Ge        58
+    5.71173194    2.10269411   -7.12468596   1  Ge        59
+    6.85408974    4.12461750   -6.35211278   1  Ge        60
+    6.84020594    4.18121724   -3.91151767   1  Ge        61
+   11.45840000    0.10760000  -10.35730000   1  Ge        62
+    9.15857387    0.10645483   -9.56568932   1  Ge        63
+    9.17133540    0.10531654   -7.13362360   1  Ge        64
+   10.35606937    2.10215590   -6.36426397   1  Ge        65
+   10.41674061    2.10316115   -3.93505491   1  Ge        66
+    1.10440000    2.10020000  -11.89330000   2  H     67
+    4.55570000    0.10760000  -11.89330000   2  H     68
+    8.00710000   -1.88500000  -11.89330000   2  H     69
+   11.45890000   -3.87770000  -11.89330000   2  H     70
+    1.10430000    6.08520000  -11.89330000   2  H     71
+    4.55560000    4.09260000  -11.89330000   2  H     72
+    8.00690000    2.10000000  -11.89330000   2  H     73
+   11.45890000    0.10760000  -11.89330000   2  H     74
+%endblock AtomicCoordinatesAndAtomicSpecies
+
+#%block AtomicCoordinatesAndAtomicSpecies
+#%endblock AtomicCoordinatesAndAtomicSpecies
+
+#%block SuperCell
+#%endblock SuperCell
+
+%block GeometryConstraints
+	position 27
+	position 32
+	position 37
+	position 42
+	position 47
+	position 52
+	position 57
+	position 62
+	position from 67 to 74
+%endblock GeometryConstraints
+ # Default value: No constraints
+
+kgrid_cutoff		15 Ang
+ # Default value: 0.0 Bohr
+
+#%block kgrid_Monkhorst_Pack
+#%endblock kgrid_Monkhorst_Pack
+ # Default value: Gamma point
+
+#BandLinesScale
+ # Default value: pi/a
+
+#%block BandLines
+#%endblock BandLines
+ # Default value: No band energies calculated
+
+
+
+##### DFT, GRID, SCF ###########################################################
+
+#Harris_functional	.true.
+ # Default value: .false.
+
+XC.functional		LDA
+ # Default value: LDA
+ #  * LDA
+ #  * GGA
+
+XC.authors		CA
+ # Default value: PZ
+ #  * CA equivalent to PZ. Local density approx.
+ #  * PW92. Local density approximation.
+ #  * PBE. Generalized gradients approximation.
+
+#SpinPolarized		.true.
+ # Default value: .false.
+
+#NonCollinearSpin	.true.
+ # Default value: .false.
+
+#FixSpin		.true.
+ # Default value: .false.
+
+#TotalSpin
+ # Default value: 0.0
+
+MeshCutoff		200 Ry
+ # Default value: 50 Ry
+
+#DM.MixingWeight	0.15
+ # Default value: 0.25
+
+DM.NumberPulay	3
+ # Default value: 0
+
+#DM.PulayOnFile	.true.
+ # Default value: .false.
+
+DM.NumberKick		15
+ # Default value: 0
+
+#DM.KickMixingWeight
+ # Default value: 0.50
+
+#DM.MixSCF1		.true.
+ # Default value: .false.
+
+#DM.Tolerance		1.0d-5
+ # Default value: 10**-4
+
+#DM.InitSpinAF		.true.
+ # Default value: .false.
+
+#%block DM.InitSpin
+#%endblock DM.InitSpin
+ # Atom index, spin, theta, phi (deg)
+
+#NeglNonOverlapInt	.true.
+ # Default value: .false.
+
+#%block ExternalElectricField
+#%endblock ExternalElectricField
+
+#%block PolarizationGrids
+#%endblock PolarizationGrids
+
+#%block GridCellSampling
+#	0.500000	0.500000	0.500000
+#	0.500000	0.500000	0.000000
+#	0.000000	0.500000	0.500000
+#	0.500000	0.000000	0.500000
+#%endblock GridCellSampling
+
+
+
+##### EIGENVALUE PROBLEM: DIAGONALIZATION OR ORDER-N ###########################
+
+SolutionMethod	diagon
+ # Default value: diagon for 100 atoms or less,
+ #  Order-N for more than 100 atoms
+
+#ElectronicTemperature	1000 K
+ # Default value: 300 K
+
+#ON.functional
+ # Default value: Kim
+ #  * Kim
+ #  * Ordejon-Mauri
+ #  * files
+
+#ON.MaxNumIter
+ # Default value: 1000
+
+#ON.etol
+ # Default value: 10**-8
+
+#ON.eta
+ # Default value: 0.0 eV
+
+#ON.RcLWF
+ # Default value: 9.5 Bohr
+
+#ON.ChemicalPotential	.true.
+ # Default value: .false.
+
+#ON.ChemicalPotentialUse	.true.
+ # Default value: .false.
+
+#ON.ChemicalPotentialRc
+ # Default value: 9.5 Bohr
+
+#ON.ChemicalPotentialTemperature
+ # Default value: 0.05 Ry
+
+#ON.ChemicalPotentialOrder
+ # Default value: 100
+
+
+
+##### MOLECULAR DYNAMICS AND RELAXATIONS #######################################
+
+MD.TypeOfRun		CG
+ # Default value: Verlet (CG for one atom systems)
+ #  * CG
+ #  * Verlet
+ #  * Nose
+ #  * ParrinelloRahman
+ #  * NoseParrinelloRahman
+ #  * Anneal
+ #  * FC
+ #  * Phonon
+
+#MD.VariableCell	.true.
+ # Default value: .false.
+
+MD.NumCGsteps	  0	
+ # Default value: 0
+
+MD.MaxCGDispl		0.2 Ang
+ # Default value: 0.2 Bohr
+
+#MD.PreconditionVariableCell	
+ # Default value: 5.0 Ang
+
+MD.MaxForceTol	0.02 eV/Ang
+ # Default value: 0.04 eV/Ang
+
+#MD.MaxStressTol
+ # Default value: 1.0 GPa
+
+#MD.InitialTimeStep
+ # Default value: 1
+
+#MD.FinalTimeStep
+ # Default value: 1
+
+#MD.LengthTimeStep
+ # Default value: 1.0 fs
+
+#MD.InitialTemperature
+ # Default value: 0.0 K
+
+#MD.Quench		.true.
+ # Default value: .false.
+
+#MD.TargetTemperature
+ # Default value: 0.0 K
+
+#MD.TargetPressure
+ # Default value: 0.0 GPa
+
+#%block MD.TargetStress
+#%endblock MD.TargetStress
+ # Default value: Hydrostatic target pressure:
+ #  -1., -1., -1., 0., 0., 0.
+
+#MD.NoseMass
+ # Default value: 100.0 Ry*fs**2
+
+#MD.ParrinelloRahmanMass
+ # Default value: 100.0 Ry*fs**2
+
+#MD.AnnealOption
+ # Default value: TemperatureAndPressure
+ #  * Temperature
+ #  * Pressure
+ #  * TemperatureandPressure
+
+#MD.TauRelax
+ # Default value: 100.0 fs
+
+#MD.BulkModulus
+ # Default value: 100.0 Ry/Bohr**3
+
+#MD.FCDispl
+ # Default value: 0.04 Bohr
+
+#MD.FCfirst
+ # Default value: 1
+
+#MD.FClast
+ # Default value: Same as NumberOfAtoms
+
+#%block MD.ATforPhonon
+#%endblock MD.ATforPhonon
+
+
+
+##### PARALLEL OPTIONS #########################################################
+
+#BlockSize
+ # Default value: 8
+
+#ProcessorY
+ # Default value: Variable - chosen using multiples of factors of the total
+ #  number of processors
+
+#DiagMemory
+ # Default value: 2
+
+#DiagScale
+ # Default value: 1.5
+
+#TryMemoryIncrease	.false.
+ # Default value: .true.
+
+#ParallelOverK		.true.
+ # Default value: .false.
+
+
+
+##### EFFICIENCY OPTIONS #######################################################
+
+#DirectPhi		.true.
+ # Default value: .false.
+
+#SaveMemory		.true.
+ # Default value: .false.
+
+
+
+##### OUTPUT OPTIONS ###########################################################
+
+#LongOutput		.true.
+ # Default value: .false.
+ #  * WriteCoorStep:  .true.
+ #  * WriteForces: .true.
+ #  * WriteKpoints: .true.
+ #  * WriteEigenvalues: .true.
+ #  * WriteKbands: .true.
+ #  * WriteBands: .true.
+ #  * WriteMullikenPop 1
+
+#WriteCoorInitial	.false.
+ # Default value: .true.
+
+WriteCoorStep		.true.
+ # Default value: .false.
+
+WriteForces		.true.
+ # Default value: .false.
+
+#WriteKpoints		.true.
+ # Default value: .false.
+
+#WriteEigenvalues	.true.
+ # Default value: .false.
+
+#WriteDM		.false.
+ # Default value: .true.
+
+#WriteKbands		.true.
+ # Default value: .false.
+
+#WriteBands		.true.
+ # Default value: .false.
+
+#WriteMullikenPop	1
+ # Default value: 0
+ #  * 0 = None
+ #  * 1 = atomic and orbital charges
+ #  * 2 = 1 + atomic overlap pop
+ #  * 3 = 2 + orbital overlap pop
+
+WriteCoorXmol		.true.
+ # Default value: .false.
+
+#WriteCoorCerius	.true.
+ # Default value: .false.
+
+#WriteMDXmol		.true.
+ # Default value: .false. if WriteCoorStep is .true. and vice-versa
+
+#WriteMDhistory	.true.
+ # Default value: .false.
+
+#WarningMinimumAtomicDistance
+ # Default value: 1.0 Bohr
+
+#AllocReportLevel	2
+# Default value: 0
+#  * level 0 : no report at all (the default)
+#  * level 1 : only total memory peak and where it occurred
+#  * level 2 : detailed report printed only at normal program termination
+#  * level 3 : detailed report printed at every new memory peak
+#  * level 4 : print every individual (re)allocation or deallocation
+
+
+
+##### OPTIONS FOR SAVING/READING INFORMATION ###################################
+
+#UseSaveData		.true.
+ # Default value: .false.
+
+#DM.UseSaveDM		.true.
+ # Default value: .false.
+
+#ON.UseSaveLWF		.true.
+ # Default value: .false.
+
+#MD.UseSaveXV		.true.
+ # Default value: .false.
+
+#MD.UseSaveCG		.true.
+ # Default value: .false.
+
+#SaveHS			.true.
+ # Default value: .false.
+
+#SaveRho		.true.
+ # Default value: .false.
+
+#SaveDeltaRho		.true.
+ # Default value: .false.
+
+#SaveElectrostaticPotential	.true.
+ # Default value: .false.
+
+#SaveTotalPotential	.true.
+ # Default value: .false.
+
+#%block LocalDensityOfStates
+#%endblock LocalDensityOfStates
+ # Default value: LDOS not calculated nor written.
+
+#%block ProjectedDensityOfStates
+#%endblock ProjectedDensityOfStates
+ # Default value: PDOS not calculated nor written.
+
+
+
+##### USER-PROVIDED BASIS ORBITALS #############################################
+
+#User.Basis
+#User.Basis.NetCDF

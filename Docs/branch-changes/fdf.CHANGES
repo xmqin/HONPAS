@@ -1,0 +1,48 @@
+----------------------------------------------------------
+January 10 2014  Alberto Garcia  siesta-trunk-448--fdf-4
+Fix handling of empty value for fdf_string
+
+When a line contains only a label, fdf_string incorrectly tried to
+read beyond the first token.  It has now been fixed, assigning an
+empty string to the function value.
+
+(+ fix the assignment of the name for the debug file)
+
+
+modified:
+  Src/fdf/fdf.F90
+
+----------------------------------------------------------
+December 11 2013  Alberto Garcia  siesta-trunk-448--fdf-3
+New list functionality in fdf
+
+See Src/fdf/sample.F90 and sample.fdf for examples.
+
+(Thanks to Nick P Andersen)
+
+modified:
+  Src/fdf/fdf.F90
+  Src/fdf/parse.F90
+  Src/fdf/sample.F90
+  Src/fdf/sample.fdf
+
+----------------------------------------------------------
+December 11 2013  Alberto Garcia  siesta-trunk-448--fdf-2
+Nullify fdf buffer pointer at declaration
+
+(Thanks to Nick P Andersen)
+
+modified:
+ Src/fdf/fdf.F90
+
+----------------------------------------------------------
+December 11 2013  Alberto Garcia  siesta-trunk-448--fdf-1
+A more flexible fdf_init (JM Soler)
+
+The routine fdf_init can be called without arguments in the most
+common case when reading from standard input (unit 5). See the new
+code in fdf.F90 for details. Note that Siesta does not yet use the new
+possibilities.
+
+modified:
+ Src/fdf/fdf.F90

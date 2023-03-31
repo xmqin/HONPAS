@@ -1,0 +1,34 @@
+
+      How to run the examples provided in this folder
+      -----------------------------------------------
+
+For instance, to run the system si54 (assuming that the executables
+of fcbuild, siesta and vibra are in the current directory; otherwise, 
+provide the appropriate paths):  
+
+1) Run:   
+
+   $ fcbuild < si54.fdf
+
+   this will build a file FC.fdf that will be a partial input for Siesta
+
+2) Run:
+
+   $ siesta < si54-siesta.fdf
+
+   si54-siesta.fdf includes all the info required by Siesta,
+   including that of file FC.fdf (which is included in the last
+   statement of si54-siesta.fdf).
+
+   Siesta will provide the file si54.FC with the force constant matrix
+
+3) Run:
+
+   $ vibra < si54.fdf
+
+   This will read the information writen by Siesta in si54.FC,
+   and calculate the phonon band structure for Silicon. The 
+   output is written in si54.bands, which can be viewed using
+   gnuplot (after processing it with gnubands, available among
+   the Siesta utilities)
+

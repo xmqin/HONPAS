@@ -1,0 +1,60 @@
+#
+# System which gives problems with split
+# To see them, uncomment the PAO.FixSplitTable directive
+#
+SystemName          Ag test
+SystemLabel         ag
+NumberOfAtoms       1
+NumberOfSpecies     1
+
+Reparametrize.Pseudos T       # Options for more accuracy
+Restricted.Radial.Grid F
+
+
+XC.functional    GGA
+XC.authors       PBE
+
+Meshcutoff 100 Ry
+
+DM.MixingWeight 0.1
+
+%block ChemicalSpeciesLabel
+1  47 Ag
+%endblock ChemicalSpeciesLabel
+
+# Full template for Basis parameters
+#
+Basis.Pressure 0.02 GPa         # As in Anglada et al
+
+PAO.FixSplitTable T
+
+#PAO.SoftDefault    T           # Global soft-confinement options
+#PAO.SoftPotential $Global_Vsoft Ry    
+#PAO.SoftInnerRadius $Global_Soft_Radius
+#
+
+PAO.BasisType    split
+%block PAO.Basis                                   # Define Basis set
+Ag   3 0.0700000 
+n=5   0   2   S 0.1500000 E 4.5000000 -0.9000000  
+4.9700000 0.000000
+1.00000   1.000000 
+n=5   1   1  E 2.9200000 -0.5000000
+5.0100000
+1.00000   
+n=4   2   2 S 0.1500000 E 4.9400000 -0.5000000
+5.1200000 0.000000       
+1.00000   1.000000  
+%endblock PAO.Basis
+
+LatticeConstant     4.09 Ang
+%block LatticeVectors
+0.500  0.500  0.000
+0.500  0.000  0.500
+0.000  0.500  0.500
+%endblock LatticeVectors
+
+%block AtomicCoordinatesAndAtomicSpecies
+  0.000000 0.0000 0.0000  1
+%endblock AtomicCoordinatesAndAtomicSpecies
+	       

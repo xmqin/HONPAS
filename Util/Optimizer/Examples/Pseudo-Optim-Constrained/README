@@ -1,0 +1,50 @@
+Pseudopotentials must be "transferable" (minimum deviations in
+properties such as excitation energies from all-electron calculations), and
+not "hard" (i.e., their fourier transform should not be too strong).
+
+In a problem like this there is no "best" solution. One must choose
+the relative weight to be given to each of the two desirable properties. 
+
+Here we show how to optimize the transferability assuming that we can
+tolerate a maximum pseudopotential hardness, and so we use a penalty
+function for hard potentials.
+
+Transferability is measured by comparing excitation energies for a
+range of configurations between all-electron and pseudopotential-test
+calculations. These come out of the ATOM program in file
+ECONF_DIFFS. File Test.inp contains the appropriate configuration
+information.
+
+Newer (>= 3.2.5) versions of the ATOM program generate a FOURIER_QMAX
+file with estimates of the "length" of the pseudopotential fourier
+transform (FT). It currently shows the value of "qmax" at which the
+normalized FT drops below 0.01 (this is an arbitrary number, but
+heuristically reflects what one can see on the typical graph).
+
+Having chosen a desirable maximum q, q0 (say, 12 bohr^-1), we use as
+our objective function the sum of the maximum excitation energy
+difference and a penalty function with a sharp rising edge near q0
+and large values for qmax appreciably larger than q0.
+
+Currently the penalty is implemented with a sigmoid function
+with parameters a (width) and b  (strength), and the relevant
+incantation for the computation of the objective function
+is:
+
+max_ediff=`tail -1  ECONF_DIFFS  | awk '{print $1}' `
+qmax=`tail -1 FOURIER_QMAX | awk '{print $2}'`
+
+awk -v a=$a -v b=$b -v ediff=$max_ediff -v qmax=$qmax  -v q0=$q0 \
+       'BEGIN {print ediff+b/(1.+exp(-(qmax-q0)/a))}'  > OPTIM_OUTPUT
+
+You can see a log of the rc parameters, Ediff, Qmax, and objective
+function in the file "log" in each job directory.
+
+Note that you need a suitable version of the ATOM program (to get the
+Fourier information and also to be able to use free-format rc values
+in the input file, as seen in the template PSGEN.TEMPLATE). It can be
+downloaded from:
+
+htpp://fisica.ehu.es/wdpgaara/sigpos/atom-3.2.5.tgz
+
+

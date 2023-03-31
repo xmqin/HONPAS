@@ -1,0 +1,126 @@
+%
+% This TeX file includes the output format from SIESTA.
+% The commands may be used to define new output files.
+%
+% These utility functions have been implemented by:
+%  Nick R. Papior, 2016 (nickpapior <at> gmail.com)
+%
+
+% Whether deprecated options should be shown
+\newif\ifdeprecated
+% Default to NOT show the deprecated options
+\deprecatedfalse
+
+% Whether developer notes should be shown
+\newif\ifdeveloper
+% Default to NOT show the developer options
+\developerfalse
+% Check that the user has requested developer version
+\def\@tmp{1}
+\ifx\siestadeveloper\@tmp
+  \developertrue
+\fi
+
+% Declare new font
+\DeclareTextFontCommand{\fontfile}{\ttfamily}
+
+
+% Verbatim environments.
+\DefineVerbatimEnvironment{codeexample}{Verbatim}{xleftmargin=2em,fontsize=\small}
+\DefineVerbatimEnvironment{shellexample}{Verbatim}{xleftmargin=2em,fontsize=\small}
+\DefineVerbatimEnvironment{output}{Verbatim}{xleftmargin=2em,fontsize=\small}
+
+
+% Create new SIESTA file
+%  #1: specify the file 
+%  #2: opt, optional additional markings in the index command
+% 
+% Example:
+%   \newfile{SIESTA.DM} will denote a new file called "SIESTA.DM"
+%   \newfile{SIESTA.DM}[|see ...] will denote a new file called "SIESTA.DM"
+%     and create a reference to the other file.
+\NewDocumentCommand\newfile{ m o }
+{%
+    \IfValueTF{#2}%
+    {%
+        % Add file to generic file index
+        \sindex[idx]{File!#1@\fontfile{#1}#2}%
+        % Add file to own index
+        \sindex[sfiles]{#1@\fontfile{#1}#2}%
+    }%
+    {% no optional indexing options
+        % Add file to generic file index
+        \sindex[idx]{File!#1@\fontfile{#1}}%
+        % Add file to own index
+        \sindex[sfiles]{#1@\fontfile{#1}}%
+    }%
+}
+
+% Allow \fileindex to be equivalent to \newfile
+\let\fileindex\newfile
+
+% Create new SIESTA file with default systemlabel prefix
+%  #1: file ending
+%  #2: opt, optional additional markings in the index command
+% 
+\NewDocumentCommand\newsysfile{ m }
+{%
+    \newfile{SystemLabel.#1}%
+}
+
+% Let \sysfileindex be equivalent to \newsysfile
+\let\sysfileindex\newsysfile
+
+
+% Use file. This merely creates a reference
+% to the file and typesets it according to the file
+% layout.
+%  #1: full file name
+\NewDocumentCommand\file{m}
+{%
+    % Typeset file
+    \fontfile{#1}%
+    % Add to the indices
+    \newfile{#1}%
+}
+
+
+% Use systemlabel.file.
+% This creates a file which is default to have the systemlabel
+% as prefix.
+%  *: do not add the SystemLabel to the output
+%  #1: suffix for the file.
+\NewDocumentCommand\sysfile{ s m }
+{%
+    % Typeset file
+    \IfBooleanTF{#1}{%
+        \fontfile{.#2}%
+    }{%
+        \fontfile{SystemLabel.#2}%
+    }%
+    % Add to the indices
+    \newfile{SystemLabel.#2}%
+}
+
+
+% Create a developer block.
+% When compiling the developer version additional
+% notes appear.
+\ifdeveloper%
+\NewDocumentEnvironment{developer}{ }
+{%
+    \begingroup%
+    \color{gray}%
+}{%
+    \endgroup%
+}%
+\else
+\let\developer\comment
+\let\enddeveloper\endcomment
+\fi
+
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "../siesta"
+%%% End:

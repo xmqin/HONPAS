@@ -1,0 +1,72 @@
+# -----------------------------------------------------------------------------
+# FDF for bcc iron      
+#
+# GGA, Ferromagnetic. 
+# Scalar-relativistic pseudopotential with non-linear partial-core correction
+#
+# E. Artacho, April 1999
+# -----------------------------------------------------------------------------
+
+SystemName       bcc Fe ferro GGA   # Descriptive name of the system
+SystemLabel            fe_cohp
+
+# Species and atoms
+
+NumberOfSpecies        1       
+NumberOfAtoms          1      
+%block ChemicalSpeciesLabel
+  1  26  Fe
+%endblock ChemicalSpeciesLabel
+
+COOP.Write T
+WFS.EnergyMax 10.0 eV
+####Diag.ParallelOverK T
+
+# Basis
+
+PAO.EnergyShift       50 meV
+PAO.BasisSize         DZP
+%block PAO.Basis
+  Fe  2
+  0  2  P
+  6. 0.
+  2  2
+  0. 0.
+%endblock PAO.Basis
+
+LatticeConstant       2.87 Ang  
+
+%block LatticeVectors          
+ 0.50000   0.500000  0.500000
+ 0.50000  -0.500000  0.500000 
+ 0.50000   0.500000 -0.500000
+%endblock LatticeVectors
+
+KgridCutoff          15. Ang
+
+xc.functional         GGA           # Exchange-correlation functional
+xc.authors            PBE           # Exchange-correlation version
+
+SpinPolarized         true          # Logical parameters are: yes or no
+
+MeshCutoff           150. Ry        # Mesh cutoff. real space mesh 
+
+# SCF options
+DM.MixingWeight       0.1           # New DM amount for next SCF cycle
+DM.Tolerance          1.d-3         # Tolerance in maximum difference
+                                    # between input and output DM
+DM.UseSaveDM          true          # to use continuation files
+DM.NumberBroyden        4           # Broyden mixing
+
+SolutionMethod        diagon        # OrderN or Diagon
+ElectronicTemperature  25 meV       # Temp. for Fermi smearing
+
+# MD options
+
+MD.TypeOfRun           cg           # Type of dynamics:
+MD.NumCGsteps           0           # Number of CG steps for 
+
+AtomicCoordinatesFormat     Fractional    
+%block AtomicCoordinatesAndAtomicSpecies
+  0.000000000000    0.000000000000    0.000000000000  1 
+%endblock AtomicCoordinatesAndAtomicSpecies

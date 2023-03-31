@@ -1,0 +1,59 @@
+%
+% This TeX file includes the default environments for creating fdf blocks
+% in the documentation of SIESTA.
+%
+% These utility functions have been implemented by:
+%  Nick R. Papior, 2016 (nickpapior <at> gmail.com)
+%
+
+% Control PDF settings
+\pdfminorversion=5
+\pdfobjcompresslevel=2
+
+% Default the textsize to 11pt
+\expandafter\ifx\csname siestatextsize\endcsname\relax\relax
+  \def\siestatextsize{11pt}
+\fi
+
+% Start the article stuff...
+\expandafter\documentclass\expandafter[\siestatextsize]{article}
+
+\expandafter\ifx\csname siestascreen\endcsname\relax
+  \usepackage[textwidth=16.7cm, textheight=22.5cm,
+              top=2.1cm,
+              left=2.2cm,
+              twoside]{geometry}
+\else
+  \usepackage[paperwidth=28.125cm, paperheight=22.5cm,
+              textwidth=25cm, textheight=18cm,
+              twocolumn,columnsep=.5cm,
+              top=2.5cm, left=1.7cm]{geometry}
+\fi
+
+\tolerance 10000
+
+\parindent=0cm
+\baselineskip=14pt
+\parskip 5pt
+
+% Define a new command to pretty-print the date
+\makeatletter
+\newcommand\printdate{\@date}
+
+% Ensure the information is written in the PDF
+\newcommand\setpdfmetadata{%
+    \hypersetup{pdfinfo={%
+            Title={\@title},%
+            Author={\@author},%
+        }%
+    }%
+}
+
+\makeatother
+
+%%% Local Variables:
+%%% mode: latex
+%%% ispell-local-dictionary: "american"
+%%% fill-column: 70
+%%% TeX-master: "../siesta"
+%%% End:

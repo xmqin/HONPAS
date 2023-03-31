@@ -1,0 +1,152 @@
+Brief user's guide of PLRHO. Jose M. Soler, December 1997.
+----------------------------------------------------------
+
+plrho uses the pgplot library, which is free domain. Once you
+have installed it (and made it visible), you compile plrho with:
+
+f90 plrho.f -lX11 -lpgplot -o plrho
+
+plrho is a utility program to plot the electron density and other 
+output functions from siesta. It draws an isosurface of the
+desired function in three dimensions. Additionally, it may color
+the surface according to a second function. Specifically, the
+following options are presently implemented:
+
+- Total electron density
+- Local density of states, integrated in a given energy interval.
+- Electron density colored with electrostatic potential (sum of
+  Hartree plus local pseudopotential)
+- Electron density colored with total potential (Hartree + xc +
+  local pseudopotential).
+- Total electron density colored with spin density
+
+To plot any of these functions, you must first generate the 
+appropriate file(s) using siesta. These files contain the desired
+function(s) in a three dimensional real space mesh (the same used 
+by routine dhscf of the siesta program). You do this by specifying
+the switches SaveRho, SaveElectrostaticPotential and 
+SaveTotalPotential, and the block LocalDensityOfStates in the fdf
+input file of siesta. See the siesta manual for more details.
+In addition you may want to displace your system using the block
+AtomicCoordinatesOrigin, so that it is placed properly in the
+center of your cell (you cannot do this later with plrho!).
+Siesta writes all these files using routine iorho, which has a
+parameter to choose between formatted or unformatted output
+(presently it is set to unformatted).
+
+Siesta calculates and writes these files only at the end, so that 
+they do not represent a heavy CPU load. It is also convenient to
+write them in an additional continuation job with a single iteration.
+This is specially useful to find the LDOS or the spin density (which
+can be obtained only with diagonalization) after a long order-N
+relaxation.
+
+Although plrho was written as a utility for siesta, it is quite
+independent of it, and you may also generate the function files with
+another program. It is particularly easy to do so with a planewave
+pseudopotential program. The format is
+
+      integer n1, n2, n3, nspin
+      real f(n1*n2*n3,nspin)
+      double precision cell(3,3)
+      write() cell
+      write() n1, n2, n3, nspin
+      write() ((f(ip,is),ip=1,n1*n2*n3),is=1,nspin)
+
+Notice that cell is double precision, while f is single precision.
+This is important only with unformatted output. For the electrostatic
+potential, nspin=1. The function files are named with a system label
+(for example h2o for the water molecule) plus a suffix:
+
+ h2o.RHO   (Total (spin) electron density)
+ h2o.LDOS  (Local density of states, integrated for desired range)
+ h2o.VH    (Electrostatic potential)
+ h2o.VT    (Total (local) effective potential)
+
+Once you have the necesary function files, you must set the plrho.dat 
+data file for plrho. An example is
+
+  'h2o'             System label (used to name the function files)
+  'vh'              Function(s) to plot ('rho'|'ldos'|'spin'|'vt'|'vh')
+  0.0  0.0  0.0     Euler rotation angles alpha, beta, gamma (degrees)
+  4.e-2             Value of electron density (or LDOS) for isosurface
+ -0.2  +0.2  +1.0   Saturation range for color function
+  'unformatted'     Data format ('formatted'|'unformatted')
+  '/XWIN'           Output option ('/XWIN'|'/PS'|'/CPS'|+more)
+
+For ('rho'|'ldos') the result will be a grayscale plot. The other
+options produce a clored surface: red, white, and blue correspond to 
+the minimun, mean, and maximun values of the saturation range, specified
+in plrho.dat. Values of the coloring function (potential or spin)
+in the ranges (minimun,mean) and (mean,maximun), are interpolated
+between red and white, and between white and blue, respectively.
+Values below/above the specified saturation minimun/maximun are 
+given pure red/blue color. In order to set the saturation color range,
+it is convenient to look at the output line like
+plrho: colmin, colavg, colmax =   -0.199181    0.612602    0.828640
+These are the corresponding values of the coloring function across
+the isosurface of the electron density. Notice that, if you specify
+a higher value for the density of the isosurface, it will be closer
+to the nucleae and the potential will be more positive.
+The units of the electron density and potential are inherited from
+the function files. Siesta writes them in electrons/Bohr**3 and Ry,
+respectively.
+
+The viewpoint is always from above (positive z axis). In order to
+view the system from a different angle, you must rotate it.
+The Euler rotation angles are
+
+  alpha: first rotation around z
+  beta:  rotation around y
+  gamma: second rotation around z
+
+For example, if you want to view it from the -y axis, you must rotate
+it -90 degrees around x, specifying:
+ 90.0  -90.0  -90.0  Euler rotation angles alpha, beta, gamma (degrees)
+
+In general, to view the object from angles theta, phi (deg), specify:
+ -phi  -theta  -90.0   Euler rotation angles alpha, beta, gamma
+
+Optionally, you may specify a illumination data file, called light.dat,
+with the following format:
+
+ 0.3               Surface reflectivity (between 0 and 1)
+ 0.2               Ambient light intensity
+ 2                 Number of light sources
+ 0.5  10. 30. 90.  Light intensity, width and theta, phi angles (deg)
+ 0.3  10. 45. 180. 
+ 
+The light intensity has a gaussian distribution, coming from a direction
+centered in the given polar angles and with a width given also in degrees.
+It gets saturated at 1.0, so that the sum of the ambient and directional 
+light intensities should add approximately that value. Notice that the
+light sources are fixed relative to the observer, not to the object.
+If light.dat does not exist, plrho uses default illumination values, 
+specified in the routine ray.f
+
+The pgplot library allows many output-unit posibilities. I have tested:
+  '/XWIN'   Opens an X window and shows the plot on the screen
+  '/PS'     Writes a postcript file that you may print directly
+  '/CPS'    The same as /PS but for a color postcript file
+  
+Once the plrho.dat file is complete, you run plrho simply with
+plrho <enter>
+
+Subroutine platom reads a file of type XV (like h2o.XV) and plots a bond 
+wireframe (in addition to the isosurface). It is still rather primitive 
+and unstable, and therefore its call is still commented out in plrho.
+
+Subroutine iorho, used by plrho, is a simplified version of the routine
+(with the same name and interface) used by siesta to write the density 
+and potential data files. The simplified verion is serial only, but
+reads correctly the files written by parallel siesta.
+
+File plrho.f77 contains a fortran77 version of plrho. It allows to use
+f77 instead of f90 to compile it, since all the subroutines are written
+in fortran77. The only disadvantage is that it uses more memory, though
+this can be fixed by adjusting parameter maxp within it.
+
+Please, send problems and suggestions to jose.soler@uam.es
+
+
+

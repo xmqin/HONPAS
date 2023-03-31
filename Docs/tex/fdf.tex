@@ -1,0 +1,315 @@
+
+%
+% This TeX file includes the default environments for creating fdf blocks
+% in the documentation of SIESTA.
+%
+% These utility functions have been implemented by:
+%  Nick R. Papior, 2016 (nickpapior <at> gmail.com)
+%
+
+% Create a new output file for the short-manual.
+% This file will contain all the short descriptions of
+% the fdf-keys.
+
+% create the correct fdf mode (for the fdf-environment)
+\let\fdf@mode\leavevmode
+
+% Declare fdf-colors
+%\definecolor{fdf-list}  {cmyk}{0.10,0.95,0.65,0.45}
+%\definecolor{fdf-option}{cmyk}{0.00,0.95,0.90,0.25}
+\definecolor{fdf-list}  {cmyk}{0.05,0.05,0.05,1.00}
+\definecolor{fdf-option}{cmyk}{0.05,0.05,0.05,0.90}
+
+% Declare new font
+\DeclareTextFontCommand{\fontfdf}{\bfseries\hyphenchar\font=45\relax}
+\let\fdffont\fontfdf
+
+% Short hand command for \fdf*{true}, \fdf*{false}
+\NewDocumentCommand\fdftrue{ }{\fdf*{true}}
+\NewDocumentCommand\fdffalse{ }{\fdf*{false}}
+
+\newwrite\file@fdf
+\immediate\openout\file@fdf=\jobname.fdf
+
+% Shorthand command for printing the fdf-key
+% correctly, AND adding it to the index.
+% A fdf-key must be formatted like this:
+%   Label!SubLabel:argument
+% and then the index of the key will be
+%   Label!SubLabel!argument
+\NewDocumentCommand\fdf{ s m }
+{%
+    \bgroup%
+    \StrSubstitute{#2}{!}{.}[\@tmp]%
+    % Handle fdf-flags with arguments (Flag:argument)
+    \expandafter\StrSubstitute\expandafter{\@tmp}{:}{ }[\@@tmp]%
+    \IfBooleanTF{#1}{%
+        \expandafter\fontfdf\expandafter{\@@tmp}%
+    }{%
+        \expandafter\cleanedhyperlink\expandafter{\@tmp}{\fontfdf{\@@tmp}}%
+        % Create index (catch arguments)
+        \StrSubstitute{#2}{:}{!}[\@tmp]%
+        \sindex[sfdf]{\@tmp}%
+    }%
+    \egroup%
+}
+
+
+% Define the skip of a new fdf key
+\newcommand\fdfentrybody{\parskip2pt}
+
+% How to show abstract option
+\NewDocumentCommand\nonvalue{ m }{\textlangle#1\textrangle}
+
+% Provide links to fdf-values with < > around (for options)
+\NewDocumentCommand\fdfvalue{ s m }{%
+    \IfBooleanTF{#1}{%
+        \nonvalue{\fdf*{#2}}%
+    }{%
+        \nonvalue{\fdf{#2}}%
+    }%
+}
+
+
+% Counter for hyper link
+\newcount\siestatargetcount
+
+% Create a unique macro for the hyperlink place
+\def\preparelink#1{%
+  \expandafter\ifx\csname siesta@hlink@#1\endcsname\relax%
+    \global\advance\siestatargetcount by1\relax%
+    \expandafter\xdef\csname siesta@hlink@#1\endcsname{siesta-pos-\the\siestatargetcount-#1}%
+  \fi%
+}
+\def\cleanedhypertarget#1#2{% 
+  \preparelink{#1}%
+  \hypertarget{\csname siesta@hlink@#1\endcsname}{#2}%
+}
+\def\cleanedhyperlink#1#2{%
+  \preparelink{#1}%
+  \hyperlink{\csname siesta@hlink@#1\endcsname}{#2}%
+}
+
+% Create a list looper
+\ExplSyntaxOn
+
+\NewDocumentCommand{\fdfdepend}{ m }
+{%
+    \bgroup%
+    \scriptsize%
+    \hfill%
+    \emph{depends~on:}~%
+    % This construct maps each entry onto the 
+    % fdf command
+    % First create a sequence from a list
+    \seq_set_from_clist:Nn \l_tmpa_seq { #1 }%
+    % Map on each entry in the sequence
+    \seq_set_map:NNn \l_tmpb_seq \l_tmpa_seq { \exp_not:n { \fdf{##1} } }%
+    \seq_use:Nn \l_tmpb_seq { ,~ }%
+    \setlength{\parskip}{2pt}%
+    \par%
+    \egroup%
+}
+
+\NewDocumentCommand{\fdfoverwrite}{ m }
+{%
+    \bgroup%
+    \scriptsize%
+    \hfill%
+    \emph{overwrites:}~%
+    % This construct maps each entry onto the 
+    % fdf command
+    % First create a sequence from a list
+    \seq_set_from_clist:Nn \l_tmpa_seq { #1 }%
+    % Map on each entry in the sequence
+    \seq_set_map:NNn \l_tmpb_seq \l_tmpa_seq { \exp_not:n { \fdf{##1} } }%
+    \seq_use:Nn \l_tmpb_seq { ,~ }%
+    \setlength{\parskip}{2pt}%
+    \par%
+    \egroup%
+}
+
+\NewDocumentCommand{\fdfdeprecates}{ m }
+{%
+    \bgroup%
+    \scriptsize%
+    \hfill%
+    \emph{deprecates:}~%
+    % This construct maps each entry onto the
+    % fdf command
+    % First create a sequence from a list
+    \seq_set_from_clist:Nn \l_tmpa_seq { #1 }%
+    % Map on each entry in the sequence
+    \seq_set_map:NNn \l_tmpb_seq \l_tmpa_seq { \exp_not:n { \fdf{##1} } }%
+    \seq_use:Nn \l_tmpb_seq { ,~ }%
+    \setlength{\parskip}{2pt}%
+    \par%
+    \egroup%
+}
+
+\NewDocumentCommand{\fdfdeprecatedby}{ m }
+{%
+    \bgroup%
+    \scriptsize%
+    \hfill%
+    \emph{deprecated~by:}~%
+    % This construct maps each entry onto the
+    % fdf command
+    % First create a sequence from a list
+    \seq_set_from_clist:Nn \l_tmpa_seq { #1 }%
+    % Map on each entry in the sequence
+    \seq_set_map:NNn \l_tmpb_seq \l_tmpa_seq { \exp_not:n { \fdf{##1} } }%
+    \seq_use:Nn \l_tmpb_seq { ,~ }%
+    \setlength{\parskip}{2pt}%
+    \par%
+    \egroup%
+}
+
+\ExplSyntaxOff
+
+
+\def\fdfentryline@None{None}
+\def\fdfentryline@block{block}
+% Create the entry for the fdf-key
+%
+% #1: the name of the fdf-key
+% #2: (optional) the type of the input value (string, true/false, physical quantity)
+% #3: <> the default value of the fdf-key
+\NewDocumentCommand\fdfentryline{ m o D<>{None}}
+{ %
+    \itemsep=0pt%
+    \parskip=0pt%
+    \bgroup%
+    \raggedright\item%
+    % Create fdf-label (with indexing)
+    \strut{\bgroup\color{fdf-list}%
+        \StrSubstitute[0]{#1}{!}{.}[\@tmp]%
+        \edef\@tmpword{\@tmp}
+        % Write the fdf-flag to the fdf-file
+        \expandafter\write\expandafter\file@fdf\expandafter{\@tmp}
+        % In case the fdfentry is a block,
+        % we prepend the %block to the 
+        % word.
+        \IfValueT{#2}{%
+            \def\tmp@None{#2}%
+            \ifx\tmp@None\fdfentryline@block
+               \def\tmp@None{\%block }%
+               \edef\@tmpword{\tmp@None\@tmp}
+            \fi
+        }
+        \expandafter\cleanedhypertarget\expandafter{\@tmp}{\expandafter\fontfdf\expandafter{\@tmpword}}%
+        \sindex[sfdf]{#1}%
+        % Create label for the entry (allows pageref)
+        \label{#1}%
+        \egroup%
+        % Separate the keyword from the options
+        \hskip 1em plus 1ex minus 1ex
+        %\space\space\space%
+        \bgroup%
+        \expandafter\let\siesta@active@bar\siesta@bar
+        \def\tmp@None{#3}%
+        \ifx\tmp@None\fdfentryline@None%
+          \let\tmp@None\nonvalue%
+        \else%
+          \let\tmp@None\relax%
+        \fi%
+        \strut{\color{fdf-option}\tmp@None{\fontfdf{#3}}}%
+        \egroup %
+    }
+    \IfValueT{#2}%
+    {%
+        \hfill\strut{\textit{(#2)}}%
+    } %
+    \par%
+    \egroup%
+    % Create fdf label
+    \fdfentrybody%
+}
+
+
+
+% Create new fdf input
+% This finalizes the call with \fdfenttryline
+% which does the actual parsing of the arguments.
+% This environment only sets up the environment
+% to typeset things in.
+\NewDocumentEnvironment{fdfentry}{ }
+{   %
+    % Create correct box-setups
+    \bgroup
+    \list{%
+    }{ %
+        % Define list
+        \topsep=4pt
+        \partopsep=0pt
+        \leftmargin=2em\itemindent-\leftmargin %
+        \listparindent=0pt
+        \itemsep=4pt
+        %\def\makelabel##1{\hss##1} %
+    }%
+    % Create entry line of the argument
+    \fdfentryline %
+}
+{%
+    \endlist%
+    \egroup
+}
+
+
+% Create new fdf input of type logical
+\NewDocumentEnvironment{fdflogicalT}{ m }
+{%
+    \begin{fdfentry}{#1}[logical]<true>%
+}
+{%
+  \end{fdfentry}
+}
+% Create new fdf input of type logical
+\NewDocumentEnvironment{fdflogicalF}{ m }
+{%
+    \begin{fdfentry}{#1}[logical]<false>%
+}
+{%
+  \end{fdfentry}
+}
+
+
+% Create new fdf input
+% This finalizes the call with \fdfenttryline
+% which does the actual parsing of the arguments.
+% This environment only sets up the enviroment
+% to typeset things in.
+\NewDocumentEnvironment{fdfoptions}{ }
+{   %
+    \begingroup
+    \def\option[##1]{%
+        \item[\strut{\color{fdf-list}\fontfdf{##1}}] %
+    }
+    \list{}
+    {%
+        \labelwidth=1em
+        \leftmargin=1em
+        \parsep=2pt
+        \itemsep=4pt
+        \listparindent=0pt
+    }%
+}
+{%
+    \endlist%
+    \endgroup
+}
+
+
+% Simple environment which extends 
+%   \begin{verbatim}
+% 
+%   \end{verbatim}
+% It is simply intended as placeholder to easily change
+% the future behaviour of the environment.
+\DefineVerbatimEnvironment{fdfexample}{Verbatim}{xleftmargin=2em,fontsize=\small}
+
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "../siesta"
+%%% End:

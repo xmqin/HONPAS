@@ -1,0 +1,811 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<title>Redistribution of sparse matrices</title>
+<!-- 2016-09-14 Wed 11:31 -->
+<meta  http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta  name="generator" content="Org-mode" />
+<meta  name="author" content="Alberto Garcia" />
+<style type="text/css">
+ <!--/*--><![CDATA[/*><!--*/
+  .title  { text-align: center; }
+  .todo   { font-family: monospace; color: red; }
+  .done   { color: green; }
+  .tag    { background-color: #eee; font-family: monospace;
+            padding: 2px; font-size: 80%; font-weight: normal; }
+  .timestamp { color: #bebebe; }
+  .timestamp-kwd { color: #5f9ea0; }
+  .right  { margin-left: auto; margin-right: 0px;  text-align: right; }
+  .left   { margin-left: 0px;  margin-right: auto; text-align: left; }
+  .center { margin-left: auto; margin-right: auto; text-align: center; }
+  .underline { text-decoration: underline; }
+  #postamble p, #preamble p { font-size: 90%; margin: .2em; }
+  p.verse { margin-left: 3%; }
+  pre {
+    border: 1px solid #ccc;
+    box-shadow: 3px 3px 3px #eee;
+    padding: 8pt;
+    font-family: monospace;
+    overflow: auto;
+    margin: 1.2em;
+  }
+  pre.src {
+    position: relative;
+    overflow: visible;
+    padding-top: 1.2em;
+  }
+  pre.src:before {
+    display: none;
+    position: absolute;
+    background-color: white;
+    top: -10px;
+    right: 10px;
+    padding: 3px;
+    border: 1px solid black;
+  }
+  pre.src:hover:before { display: inline;}
+  pre.src-sh:before    { content: 'sh'; }
+  pre.src-bash:before  { content: 'sh'; }
+  pre.src-emacs-lisp:before { content: 'Emacs Lisp'; }
+  pre.src-R:before     { content: 'R'; }
+  pre.src-perl:before  { content: 'Perl'; }
+  pre.src-java:before  { content: 'Java'; }
+  pre.src-sql:before   { content: 'SQL'; }
+
+  table { border-collapse:collapse; }
+  caption.t-above { caption-side: top; }
+  caption.t-bottom { caption-side: bottom; }
+  td, th { vertical-align:top;  }
+  th.right  { text-align: center;  }
+  th.left   { text-align: center;   }
+  th.center { text-align: center; }
+  td.right  { text-align: right;  }
+  td.left   { text-align: left;   }
+  td.center { text-align: center; }
+  dt { font-weight: bold; }
+  .footpara:nth-child(2) { display: inline; }
+  .footpara { display: block; }
+  .footdef  { margin-bottom: 1em; }
+  .figure { padding: 1em; }
+  .figure p { text-align: center; }
+  .inlinetask {
+    padding: 10px;
+    border: 2px solid gray;
+    margin: 10px;
+    background: #ffffcc;
+  }
+  #org-div-home-and-up
+   { text-align: right; font-size: 70%; white-space: nowrap; }
+  textarea { overflow-x: auto; }
+  .linenr { font-size: smaller }
+  .code-highlighted { background-color: #ffff00; }
+  .org-info-js_info-navigation { border-style: none; }
+  #org-info-js_console-label
+    { font-size: 10px; font-weight: bold; white-space: nowrap; }
+  .org-info-js_search-highlight
+    { background-color: #ffff00; color: #000000; font-weight: bold; }
+  /*]]>*/-->
+</style>
+<script type="text/javascript">
+/*
+@licstart  The following is the entire license notice for the
+JavaScript code in this tag.
+
+Copyright (C) 2012-2013 Free Software Foundation, Inc.
+
+The JavaScript code in this tag is free software: you can
+redistribute it and/or modify it under the terms of the GNU
+General Public License (GNU GPL) as published by the Free Software
+Foundation, either version 3 of the License, or (at your option)
+any later version.  The code is distributed WITHOUT ANY WARRANTY;
+without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE.  See the GNU GPL for more details.
+
+As additional permission under GNU GPL version 3 section 7, you
+may distribute non-source (e.g., minimized or compacted) forms of
+that code without the copy of the GNU GPL normally required by
+section 4, provided you include this license notice and a URL
+through which recipients can access the Corresponding Source.
+
+
+@licend  The above is the entire license notice
+for the JavaScript code in this tag.
+*/
+<!--/*--><![CDATA[/*><!--*/
+ function CodeHighlightOn(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(null != target) {
+     elem.cacheClassElem = elem.className;
+     elem.cacheClassTarget = target.className;
+     target.className = "code-highlighted";
+     elem.className   = "code-highlighted";
+   }
+ }
+ function CodeHighlightOff(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(elem.cacheClassElem)
+     elem.className = elem.cacheClassElem;
+   if(elem.cacheClassTarget)
+     target.className = elem.cacheClassTarget;
+ }
+/*]]>*///-->
+</script>
+</head>
+<body>
+<div id="content">
+<h1 class="title">Redistribution of sparse matrices</h1>
+<div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#sec-1">1. Introduction</a></li>
+<li><a href="#sec-2">2. The code</a></li>
+</ul>
+</div>
+</div>
+<p>
+-*- mode: Org -*-
+</p>
+
+<div id="outline-container-sec-1" class="outline-2">
+<h2 id="sec-1"><span class="section-number-2">1</span> Introduction</h2>
+<div class="outline-text-2" id="text-1">
+<p>
+This file implements functionality to change the MPI parallel distribution
+of a sparse matrix stored in the modified block-compressed form used
+in Siesta.
+</p>
+
+<p>
+The immediate goal is to exchange matrices between Siesta and the
+PEXSI library. Siesta uses a "block-cyclic" distribution over
+N<sub>Siesta</sub> processors, and PEXSI uses a simple "greedy" blocked
+distribution on each pole-group, with npPerPole processors. The
+code works in principle with any distribution (subject to some
+conditions spelled out below). The source and target process groups
+are arbitrary, and can overlap. In fact, in SIESTA-PEXSI they <b>will</b>
+overlap, as otherwise we would need extra processors for the Siesta
+operations. This overlap forces the code to re-invent much of the
+logic involved in MPI intercommunicators, which cannot be created for
+non-disjoint groups.
+</p>
+</div>
+</div>
+
+<div id="outline-container-sec-2" class="outline-2">
+<h2 id="sec-2"><span class="section-number-2">2</span> The code</h2>
+<div class="outline-text-2" id="text-2">
+<p>
+The general structure is
+</p>
+<div class="org-src-container">
+
+<pre class="src src-f90"><span style="color: #a020f0;">module</span> <span style="color: #0000ff;">m_redist_spmatrix</span>
+<span style="color: #483d8b;">#ifdef</span> SIESTA__PEXSI
+ <span style="color: #a020f0;">implicit</span> <span style="color: #228b22;">none</span>
+ &lt;&lt;module-type-declarations&gt;&gt;
+ <span style="color: #a020f0;">public</span> :: redistribute_spmatrix
+<span style="color: #a020f0;">CONTAINS</span>
+ &lt;&lt;routine-redist-spmatrix&gt;&gt;
+ &lt;&lt;transfers&gt;&gt;
+<span style="color: #483d8b;">#endif</span>
+<span style="color: #a020f0;">end module</span> <span style="color: #0000ff;">m_redist_spmatrix</span>
+</pre>
+</div>
+
+<p>
+We need some auxiliary structures. First, a simple derived type to keep
+track of source, target, starting points in source and target, and
+number of items to communicate.
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-f90"><span style="color: #a020f0;">type</span>, <span style="color: #a020f0;">public</span> :: <span style="color: #0000ff;">comm_t</span>
+   <span style="color: #228b22;">integer</span> ::<span style="color: #a0522d;"> src, dst, i1, i2, nitems</span>
+<span style="color: #a020f0;">end type</span> <span style="color: #0000ff;">comm_t</span>
+</pre>
+</div>
+
+<p>
+Next, a structure to hold the matrix information. We use an array of
+1D pointers to make it easier to point to individual components (spin, or
+S, H, EDM, etc)
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-f90"><span style="color: #228b22;">integer</span>, <span style="color: #a020f0;">parameter</span>, <span style="color: #a020f0;">private</span> ::<span style="color: #a0522d;"> dp = selected_real_kind(10,100)</span>
+
+<span style="color: #a020f0;">type</span>, <span style="color: #a020f0;">public</span> :: <span style="color: #0000ff;">dp_pointer</span>
+   <span style="color: #b22222;">! </span><span style="color: #b22222;">boxed array pointer type</span>
+   <span style="color: #228b22;">real</span>(dp), <span style="color: #a020f0;">pointer</span> ::<span style="color: #a0522d;"> data(:) =&gt; null()</span>
+<span style="color: #a020f0;">end type</span> <span style="color: #0000ff;">dp_pointer</span>
+
+<span style="color: #a020f0;">type</span>, <span style="color: #a020f0;">public</span> ::  <span style="color: #0000ff;">aux_matrix</span>
+   <span style="color: #228b22;">integer</span> ::<span style="color: #a0522d;"> norbs = -1</span>
+   <span style="color: #228b22;">integer</span> ::<span style="color: #a0522d;"> no_l  = -1</span>
+   <span style="color: #228b22;">integer</span> ::<span style="color: #a0522d;"> nnzl  = -1</span>
+   <span style="color: #228b22;">integer</span>, <span style="color: #a020f0;">pointer</span> ::<span style="color: #a0522d;"> numcols(:) =&gt; null()</span>
+   <span style="color: #228b22;">integer</span>, <span style="color: #a020f0;">pointer</span> ::<span style="color: #a0522d;"> cols(:)    =&gt; null()</span>
+   <span style="color: #b22222;">! </span><span style="color: #b22222;">array of 1D pointers</span>
+   <span style="color: #228b22;">type(dp_pointer)</span>, <span style="color: #a020f0;">dimension</span>(:), <span style="color: #a020f0;">pointer</span> :: <span style="color: #a0522d;">vals(:) =&gt; null()</span>
+<span style="color: #a020f0;">end type</span> <span style="color: #0000ff;">aux_matrix</span>
+</pre>
+</div>
+
+<p>
+Note about the use of integer group handles. Their value (say, "group
+= 10") might be the same but the actual content different in different
+subsets of processors!!!  If two subsets assign the same number to the
+group handle, each subset will treat the group as "its own", so
+'proc<sub>in</sub><sub>set'</sub> below will be true.  The only reliable way to test
+membership of the current process in a group is then to explicitly use
+the list of group ranks in the base group.  Or to include in the
+'dist' structure a field saying "I belong or not" Can this also be
+done with communicators instead of groups? In principle yes, since the
+comm field will have a MPI<sub>COMM</sub><sub>NULL</sub> value if the process does not
+belong.  However, those processors not in a given communicator will
+not know the corresponding group number, so the ranks in World will
+not be available for the kinds of "inter-communication" that we are
+doing.
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-f90"><span style="color: #a020f0;">subroutine</span> <span style="color: #0000ff;">redistribute_spmatrix</span>(norbs,m1,dist1,m2,dist2,bridge_comm)
+
+  <span style="color: #a020f0;">use</span> <span style="color: #0000ff;">mpi</span>
+  <span style="color: #a020f0;">use</span> <span style="color: #0000ff;">class_Distribution</span>
+  <span style="color: #a020f0;">use</span> <span style="color: #0000ff;">alloc</span>,       <span style="color: #a020f0;">only</span>: re_alloc, de_alloc
+
+  <span style="color: #a020f0;">implicit</span> <span style="color: #228b22;">none</span>
+
+  <span style="color: #228b22;">integer</span>, <span style="color: #a020f0;">intent</span>(in)       ::<span style="color: #a0522d;"> norbs   </span><span style="color: #b22222;">! </span><span style="color: #b22222;">Overall number of rows</span>
+  <span style="color: #228b22;">type(aux_matrix)</span> :: <span style="color: #a0522d;">m1               </span><span style="color: #b22222;">! </span><span style="color: #b22222;">Source matrix</span>
+  <span style="color: #228b22;">type(aux_matrix)</span> :: <span style="color: #a0522d;">m2               </span><span style="color: #b22222;">! </span><span style="color: #b22222;">Destination matrix -- it is allocated</span>
+  <span style="color: #228b22;">type(Distribution)</span> :: <span style="color: #a0522d;">dist1, dist2           </span><span style="color: #b22222;">! </span><span style="color: #b22222;">Distributions</span>
+  <span style="color: #228b22;">integer</span>, <span style="color: #a020f0;">intent</span>(in)   ::<span style="color: #a0522d;"> bridge_comm    </span><span style="color: #b22222;">! </span><span style="color: #b22222;">Umbrella Communicator</span>
+
+  <span style="color: #228b22;">type(comm_t)</span>, <span style="color: #a020f0;">dimension</span>(:), <span style="color: #a020f0;">allocatable</span>, <span style="color: #a020f0;">target</span> :: <span style="color: #a0522d;">comms</span>
+  <span style="color: #228b22;">type(comm_t)</span>, <span style="color: #a020f0;">dimension</span>(:), <span style="color: #a020f0;">allocatable</span>, <span style="color: #a020f0;">target</span> :: <span style="color: #a0522d;">commsnnz</span>
+  <span style="color: #228b22;">type(comm_t)</span>, <span style="color: #a020f0;">pointer</span> :: <span style="color: #a0522d;">c, cnnz</span>
+
+  <span style="color: #228b22;">integer</span> ::<span style="color: #a0522d;">  myrank1, myrank2, myid, gg</span>
+  <span style="color: #228b22;">logical</span> ::<span style="color: #a0522d;">  proc_in_set1, proc_in_set2</span>
+  <span style="color: #228b22;">integer</span> ::<span style="color: #a0522d;">  ierr</span>
+
+  <span style="color: #228b22;">integer</span> ::<span style="color: #a0522d;">  i, io, g1, g2, j, nvals</span>
+  <span style="color: #228b22;">integer</span> ::<span style="color: #a0522d;">  comparison, n1, n2, c1, c2</span>
+  <span style="color: #228b22;">integer</span>, <span style="color: #a020f0;">parameter</span> ::<span style="color: #a0522d;"> dp = selected_real_kind(10,100)</span>
+  <span style="color: #228b22;">real</span>(dp), <span style="color: #a020f0;">dimension</span>(:), <span style="color: #a020f0;">pointer</span>  ::<span style="color: #a0522d;"> data1 =&gt; null(), data2 =&gt; null()</span>
+
+  <span style="color: #228b22;">integer</span>, <span style="color: #a020f0;">allocatable</span> ::<span style="color: #a0522d;"> ranks1(:), ranks2(:)</span>
+
+  <span style="color: #b22222;">! </span><span style="color: #b22222;">The communicators are a sanity check on the ranks</span>
+
+  <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">mpi_comm_rank</span>(bridge_comm,myid,ierr)
+  c1 = ref_comm(dist1)
+  c2 = ref_comm(dist2)
+  <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">MPI_Comm_Compare</span>(c1,c2,comparison,ierr)
+
+  <span style="color: #a020f0;">select case</span> (comparison)
+  <span style="color: #a020f0;">case</span> (MPI_IDENT)
+     <span style="color: #b22222;">! </span><span style="color: #b22222;">Communicators are identical</span>
+  <span style="color: #a020f0;">case</span> (MPI_CONGRUENT)
+     <span style="color: #b22222;">! </span><span style="color: #b22222;">Communicators have the same group and rank order, but they differ in context</span>
+  <span style="color: #a020f0;">case</span> (MPI_SIMILAR)
+     <span style="color: #b22222;">! </span><span style="color: #b22222;">Rank order is different</span>
+     <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">die</span>(<span style="color: #8b2252;">"Different rank order in communicators"</span>)
+  <span style="color: #a020f0;">case</span> (MPI_UNEQUAL)
+     <span style="color: #b22222;">! </span><span style="color: #b22222;">Big mess</span>
+     <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">die</span>(<span style="color: #8b2252;">"Incompatible distribution reference communicators"</span>)
+  <span style="color: #a020f0;">end select</span>
+
+  <span style="color: #b22222;">! </span><span style="color: #b22222;">Now check congruence with the provided bridge_comm</span>
+
+  <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">MPI_Comm_Compare</span>(c1,bridge_comm,comparison,ierr)
+  <span style="color: #a020f0;">select case</span> (comparison)
+  <span style="color: #a020f0;">case</span> (MPI_IDENT)
+     <span style="color: #b22222;">! </span><span style="color: #b22222;">Communicators are identical</span>
+  <span style="color: #a020f0;">case</span> (MPI_CONGRUENT)
+     <span style="color: #b22222;">! </span><span style="color: #b22222;">Communicators have the same group and rank order, but they differ in context</span>
+     <span style="color: #b22222;">! </span><span style="color: #b22222;">We will use bridge_comm</span>
+  <span style="color: #a020f0;">case</span> (MPI_SIMILAR)
+     <span style="color: #b22222;">! </span><span style="color: #b22222;">Rank order is different</span>
+     <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">die</span>(<span style="color: #8b2252;">"Different rank order in dist communicators and bridge comm"</span>)
+  <span style="color: #a020f0;">case</span> (MPI_UNEQUAL)
+     <span style="color: #b22222;">! </span><span style="color: #b22222;">Big mess</span>
+     <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">die</span>(<span style="color: #8b2252;">"Incompatible bridge and dist communicators"</span>)
+  <span style="color: #a020f0;">end select</span>
+
+  <span style="color: #b22222;">! </span><span style="color: #b22222;">Now create groups g1 and g2.</span>
+  <span style="color: #b22222;">! </span><span style="color: #b22222;">(DO NOT trust the internal handles)</span>
+  <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">MPI_Comm_Group</span>(bridge_comm,gg,ierr)
+  <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">get_ranks_in_ref_comm</span>(dist1, ranks1)
+  <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">get_ranks_in_ref_comm</span>(dist2, ranks2)
+  n1 = <span style="color: #a020f0;">size</span>(ranks1)
+  n2 = <span style="color: #a020f0;">size</span>(ranks2)
+  <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">MPI_Group_Incl</span>(gg,n1,ranks1,g1,ierr)
+  <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">MPI_Group_Incl</span>(gg,n2,ranks2,g2,ierr)
+
+  <span style="color: #b22222;">! </span><span style="color: #b22222;">The rest is the same as before</span>
+
+  <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">mpi_group_rank</span>(g1,myrank1,ierr)
+  <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">mpi_group_rank</span>(g2,myrank2,ierr)
+
+  proc_in_set1 = (myrank1 /= MPI_UNDEFINED)
+  proc_in_set2 = (myrank2 /= MPI_UNDEFINED)
+
+  <span style="color: #a020f0;">if</span> (proc_in_set1 <span style="color: #a020f0;">.or.</span> proc_in_set2) <span style="color: #a020f0;">then</span>
+    <span style="color: #a020f0;">print</span> <span style="color: #8b2252;">"(a,3i6,2l2)"</span>, <span style="color: #8b2252;">"world_rank, rank1, rank2, ing1?, ing2?"</span>, myid,  <span style="color: #a020f0;">&amp;</span>
+       myrank1, myrank2, proc_in_set1, proc_in_set2
+  <span style="color: #a020f0;">endif</span>
+
+  <span style="color: #b22222;">! </span><span style="color: #b22222;">Figure out the communication needs</span>
+  <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">analyze_comms</span>()
+
+  <span style="color: #b22222;">! </span><span style="color: #b22222;">In preparation for the transfer, we allocate</span>
+  <span style="color: #b22222;">! </span><span style="color: #b22222;">storage for the second group of processors</span>
+  <span style="color: #b22222;">! </span><span style="color: #b22222;">Note that m2%numcols (and, in general, any of the 2nd set </span>
+  <span style="color: #b22222;">! </span><span style="color: #b22222;">of arrays), will not be allocated by those processors</span>
+  <span style="color: #b22222;">! </span><span style="color: #b22222;">not in the second set.</span>
+
+
+  <span style="color: #a020f0;">if</span> (proc_in_set2) <span style="color: #a020f0;">then</span>
+     m2%norbs = norbs
+     m2%no_l = num_local_elements(dist2,norbs,myrank2)
+     <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">re_alloc</span>(m2%numcols,1,m2%no_l,<span style="color: #8b2252;">"m2%numcols"</span>,<span style="color: #8b2252;">"redistribute_spmatrix"</span>)
+  <span style="color: #a020f0;">endif</span>
+
+  <span style="color: #a020f0;">if</span> (myid == 0) <span style="color: #a020f0;">print</span> *, <span style="color: #8b2252;">"About to transfer numcols..."</span>
+  <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">do_transfers_int</span>(comms,m1%numcols,m2%numcols, <span style="color: #a020f0;">&amp;</span>
+       g1,g2,bridge_comm)
+  <span style="color: #a020f0;">if</span> (myid == 0) <span style="color: #a020f0;">print</span> *, <span style="color: #8b2252;">"Transferred numcols."</span>
+
+  <span style="color: #b22222;">! </span><span style="color: #b22222;">We need to tell the processes in set 2 how many</span>
+  <span style="color: #b22222;">! </span><span style="color: #b22222;">"vals" to expect.</span>
+  <span style="color: #a020f0;">if</span> (proc_in_set1) <span style="color: #a020f0;">then</span>
+     <span style="color: #a020f0;">if</span> (<span style="color: #a020f0;">associated</span>(m1%vals)) <span style="color: #a020f0;">then</span>
+        nvals = <span style="color: #a020f0;">size</span>(m1%vals)
+     <span style="color: #a020f0;">else</span>
+        nvals = 0
+     <span style="color: #a020f0;">endif</span>
+  <span style="color: #a020f0;">endif</span>
+  <span style="color: #b22222;">! </span><span style="color: #b22222;">Now do a broadcast within bridge_comm, using as root one</span>
+  <span style="color: #b22222;">! </span><span style="color: #b22222;">process in the first set. Let's say the one with rank 0</span>
+  <span style="color: #b22222;">! </span><span style="color: #b22222;">in g1, the first in the set, which will have rank=ranks1(1)</span>
+  <span style="color: #b22222;">! </span><span style="color: #b22222;">in bridge_comm</span>
+  <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">MPI_Bcast</span>(nvals,1,MPI_Integer,ranks1(1),bridge_comm,ierr)
+
+  <span style="color: #b22222;">! </span><span style="color: #b22222;">Now we can figure out how many non-zeros there are</span>
+  <span style="color: #a020f0;">if</span> (proc_in_set2) <span style="color: #a020f0;">then</span>
+     m2%nnzl = <span style="color: #a020f0;">sum</span>(m2%numcols(1:m2%no_l))
+     <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">re_alloc</span>(m2%cols,1,m2%nnzl,<span style="color: #8b2252;">"m2%cols"</span>,<span style="color: #8b2252;">"redistribute_spmatrix"</span>)
+
+     <span style="color: #a020f0;">if</span> (nvals &gt; 0) <span style="color: #a020f0;">then</span>
+        <span style="color: #a020f0;">allocate</span>(m2%vals(nvals))
+        <span style="color: #a020f0;">do</span> j=1,nvals
+           <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">re_alloc</span>(m2%vals(j)%data,1,m2%nnzl, <span style="color: #a020f0;">&amp;</span>
+                <span style="color: #8b2252;">"m2%vals(j)%data"</span>,<span style="color: #8b2252;">"redistribute_spmatrix"</span>)
+        <span style="color: #a020f0;">enddo</span>
+     <span style="color: #a020f0;">endif</span>
+
+  <span style="color: #a020f0;">endif</span>
+
+  <span style="color: #b22222;">! </span><span style="color: #b22222;">Generate a new comms-structure with new start/count indexes</span>
+
+  <span style="color: #a020f0;">allocate</span>(commsnnz(<span style="color: #a020f0;">size</span>(comms)))
+  <span style="color: #a020f0;">do</span> i = 1, <span style="color: #a020f0;">size</span>(comms)
+     c =&gt; comms(i)
+     cnnz =&gt; commsnnz(i)
+
+     cnnz%src = c%src
+     cnnz%dst = c%dst
+     <span style="color: #a020f0;">if</span> (myrank1 == c%src) <span style="color: #a020f0;">then</span>
+        <span style="color: #b22222;">! </span><span style="color: #b22222;">Starting position at source: previous cols plus 1</span>
+        cnnz%i1 = <span style="color: #a020f0;">sum</span>(m1%numcols(1:(c%i1-1))) + 1
+        <span style="color: #b22222;">! </span><span style="color: #b22222;">Number of items transmitted: total number of cols</span>
+        cnnz%nitems = <span style="color: #a020f0;">sum</span>(m1%numcols(c%i1 : c%i1 + c%nitems -1))
+     <span style="color: #a020f0;">endif</span>
+     <span style="color: #a020f0;">if</span> (myrank2 == c%dst) <span style="color: #a020f0;">then</span>
+        <span style="color: #b22222;">! </span><span style="color: #b22222;">Starting position at destination: previous cols plus 1</span>
+        cnnz%i2 = <span style="color: #a020f0;">sum</span>(m2%numcols(1 : (c%i2-1))) + 1
+        <span style="color: #b22222;">! </span><span style="color: #b22222;">Number of items transmitted: total number of cols</span>
+        cnnz%nitems = <span style="color: #a020f0;">sum</span>(m2%numcols(c%i2 : c%i2 + c%nitems -1))
+     <span style="color: #a020f0;">endif</span>
+  <span style="color: #a020f0;">end do</span>
+
+<span style="color: #b22222;">!!</span><span style="color: #b22222;">$         do i = 1, size(comms)</span>
+<span style="color: #b22222;">!!</span><span style="color: #b22222;">$            c =&gt; commsnnz(i)</span>
+<span style="color: #b22222;">!!</span><span style="color: #b22222;">$            if (myrank1 == c%src) then</span>
+<span style="color: #b22222;">!!</span><span style="color: #b22222;">$               print "(a,i5,a,2i5,2i7,i5)", &amp;</span>
+<span style="color: #b22222;">!!</span><span style="color: #b22222;">$                 "commnnz(src): ", i, " src, dst, i1, (), n:", &amp;</span>
+<span style="color: #b22222;">!!</span><span style="color: #b22222;">$                 c%src, c%dst, c%i1, -1, c%nitems</span>
+<span style="color: #b22222;">!!</span><span style="color: #b22222;">$            endif</span>
+<span style="color: #b22222;">!!</span><span style="color: #b22222;">$            if (myrank2 == c%dst) then</span>
+<span style="color: #b22222;">!!</span><span style="color: #b22222;">$               print "(a,i5,a,2i5,2i7,i5)", &amp;</span>
+<span style="color: #b22222;">!!</span><span style="color: #b22222;">$                 "commnnz(dst): ", i, " src, dst, (), i2, n:", &amp;</span>
+<span style="color: #b22222;">!!</span><span style="color: #b22222;">$                 c%src, c%dst, -1, c%i2, c%nitems</span>
+<span style="color: #b22222;">!!</span><span style="color: #b22222;">$            endif</span>
+<span style="color: #b22222;">!!</span><span style="color: #b22222;">$         enddo</span>
+
+  <span style="color: #a020f0;">if</span> (myid == 0) <span style="color: #a020f0;">print</span> *, <span style="color: #8b2252;">"About to transfer cols..."</span>
+  <span style="color: #b22222;">! </span><span style="color: #b22222;">Transfer the cols arrays</span>
+  <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">do_transfers_int</span>(commsnnz,m1%cols,m2%cols, <span style="color: #a020f0;">&amp;</span>
+       g1, g2, bridge_comm)
+
+  <span style="color: #a020f0;">if</span> (myid == 0) <span style="color: #a020f0;">print</span> *, <span style="color: #8b2252;">"About to transfer values..."</span>
+  <span style="color: #b22222;">! </span><span style="color: #b22222;">Transfer the values arrays</span>
+  <span style="color: #a020f0;">do</span> j=1, nvals
+     <span style="color: #a020f0;">if</span> (proc_in_set1) data1 =&gt; m1%vals(j)%data
+     <span style="color: #a020f0;">if</span> (proc_in_set2) data2 =&gt; m2%vals(j)%data
+     <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">do_transfers_dp</span>(commsnnz,data1,data2, <span style="color: #a020f0;">&amp;</span>
+          g1,g2,bridge_comm)
+  <span style="color: #a020f0;">enddo</span>
+  <span style="color: #a020f0;">nullify</span>(data1,data2)
+  <span style="color: #a020f0;">if</span> (myid == 0) <span style="color: #a020f0;">print</span> *, <span style="color: #8b2252;">"Done transfers."</span>
+
+  <span style="color: #a020f0;">deallocate</span>(commsnnz)
+  <span style="color: #a020f0;">deallocate</span>(comms)
+  <span style="color: #a020f0;">deallocate</span>(ranks1, ranks2)
+
+  <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">MPI_group_free</span>(gg,ierr)
+  <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">MPI_group_free</span>(g1,ierr)
+  <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">MPI_group_free</span>(g2,ierr)
+
+<span style="color: #a020f0;">CONTAINS</span>
+
+  &lt;&lt;analyze-comms&gt;&gt;
+
+<span style="color: #a020f0;">end subroutine</span> <span style="color: #0000ff;">redistribute_spmatrix</span>
+</pre>
+</div>
+
+<p>
+The analysis of the needed communications is basically a
+classification of the contiguous chunks of orbital data.
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-f90"><span style="color: #b22222;">!</span><span style="color: #b22222;">-----------------------------------------------------</span>
+   <span style="color: #a020f0;">subroutine</span> <span style="color: #0000ff;">analyze_comms</span>()
+
+      <span style="color: #228b22;">integer</span>, <span style="color: #a020f0;">allocatable</span>, <span style="color: #a020f0;">dimension</span>(:) ::<span style="color: #a0522d;"> p1, p2, isrc, idst</span>
+      <span style="color: #228b22;">integer</span> ::<span style="color: #a0522d;"> ncomms</span>
+
+      <span style="color: #b22222;">! </span><span style="color: #b22222;">To turn on debug printing, set this to .true.</span>
+      <span style="color: #228b22;">logical</span>, <span style="color: #a020f0;">save</span> ::<span style="color: #a0522d;"> comms_not_printed = .false. </span>
+
+      <span style="color: #b22222;">! </span><span style="color: #b22222;">Find the communication needs for each orbital</span>
+      <span style="color: #b22222;">! </span><span style="color: #b22222;">This information is replicated in every processor</span>
+      <span style="color: #b22222;">! </span><span style="color: #b22222;">(Note that the indexing functions are able to find</span>
+      <span style="color: #b22222;">!  </span><span style="color: #b22222;">out the information for any processor. For the</span>
+      <span style="color: #b22222;">! </span><span style="color: #b22222;">block-cyclic and "pexsi" distributions, this is quite</span>
+      <span style="color: #b22222;">! </span><span style="color: #b22222;">easy. For others, the underlying indexing arrays might</span>
+      <span style="color: #b22222;">! </span><span style="color: #b22222;">be large...)</span>
+
+      <span style="color: #b22222;">! </span><span style="color: #b22222;">It might not be necessary to have this in memory. It </span>
+      <span style="color: #b22222;">! </span><span style="color: #b22222;">can be done on the fly</span>
+      <span style="color: #a020f0;">allocate</span>(p1(norbs),p2(norbs),isrc(norbs),idst(norbs))
+
+<span style="color: #b22222;">!      </span><span style="color: #b22222;">if (myid == 0) then</span>
+<span style="color: #b22222;">!         </span><span style="color: #b22222;">write(6,"(5a10)") "Orb", "p1", "i1", "p2", "i2"</span>
+<span style="color: #b22222;">!      </span><span style="color: #b22222;">endif</span>
+      <span style="color: #a020f0;">do</span> io = 1, norbs
+         p1(io) = node_handling_element(dist1,io)
+         p2(io) = node_handling_element(dist2,io)
+         isrc(io) = index_global_to_local(dist1,io,p1(io))
+         idst(io) = index_global_to_local(dist2,io,p2(io))
+<span style="color: #b22222;">!         </span><span style="color: #b22222;">if (myid == 0) then</span>
+<span style="color: #b22222;">!            </span><span style="color: #b22222;">if ((norbs &lt; 1000) .or. (mod(io,12) == 0)) then</span>
+<span style="color: #b22222;">!               </span><span style="color: #b22222;">write(6,"(5i10)") io, p1(io), isrc(io), p2(io), idst(io)</span>
+<span style="color: #b22222;">!            </span><span style="color: #b22222;">endif</span>
+<span style="color: #b22222;">!        </span><span style="color: #b22222;">endif</span>
+      <span style="color: #a020f0;">enddo</span>
+
+      <span style="color: #b22222;">! </span><span style="color: #b22222;">Aggregate communications</span>
+      <span style="color: #b22222;">! </span><span style="color: #b22222;">First pass: find out how many there are, on the basis</span>
+      <span style="color: #b22222;">! </span><span style="color: #b22222;">of groups of orbitals that share the same source and</span>
+      <span style="color: #b22222;">! </span><span style="color: #b22222;">destination. Due to the form of the distributions, the</span>
+      <span style="color: #b22222;">! </span><span style="color: #b22222;">local indexes are also correlative in that case, so we</span>
+      <span style="color: #b22222;">! </span><span style="color: #b22222;">only need to check for p1 and p2. (Check whether this</span>
+      <span style="color: #b22222;">! </span><span style="color: #b22222;">applies to every possible distribution...)</span>
+
+      ncomms = 1
+      <span style="color: #a020f0;">do</span> io = 2, norbs
+         <span style="color: #a020f0;">if</span> ((p1(io) /= p1(io-1)) <span style="color: #a020f0;">.or.</span> (p2(io) /= p2(io-1))) <span style="color: #a020f0;">then</span>
+            ncomms = ncomms + 1
+         <span style="color: #a020f0;">else</span>
+            <span style="color: #b22222;">!</span>
+         <span style="color: #a020f0;">endif</span>
+      <span style="color: #a020f0;">enddo</span>
+
+      <span style="color: #a020f0;">allocate</span>(comms(ncomms))
+
+      <span style="color: #b22222;">! </span><span style="color: #b22222;">Second pass: Fill in the data structures</span>
+      ncomms = 1
+      c =&gt; comms(ncomms)
+      io = 1
+      c%src = p1(io)
+      c%dst = p2(io)
+      c%i1  = isrc(io)
+      c%i2  = idst(io)
+      c%nitems = 1
+      <span style="color: #a020f0;">do</span> io = 2, norbs
+         <span style="color: #a020f0;">if</span> ((p1(io) /= p1(io-1)) <span style="color: #a020f0;">.or.</span> (p2(io) /= p2(io-1))) <span style="color: #a020f0;">then</span>
+            <span style="color: #b22222;">! </span><span style="color: #b22222;">end of group -- new communication</span>
+            ncomms = ncomms + 1
+            c =&gt; comms(ncomms)
+            c%src = p1(io)
+            c%dst = p2(io)
+            c%i1  = isrc(io)
+            c%i2  = idst(io)
+            c%nitems = 1
+         <span style="color: #a020f0;">else</span>
+            <span style="color: #b22222;">! </span><span style="color: #b22222;">we stay in the same communication</span>
+            c%nitems = c%nitems + 1
+         <span style="color: #a020f0;">endif</span>
+      <span style="color: #a020f0;">enddo</span>
+
+      <span style="color: #a020f0;">if</span> (myid == 0 <span style="color: #a020f0;">.and.</span> comms_not_printed) <span style="color: #a020f0;">then</span>
+         <span style="color: #a020f0;">do</span> i = 1, ncomms
+            c =&gt; comms(i)
+            <span style="color: #a020f0;">write</span>(6,<span style="color: #8b2252;">"(a,i5,a,2i5,2i7,i5)"</span>) <span style="color: #a020f0;">&amp;</span>
+                 <span style="color: #8b2252;">"comm: "</span>, i, <span style="color: #8b2252;">" src, dst, i1, i2, n:"</span>, <span style="color: #a020f0;">&amp;</span>
+                 c%src, c%dst, c%i1, c%i2, c%nitems
+         <span style="color: #a020f0;">enddo</span>
+         comms_not_printed = <span style="color: #a020f0;">.false.</span>
+      <span style="color: #a020f0;">endif</span>
+
+      <span style="color: #a020f0;">deallocate</span>(p1,p2,isrc,idst)
+
+    <span style="color: #a020f0;">end subroutine</span> <span style="color: #0000ff;">analyze_comms</span>
+</pre>
+</div>
+
+<p>
+The actual data transfer is done on the basis of the communication
+pattern. The scheme chosen is non-blocking communications. It seems to
+work well, but it could be changed if needed.
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-f90"><span style="color: #b22222;">!</span><span style="color: #b22222;">--------------------------------------------------</span>
+   <span style="color: #a020f0;">subroutine</span> <span style="color: #0000ff;">do_transfers_int</span>(comms,data1,data2,g1,g2,bridge_comm)
+
+     <span style="color: #a020f0;">use</span> <span style="color: #0000ff;">mpi</span>
+     <span style="color: #228b22;">type(comm_t)</span>, <span style="color: #a020f0;">intent</span>(in), <span style="color: #a020f0;">target</span>     :: <span style="color: #a0522d;">comms(:)</span>
+     <span style="color: #228b22;">integer</span>, <span style="color: #a020f0;">dimension</span>(:), <span style="color: #a020f0;">pointer</span>  ::<span style="color: #a0522d;"> data1</span>
+     <span style="color: #228b22;">integer</span>, <span style="color: #a020f0;">dimension</span>(:), <span style="color: #a020f0;">pointer</span>  ::<span style="color: #a0522d;"> data2</span>
+     <span style="color: #228b22;">integer</span>, <span style="color: #a020f0;">intent</span>(in)                ::<span style="color: #a0522d;"> g1</span>
+     <span style="color: #228b22;">integer</span>, <span style="color: #a020f0;">intent</span>(in)                ::<span style="color: #a0522d;"> g2</span>
+     <span style="color: #228b22;">integer</span>, <span style="color: #a020f0;">intent</span>(in)                ::<span style="color: #a0522d;"> bridge_comm</span>
+
+     <span style="color: #228b22;">integer</span>                 ::<span style="color: #a0522d;"> basegroup, nsize1, nsize2, ierr</span>
+     <span style="color: #228b22;">integer</span>, <span style="color: #a020f0;">allocatable</span>    ::<span style="color: #a0522d;"> comm_rank1(:), comm_rank2(:)</span>
+
+
+     <span style="color: #228b22;">integer</span> ::<span style="color: #a0522d;"> ncomms</span>
+     <span style="color: #228b22;">integer</span> ::<span style="color: #a0522d;"> i</span>
+     <span style="color: #228b22;">integer</span> ::<span style="color: #a0522d;"> nrecvs_local, nsends_local</span>
+     <span style="color: #228b22;">integer</span>, <span style="color: #a020f0;">allocatable</span> ::<span style="color: #a0522d;"> statuses(:,:), local_reqR(:), local_reqS(:)</span>
+     <span style="color: #228b22;">integer</span> ::<span style="color: #a0522d;"> src_in_comm, dst_in_comm</span>
+     <span style="color: #228b22;">integer</span> ::<span style="color: #a0522d;"> myrank1, myrank2, myrank</span>
+     <span style="color: #228b22;">type(comm_t)</span>, <span style="color: #a020f0;">pointer</span> :: <span style="color: #a0522d;">c</span>
+
+
+      <span style="color: #b22222;">! </span><span style="color: #b22222;">Find the rank correspondences, in case</span>
+      <span style="color: #b22222;">! </span><span style="color: #b22222;">there is implicit renumbering at the time of group creation</span>
+
+      <span style="color: #a020f0;">call</span>  <span style="color: #0000ff;">MPI_Comm_group</span>( bridge_comm, basegroup, ierr )
+      <span style="color: #a020f0;">call</span>  <span style="color: #0000ff;">MPI_Comm_Rank</span>( bridge_comm, myrank, ierr )
+
+      <span style="color: #a020f0;">call</span>  <span style="color: #0000ff;">MPI_Group_Size</span>( g1, nsize1, ierr )
+      <span style="color: #a020f0;">call</span>  <span style="color: #0000ff;">MPI_Group_Size</span>( g2, nsize2, ierr )
+
+      <span style="color: #a020f0;">allocate</span>(comm_rank1(0:nsize1-1))
+      <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">MPI_Group_translate_ranks</span>( g1, nsize1, (/ (i,i=0,nsize1-1) /), <span style="color: #a020f0;">&amp;</span>
+                                      basegroup, comm_rank1, ierr )
+<span style="color: #b22222;">!      </span><span style="color: #b22222;">print "(i4,a,10i3)", myrank, ":Ranks of g1 in base group:", comm_rank1</span>
+
+      <span style="color: #a020f0;">allocate</span>(comm_rank2(0:nsize2-1))
+      <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">MPI_Group_translate_ranks</span>( g2, nsize2, (/ (i,i=0,nsize2-1) /), <span style="color: #a020f0;">&amp;</span>
+                                      basegroup, comm_rank2, ierr )
+<span style="color: #b22222;">!      </span><span style="color: #b22222;">print "(i4,a,10i3)", myrank,":Ranks of g2 in base group:", comm_rank2</span>
+
+      <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">mpi_group_rank</span>(g1,myrank1,ierr)
+      <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">mpi_group_rank</span>(g2,myrank2,ierr)
+
+<span style="color: #b22222;">!      </span><span style="color: #b22222;">print "(i4,a,2i6)", myrank,": Ranks in g1 and g2: ", myrank1, myrank2</span>
+<span style="color: #b22222;">!      </span><span style="color: #b22222;">print "(i4,a,2i3)", myrank,": g1 and g2: ", g1, g2</span>
+
+
+      <span style="color: #b22222;">! </span><span style="color: #b22222;">Do the actual transfers. </span>
+      <span style="color: #b22222;">! </span><span style="color: #b22222;">This version with non-blocking communications</span>
+
+     ncomms = <span style="color: #a020f0;">size</span>(comms)
+
+      <span style="color: #b22222;">! </span><span style="color: #b22222;">Some bookkeeping for the requests</span>
+      nrecvs_local = 0
+      nsends_local = 0
+      <span style="color: #a020f0;">do</span> i=1,ncomms
+         c =&gt; comms(i)
+         <span style="color: #a020f0;">if</span> (myrank2 == c%dst) <span style="color: #a020f0;">then</span>
+            nrecvs_local = nrecvs_local + 1
+         <span style="color: #a020f0;">endif</span>
+         <span style="color: #a020f0;">if</span> (myrank1 == c%src) <span style="color: #a020f0;">then</span>
+            nsends_local = nsends_local + 1
+         <span style="color: #a020f0;">endif</span>
+      <span style="color: #a020f0;">enddo</span>
+      <span style="color: #a020f0;">allocate</span>(local_reqR(nrecvs_local))
+      <span style="color: #a020f0;">allocate</span>(local_reqS(nsends_local))
+      <span style="color: #a020f0;">allocate</span>(statuses(mpi_status_size,nrecvs_local))
+
+      <span style="color: #b22222;">! </span><span style="color: #b22222;">First, post the receives</span>
+      nrecvs_local = 0
+      <span style="color: #a020f0;">do</span> i=1,ncomms
+         c =&gt; comms(i)
+         <span style="color: #a020f0;">if</span> (myrank2 == c%dst) <span style="color: #a020f0;">then</span>
+            nrecvs_local = nrecvs_local + 1
+            src_in_comm = comm_rank1(c%src)
+            <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">MPI_irecv</span>(data2(c%i2),c%nitems,MPI_integer,src_in_comm, <span style="color: #a020f0;">&amp;</span>
+                           i,bridge_comm,local_reqR(nrecvs_local),ierr)
+         <span style="color: #a020f0;">endif</span>
+      <span style="color: #a020f0;">enddo</span>
+
+      <span style="color: #b22222;">! </span><span style="color: #b22222;">Post the sends</span>
+      nsends_local = 0
+      <span style="color: #a020f0;">do</span> i=1,ncomms
+         c =&gt; comms(i)
+         <span style="color: #a020f0;">if</span> (myrank1 == c%src) <span style="color: #a020f0;">then</span>
+            nsends_local = nsends_local + 1
+            dst_in_comm = comm_rank2(c%dst)
+            <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">MPI_isend</span>(data1(c%i1),c%nitems,MPI_integer,dst_in_comm, <span style="color: #a020f0;">&amp;</span>
+                        i,bridge_comm,local_reqS(nsends_local),ierr)
+         <span style="color: #a020f0;">endif</span>
+      <span style="color: #a020f0;">enddo</span>
+
+      <span style="color: #b22222;">! </span><span style="color: #b22222;">A former loop of waits can be substituted by a "waitall",</span>
+      <span style="color: #b22222;">! </span><span style="color: #b22222;">with every processor keeping track of the actual number of </span>
+      <span style="color: #b22222;">! </span><span style="color: #b22222;">requests in which it is involved.</span>
+
+      <span style="color: #b22222;">! </span><span style="color: #b22222;">Should we wait also on the sends?</span>
+
+      <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">MPI_waitall</span>(nrecvs_local, local_reqR, statuses, ierr)
+
+
+      <span style="color: #b22222;">! </span><span style="color: #b22222;">This barrier is needed, I think</span>
+      <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">MPI_Barrier</span>(bridge_comm,ierr)
+
+      <span style="color: #a020f0;">deallocate</span>(local_reqR, local_reqS, statuses)
+
+    <span style="color: #a020f0;">end subroutine</span> <span style="color: #0000ff;">do_transfers_int</span>
+
+<span style="color: #b22222;">!</span><span style="color: #b22222;">--------------------------------------------------</span>
+   <span style="color: #a020f0;">subroutine</span> <span style="color: #0000ff;">do_transfers_dp</span>(comms,data1,data2,g1,g2,bridge_comm)
+
+     <span style="color: #a020f0;">use</span> <span style="color: #0000ff;">mpi</span>
+     <span style="color: #228b22;">integer</span>, <span style="color: #a020f0;">parameter</span> ::<span style="color: #a0522d;"> dp = selected_real_kind(10,100)</span>
+
+     <span style="color: #228b22;">type(comm_t)</span>, <span style="color: #a020f0;">intent</span>(in), <span style="color: #a020f0;">target</span>     :: <span style="color: #a0522d;">comms(:)</span>
+     <span style="color: #228b22;">real</span>(dp), <span style="color: #a020f0;">dimension</span>(:), <span style="color: #a020f0;">pointer</span> ::<span style="color: #a0522d;"> data1</span>
+     <span style="color: #228b22;">real</span>(dp), <span style="color: #a020f0;">dimension</span>(:), <span style="color: #a020f0;">pointer</span> ::<span style="color: #a0522d;"> data2</span>
+     <span style="color: #228b22;">integer</span>, <span style="color: #a020f0;">intent</span>(in)                ::<span style="color: #a0522d;"> g1</span>
+     <span style="color: #228b22;">integer</span>, <span style="color: #a020f0;">intent</span>(in)                ::<span style="color: #a0522d;"> g2</span>
+     <span style="color: #228b22;">integer</span>, <span style="color: #a020f0;">intent</span>(in)                ::<span style="color: #a0522d;"> bridge_comm</span>
+
+     <span style="color: #228b22;">integer</span>                 ::<span style="color: #a0522d;"> basegroup, nsize1, nsize2, ierr</span>
+     <span style="color: #228b22;">integer</span>, <span style="color: #a020f0;">allocatable</span>    ::<span style="color: #a0522d;"> comm_rank1(:), comm_rank2(:)</span>
+
+
+     <span style="color: #228b22;">integer</span> ::<span style="color: #a0522d;"> ncomms</span>
+     <span style="color: #228b22;">integer</span> ::<span style="color: #a0522d;"> i</span>
+     <span style="color: #228b22;">integer</span> ::<span style="color: #a0522d;"> nrecvs_local, nsends_local</span>
+     <span style="color: #228b22;">integer</span>, <span style="color: #a020f0;">allocatable</span> ::<span style="color: #a0522d;"> statuses(:,:), local_reqR(:), local_reqS(:)</span>
+     <span style="color: #228b22;">integer</span> ::<span style="color: #a0522d;"> src_in_comm, dst_in_comm</span>
+     <span style="color: #228b22;">integer</span> ::<span style="color: #a0522d;"> myrank1, myrank2, myid</span>
+     <span style="color: #228b22;">type(comm_t)</span>, <span style="color: #a020f0;">pointer</span> :: <span style="color: #a0522d;">c</span>
+
+     <span style="color: #a020f0;">call</span>  <span style="color: #0000ff;">MPI_Comm_Rank</span>( bridge_comm, myid, ierr )
+<span style="color: #b22222;">!     </span><span style="color: #b22222;">print *, "Entering transfer_dp"</span>
+<span style="color: #b22222;">!     </span><span style="color: #b22222;">print *, "rank, Associated data1: ", myid, associated(data1)</span>
+<span style="color: #b22222;">!     </span><span style="color: #b22222;">print *, "rank, Associated data2: ", myid, associated(data2)</span>
+
+      <span style="color: #b22222;">! </span><span style="color: #b22222;">Find the rank correspondences, in case</span>
+      <span style="color: #b22222;">! </span><span style="color: #b22222;">there is implicit renumbering at the time of group creation</span>
+
+      <span style="color: #a020f0;">call</span>  <span style="color: #0000ff;">MPI_Comm_group</span>( bridge_comm, basegroup, ierr )
+      <span style="color: #a020f0;">call</span>  <span style="color: #0000ff;">MPI_Group_Size</span>( g1, nsize1, ierr )
+      <span style="color: #a020f0;">call</span>  <span style="color: #0000ff;">MPI_Group_Size</span>( g2, nsize2, ierr )
+      <span style="color: #a020f0;">allocate</span>(comm_rank1(0:nsize1-1))
+      <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">MPI_Group_translate_ranks</span>( g1, nsize1, (/ (i,i=0,nsize1-1) /), <span style="color: #a020f0;">&amp;</span>
+                                      basegroup, comm_rank1, ierr )
+<span style="color: #b22222;">!      </span><span style="color: #b22222;">print "(a,10i3)", "Ranks of g1 in base group:", comm_rank1</span>
+      <span style="color: #a020f0;">allocate</span>(comm_rank2(0:nsize2-1))
+      <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">MPI_Group_translate_ranks</span>( g2, nsize2, (/ (i,i=0,nsize2-1) /), <span style="color: #a020f0;">&amp;</span>
+                                      basegroup, comm_rank2, ierr )
+<span style="color: #b22222;">!      </span><span style="color: #b22222;">print "(a,10i3)", "Ranks of g2 in base group:", comm_rank2</span>
+
+      <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">mpi_group_rank</span>(g1,myrank1,ierr)
+      <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">mpi_group_rank</span>(g2,myrank2,ierr)
+
+      <span style="color: #b22222;">! </span><span style="color: #b22222;">Do the actual transfers. </span>
+      <span style="color: #b22222;">! </span><span style="color: #b22222;">This version with non-blocking communications</span>
+
+     ncomms = <span style="color: #a020f0;">size</span>(comms)
+
+      <span style="color: #b22222;">! </span><span style="color: #b22222;">Some bookkeeping for the requests</span>
+      nrecvs_local = 0
+      nsends_local = 0
+      <span style="color: #a020f0;">do</span> i=1,ncomms
+         c =&gt; comms(i)
+         <span style="color: #a020f0;">if</span> (myrank2 == c%dst) <span style="color: #a020f0;">then</span>
+            nrecvs_local = nrecvs_local + 1
+         <span style="color: #a020f0;">endif</span>
+         <span style="color: #a020f0;">if</span> (myrank1 == c%src) <span style="color: #a020f0;">then</span>
+            nsends_local = nsends_local + 1
+         <span style="color: #a020f0;">endif</span>
+      <span style="color: #a020f0;">enddo</span>
+      <span style="color: #a020f0;">allocate</span>(local_reqR(nrecvs_local))
+      <span style="color: #a020f0;">allocate</span>(local_reqS(nsends_local))
+      <span style="color: #a020f0;">allocate</span>(statuses(mpi_status_size,nrecvs_local))
+
+      <span style="color: #b22222;">! </span><span style="color: #b22222;">First, post the receives</span>
+      nrecvs_local = 0
+      <span style="color: #a020f0;">do</span> i=1,ncomms
+         c =&gt; comms(i)
+         <span style="color: #a020f0;">if</span> (myrank2 == c%dst) <span style="color: #a020f0;">then</span>
+            nrecvs_local = nrecvs_local + 1
+            src_in_comm = comm_rank1(c%src)
+            <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">MPI_irecv</span>(data2(c%i2),c%nitems,MPI_Double_Precision,src_in_comm, <span style="color: #a020f0;">&amp;</span>
+                           i,bridge_comm,local_reqR(nrecvs_local),ierr)
+         <span style="color: #a020f0;">endif</span>
+      <span style="color: #a020f0;">enddo</span>
+
+      <span style="color: #b22222;">! </span><span style="color: #b22222;">Post the sends</span>
+      nsends_local = 0
+      <span style="color: #a020f0;">do</span> i=1,ncomms
+         c =&gt; comms(i)
+         <span style="color: #a020f0;">if</span> (myrank1 == c%src) <span style="color: #a020f0;">then</span>
+            nsends_local = nsends_local + 1
+            dst_in_comm = comm_rank2(c%dst)
+            <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">MPI_isend</span>(data1(c%i1),c%nitems,MPI_Double_Precision,dst_in_comm, <span style="color: #a020f0;">&amp;</span>
+                        i,bridge_comm,local_reqS(nsends_local),ierr)
+         <span style="color: #a020f0;">endif</span>
+      <span style="color: #a020f0;">enddo</span>
+
+      <span style="color: #b22222;">! </span><span style="color: #b22222;">A former loop of waits can be substituted by a "waitall",</span>
+      <span style="color: #b22222;">! </span><span style="color: #b22222;">with every processor keeping track of the actual number of </span>
+      <span style="color: #b22222;">! </span><span style="color: #b22222;">requests in which it is involved.</span>
+
+      <span style="color: #b22222;">! </span><span style="color: #b22222;">Should we wait also on the sends?</span>
+
+      <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">MPI_waitall</span>(nrecvs_local, local_reqR, statuses, ierr)
+
+
+      <span style="color: #b22222;">! </span><span style="color: #b22222;">This barrier is needed, I think</span>
+      <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">MPI_Barrier</span>(bridge_comm,ierr)
+
+      <span style="color: #a020f0;">deallocate</span>(local_reqR, local_reqS, statuses)
+
+    <span style="color: #a020f0;">end subroutine</span> <span style="color: #0000ff;">do_transfers_dp</span>
+</pre>
+</div>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<p class="author">Author: Alberto Garcia</p>
+<p class="date">Created: 2016-09-14 Wed 11:31</p>
+<p class="creator"><a href="http://www.gnu.org/software/emacs/">Emacs</a> 24.5.1 (<a href="http://orgmode.org">Org</a> mode 8.2.10)</p>
+<p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
+</div>
+</body>
+</html>

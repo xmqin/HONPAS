@@ -1,0 +1,99 @@
+-------------------------------------------------
+2016-07-25  Alberto Garcia   trunk-531--elpa-3
+Sync to trunk-531
+
+-------------------------------------------------
+2016-07-21  Alberto Garcia   trunk-525--elpa-3
+Updated manual
+
+Note that ELPA code is embedded in the Siesta distribution for now.
+Eventually, Siesta should link to an external pre-compiled ELPA library.
+
+
+-------------------------------------------------
+2016-07-21  Alberto Garcia   trunk-525--elpa-2
+Sync to trunk-525
+
+.....
+.....
+
+-------------------------------------------------
+2015-10-09  Alberto Garcia   trunk-479--elpa-2
+Sync to trunk-479
+
+-------------------------------------------------
+2015-10-01  Alberto Garcia   trunk-478--elpa-2
+Sync to trunk-478. Added MRRR example
+
+* Added Tests/sih-mrrr
+
+-------------------------------------------------
+2014-01-19  Alberto Garcia   trunk-453--elpa-2
+Added real solver based on the MRRR method in Scalapack.
+
+This method allows to compute only a subset of eigenpairs.
+
+First version with query for sizing of work arrays.
+It could probably be optimized for memory in Z, since
+only a subset of eigenvectors is dealt with.
+
+Set the option with
+
+ Diag.MRRR T
+
+and specify number of eigenstates to compute by
+
+NumberOfEigenstates N
+
+(A. Garcia)
+
+added:
+  Src/rdiag_mrrr.F
+modified:
+  Src/Makefile
+  Src/diagg.F
+
+-------------------------------------------------
+2014-01-17  Alberto Garcia   trunk-453--elpa-1
+Ported ELPA interface to trunk
+
+The version interfaced is that nicknamed 'ELPA_2011.12'.
+So far there is only functionality for real matrices.
+
+added:
+  Docs/ELPA.CHANGES
+  Src/Sys/macosx-gfortran-openmpi.make
+  Src/elpa1.f90
+  Src/elpa2.f90
+  Src/elpa2_kernels.f90
+  Src/rdiag_elpa.F
+modified:
+  Src/Makefile
+  Src/diagg.F
+
+-------------------------------------------------
+2012-02-10  Alberto Garcia   siesta-3.1.1--elpa-2
+ELPA solver now works for real matrices
+
+It works with the intel compiler and openmpi-1.4.
+
+modified:
+  Src/rdiag_elpa.F
+
+-------------------------------------------------
+2012-02-10  Alberto Garcia   siesta-3.1.1--elpa-1
+First step for ELPA interface
+
+Wrote a new routine rdiag_elpa to interface with the library.
+There are some residual MPI problems.
+
+added:
+  Src/Sys/macosx-gfortran-openmpi.make
+  Src/elpa1.f90
+  Src/elpa2.f90
+  Src/elpa2_kernels.f90
+  Src/rdiag_elpa.F
+modified:
+  Src/Makefile
+  Src/diagg.F
+

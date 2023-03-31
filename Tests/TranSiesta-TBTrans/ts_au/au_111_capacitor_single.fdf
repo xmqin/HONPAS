@@ -1,0 +1,179 @@
+
+SystemName  au_111_capacitor_single
+SystemLabel au_111_capacitor_single
+
+==================================================
+==================================================
+# SPECIES AND BASIS
+
+# Number of species 
+NumberOfSpecies 1
+%block ChemicalSpeciesLabel
+  1  79 Au 
+%endblock ChemicalSpeciesLabel
+
+PAO.BasisSize    SZP
+PAO.EnergyShift  0.005 Ry
+
+
+# Use vacuum electric field rather than the system dipole
+Slab.DipoleCorrection Vacuum
+
+# This correspond roughly to 1. eV between a plate-capacitor
+# with a distance of (6.53197264-3.265986324) * 2.92311
+# See au_111_capacitor.fdf
+%block ExternalElectricField
+ 0.000  0.000  -0.1325058386085343 V/Ang
+%endblock ExternalElectricField
+
+==================================================
+==================================================
+# K-points
+
+%block kgrid_Monkhorst_Pack
+8   0   0   0.0
+0   8   0   0.0
+0   0   1  0.0
+%endblock kgrid_Monkhorst_Pack
+
+==================================================
+==================================================
+# UNIT CELL
+LatticeConstant       2.92311 Ang
+%block LatticeVectors
+1.000000000   0.00000000000   0.0000000000
+0.500000000   0.86602540378   0.0000000000
+0.000000000   0.00000000000  12.6144555530 
+%endblock LatticeVectors
+
+# Atomic coordinates
+AtomicCoordinatesFormat ScaledCartesian
+%block AtomicCoordinatesAndAtomicSpecies
+ 0.00000000 0.00000000 1.70000000 1 # 1: Au
+ 0.50000000 0.28867514 2.51649658 1 # 2: Au
+ .50000000 -0.288675135 3.33299316 1 # 3: Au
+ 0.00000000 0.00000000 4.14948974 1 # 4: Au
+ 0.50000000 0.28867514 4.96598632 1 # 5: Au
+ 0.50000000 0.28867514 0.06700684 1 # 6: Au
+ 1.00000000 0.57735027 0.88350342 1 # 7: Au
+%endblock AtomicCoordinatesAndAtomicSpecies
+
+==================================================
+==================================================
+# General variables
+
+ElectronicTemperature  100 K 
+MeshCutoff           350. Ry
+xc.functional         LDA           # Exchange-correlation functional
+xc.authors            CA
+SpinPolarized .false.
+SolutionMethod Transiesta 
+
+==================================================
+==================================================
+# SCF variables
+
+DM.MixSCF1   T
+MaxSCFIterations      300           # Maximum number of SCF iter
+DM.MixingWeight       0.03          # New DM amount for next SCF cycle
+DM.Tolerance          1.d-4         # Tolerance in maximum difference
+DM.UseSaveDM          true          # to use continuation files
+DM.NumberPulay         5
+Diag.DivideAndConquer     no
+MixHamiltonian yes
+
+==================================================
+==================================================
+# MD variables
+
+MD.FinalTimeStep 1
+MD.TypeOfRun CG
+MD.NumCGsteps     000
+MD.UseSaveXV      .true.
+
+==================================================
+==================================================
+# Output variables
+
+WriteMullikenPop                1
+WriteBands                      .false.
+SaveRho                         .false.
+SaveDeltaRho                    .false.
+SaveHS                          .false.
+SaveElectrostaticPotential      True 
+SaveTotalPotential              no
+WriteCoorXmol                   .true.
+WriteMDXmol                     .true.
+WriteMDhistory                  .false.
+WriteEigenvalues                yes
+
+==================================================
+==================================================
+# Parallel variables
+
+Diag.ParallelOverK      yes 
+
+==================================================
+==================================================
+# Transiesta information
+
+TS.Atoms.Buffer [ -1 -2]
+
+TS.Voltage    0.00000 eV
+%block TS.ChemPots
+  Left
+%endblock TS.ChemPots
+
+%block TS.ChemPot.Left
+  mu 0. eV
+  contour.eq
+    begin
+      c-Left
+      t-Left
+    end
+%endblock TS.ChemPot.Left
+
+TS.Elecs.Bulk true
+# This is for testing purposes!
+# DO NOT USE IF YOU DO NOT UNDERSTAND!
+TS.Elecs.Neglect.Principal true
+TS.Elecs.GF.ReUse true
+%block TS.Elecs
+  Left
+%endblock TS.Elecs
+
+%block TS.Elec.Left
+  TSHS ./elec_au_111_abc.TSHS
+  chem-pot Left
+  semi-inf-dir -a3
+  elec-pos begin 1
+%endblock TS.Elec.Left
+
+TS.Contours.Eq.Pole    2.50000 eV
+%block TS.Contour.c-Left
+  part circle
+   from  -40.00000 eV + V/2 to -10. kT + V/2
+    points 30
+     method g-legendre
+%endblock TS.Contour.c-Left
+%block TS.Contour.t-Left
+  part tail
+   from prev to inf
+    points 10
+     method g-fermi
+%endblock TS.Contour.t-Left
+
+# TBtrans options
+
+TBT.Elecs.Eta    0.0001 eV
+%block TBT.Contours
+  neq
+%endblock TBT.Contours
+
+%block TBT.Contour.neq
+  part line
+   from   -0.50000 eV to    0.50000 eV
+    delta    0.01000 eV
+     method mid-rule
+%endblock TBT.Contour.neq
+TBT.T.Eig 3

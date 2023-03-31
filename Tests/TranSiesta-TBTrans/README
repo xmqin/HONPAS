@@ -1,0 +1,41 @@
+
+Automated tests for TranSiesta-TBTrans
+
+A copy of the Tests directory is placed by the Src/obj_setup.sh script
+into the compilation directory (which by default is Obj, but any number of
+compilation directories can be created, as explained in the manual --
+we will refer to this compilation directory as OBJDIR). The original
+Tests directory should therefore be kept clean, and all the work done
+in the relevant copy.
+
+For the default mode of operation, go into any subdirectory of the
+current directory (OBJDIR/Tests/TranSiesta-TBTrans) and type
+'make'. This will execute a script that first runs the "electrode"
+calculation, and then the "scattering region" calculation and the
+TBTrans post-processing.
+
+Reference output files can be found in directory
+Tests/Reference/TranSiesta-TBTrans.
+
+To use a different Siesta executable (i.e., other than the default,
+which is the one compiled in OBJDIR), use:
+
+make TS=/full/path/to/siesta
+
+This technique is also useful for other execution environments. For
+example, to run OBJDIR/siesta in parallel (assuming the right path
+and libraries for mpirun are set):
+
+make TS="mpirun -np 2 ../../../../siesta"
+
+The source for TBTrans resides in Util/TS/TBtrans. 
+To guarantee that the TBtrans executable is
+compatible with the TranSiesta executable in OBJDIR, TBtrans is
+re-compiled with the appropriate settings in OBJDIR/arch.make.
+
+To override the default TBtrans executable in Util/TS/TBtrans, TBT can be
+specified in the command line:
+
+make TBT=/full/path/to/tbtrans
+
+

@@ -1,0 +1,60 @@
+SystemName          2 Water molecule + gate
+SystemLabel         h2o_2_dipol_gate
+
+# Add a charged gate of 0.001 electrons
+# at a distance of 20 Ang from the top H2O
+# molecule
+%block Geometry.Charge
+ plane -0.001 charge
+  gauss 1. 2. Ang
+   0. 40. 0. Ang # point in plane
+   0. 1. 0.      # normal vector to plane
+%endblock Geometry.Charge
+
+# In this case we know the vacuum region is too
+# short.
+# So we fix this by defining the
+# correct vacuum place where the field should be 0.
+
+# If you change this to "Dipole charge"
+# you will find the wrong field between the water
+# molecules and the gate
+Slab.DipoleCorrection vacuum
+%block Slab.DipoleCorrection.Vacuum
+  # The actual point isn't extremely important
+  # It just needs to be at least 3 Ang from the plane
+  # and the closest orbital
+  point 0. 47. 0. Ang
+%endblock
+# This origin of the dipole should calculate
+# the dipole correctly.
+#%block Slab.DipoleCorrection.Origin
+#  0. 20. 0. Ang
+#%endblock
+
+MeshCutoff  200 Ry
+
+%block ChemicalSpeciesLabel
+ 1  8  O
+ 2  1  H
+%endblock ChemicalSpeciesLabel
+
+LatticeConstant 1.0 Ang
+%block LatticeVectors
+3.0 0.0 0.0
+0.0 60.0 0.0
+0.0 0.0 5.0
+%endblock LatticeVectors
+
+AtomicCoordinatesFormat  Ang
+%block AtomicCoordinatesAndAtomicSpecies
+ 0.000  0.000  0.000  1
+ 0.757  0.586  0.000  2
+-0.757  0.586  0.000  2
+ 0.000  20.000  0.000  1
+ 0.757  19.414  0.000  2
+-0.757  19.414  0.000  2
+%endblock AtomicCoordinatesAndAtomicSpecies
+
+save-delta-rho T
+save-electrostatic-potential T

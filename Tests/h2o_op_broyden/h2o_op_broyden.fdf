@@ -1,0 +1,29 @@
+SystemName          Water molecule Broyden Optimization
+SystemLabel         h2o_op_broyden
+NumberOfAtoms       3
+NumberOfSpecies     2
+
+MeshCutoff  50 Ry
+
+%block ChemicalSpeciesLabel
+ 1  8  O      # Species index, atomic number, species label
+ 2  1  H
+%endblock ChemicalSpeciesLabel
+
+AtomicCoordinatesFormat  Ang
+%block AtomicCoordinatesAndAtomicSpecies
+ 0.000  0.000  0.000  1
+ 0.757  0.586  0.000  2
+-0.757  0.586  0.000  2
+%endblock AtomicCoordinatesAndAtomicSpecies
+
+DM.Number.Pulay 3
+
+WriteForces T
+
+MD.MaxForceTol          0.01 eV/Ang
+MD.TypeOfRun Broyden
+MD.NumCGSteps 40
+MD.Broyden.History.Steps 6
+MD.Broyden.Initial.Inverse.Jacobian 1.0
+

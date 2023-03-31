@@ -1,0 +1,62 @@
+%
+% This TeX file includes the default indices used in the SIESTA
+% manual.
+%
+%  Nick R. Papior, 2016 (nickpapior <at> gmail.com)
+%
+
+\makeindex
+
+% Generic index for non specified index commands
+\newindex[Index]{idx}
+
+% In this document we create several indices to enable direct 
+% interaction with the wanted feature.
+
+% This index is indexing all the files of siesta:
+\newindex[List of \siesta\ files]{sfiles}
+
+% This index lists all fdf-key words
+\newindex[List of \fdflib\ flags]{sfdf}
+
+
+% Create shorthand commands for fdf-indices
+\NewDocumentCommand\fdfindex{ s m o }
+{%
+    % If this is the starred variant, we will
+    % create the hypertarget
+    \bgroup%
+    \StrSubstitute{#2}{!}{.}[\@tmp]%
+    \IfBooleanT{#1}{%
+        \expandafter\cleanedhypertarget\expandafter{\@tmp}{{}}%
+        \expandafter\label\expandafter{\@tmp}%
+    }%
+    \egroup%
+    \StrSubstitute{#2}{:}{!}[\@tmp]%
+    \IfNoValueTF{#3}{%
+        %\index{#1@\fdf*{#1}}%
+        \sindex[sfdf]{\@tmp}%
+    }{%
+        %\index{#1@\fdf*{#1}#2}%
+        \sindex[sfdf]{\@tmp#3}%
+    }%
+}
+
+% Create shorthand commands for file-indices
+\NewDocumentCommand\fileindex{ m o }
+{%
+    \IfNoValueTF{#2}{%
+        %\index{#1@\fdf*{#1}}%
+        \sindex[sfiles]{#1}%
+    }{%
+        %\index{#1@\fdf*{#1}#2}%
+        \sindex[sfiles]{#1#2}%
+    }%
+}
+
+
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "../siesta"
+%%% End:

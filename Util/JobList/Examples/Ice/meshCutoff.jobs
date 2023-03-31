@@ -1,0 +1,43 @@
+# MeshCutoff convergence for water iceXI vs 
+
+# Leave '$jobName' untouched. Do NOT substitute it by an actual name.
+# %queue sh queue.sh $jobName 8    # real queuing of jobs on 8 cores/job
+%queue touch $jobName.queued       # testing dummy (does not run anything)
+
+%result energy pressure virial
+
+%list MeshCutoff
+  %list Unfiltered
+    %list IceXI
+      defaults.fdf; iceXI.fdf; dzp.fdf; MeshCutoff 100 Ry      
+      defaults.fdf; iceXI.fdf; dzp.fdf; MeshCutoff 200 Ry      
+      defaults.fdf; iceXI.fdf; dzp.fdf; MeshCutoff 300 Ry      
+      defaults.fdf; iceXI.fdf; dzp.fdf; MeshCutoff 500 Ry      
+      defaults.fdf; iceXI.fdf; dzp.fdf; MeshCutoff 800 Ry  
+    %endlist IceXI
+    %list IceVIII
+      defaults.fdf; iceVIII.fdf; dzp.fdf; MeshCutoff 100 Ry      
+      defaults.fdf; iceVIII.fdf; dzp.fdf; MeshCutoff 200 Ry      
+      defaults.fdf; iceVIII.fdf; dzp.fdf; MeshCutoff 300 Ry      
+      defaults.fdf; iceVIII.fdf; dzp.fdf; MeshCutoff 500 Ry      
+      defaults.fdf; iceVIII.fdf; dzp.fdf; MeshCutoff 800 Ry      
+    %endlist IceVIII
+  %endlist Unfiltered
+  %list Filtered
+    %list IceXI
+      defaults.fdf; iceXI.fdf; dzp.fdf; FilterCutoff 100 Ry; MeshCutoff 100 Ry    
+      defaults.fdf; iceXI.fdf; dzp.fdf; FilterCutoff 200 Ry; MeshCutoff 200 Ry      
+      defaults.fdf; iceXI.fdf; dzp.fdf; FilterCutoff 300 Ry; MeshCutoff 300 Ry      
+      defaults.fdf; iceXI.fdf; dzp.fdf; FilterCutoff 500 Ry; MeshCutoff 500 Ry      
+      defaults.fdf; iceXI.fdf; dzp.fdf; FilterCutoff 800 Ry; MeshCutoff 800 Ry  
+    %endlist IceXI
+    %list IceVIII    
+      defaults.fdf; iceVIII.fdf; dzp.fdf; FilterCutoff 100 Ry; MeshCutoff 100 Ry      
+      defaults.fdf; iceVIII.fdf; dzp.fdf; FilterCutoff 200 Ry; MeshCutoff 200 Ry      
+      defaults.fdf; iceVIII.fdf; dzp.fdf; FilterCutoff 300 Ry; MeshCutoff 300 Ry      
+      defaults.fdf; iceVIII.fdf; dzp.fdf; FilterCutoff 500 Ry; MeshCutoff 500 Ry      
+      defaults.fdf; iceVIII.fdf; dzp.fdf; FilterCutoff 800 Ry; MeshCutoff 800 Ry      
+    %endlist IceVIII
+  %endlist Filtered
+%endlist MeshCutoff
+

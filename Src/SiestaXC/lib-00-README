@@ -1,0 +1,66 @@
+SiestaXC library
+
+This directory contains, as a self-contained package, the source code of the 
+siestaXC library, used by the SIESTA program. It provides routines to calculate 
+the exchange and correlation energy and potential in spherical (i.e. an atom) 
+or periodic systems, using a variety of LDA and GGA functionals, as well as
+the van der Waals DFT functionals of Dion et al (PRL 92, 246401 (2004)), 
+Lee et al (PRB 82, 081101 (2010)), Klimes et al (JPCM 22, 022201 (2009)),
+and Vydrov and VanVoorhis (JCP 133, 244103 (2010)) implemented as described 
+by Roman-Perez and Soler (PRL 103, 096102 (2009))
+
+See siestaxc.f90 for how to call the siestaXC library routines
+
+To compile the library you might do something similar to the following, 
+depending on the building system used for your code:
+
+1) Make SiestaXC a subdirectory of your main-program's directory.
+
+2) Edit the lib-arch.make file in the SiestaXC directory, or create your 
+   own version. If you need MPI operation, make sure to define MPI_INTERFACE 
+   and DEFS_MPI. A minimal lib-arch.make could be:
+#--------------------
+FC=g95 -O3 -DGRID_DP
+#
+.F.o:
+	$(FC) -c $<
+.f.o:
+	$(FC) -c $<
+.F90.o:
+	$(FC) -c $<
+.f90.o:
+	$(FC) -c $<
+#--------------------
+
+3) Do "make" in the SiestaXC subdirectory. This will create the library and 
+   copy files libSiestaXC.a and siestaxc.mod to your main-program's directory.
+
+4) Compile the rest of the program with the same compiler and compilation
+   options specified in lib-arch.make
+
+Some f90 compilers (notably Intel's) require all the .mod files (and not only
+siestaxc.mod) to be present when compiling your main program. In this case,
+substitute the following lines (notice: tabulators, not spaces, are required):
+In SiestaXC/makefile:
+< module:  libSiestaXC.a
+< 	cp siestaxc.mod *.a ..
+-------
+> module:  libSiestaXC.a
+>	cp *.mod *.a ..
+-------
+In SiestaXC/MPI/Makefile:
+< module_built: libmpi_f90.a
+<	@touch module_built
+<	@cp mpi_siesta.mod ..
+-------
+> module_built: libmpi_f90.a
+>	@touch module_built
+>	@cp *.mod ..
+-------
+Alernatively, add a flag similar to '-I ./SiestaXC' to have the compiler 
+search the subdirectory for the appropriate modules. Notice that both 
+methods may lead to some name conflicts with your main program. In this
+case, you will have to edit and change the conflicting module names in 
+either your program or the siestaXC library.
+
+

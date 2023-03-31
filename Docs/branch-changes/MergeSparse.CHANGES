@@ -1,0 +1,81 @@
+-----------------------------------------------------------------------
+2015-01-25  Alberto Garcia             siesta-trunk-465--merge-sparse-1
+Merge trunk-sparse (a.k.a. trunk-scf)
+
+Merged the work done in trunk-refcount, trunk-sparse, and
+trunk-scf. This was the original source of inspiration for
+the re-organization of the scf loop, the reference-counted
+objects, and the sparse-matrix extrapolation, among other
+things. 
+
+The main new functionality in this merge is the sparse matrix
+extrapolation. Most of the logic in the scf loop stays the same as in
+trunk, except for the possibility of having dDmax and dHmax
+separately.
+
+NOTE: Some files appear as 'removed' and then 'added'. This means that
+they were added with the same name in two different branches, and
+hence had different file-ids.
+
+removed:
+  Src/m_history.f90
+  Src/m_sparse.F
+removed and re-added (actually changed file-id):
+  Src/Fstack.T90
+  Src/Pair.T90
+  Src/basic_type.inc
+  Src/compute_max_diff.F
+  Src/m_svd.F90
+  Src/save_density_matrix.F
+added:
+  Docs/SCF.CHANGES
+  Src/Orphans/
+  Src/Orphans/check_scf_convergence.F
+  Src/Orphans/compute_EKS_Harris.F90
+  Src/class_Array2D.F90
+  Src/class_Fstack_Pair_Geometry_SpMatrix.F90
+  Src/class_Geometry.F90
+  Src/class_OrbitalDistribution.F90
+  Src/class_Pair_Geometry_SpMatrix.F90
+  Src/class_SpMatrix.F90
+  Src/class_Sparsity.F90
+  Src/die.F90
+  Src/extrapolateSpMatrix.F90
+  Src/m_new_dm.F90
+  Src/m_uuid.f90
+  Src/object_debug.F90
+  Src/readSpMatrix.F90
+  Src/restructSpMatrix.F90
+renamed:
+  Src/new_dm.F => Src/Orphans/new_dm.F
+modified:
+  Docs/siesta.tex
+  Src/MPI/Makefile
+  Src/Makefile
+  Src/SiestaXC/makefile
+  Src/born_charge.F
+  Src/compute_dm.F
+  Src/compute_energies.F90
+  Src/hsparse.F
+  Src/initparallel.F
+  Src/ksv.f
+  Src/m_check_supercell.f
+  Src/m_convergence.f90
+  Src/m_pulay.F90
+  Src/mixer.F
+  Src/normalize_dm.F
+  Src/optical.F
+  Src/overfsm.f
+  Src/parallelsubs.F
+  Src/post_scf_work.F
+  Src/scfconvergence_test.F
+  Src/setup_H0.F
+  Src/setup_hamiltonian.F
+  Src/siesta_analysis.F
+  Src/siesta_forces.F
+  Src/siesta_init.F
+  Src/siesta_options.F90
+  Src/sparse_matrices.F
+  Src/state_analysis.F
+  Src/state_init.F
+  Src/write_subs.F

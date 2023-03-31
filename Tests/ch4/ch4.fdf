@@ -1,0 +1,71 @@
+SystemName methane fcc  With vdW. Pre-packaged molecules
+SystemLabel ch4
+
+NumberOfSpecies 2
+NumberOfAtoms   5
+
+%block ChemicalSpeciesLabel
+1    6 C.pbe
+2    1 H.pbe
+%endblock ChemicalSpeciesLabel
+%block PS.lmax
+   C.pbe 2
+%endblock PS.lmax
+
+PAO.BasisSize   DZP
+kgrid_cutoff    10.0 Ang
+MeshCutoff      200 Ry
+PAO.EnergyShift 0.001 Ry
+
+# DFT, Grid, SCF
+
+XC.functional           GGA
+XC.authors              PBE
+DM.MixingWeight         0.150
+DM.Tolerance            1.d-4
+DM.NumberPulay          5      # Number of SCF steps between pulay mixing
+
+# Relaxation, smearing, etc.
+ElectronicTemperature   500 K
+
+
+#
+# Zmatrix for methane in fcc structure
+#
+LatticeConstant 5.96 Ang
+%block LatticeVectors
+          0.5    0.5   0.0
+          0.5    0.0   0.5
+          0.0    0.5   0.5
+%endblock LatticeVectors
+ZM.UnitsLength Ang
+ZM.UnitsAngle rad
+#
+# Zmatrix block: Only the orientation of the molecule
+# is allowed to vary (three angles). In particular,
+# the CH bond-length is fixed to a value lower than
+# the theoretically optimal, so there is an intramolecular
+# contribution to the stress which is deactivated below
+#
+%block Zmatrix
+molecule_fractional
+ 1   0   0   0      0.0             0.0     0.0          0   0   0
+ 2   1   0   0      CH      0.7             1.5          0   1   1
+ 2   1   2   0      CH      1.91063300      2.09439500   0   0   1
+ 2   1   2   3      CH      1.91063300      2.09439500   0   0   0
+ 2   1   2   4      CH      1.91063300      2.09439500   0   0   0
+constants
+CH 1.060015
+%endblock Zmatrix
+
+MD.TypeOfRun            Broyden     # Type of dynamics
+MD.VariableCell         T
+MD.RemoveIntraMolecularPressure T
+
+MD.NumCGsteps           30
+
+%block MM.Potentials
+1 1 C6 25.065 2.0
+2 2 C6  1.130 2.0
+1 2 C6  4.900 2.0
+%endblock MM.Potentials

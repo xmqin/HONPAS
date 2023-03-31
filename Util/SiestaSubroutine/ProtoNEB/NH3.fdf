@@ -1,0 +1,28 @@
+SystemName          Ammonia molecule
+NumberOfAtoms       4
+NumberOfSpecies     2
+
+%block ChemicalSpeciesLabel
+ 1  1  H      # Species index, atomic number, species label
+ 2  7  N
+%endblock ChemicalSpeciesLabel
+
+AtomicCoordinatesFormat  Ang
+%block AtomicCoordinatesAndAtomicSpecies
+ 0.000  0.000  0.000  1
+ 0.000  0.000  0.000  1
+ 0.000  0.000  0.000  1
+ 0.000  0.000  0.000  2
+%endblock AtomicCoordinatesAndAtomicSpecies
+
+XC.functional	GGA
+XC.authors	PBE
+
+MaxSCFIterations	100
+DM.MixingWeight	        1.0
+DM.NumberPulay		5
+DM.UseSaveDM		no
+DM.Tolerance            1.e-6
+
+MD.TypeOfRun    forces
+

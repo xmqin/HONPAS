@@ -1,0 +1,35 @@
+SystemName          H chain
+SystemLabel         h_chain
+NumberOfAtoms       1
+NumberOfSpecies     1
+
+MeshCutoff  50 Ry
+
+%block ChemicalSpeciesLabel
+ 1  1  H
+%endblock ChemicalSpeciesLabel
+
+#
+# Note: For some reason, SZ will not work...
+#
+PAO.BasisSize DZ
+
+LatticeConstant 1.0 Ang
+%block LatticeVectors
+8.0 0.0 0.0
+0.0 8.0 0.0
+0.0 0.0 2.0
+%endblock LatticeVectors
+
+%block kgrid_Monkhorst_Pack
+1 0 0  0.0
+0 1 0  0.0
+0 0 40 0.0
+%endblock kgrid_Monkhorst_Pack 
+
+AtomicCoordinatesFormat  Ang
+%block AtomicCoordinatesAndAtomicSpecies
+ 2.000  2.000  1.000  1
+%endblock AtomicCoordinatesAndAtomicSpecies
+
+COOP.Write T

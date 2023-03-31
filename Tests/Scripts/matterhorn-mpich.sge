@@ -1,0 +1,22 @@
+#!/bin/sh
+#$ -pe mpich 2
+#$ -cwd
+#$ -j y
+#$ -q oci.q
+#$ -S /bin/sh
+#$ -V
+
+#
+# Script to run Siesta tests in OCI's queue in Matterhorn, under MPICH
+# (the OCI nodes do not support Myrinet, apparently)
+#
+# Note the parallel environment above ("-pe mpich") and the MPIRUN below
+#
+prog=../../../siesta
+MPIRUN=/opt/64/mpich-pgi6/bin/mpirun
+#
+echo This job runs on the following nodes:
+echo `cat $TMP/machines`
+#
+make SIESTA="$MPIRUN -np $NSLOTS -machinefile $TMPDIR/machines $prog"
+

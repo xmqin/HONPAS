@@ -1,0 +1,909 @@
+----------------------------------------------------
+Feb 12, 2013 -- Nick P. Andersen     trunk-427--ts-npa-38
+Corrected transfer matrix calculation in hs_matrix
+
+* Bugfix for available transfer matrices.
+  - Was initialised to 1 for all connections
+    Correct value should be 0
+
+modified:
+  Src/m_hs_matrix.F90
+
+----------------------------------------------------
+Feb 06, 2013 -- Nick P. Andersen     trunk-427--ts-npa-37
+Output in TBTrans of read file was not correct
+
+* Removed uncessesary filename specification length.
+
+modified:
+  Src/m_ts_electrode.F90
+  Util/TBTrans_rep/m_tbt_options.F90
+  Util/TBTrans_rep/tbtrans.F90
+
+----------------------------------------------------
+Feb 06, 2013 -- Nick P. Andersen     trunk-427--ts-npa-36
+Bugfixes for last commit, missing pointer nullification
+
+* Missing nullification upon reading the TSHS files.
+* Added "continue on error" with make dep in the makefiles
+* Changed interface to tbt_read for consistency
+
+modified:
+  Src/Makefile
+  Src/m_ts_io.F90
+  Util/TBTrans_rep/Makefile
+  Util/TBTrans_rep/m_tbt_iotshs.F90
+  Util/TBTrans_rep/m_tbt_options.F90
+  Util/TBTrans_rep/tbtrans.F90
+
+----------------------------------------------------
+Feb 05, 2013 -- Nick P. Andersen     trunk-427--ts-npa-35
+Implemented phonon transport code, restructured IO for TS/TBT
+
+* Completely changed the TSHS io module.
+  - the read and write subroutines have been divided into
+    two seperate subroutines.
+  - Furthermore, no checks are made inside the ts_io module.
+    This will make it easier to reuse the code and retain code in
+    the proper places.
+  - The IO read has been adapted to use the glob_sparse routines
+    and is also capable of broad-casting the read values (give an 
+    optional flag Bcast=.true.
+* Implemented the new IO module into TBTrans_rep and the electrode
+  generation.
+  TODO: request a file format change of the TSHS/onlyS file.
+* Removed unneeded routines in IO TBTrans_rep as they are supplied in 
+  the new ts_io module
+* TSHS had errorneously saved the 'isa' which was ment to be
+  the 'iza' array (the species number does not bring any information)
+  It was not checked in any case, so it should be portable
+* Added code to do phonon transport
+  1. It relies on passing an option 'TS.TBT.Transport'
+     a) it could be 'phonon' or 'ph'
+     b) anything else, it will behave normally
+* Added contour types for allowing a phonon contour:
+  The TBTrans calculation is exactly the same, albeit the energy points
+  are calculated using (E+i\eta)**2
+  The contour points are however, still considered a transport contour 
+  point.
+  Added 'phonon' routine for generating this contour
+* Started on the implementation of different input files for TSHS
+  - For now it only responds to files with TSHS name ending.
+    Anything else will kill the program with a:
+    "file format not recognized"
+* m_glob_sparse has been added several new routines to aid the 
+  seperation of array creation:
+  - glob_sparse_numh
+  - glob_sparse_listh
+  - glob_sparse_listhptr
+  - glob_sparse_xij
+  - glob_sparse_matrices
+  The old glob_sparse_matrix has been changed to only handle one 
+  array at a time, whereas glob_sparse_matrices handles two 
+  simultaneously. This will reduce the MPI communication when
+  the spin is 2 or more as the S matrix will not be created every time
+* Added comments in the m_hs_matrix module for doubt in the algorithm
+  (RemUCellDistances should thus not be trusted upon...)
+  TODO, produce a test of the algorithm suggested.
+* Moved Dnewg and Enewg in transiesta into the spin loop
+  This reduces the array size by a factor of nspin
+* Corrected a bug when checking the Gamma-point in a TBTrans calculation.
+  The bug happened when the transiesta calculation was performed with
+  Gamma_parallel and the TBTrans calculation was performed at non-Gamma 
+  point. This is only non-allowed in a transiesta calculation.
+  - Thanks to Henrik Lofas (mailing list)
+  
+removed:
+  Util/TBTrans_rep/m_tbt_read_tshs.F90
+modified:
+  Src/Makefile
+  Src/final_H_f_stress.F
+  Src/m_glob_sparse.F90
+  Src/m_hs_matrix.f90
+  Src/m_ts_cctype.f90
+  Src/m_ts_contour.f90
+  Src/m_ts_electrode.F90
+  Src/m_ts_in_siesta.F
+  Src/m_ts_io.F90
+  Src/state_init.F
+  Util/TBTrans_rep/Makefile
+  Util/TBTrans_rep/m_tbt_iotshs.F90
+  Util/TBTrans_rep/m_tbt_options.F90
+  Util/TBTrans_rep/tbt_init.F90
+  Util/TBTrans_rep/tbt_reinit.F90
+  Util/TBTrans_rep/tbtrans.F90
+
+----------------------------------------------------
+Feb 05, 2013 -- Nick P. Andersen     trunk-427--ts-npa-34
+Extended and made glob_sparse more intuitive
+
+* Added routines for globalizing seperate sparse arrays
+  1. This will leverage the need for all arrays when just
+     needing one.
+  2. Particular in IO-writes one wished to do allocating 
+     of an array before writing.
+* Fixed the deallocation to deallocate only if they are not
+  allocated.
+* Added routines for deallocating the global H and S matrices
+* Changed the interface to better match which arrays needs
+  others.
+  In general a preceding array is needed before a later array can
+  be created:
+  call glob_sparse_xij(no_l,no_u, maxnh, &
+         numh ,listhptr, xij, Gamma, &
+  	 numhg,listhptrg,maxnhg, xijg)
+  Here 'xijg' needs 'listhptr' and 'numh', and 'listhptr' needs
+  'numh'
+* Corrected the interfaces in TranSIESTA
+* Made ReUseGF default to .FALSE.. The problem was that if somebody
+  changed the MeshCutOff it could not be ensured via the GF for the 
+  electrodes.
+  Now it is on the user to specify whether the system parameters 
+  have not changed.
+
+modified:
+  Docs/siesta.tex
+  Src/m_glob_sparse.F90
+  Src/m_ts_in_siesta.F
+  Src/m_ts_options.F90
+
+----------------------------------------------------
+Dec 13, 2012 -- Nick P. Andersen     trunk-427--ts-npa-33
+Merge of trunk-427
+
+----------------------------------------------------
+Dec 13, 2012 -- Nick P. Andersen     trunk-426--ts-npa-32
+Bugfix in spin calculations for TBTrans_rep
+
+* The current and the averaged arrays were not initialized 
+  correctly for the case of spin.
+  - TAv, TEigAv, TDOSAv, PDOSAv
+  
+modified:
+  Util/TBTrans_rep/tbtrans.F90
+
+----------------------------------------------------
+Dec 9, 2012 -- Nick P. Andersen     trunk-426--ts-npa-31
+Writing of mulliken populations was writting by all nodes, only IONode
+
+* Showing that the mulliken population was calculated after mixing
+  was showed for all nodes. A simple if of the IONode has been
+  inserted
+
+modified:
+  Src/mixer.F
+
+----------------------------------------------------
+Dec 4, 2012 -- Nick P. Andersen     trunk-426--ts-npa-30
+Added tbtrans calculation of the transmission without innercell distances
+
+* This will accomodate several new features in the future:
+  - It gives a more intuitive Hamiltonian for "outsiders".
+    The inner cell distances are all together not required (as far 
+    as NPA knows), so it could be argued to entirely remove it.
+  - When taking a mean of a Hamiltonian it does not make sense to have
+    inner-cell distances contribute to k-points.
+* When comparing to Inelastica's implementation the inner-cell
+  distance is also entirely removed.
+* Required the need for obtaining the Hamiltonian without inner-cell
+  distances.
+  - Added to hs_matrix so that the inner-cell distance can be removed 
+    without iaorb, simply provide lasto instead.
+* Added this to the GF generation (the electrode inner cell must be 
+  the same)
+  - Both the reading and check of the inner-cell creation are performed
+  - TranSIESTA will only perform this with the inner-cell distance
+    (for now)
+* I have not added it to the manual as it will first make sense later on
+  when analysis tools are added
+
+modified:
+  Src/m_hs_matrix.f90
+  Src/m_ts_electrode.F90
+  Src/m_ts_gf.F90
+  Src/m_ts_in_siesta.F
+  Src/ts_init.F90
+  Util/TBTrans_rep/m_tbt_options.F90
+  Util/TBTrans_rep/tbtrans.F90
+
+----------------------------------------------------
+Dec 3, 2012 -- Nick P. Andersen     trunk-426--ts-npa-29
+Bugfix in forces run, an MPI_Bcast was never performed
+
+* A bug had been introduced when changing to the new FDF routines.
+  The broadcasting of xa and cell was never performed in iopipes.f90
+
+modified:
+  Src/iopipes.F90
+
+----------------------------------------------------
+Dec 2, 2012 -- Nick P. Andersen     trunk-426--ts-npa-28
+Name fix in m_hs_matrix
+
+* Allocated arrays where attributed a consHS name
+  whereas that is a leftover from old code. We have introduced the
+  correct naming.
+
+modified:
+  Src/m_hs_matrix.f90
+
+----------------------------------------------------
+Dec 2, 2012 -- Nick P. Andersen     trunk-426--ts-npa-27
+Added a deallocation routine for the glob_sparse module
+
+* The glob sparse module did not provide a routine for
+  deallocation of the arrays.
+  This is a most obvious way to handle the arrays.
+  glob_sparse_arrays_dealloc
+
+modified:
+  Src/m_glob_sparse.F90
+  Src/m_ts_in_siesta.F
+
+----------------------------------------------------
+Nov 28, 2012 -- Nick P. Andersen     trunk-426--ts-npa-26
+Added new tests for TranSIESTA, Gold 100 with 4 atom chain
+
+* The current TranSIESTA test with voltage can lead to errorneous 
+  calculations due to its very small matrix elements
+  - Thus small fluctuations in accurary will lead to non-conforming results
+* Instead we have added testing of a much larger system (maybe too large)
+  which has 112 atoms.
+  - It consists of a non-repeated calculation and one with repetition
+    + ts_au_100
+    + ts_au_100_repetition
+    + ts_au_100_0.25V
+    + ts_au_100_repetition_0.25V
+  - The voltage tests are merely for testing the voltage part of TranSIESTA
+* This is intended to superseed the au_111_capacitor test
+
+added:
+  Tests/Reference/TranSiesta-TBTrans/ts_au_100/
+  Tests/Reference/TranSiesta-TBTrans/ts_au_100/au_100.TRANS
+  Tests/Reference/TranSiesta-TBTrans/ts_au_100/au_100.out
+  Tests/Reference/TranSiesta-TBTrans/ts_au_100/elec_au_100.out
+  Tests/Reference/TranSiesta-TBTrans/ts_au_100/tbt_au_100.out
+  Tests/Reference/TranSiesta-TBTrans/ts_au_100_0.25V/
+  Tests/Reference/TranSiesta-TBTrans/ts_au_100_0.25V/au_100.TRANS
+  Tests/Reference/TranSiesta-TBTrans/ts_au_100_0.25V/au_100.out
+  Tests/Reference/TranSiesta-TBTrans/ts_au_100_0.25V/elec_au_100.out
+  Tests/Reference/TranSiesta-TBTrans/ts_au_100_0.25V/tbt_au_100.out
+  Tests/Reference/TranSiesta-TBTrans/ts_au_100_repetition/
+  Tests/Reference/TranSiesta-TBTrans/ts_au_100_repetition/au_100.TRANS
+  Tests/Reference/TranSiesta-TBTrans/ts_au_100_repetition/au_100.out
+  Tests/Reference/TranSiesta-TBTrans/ts_au_100_repetition/elec_au_100.out
+  Tests/Reference/TranSiesta-TBTrans/ts_au_100_repetition/tbt_au_100.out
+  Tests/Reference/TranSiesta-TBTrans/ts_au_100_repetition_0.25V/
+  Tests/Reference/TranSiesta-TBTrans/ts_au_100_repetition_0.25V/au_100.TRANS
+  Tests/Reference/TranSiesta-TBTrans/ts_au_100_repetition_0.25V/au_100.out
+  Tests/Reference/TranSiesta-TBTrans/ts_au_100_repetition_0.25V/elec_au_100.out
+  Tests/Reference/TranSiesta-TBTrans/ts_au_100_repetition_0.25V/tbt_au_100.out
+  Tests/TranSiesta-TBTrans/ts_au_100/
+  Tests/TranSiesta-TBTrans/ts_au_100/Au.psf
+  Tests/TranSiesta-TBTrans/ts_au_100/au_100.fdf
+  Tests/TranSiesta-TBTrans/ts_au_100/elec_au_100.fdf
+  Tests/TranSiesta-TBTrans/ts_au_100/makefile
+  Tests/TranSiesta-TBTrans/ts_au_100/script.sh
+  Tests/TranSiesta-TBTrans/ts_au_100_0.25V/
+  Tests/TranSiesta-TBTrans/ts_au_100_0.25V/Au.psf
+  Tests/TranSiesta-TBTrans/ts_au_100_0.25V/au_100.fdf
+  Tests/TranSiesta-TBTrans/ts_au_100_0.25V/elec_au_100.fdf
+  Tests/TranSiesta-TBTrans/ts_au_100_0.25V/makefile
+  Tests/TranSiesta-TBTrans/ts_au_100_0.25V/script.sh
+  Tests/TranSiesta-TBTrans/ts_au_100_repetition/
+  Tests/TranSiesta-TBTrans/ts_au_100_repetition/Au.psf
+  Tests/TranSiesta-TBTrans/ts_au_100_repetition/au_100.fdf
+  Tests/TranSiesta-TBTrans/ts_au_100_repetition/elec_au_100.fdf
+  Tests/TranSiesta-TBTrans/ts_au_100_repetition/makefile
+  Tests/TranSiesta-TBTrans/ts_au_100_repetition/script.sh
+  Tests/TranSiesta-TBTrans/ts_au_100_repetition_0.25V/
+  Tests/TranSiesta-TBTrans/ts_au_100_repetition_0.25V/Au.psf
+  Tests/TranSiesta-TBTrans/ts_au_100_repetition_0.25V/au_100.fdf
+  Tests/TranSiesta-TBTrans/ts_au_100_repetition_0.25V/elec_au_100.fdf
+  Tests/TranSiesta-TBTrans/ts_au_100_repetition_0.25V/makefile
+  Tests/TranSiesta-TBTrans/ts_au_100_repetition_0.25V/script.sh
+modified:
+  Docs/TranSiestaUpdate.pdf
+
+----------------------------------------------------
+Nov 27, 2012 -- Nick P. Andersen     trunk-426--ts-npa-25
+Merged with trunk
+
+----------------------------------------------------
+Nov 19, 2012 -- Nick P. Andersen     trunk-424--ts-npa-24
+Fix for overseen pointer intent value
+
+* Intent for pointers are not F95 compatible (thanks Alberto)
+
+modified:
+  Src/m_ts_electrode.F90
+
+----------------------------------------------------
+Nov 19, 2012 -- Nick P. Andersen     trunk-424--ts-npa-23
+Fix for several reported bugs, pointers and spin factors reintroduced
+
+* Intent for pointers are not F95 compatible (thanks Alberto)
+* Introduced alloc module in m_hs_matrix
+* Added dummy routine in m_glob_sparse for non-MPI compilations
+* Reintroduced spin factors in DOS calculations
+* Added check of the displacement in the electrode and system
+  k-grid
+
+modified:
+  Docs/TranSiestaUpdate.pdf
+  Docs/siesta.tex
+  Src/m_glob_sparse.F90
+  Src/m_hs_matrix.f90
+  Src/m_ts_electrode.F90
+  Util/TBTrans_rep/atompdos.F90
+  Util/TBTrans_rep/coop.F90
+  Util/TBTrans_rep/m_tbt_out.f90
+  Util/TBTrans_rep/tbtrans.F90
+
+----------------------------------------------------
+Nov 5, 2012 -- Nick P. Andersen     trunk-424--ts-npa-22
+Added documentation, tbtrans fixes, DOS calculation, output
+
+* Added documentation about AtomPDOS and the difference to the PDOS in 
+  TRANS and AVTRANS
+* Fixed index markings of long names (should be on one line to be the same
+  item
+* Added remark on the WARNING message. A short description of what it does
+* Fixed some index references for transiesta
+* Added more contents about the out-files of transiesta
+   - TSKP
+   - TSCC
+* Added remarks of the DOS in tbtrans to not be times a factor of two, in cases
+  of nspin == 1
+* Added new files to the index, TRANS, AVTRANS, TOTDOS, ORBDOS, COOP[|L|R]
+* Rename TS.ReUseGF in tbtrans to TS.TBT.ReUseGF
+* tbtrans output has been streamlined and headers for LDOS and RDOS have been	
+  added
+* Bugfix in the calculation of the electrode density of states
+  - Also fixed that it can be calculated with spin dependency
+
+modified:
+  Docs/siesta.tex
+  Src/m_ts_electrode.F90
+  Src/m_ts_gf.F90
+  Src/ts_init.F90
+  Util/TBTrans_rep/atompdos.F90
+  Util/TBTrans_rep/coop.F90
+  Util/TBTrans_rep/m_tbt_options.F90
+  Util/TBTrans_rep/m_tbt_out.f90
+  Util/TBTrans_rep/tbtrans.F90
+
+----------------------------------------------------
+Nov 2, 2012 -- Nick P. Andersen     trunk-424--ts-npa-21
+Merged with trunk
+
+----------------------------------------------------
+Nov 2, 2012 -- Nick P. Andersen     trunk-422--ts-npa-21
+Added more precision in the out files for tbtrans
+
+* Added more precision to the TOTDOS and ORBDOS and COOP
+
+modified:
+  Util/TBTrans_rep/m_tbt_out.F90
+
+----------------------------------------------------
+Nov 2, 2012 -- Nick P. Andersen     trunk-422--ts-npa-20
+ifort10, bugfix, several bugfixes in tbtrans
+
+* m_ts_contour had a possible bug in the pointer assignment,
+  it seemed as if it were a bug in the Ifort 10 compiler. 
+  However, it has been generalized and fixed.
+* Added Alberto's fix for the non-parallel run maxng => maxnh
+* TBTrans fixes:
+ * Removed factors of eV in atompdos and coop. Is I feared it was not
+   a reasonable factor.
+ * Generalized all density of states calculations to the same format
+ * Removed spin dependency in the calculations, thus all information
+   is not spin doubled.
+   - I think this will accomodate several things
+     1. The code is much easier to maintain (no need to check for spin)
+     2. Comparing transmissions makes more sense in "channel" view, and
+        having T = 1.0 is obviously one channel.
+ * Added the use of TS.TBT.ReUseGF in TBTrans instead of reading TS.ReUseGF
+ * Fixed the fdf.log issue that was not merged in at the time of tbtrans 
+   creation
+ * Fixed the user determined calculation of the PDOS Hamiltonian eigenvalues 
+ * Added headers about the contents in all out files
+
+modified:
+  Src/m_ts_contour.f90
+  Src/m_ts_in_siesta.F
+  Util/TBTrans_rep/atompdos.F90
+  Util/TBTrans_rep/coop.F90
+  Util/TBTrans_rep/m_tbt_options.F90
+  Util/TBTrans_rep/tbt_reinit.F90
+  Util/TBTrans_rep/tbtrans.F90
+
+----------------------------------------------------
+Oct 29, 2012 -- Nick P. Andersen     trunk-422--ts-npa-19
+Bugfix in reading the TSHS file when Gamma /= GammaOnFile, fixed transport E's
+
+* Fixed m_ts_io to read in the correct format when the file was a Gamma 
+  calculation.
+* Fixed the energy points creation when using transport points
+  to be formatted correctly.
+* Added print out of the energies in TBTrans
+
+modified:
+  Src/m_ts_contour.f90
+  Src/m_ts_io.F90
+  Src/m_ts_options.F90
+  Src/ts_init.F90
+  Util/TBTrans_rep/m_tbt_options.F90
+  Util/TBTrans_rep/m_tbt_read_tshs.F90
+  Util/TBTrans_rep/tbt_init.F90
+
+----------------------------------------------------
+Oct 29, 2012 -- Nick P. Andersen     trunk-422--ts-npa-18
+Added test for the unit-cell repetition
+
+* Added a test for the repetition, it will automatically link to the correct
+  TBTrans utility
+  - I have added a reference as well as corrected the scripts to correctly run
+  - The transmission should be the same as the au_111_capacitor as it is the
+    same system.
+* Bugfix for the sh script for Transiesta.
+  - sh does not contain pushd or popd commands, they are intrinsically
+    linked to bash. Hence we should use bash instead.
+
+added:
+  Tests/Reference/TranSiesta-TBTrans/ts_au_repetition/
+  Tests/Reference/TranSiesta-TBTrans/ts_au_repetition/au_111_capacitor.AVTRANS
+  Tests/Reference/TranSiesta-TBTrans/ts_au_repetition/au_111_capacitor.TEIG
+  Tests/Reference/TranSiesta-TBTrans/ts_au_repetition/au_111_capacitor.TRANS
+  Tests/Reference/TranSiesta-TBTrans/ts_au_repetition/au_111_capacitor.out
+  Tests/Reference/TranSiesta-TBTrans/ts_au_repetition/elec_au_111_abc.out
+  Tests/Reference/TranSiesta-TBTrans/ts_au_repetition/tbt_au_111_capacitor.out
+  Tests/TranSiesta-TBTrans/ts_au_repetition/
+  Tests/TranSiesta-TBTrans/ts_au_repetition/Au.psf
+  Tests/TranSiesta-TBTrans/ts_au_repetition/au_111_capacitor.fdf
+  Tests/TranSiesta-TBTrans/ts_au_repetition/elec_au_111_abc.fdf
+  Tests/TranSiesta-TBTrans/ts_au_repetition/makefile
+  Tests/TranSiesta-TBTrans/ts_au_repetition/script.sh
+modified:
+  Tests/script_ts.mk
+
+----------------------------------------------------
+Oct 29, 2012 -- Nick P. Andersen     trunk-422--ts-npa-17
+Merged with trunk
+
+----------------------------------------------------
+Oct 29, 2012 -- Nick P. Andersen     trunk-421--ts-npa-17
+Bugfix in m_ts_electrode and added trim for option reading, removed m_os
+
+* Removed m_os as it is not stable and should be directly merged with trunk
+* Added Alberto Garcia's bugfixes in the following routines:
+  - m_ts_electrode
+  - m_ts_in_siesta
+* Added a trim to an option printing to not have too much white space
+
+removed:
+  Src/m_os.f90
+modified:
+  Src/Makefile
+  Src/m_ts_electrode.F90
+  Src/m_ts_in_siesta.F90
+  Src/m_ts_options.F90
+  Util/TBTrans_rep/Makefile
+
+----------------------------------------------------
+Oct 24, 2012 -- Nick P. Andersen     trunk-421--ts-npa-16
+Merged with trunk
+
+----------------------------------------------------
+Oct 24, 2012 -- Nick P. Andersen     trunk-417--ts-npa-15
+[merge] Merged trunk-417 with ts-npa-14
+
+----------------------------------------------------
+Oct 24, 2012 -- Nick P. Andersen     trunk-411--ts-npa-14
+Renamed GF files to <systemlabel>.[TS|TBT]GF[L|R] for clarity. Added m_os
+
+* Renamed the GF files to be more consistent with the naming scheme of files
+  - For transiesta this means that:
+    * Left.GF has been defaulted to <systemlabel>.TSGFL
+    * Right.GF has been defaulted to <systemlabel>.TSGFR
+  - For tbtrans this means that:
+    * TBTLeft.GF has been defaulted to <systemlabel>.TBTGFL
+    * TBTRight.GF has been defaulted to <systemlabel>.TBTGFR
+* Added a m_os module which can aid in the creation of new filenames
+  It is not fully tested but provides a starting ground for creating names
+  with respect to directories. The following functions are available:
+  - file_ext (returns the extension)
+  - file_noext (returns the filename without the extension)
+  - basename (returns the filename without directories)
+  - dirname (returns the directory name, with an ending slash)
+  All these functions return a string of length 512, due to it being in a
+  module, however, we could provide a wrapper function to return it for 
+  the correct length. This requires some more "pure" functions.
+* Added a writeout of the electrode for a higher precision.
+  Enables to insert in FDF files.
+
+added:
+  Src/m_os.f90
+modified:
+  Src/Makefile
+  Src/m_ts_electrode.F90
+  Src/m_ts_options.F90
+  Util/TBTrans_rep/Makefile
+  Util/TBTrans_rep/m_tbt_options.F90
+
+----------------------------------------------------
+Oct 23, 2012 -- Nick P. Andersen     trunk-411--ts-npa-13
+Enabled tbtrans for new contour type, ipo compilation, FDF-deprecate/obsolete
+
+* Made IPO compilation compatible
+  - user should in their arch.make file add IPO_FLAG=-ipo
+    which then gets removed in library compilations.
+* Made tbtrans fully compliant with the new contour algorithms
+* Fixed a configure statement which often produces errors in NetCDF library
+  checking. I.e. fortran netcdf and c netcdf are not the same lib, so
+  two libs are needed (hence we need quotation marks in the configure script) 
+* Removed spin from ts_init (now in interface)
+* Added possibility for obsolete and deprecation in FDF codes.
+  Enables easier maintenance of fdf labels in the list and also	
+  is a consistent way of handling that.
+
+modified:
+  Src/Makefile
+  Src/configure
+  Src/fdf/fdf.F90
+  Src/m_ts_contour.f90
+  Src/m_ts_options.F90
+  Src/siesta_init.F
+  Src/ts_init.F90
+  Util/TBTrans_rep/Makefile
+  Util/TBTrans_rep/m_tbt_options.F90
+  Util/TBTrans_rep/tbt_init.F90
+  Util/TBTrans_rep/tbtrans.F90
+
+----------------------------------------------------
+Oct 23, 2012 -- Nick P. Andersen     trunk-411--ts-npa-12
+Moved contour to start and created a type for energy path
+
+* Added module m_ts_cctype for containing the contour path variables.
+  Maybe this should be moved to m_ts_contour. However, for having the 
+  type separately "using" it in subs are easier. 
+* Split the contour generation routines to be more straight-forward.
+  Named each part by their name for easier reference.
+* Output information about the contour path is more understandable
+   - Changed .CONTOUR to .TSCC
+* Started on code for transport during SCF cycle.
+* Made Transiesta fully compliant with the new contour type
+* Added a ts_init routine, much like siesta_init (makes it more stringent
+  on output and coding.
+* Added notice code for telling the user about "non"-optimal energy points
+* Need to fully test it in TBTrans
+
+removed:
+  Src/m_ts_contour.f
+added:
+  Src/m_ts_cctype.f90
+  Src/m_ts_contour.f90
+  Src/ts_init.F90
+modified:
+  Docs/siesta.tex
+  Src/Makefile
+  Src/m_ts_electrode.F90
+  Src/m_ts_gf.F90
+  Src/m_ts_in_siesta.F
+  Src/m_ts_io.F90
+  Src/m_ts_kpoints.F90
+  Src/m_ts_options.F90
+  Src/m_ts_scattering.F
+  Src/siesta_init.F
+  Src/ts_show_regions.f90
+  Util/TBTrans_rep/Makefile
+  Util/TBTrans_rep/m_tbt_options.F90
+  Util/TBTrans_rep/tbt_init.F90
+  Util/TBTrans_rep/tbtrans.F90
+
+modified:
+  Src/m_ts_electrode.F90
+  Src/m_ts_options.F90
+  Src/m_ts_scattering.F
+  Src/parallel.F
+  Src/precision.F
+  Util/TBTrans_rep/tbtrans.F90
+
+----------------------------------------------------
+Oct 20, 2012 -- Nick P. Andersen     trunk-411--ts-npa-11
+GFGammaGF optimization, energy-point notification and parallel loop count 
+
+* Provided an operator .PARCOUNT. which returns the ceiling of the 
+  closest integer divisable by number of nodes: Nodes .PARCOUNT. N
+* Added comments as requested
+* Removed some double comments
+* Made checks in the ts_options more general
+* Added check of optimal energy points (provides a user-notification
+  about the optimal number of energy-points with respect to 
+  parallelization
+* Further memory optimization of GFGammaGF 
+* Added ts_p in the precision code. Mainly so that we remember to
+  have this to test in the future
+  
+modified:
+  Src/m_ts_electrode.F90
+  Src/m_ts_options.F90
+  Src/m_ts_scattering.F
+  Src/parallel.F
+  Src/precision.F
+  Util/TBTrans_rep/tbtrans.F90
+
+----------------------------------------------------
+Oct 16, 2012 -- Nick P. Andersen     trunk-411--ts-npa-10
+Cleaned up output, renamed 'TranSIESTA:' to 'ts-charge:'
+
+* Simply make the output shorter and more concise
+* Transiesta output in write_subs has also been 
+  shortened
+
+modified:
+  Src/m_ts_in_siesta.F
+  Src/write_subs.F
+
+----------------------------------------------------
+Oct 15, 2012 -- Nick P. Andersen     trunk-411--ts-npa-9
+Bugfix in electrode GF generation if processors > NEn
+
+* If the number of processors exceeded the number of energy points,
+  an array was not used. It is now initialised correct and deallocated
+  correctly.
+  
+modified:
+  Src/m_ts_electrode.F90
+
+----------------------------------------------------
+Oct 15, 2012 -- Nick P. Andersen     trunk-411--ts-npa-8
+GF checks of electrode atomic coordinates
+
+* Upon reading the GF files the atomic coordinates will also be checked
+  Makes it near impossible to use a GF file which does not conform with the
+  setup.
+* Moved ts_do_Green into the GF module. (thus renamed to do_Green)
+* Bugfix for DM.UseSaveDM False and transiesta 
+  TSinit *was* only set correctly if 'DM.UseSaveDM T'
+  TSinit is now set in m_ts_options if TSmode == True
+* Bugfix in ts_show_regions
+
+removed:
+  Src/ts_do_green.F90
+modified:
+  Src/Makefile
+  Src/m_ts_electrode.F90
+  Src/m_ts_gf.F90
+  Src/m_ts_in_siesta.F
+  Src/m_ts_options.F90
+  Src/ts_show_regions.f90
+  Util/TBTrans_rep/Makefile
+  Util/TBTrans_rep/m_tbt_options.F90
+  Util/TBTrans_rep/tbtrans.F90
+
+----------------------------------------------------
+Oct 15, 2012 -- Nick P. Andersen     trunk-411--ts-npa-7
+Bugfix in charge calculation in TranSIESTA (does not affect calculation)
+
+* Calculation of the charges in the density matrix and regions are now correct
+  Will show correct charges in every k-point as well as doing correct 
+  charge-correction upon request.
+* Truncated warning for electrode range to 80 chars
+* UseBulk warning in m_ts_scattering has been removed (it was already 
+  present in the options)
+* Name of getGF_tri has been renamed to the general name getGF
+  getGF does both regular inversion AND tri-diagonalization.
+* Added timer output for TS_calc which gives a better estimate
+  of each TranSiesta SCF cycle.
+* Minor corrections in the documentation
+* Transiesta options reading is now streamlined
+
+modified:
+  Docs/siesta.ind
+  Docs/siesta.tex
+  Src/Makefile
+  Src/m_ts_electrode.F90
+  Src/m_ts_in_siesta.F
+  Src/m_ts_options.F90
+  Src/m_ts_scattering.F
+  Src/scfconvergence_test.F
+  Src/siesta_init.F
+  Src/ts_show_regions.f90
+  Util/TBTrans_rep/Makefile
+
+----------------------------------------------------
+Oct 9, 2012 -- Nick P. Andersen     trunk-411--ts-npa-6
+Added TranSIESTA regions, transfer cell calculation, NUsedAtoms read in options
+
+* ts_show_regions.f90 has been added for easier debugging system setups
+  - For new users it also provides a better insight as to how transiesta
+    sets up the buffer regions as well as electrodes.
+* m_hs_matrix has been added two new routines:
+  - set_HS_available_transfers:
+     This routine returns the available transfer cells for calculation.
+     It should be similar to the internal supercell for k-point sampling.
+     Thus if Gamma calculation it returns a 2x3 matrix filled with 0's.
+  - set_HS_transfermatrix
+     Can be used to obtain the transfer matrix of the system. 
+     This in effect allows for testing various mechanisms in surface Green's
+     functions etc. However, this should not be implemented into the 
+     m_ts_electrode as it is far slower.
+     However, in future cases it can be used to generate a utility for
+     easy generation of GF files.
+* Bugfix in m_tbt_out.f90. The coordinates has been changed to output Ang
+  correctly.
+* Finally read in the NA in the initialization of TranSIESTA.
+  - Enables the output of the system at start
+  - as well as error checking.
+   ? TODO... Move all contour generation routines to the initialization.
+     Will clean up TranSIESTA as well as faster checking for errors in the GF
+     files.
+* Added comment about the GCC compiler in cases of a forces run.
+  - The GCC 4.7 have removed access to piped files. Thus one needs gfortran
+    compiler version 4.6 or older.
+* Renamed DEBUG flags to TRANSIESTA_DEBUG in the ts files.
+* TS options are limited in their output if diagon or orderN method is used.
+  Only the relevant options for such a run is shown. (However, the full reading
+  can still be found in the fdf.log file)
+* Added a Makefile for the manual as well as hyperref for the document.
+  - make siesta (one time compilation)
+  - make final (latex, makeindex, latex, latex)
+  - make extra (makeindex)
+* Made the version.info directly input to the siesta manual.
+  Again this makes no confusion when passing around revisions of the manual,
+  as one is certain of the revisioned document.
+* Made refs into hyperlinks using hyperref (but only using the url package)
+  So removing the hyperref package will still be compilable.
+
+added:
+  Docs/Makefile
+  Src/ts_show_regions.f90
+modified:
+  Docs/siesta.ind
+  Docs/siesta.tex
+  Src/Makefile
+  Src/m_hs_matrix.f90
+  Src/m_ts_contour.f
+  Src/m_ts_electrode.F90
+  Src/m_ts_gf.F90
+  Src/m_ts_in_siesta.F
+  Src/m_ts_io.F90
+  Src/m_ts_options.F90
+  Src/m_ts_scattering.F
+  Src/ts_do_green.F90
+  Util/SiestaSubroutine/README
+  Util/TBTrans/Makefile
+  Util/TBTrans_rep/Makefile
+  Util/TBTrans_rep/m_tbt_options.F90
+  Util/TBTrans_rep/m_tbt_out.f90
+  Util/TBTrans_rep/tbtrans.F90
+
+----------------------------------------------------
+Sep 27, 2012 -- Nick P. Andersen    trunk-411--ts-npa-5
+Added AtomPDOS (TBT), TranSIESTA tests of electrode in z-dir, added DEBUG
+
+* Added code for outputting AtomPDOS
+  - This could still be improved so that the PDOS will be output
+    consequtively with regards of energy points and atomic index
+* The AtomPDOS routine is a little better on the communication side
+  as we send after all DOS regions have been calculated
+* The out formats in TBTrans did not have the 'tr1' fix which meant
+  a "close" format
+* Renamed m_tbt_out.F90 to m_tbt_out.f90 (no preprocessing takes place)
+* Added check of unitcell if TSmode == .true. 
+  - If the electrodes extend into the transport direction it is impossible 
+    to generate the surface Green's function for the electrode. 
+    Hence transiesta will stop if the unitcell have any components:
+      ucell(3,1:2) > 1e-7 or ucell(1:2,3) > 1e-7
+    The error margin is hardcoded (no reason to test)
+* Added many DEBUG statements for -DDEBUG in transiesta routines
+* Updated doc to reflect changes
+
+added:
+  Util/TBTrans_rep/atompdos.f90
+  Util/TBTrans_rep/m_lowdin.f90
+renamed:
+  Util/TBTrans_rep/m_tbt_out.F90 => Util/TBTrans_rep/m_tbt_out.f90
+modified:
+  Docs/siesta.tex
+  Src/m_ts_electrode.F90
+  Src/m_ts_gf.F90
+  Src/m_ts_options.F90
+  Src/m_ts_scattering.F
+  Src/ts_do_green.F90
+  Util/TBTrans_rep/Makefile
+  Util/TBTrans_rep/m_tbt_options.F90
+  Util/TBTrans_rep/tbtrans.F90
+  Util/TBTrans_rep/m_tbt_out.f90
+
+----------------------------------------------------
+Sep 10, 2012 -- Nick P. Andersen    trunk-411--ts-npa-4
+Bugfix in TBtrans which occured when PDOS region was 1
+  
+modified:
+  Util/TBTrans_rep/tbtrans.F90
+
+----------------------------------------------------
+Sep 10, 2012 -- Nick P. Andersen    trunk-411--ts-npa-3
+
+Bugfix in TBtrans and extra region output information
+
+* Added output of region in the out file.
+* Fixed spin factor to be 2 if nspin == 1.
+* Moved kgrid to tbtrans routines as the k-points needs
+  not to be shortened
+
+modified:
+  Util/TBTrans_rep/Makefile
+  Util/TBTrans_rep/m_tbt_out.F90
+  Util/TBTrans_rep/tbtrans.F90
+  Util/TBTrans_rep/m_tbt_kpoints.F90
+
+----------------------------------------------------
+Sep 10, 2012 -- Nick P. Andersen    trunk-411--ts-npa-2
+
+Several bugfixes in TranSiesta
+
+* Moved work2 array deallocation to appropriate place.
+* Added mpi-bcast for read in gamma variable of TSHS files
+* Makefile for version.F90 could not handle lines of length == 80
+
+modified:
+  Src/m_ts_in_siesta.F 
+  Src/m_ts_electrode.F90
+  Src/Makefile
+
+----------------------------------------------------
+Sep 5, 2012  -- Alberto Garcia      trunk-411--ts-npa-1
+First stage of merging of changes by Nick Papior Andersen
+
+They affect mostly TranSiesta.
+Full log message to come when the process is completed.
+
+added:
+  Src/kpoint_convert.f90
+  Src/m_glob_sparse.F90
+  Src/m_hs_matrix.f90
+  Src/m_ts_gf.F90
+  Src/m_ts_voltage.F90
+  Src/ts_do_green.F90
+  Util/TBTrans_rep/
+  Util/TBTrans_rep/Makefile
+  Util/TBTrans_rep/coop.F90
+  Util/TBTrans_rep/m_tbt_iotshs.F90
+  Util/TBTrans_rep/m_tbt_kpoints.F90
+  Util/TBTrans_rep/m_tbt_options.F90
+  Util/TBTrans_rep/m_tbt_out.F90
+  Util/TBTrans_rep/m_tbt_read_tshs.F90
+  Util/TBTrans_rep/tbt_init.F90
+  Util/TBTrans_rep/tbt_reinit.F90
+  Util/TBTrans_rep/tbtrans.F90
+  Util/TBTrans_rep/transmission.f90
+  Util/TBTrans_rep/tt_eig.f90
+renamed:
+  Src/m_ts_contour.F => Src/m_ts_contour.f
+modified:
+  Docs/siesta.tex
+  Src/MPI/Makefile
+  Src/Makefile
+  Src/compute_dm.F
+  Src/dhscf.F
+  Src/diagkp.F
+  Src/m_ts_aux_rout.F
+  Src/m_ts_electrode.F90
+  Src/m_ts_in_siesta.F
+  Src/m_ts_io.F90
+  Src/m_ts_kpoints.F90
+  Src/m_ts_options.F90
+  Src/m_ts_scattering.F
+  Src/scfconvergence_test.F
+  Src/siesta_forces.F
+  Src/siesta_init.F
+  Src/siesta_options.F90
+  Src/version.F90
+  Src/write_subs.F
+  Src/m_ts_contour.f
+
+

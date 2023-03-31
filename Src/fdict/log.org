@@ -1,0 +1,225 @@
+
+
+* Change log
+
+Every section in this part lists the change of the versions
+
+The dictionary will make use of the var format for retaining any type of
+data. This will allow for greater structure 
+** Changed build system <2016-05-14 Sat>
+Now the build system has been changed.
+I still need to document the build system, but essentially one
+may build fdict using:
+  make SHARED|STATIC=1
+to control whether shared/static libraries are build.
+(Both may be opted individually)
+Using the new build system an installation script also exists
+  make PREFIX=... install
+
+
+** Added test of speed <2015-10-17 Sat>
+To check the speed we create a test with 100 items and search through them
+300,000 times. This takes less than 1/10 of a second meaning that the
+overhead is nearly zero for practical purposes.
+
+Needless to say as the hash-table is in increasing order searching for
+keys with low-hash is _much_ faster than keys with high-hash.
+So the std. is around half the average search time of all items.
+
+** Speed-ed up concatenating large dictionaries substantially <2015-01-29 Thu>
+By moving the dictionary along with the insertion point we can
+greatly speed up the insertion of a large dictionary into another.
+The reason is that we always keep the hash values in ascending order,
+meaning that the search for insertion points will always increase
+in the linked list.
+Now the starting search point will move with the reached hash value
+to decrease insertion time.
+For RHS dictionaries of size 1 there is no benefit.
+** Added hash_same <2015-01-29 Thu>
+Enables the user to test different hash values by counting
+the maximally same hash key values encountered in the linked-list.
+** Added pop routine <2015-01-29 Thu>
+Instead of doing:
+  call associate(v,dict,key)
+  call remove(dict,key)
+the user can do:
+  call pop(v,dict,key)
+which moves the location from the dictionary
+to the variable by an associate call.
+The reference in the dictionary will be nullified.
+
+An optional dealloc keyword can be used to control the
+v deallocation if it already had an entry.
+
+** Added LLEN function <2015-01-29 Thu>
+Instead of relying on the counter %len to be correct
+the user can assert that the dictionary is consistent by
+using the LinkedListLen function (llen), they should ALWAYS
+be equivalent.
+** Improved HASH calculations to maximise spread <2015-01-29 Thu>
+The spread of the HASH values was not so good.
+By changing the algorithm slightly we went from 2000 similar
+keys out of 37000 to 400.
+This makes searches much faster.
+** Added direct retrieval from dictionaries <2015-01-29 Thu>
+call associate(real(dp),dict,key)
+and the assign equivalent is now possible.
+However, this will fail miserably if the data type is not
+consistent. This will be the users responsibility.
+** Bugfix for constants as pointers <2015-01-29 Thu>
+Creating a variable with a pointer to a constant
+has now been totally removed from the library.
+It should never occur on the user side so we have
+removed the possibility all together.
+** Bugfix for dict in dict <2014-10-23 Thu>
+Containing a dictionary in a dictionary is now done using
+the first address of the first d_entry. This means that
+one can create dictionaries in sub-routines and still be
+able to reference them outside.
+
+** Bugfix for dictionaries <2014-10-23 Thu>
+Nullification is now performed on only the first
+element, this is consistent with the regular pointer
+handling as nullification only does so on the "host".
+
+** Added call nullify to dictionaries <2014-10-21 Tue>
+This is mainly convenient if you know you only have
+a dictionary of dictionaries.
+** Added dictionaries to carry dictionaries <2014-10-21 Tue>
+This is not so easy, yet is accomblishable.
+We suspect this is quite a nice feature.
+The problem with user-types in dictionaries is that deleting
+a variable with a custom type is not well defined.
+Hence, a deletion of a dictionary will NOT delete custom types
+for obvious reasons.
+It will not even delete dictionaries as it does not 
+know the value of a custom type to be a dictionary.
+A small test example has been added.
+
+** Added custom types to be contained in variables <2014-10-20 Mon>
+The ability to allow users to extend the capabilities of the variable
+type has been added.
+Any programmer can now extend the variable to contain any kind of
+data type.
+
+However, the fact that any information regarding the contained data
+type is hidden for the variable type means that there are certain
+limitations.
+
+1. The user cannot assign user-types. It makes no sense as the 
+   data cannot be copied, we can only copy the pointer.
+2. Retrieval of data of a variable has to be done by the programmer
+   (add variable retrieval in the code that defines the data type, 
+    and thats it)
+3. 
+
+** Added dealloc specifier for delete <2014-10-19 Sun>
+When deleting a dictionary, or key in dictionary one
+can now only delete the reference. 
+This is handy if the <key>.kvp.<val> has been used.
+Also improved specific key deletion by adding a 
+hash-check.
+
+** Added .NIN. and .VALP. routines <2014-10-19 Sun>
+Added a function to check for keys not in a dictionary.
+Added a value retriever which transfers the pointer, and not
+the value.
+** Converted data container to a single byte array <2014-07-31 Thu>
+By using a trick of transferring types with pointers we only pass
+the direct information in the type (i.e. variable placement in
+memory etc).
+With this method we can hold any type of variable as the type
+is saved via an encoding realised as:
+
+ type :: ptr
+   real, pointer :: p(:)
+ end type ptr
+ type(ptr) :: p
+ character(len=1), allocatable :: enc(:)
+ real :: a(2)
+ 
+ allocate(enc(size(transfer(a,p)))
+ enc = transfer(a,p)
+
+which tells the encoding the placement of the data.
+
+** Changed required BASH version to 3 for compilation <2014-06-10 Tue>
+The required BASH version was version 4+.
+However, as many Macs are still relying on very old BASH 3 it has
+been decided to change the compilation compatibility to BASH 3.
+
+** Added information to printout statement <2014-05-30 Fri>
+Printing the dictionary now also shows the datatype along with
+the hash. The format:
+  <key> [<data-type>] (<hash-value>)
+is utilised
+
+** Created a generic routine for deletes <2014-05-30 Fri>
+In the dictionary several places of the code utilises a formation
+of checking deletion/nullification of the out/in-going variable.
+Now a generic subroutine can handle this.
+
+** Can now assign a dictionary without specifying a key <2014-05-30 Fri>
+I had forgotten to enable direct assignment "call assign(val,dic)"
+this has been fixed.
+
+** Added a which(this,key) for the dictionary <2014-05-30 Fri>
+It enables a direct look on the data type to assert without 
+having to fetch to a type(var)
+
+** Renamed add => extend <2014-05-30 Fri>
+This follows better the dictionary terminology.
+I think extend is better than append as the latter implies
+an "end"-appendage.
+
+** Renamed dict_print => print <2014-05-30 Fri>
+We might as well use a common print function.
+It has been overloaded to enable other codes to also
+utilise the print routine name.
+
+** Bugfix for associating <2014-05-30 Fri>
+The default associating a type(var) with type(var)
+is to not deallocate.
+This was a bug and has been fixed. It now behaves correctly.
+
+** Added print function to variable <2014-05-30 Fri>
+Only prints out the data type for now,
+consider adding a field to hold the size of the variable.
+That would also allow calling size on type(var)
+
+** Added the variable data type <2014-05-28 Wed>
+The data type type(var) has been added to the dictionary.
+
+** Renamed character data type <2014-05-28 Wed>
+The character data type was added using a non-conforming name,
+I have renamed the function calls for both the variable and the
+dictionary code.
+
+** Direct creation of dictionaries not allowed <2014-05-25 Sun>
+For calling routines:
+  call routine('hello'.kv.'h')
+we have a memory leak. This is obvious due to the pointer
+nature of the data associated. 
+A test has been added to demonstrate this effect:
+  tst_dict_mem3
+
+** Renamed .HAS. to .IN. <2014-05-25 Sun>
+A more appropriate name has been chosen for checking 
+existence of keys in dictionaries. Much like python we
+rely on the <key> .IN. <dict> to check for the existence.
+
+** Same value keys are (assign)ed <2014-05-25 Sun>
+In case a dictionary key with the same name
+is added to an existing dictionary we delete the old one
+by doing an "assign".
+This is the expected behaviour in any language.
+
+** Rely on libvar.a rather than chars <2013-11-11 Mon>
+The dictionary values are now the type(var) which eases
+the interfacing between different segments of the code.
+We allow to fully utilise the "assign" and "associate"
+function calls in the assignment of the dictionary by following the 
+operators:
+   .KV. (assign)
+   .KPV. (associate)
+

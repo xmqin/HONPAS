@@ -1,0 +1,43 @@
+# -----------------------------------------------------------------------------
+
+SystemName          bulk silicon  with extra sampling for PDOS
+SystemLabel         si_pdos_kgrid
+
+NumberOfAtoms       2
+NumberOfSpecies     1
+
+%block ChemicalSpeciesLabel
+ 1  14  Si
+%endblock ChemicalSpeciesLabel
+
+PAO.BasisSize       DZP
+PAO.EnergyShift     300 meV
+
+LatticeConstant    5.43 Ang
+%block LatticeVectors
+  0.500  0.500  0.000
+  0.000  0.500  0.500
+  0.500  0.000  0.500
+%endblock LatticeVectors
+
+MeshCutoff          90.0 Ry
+
+DM.MixingWeight      0.3 
+DM.NumberPulay       3  
+DM.Tolerance         1.d-4
+ 
+kgridcutoff          7. Ang
+PDOS.kgridcutoff    15. Ang
+
+SolutionMethod       diagon    
+ElectronicTemperature  25 meV  
+
+AtomicCoordinatesFormat  Fractional
+%block AtomicCoordinatesAndAtomicSpecies
+    0.    0.    0.     1  Si        1
+    0.25  0.25  0.25   1  Si        2
+%endblock AtomicCoordinatesAndAtomicSpecies
+
+%block Projected-density-of-states
+-30.00 15.00 0.200 500 eV
+%endblock Projected-density-of-states

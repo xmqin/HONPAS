@@ -1,0 +1,34 @@
+#
+# Title  in          $0
+# ROOT File name in       $1
+#
+set data style lines
+#
+# Stupid line length limit ... try to economize
+# z3 and z4 will not work.
+# Note that replot is not practical with "multiplot"
+#
+z2=`test -f $1.2 && echo 1 || echo 0`
+there_is_z3=`test -f $1.3 && echo 1 || echo 0`
+there_is_z4=`test -f $1.4 && echo 1 || echo 0`
+
+set title "$0"
+if (z2 == 0) \
+plot "$1.1" using 1:2 title "N=1" ,\
+                 0.0 notitle  lt 0
+if (z2 == 1) \
+plot "$1.1" us 1:2 ti "N=1",\
+        "$1.2" us 1:2 ti "N=2",\
+                 0.0 notitle  lt 0
+
+#if (there_is_z2 == 1) \
+#plot "$1.1" using 1:(($$2)*$$1**L) title "Z=1" with lines,\
+#     "$1.2" using 1:(($$2)*$$1**L) title "Z=2" with lines
+if (there_is_z3 == 1) \
+replot "$1.3" using 1:(($$2)*$$1**L) title "Z=3" with lines
+if (there_is_z4 == 1) \
+replot "$1.4" using 1:(($$2)*$$1**L) title "Z=4" with lines
+
+
+
+

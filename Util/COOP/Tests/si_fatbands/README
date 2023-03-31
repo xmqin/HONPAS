@@ -1,0 +1,38 @@
+Get the data from Tests/si_fatbands, i.e., copy the si_fatbands.HSX
+and the si_fatbands.bands.WFSX files, and process them:
+
+/path/to/fat [options] fatbands
+
+Then, a number of .EIGFAT files will be produced. These files contain
+*both* the eigenvalues and the projection weight for each orbital set
+in the .mpr file, and can be re-processed by the "eigfat2plot" program
+in Util/Bands to produce a data file suitable for plotting by Gnuplot.
+
+Alternatively, users might want to produce their own post-processors.
+
+
+The process in more detail:
+
+#
+# Copy the .HSX and .bands.WFSX file from the working directory where
+# you ran the 'si_fatbands' test.
+#
+# Rename the si_fatbands.bands.WFSX file to 'si_fatbands.WFSX'.
+#
+# Execute the 'fat' program (compile it first in the COOP directory)
+
+../../fat fatbands
+#
+# Now process the EIGFAT files:
+#
+../../../Bands/eigfat2plot fatbands.fatbands_Si_3s.EIGFAT > 3s.dat
+../../../Bands/eigfat2plot fatbands.fatbands_Si_3p.EIGFAT > 3p.dat
+../../../Bands/eigfat2plot fatbands.fatbands_Si_3d.EIGFAT > 3d.dat
+#
+# Plot with gnuplot, with typical commands:
+#
+
+plot "3s.dat" using 1:2:(4*$3) with points pt 6 ps variable  
+replot "3p.dat" using 1:2:(4*$3) with points pt 6 ps variable 
+
+

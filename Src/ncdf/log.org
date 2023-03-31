@@ -1,0 +1,176 @@
+
+
+* Change log
+
+Every section in this part lists the change of the versions
+
+** Updated reference to fdict name change <2015-06-02 Tue>
+** Added ncdf_crt <2014-10-23 Thu>
+Added the possibility of creating a NetCDF file purely based
+on a dictionary.
+Creating a dictionary like:
+  { DIMx : 2,
+    DIMy : 3,
+    VARxa : {
+      type : NF90_INT,
+      dims : "x,y",
+      atts : { },
+      chunks : <list of ints>,
+    },
+    VARya : {
+      type : NF90_INT,
+      dims : "x,y",
+      atts : { },
+      chunks : <list of ints>,
+    },
+    GROUPleft : {
+      { < a dictionary just like the top level dict. > }
+    },
+  }
+Added test to show-case this.
+
+** Bugfix for ncdf_assert <2014-10-23 Thu>
+Checking dimensions sizes used an erroneous logical to check.
+Changed delete(,dealloc=.false.) to nullify.
+
+** Added ncdf_assert <2014-10-19 Sun>
+Routine for checking content of NetCDF files has been implemented
+Currently it allows checking for the existance/values of
+  - i0,i1,i2
+  - s1,s2
+  - d1,d2
+It can be called using this interface:
+   ncdf_assert(ncdf,assert,dims=<dict>,vars=<dict>, &
+     has_dims=<dict>,has_vars=<dict>)
+The has_[dims|vars] simply checks for existance.
+The [dims|vars] checks their existance AND the value that
+resides in the dictionary.
+Optionally one can pass a [s|d]_EPS flag to determine 
+tolerance levels of similarity, for integers we only assert
+completely the same.
+
+Added usage of ncdf_assert in tst_ncdf_[34]
+
+** Enabled opening of groups from ncdf <2014-10-14 Tue>
+The opening of groups could before only be done using the regular
+ncdf_open construct.
+We now enable this command:
+  call ncdf_group_open(ncdf,groupname,grp)
+to ease the group-handling.
+
+** Bugfix for redef <2014-10-14 Tue>
+Similar to the fix with enddef (changed <2014-10-14 Tue>) we enable the
+same thing in redef.
+
+** Cleaned up build instructions <2014-10-14 Tue>
+The build instructions can now utilise a user supplied path
+to libfdict.a which enables the build process to be
+fully controlled by the environment.
+
+** NCDF enddef changed <2014-10-14 Tue>
+In case ncdf_enddef is called and a NF90_ENOTINDEFINE
+error is issued we will now not error out.
+It is just telling the user that the file is already in
+define mode.
+
+** Clean-up code for type(var) usage in attributes <2014-07-31 Thu>
+type(var) was not utilised to its full capabilities. We now 
+rely on the full variable implementation (which was the intent).
+
+** Bugfixes for ncdf <2014-07-31 Thu>
+A bug of reusing a hNCDF was erroneous as it could possibly
+retain information from the previous one.
+We now ensure that it is reset on close.
+
+Added chunks to def_var to set the chunking level of the variable.
+
+Bugfix for gatt fetches as the get_att_id was not considering when
+the attribute was global or not. We now check for globality.
+
+Bugfix for fetching attributes. All attributes with length one
+are now saved in the attribute as a scalar rather than a 1D size 1 array.
+
+** Updated to handle new fvar with encoding <2014-07-31 Thu>
+The fvar library has been updated and using the data
+types is now a bit more tedious. Yet, they provide a 
+heavily reduced memory footprint for many variables.
+
+** Changed BASH requirement to BASH >= 3 <2014-06-10 Tue>
+Instead of relying on BASH >= 4 we now settle at
+version 3. 
+I blame Mac for updating the bash version extremely slowly.
+:)
+
+** Updated to fvar-0.13 <2014-05-30 Fri>
+Updated to conform with fvar-release 0.13
+
+** COLLECTIVE parallelism is necessary for unlimited dimensions <2014-05-30 Fri>
+The parallel netcdf-4 test needed the COLLECTIVE flag 
+as the parallel access on unlimited dimensions must extend 
+simultaneously.
+
+** Cleaned routines <2014-05-28 Wed>
+Cleaned interfaces for putting/getting attributes.
+A single routine is now used for all put/get routines.
+
+The user can now also save a single attribute using the
+variable data type.
+
+** Changed some interface names to a more strict sense <2014-05-28 Wed>
+Changed interface names to conform with the standard.
+Accessing variables are with "name"
+Accessing attributes related to variables are with "var" and "name"
+
+The character functions now restricts their return values to
+the actual needed size of the byte-array.
+
+The NF90_MAX_NAME has been explicitly used in places were it is needed.
+
+** Added get_att for only attributes (and all of them) <2014-05-27 Tue>
+Enabled retrieval of a dictionary containing all 
+attributes associated with a variable or the global
+attributes.
+
+** Added get_att size information <2014-05-27 Tue>
+Extended attribute inquiries to also retrieve
+the data-type and the data length of the attributes.
+
+** Enable compression for classic-model <2014-05-25 Sun>
+If the netcdf model is a classic model we can also enable 
+the compression.
+
+** Ensured deletion of atts when not participating <2014-05-25 Sun>
+For passing attributes to the def_var routine we need
+to ensure that the dictionary gets deleted if the user 
+adds the key 'ATT_DELETE'.
+However, for cases where some nodes are not part of the 
+file we still need to enforce this to handle memory leakage
+correctly. This has been fixed.
+
+** Parallel access on variables not in parallel files <2014-05-25 Sun>
+If a user request to change the default parallel access
+to variables we will return immediately if the file is not
+a parallel file.
+
+** Deleting dict after atts= <2014-05-25 Sun>
+Added possibility to delete the dictionary after calling
+the def_var routine. 
+By adding the key 'ATT_DELETE' it will delete all entries.
+In case one is worried about memory leakage this can be used.
+
+It is necessary, calling def_var(...,atts=('hello'.kv.'a'))
+will result in memory leakage.
+
+
+* Feature requests
+
+- [ ] Variable filling of specific values
+      I.e. add arguments to ncdf_def_var, etc
+
+- [ ] <<inq_fill>> Adding FILL to the inquiry routines
+      ncdf_inq(ncdf,...)
+
+- [ ] [[inq_fill]] Consider changing the routine name ncdf_fill
+      to something more meaning full
+      Should probably be deprecated when implementing
+      the inquiry fill statement

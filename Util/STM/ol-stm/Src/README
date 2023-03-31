@@ -1,0 +1,27 @@
+This program needs some work:
+
+* The contributions from atoms above the reference plane to the wavefunction values on it should
+  in principle be removed, but then we are not getting the "complete" wavefunction as produced
+  by the program. In practice, this means that the reference plane should be closer to the
+  "canonical" side of the slab than to the image of the slab bottom in the above cell, so that
+  there are no such contributions.
+
+* Spin components of the wavefunctions are currently just added together. Spin support will be
+  only added in the 4.1 branch.
+
+* The use of cube and "Siesta grid" files is not really appropriate, since the function represented
+  is not periodic, but is a practical convenience, because they can be processed by the 'plstm' program.
+
+* There is a "boundary problem": the ZMAX plane is not currently included in the Siesta grid file,
+  as the latter holds planes from 0 to NPZ-1. We could include it by enlarging the effective c
+  cell vector.
+
+* There is an inconsistency in the z-coordinates in 'stm' and 'extrapolate', due to the use
+  of (ZMAX-ZMIN)/NPZ and (ZMAX-ZMIN)/(NPZ-1) as steps.
+
+* The cube file format is not able to hold multiple channels, and should be abandoned in favor
+  of the Siesta grid file. There is also an inconsistency in the voxel (step) values.
+
+* The Siesta grid file has no support for 'ZMIN'.
+
+

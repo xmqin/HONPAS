@@ -1,0 +1,73 @@
+Release Notes for SIESTA-1.1, September 25, 2001
+
+(See the Manual for documentation of the new features. A complete list
+of changes can also be found in the Docs/CHANGES file.)
+
+NEW FEATURES AND USER-INTERFACE CHANGES
+
+* SIESTA is now written in Fortran90. By using the dynamic memory
+allocation features of the language, we have eliminated the need to
+recompile the program for each particular project. Only a very small
+number of parameters, which will seldom need to be changed, are still
+hardwired. (See file Src/atmparams.f). Running now: siesta <in.fdf >out.
+
+* SIESTA can now read ASCII (.psf extension) pseudopotential files, in
+addition to the binary ones (with the .vps extension). Files with the
+extension .psatom.data are no longer accepted.
+
+* Orbital and projector information can be saved to and read from files.
+It allows for easier manipulation of the basis. It also makes SIESTA
+as a code less dependent on the basis, which can be prepared
+beforehand if the user so chooses.
+
+* Soft-confinement potentials can be used to generate smoother basis
+sets, avoiding kinks.
+
+* SIESTA can now run in parallel, using MPI for communication, as well
+as the Blacs and Scalapack libraries. (Note: This feature is not
+available in all distributions of the program.)
+
+* A direct SCF option has been included, that leads to the
+recalculation of the orbital values at the mesh points on the
+fly. Although this increases the CPU time, it significantly reduces
+the memory usage of the program by up to a factor of a half.
+
+* Harris functional forces implemented, allowing for efficient
+non-selfconsistent calculations.
+
+* Improvements in performance.
+
+
+REPORTING BUGS
+
+This long-awaited version of SIESTA is a significant rewrite, and
+incorporates a number of new features. We believe that it represents
+an important step forward in functionality and ease of use. On the
+other hand, due to the large number of changes and the wide variety of
+options, modes of operation, and supported environments, it is very
+likely that a number of quirks and bugs have escaped our detection.
+
+That is why we request your cooperation. You should test the new
+version by using it to re-run some of the calculations you have done
+in the past and comparing the results, and by exercising any new
+features you might want to start using.
+
+Any problems should be reported back to us, using the "send-bug"
+script located in the top directory or (better) the Web interface at
+the main SIESTA home page at http://www.uam.es/siesta (login as
+'user' with any non-empty password). Please tell us also about any 
+problems regarding:
+
+* Installation 
+* Documentation 
+* Memory use 
+* Speed 
+* Auxiliary programs
+
+We encourage you to follow the bug reporting guidelines in the SIESTA
+manual.
+
+
+
+
+

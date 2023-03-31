@@ -1,0 +1,283 @@
+____________________________________________________________
+** CHANGES ALONG Javier Junquera's Wannier branch
+------------------------------------------------------------
+
+------------------------------------------------------------
+2013-12-04   Javier Junquera trunk-438--radfunc-5--wannier-4
+
+The parallelization of the interface with Wannier90 has finished.
+
+This version runs the test ranging from number 1 to number 12 distributed
+with the Wannier90 suite, and the results are perfectly compatible with
+those obtained using QuantumEspresso
+
+added:
+  Src/reordpsi.F
+modified:
+  Src/Makefile
+  Src/alloc.F90
+  Src/amn.F90
+  Src/compute_pw_matrix.F90
+  Src/m_digest_nnkp.F90
+  Src/m_noccbands.f
+  Src/m_overkkneig.F90
+  Src/m_trialorbitalclass.f90
+  Src/mmn.F90
+  Src/mneighb.f
+  Src/siesta2wannier90.F90
+  Src/siesta_analysis.F
+  Src/siesta_options.F90
+  Src/write_inp_wannier.F90
+
+------------------------------------------------------------
+2013-08-02   Alberto Garcia  trunk-438--radfunc-5--wannier-3
+Move wannier analysis to 'siesta_analysis'. Reinstate call to siesta_end
+
+A previous patch had removed the call to siesta_end in the main program.
+It has been re-instated. 
+
+The call to siesta2wannier90 has been moved to 'siesta_analysis'. In
+case the user requests a local_DOS calculation (which destroys the scf
+DM), the new call is placed just before that section.
+
+modified:
+  Src/Makefile
+  Src/siesta.F
+  Src/siesta_analysis.F
+
+------------------------------------------------------------
+2013-08-01   Javier Junquera  trunk-438--radfunc-5--wannier-2
+Complete the SIESTA-WANNIER90 interface
+
+* Use the new function registry.
+* Added a new test
+  
+  removed:
+    Src/initswan.F90
+    Src/parallelsubswan.F90
+    Src/trialOrbitalClass.f90
+  added:
+    Src/m_overkkneig.F90
+    Src/write_inp_wannier.F90
+    Tests/wannier/
+    Tests/wannier/kremik.fdf
+    Tests/wannier/kremik.nnkp
+  modified:
+    Src/Makefile
+    Src/alloc.F90
+    Src/amn.F90
+    Src/compute_pw_matrix.F90
+    Src/m_trialorbitalclass.f90
+    Src/matel_registry.F90
+    Src/mmn.F90
+    Src/register_rfs.F90
+    Src/siesta2wannier90.F90
+
+------------------------------------------------------------
+2013-07-09 14:30 GMT Alberto Garcia trunk-438--radfunc-5--wannier-1
+Merge with trunk-register-5 to pull in registry for new matel
+
+(A. Garcia)
+
+This merge pulled in also the trunk changes up to 438 (see CHANGES).
+
+See Docs/radfunc.CHANGES for details about the registry.
+
+NOTE: the functionality of the module "trialorbitalClass" is duplicated, but
+the two versions are not really compatible. One of them should be chosen once
+and for all.
+
+------------------------------------------------------------
+2013-07-09 14:10 GMT Javier Junquera    trunk-434--wannier-1
+Implementation of the interface between Siesta and Wannier90
+(Javier Junquera)
+
+Commited by A. Garcia (See description below)
+
+added:
+  Src/amn.F90
+  Src/broadcast_projections.F
+  Src/compute_pw_matrix.F90
+  Src/delk.F
+  Src/initswan.F90
+  Src/m_digest_nnkp.F90
+  Src/m_noccbands.f
+  Src/m_planewavematrix.F90
+  Src/m_planewavematrixvar.F90
+  Src/m_trialorbitalclass.f90
+  Src/m_writedelk.F
+  Src/mmn.F90
+  Src/parallelsubswan.F90
+  Src/siesta2wannier90.F90
+modified:
+  Src/Makefile
+  Src/atom.F
+  Src/dhscf.F
+  Src/diagpol.f
+  Src/grdsam.F
+  Src/ksv.f
+  Src/local_DOS.F
+  Src/m_mpi_utils.F
+  Src/mesh.F
+  Src/meshdscf.F
+  Src/meshsubs.F
+  Src/savepsi.F
+  Src/setup_hamiltonian.F
+  Src/siesta.F
+  Src/siesta_analysis.F
+  Src/siesta_options.F90
+
+-----------------------------------------------------------------------
+Description of the changes
+-----------------------------------------------------------------------
+
+--------------------------------
+    In m_planewavematrix.F90
+--------------------------------
+
+New module that contains all the ingredients to compute the matrix elements
+of a plane wave in the grid.
+
+--------------------------------
+    In dhscf.F:
+--------------------------------
+
+      New argument in the call to dhscf:
+
+C integer isigneikr     : Switch which fixes whether the matrix elements
+C                         of exp(i k r) are calculated or not.
+C                          0 = not computed.
+C                          1 = compute the matrix elements of exp(i k r).
+C                         -1 = compute the matrix elements of exp(-i k r).
+
+      
+      New call to the subroutine delk, where the matrix elements
+ of a plane wave are computed in real space.
+
+--------------------------------
+    In grdsam.F:
+--------------------------------
+
+     The calls to dhscf have been modified adding the
+ new variable isigneikr in the list of arguments.
+
+     Since the matrix elements of the plane wave are not required
+ during the normal self-consistent-cicle, 
+ isigneikr is always set up to zero in grdsam.F
+
+--------------------------------
+    In local_DOS.F:
+--------------------------------
+
+     The calls to dhscf have been modified adding the
+ new variable isigneikr in the list of arguments.
+
+     Since the matrix elements of the plane wave are not required
+ to compute the local DOS, 
+ isigneikr is set up to zero in local_DOS.F
+
+--------------------------------
+    In setup_hamiltonian.F
+--------------------------------
+
+     New variable:
+
+     integer:: isigneikr ! Calculate matrix element of a plane wave exp(ikr)
+                       !  0 => no,
+                       !  1 => calculate exp(ikr)
+                       ! -1 => calculate exp(-ikr)
+
+     The calls to dhscf have been modified adding the
+ new variable iexpikr in the list of arguments.
+
+     Since the matrix elements of the plane wave are not required
+ during the normal self-consistent-cicle, 
+ isigneikr is set up to zero in setup_hamiltonian.F
+
+--------------------------------
+    In siesta_analysis.F
+--------------------------------
+
+     The call to dhscf have been modified adding the
+ new variable isigneikr in the list of arguments.
+
+     Since the matrix elements of the plane wave are not required
+ for the analysis, 
+ isigneikr is set up to zero in siesta_analysis.F
+
+--------------------------------
+    In mesh.F:
+--------------------------------
+
+    A new variable, iatfold, is defined in the module mesh.
+ This is an integer variable of dimension 3 * number of atoms in the supercell.
+ It is defined and computed in InitAtomMesh (subroutine meshsubs.F, see below) 
+ independently of whether the finite field
+ capability is used or not. The computational cost in CPU time and memory
+ is negligeable, though.
+
+    In the subroutine setupExtMesh, the variable nem is deleted
+ from the list of internal variables and introduced as a module variable.
+ It is defined in module mesh.
+
+--------------------------------
+    In meshsubs.F:
+--------------------------------
+
+    A new variable, iatfold, is defined in the module mesh.
+ This is an integer variable of dimension 3 * number of atoms in the supercell.
+ It is defined and computed independently of whether the finite field
+ capability is used or not. The computational cost in CPU time and memory
+ is negligeable, though.
+
+    The variable is allocated and computed in the subroutine InitAtomMesh
+ This variable stores the supercell vector required to fold the position
+ of an atom back into the unit cell. 
+
+--------------------------------
+    In meshdscf.F
+--------------------------------
+
+    New subroutine matrixMtoOC.
+ This is a copy of matrixMtoO, but modified to handle complex matrices.
+ 
+--------------------------------
+    In m_mpi_utils.F
+--------------------------------
+
+    New subruoutine broadcast_vvv_int added.
+ This is required to broadcast the array nnfolding readed from the .nnkp file
+
+--------------------------------
+    In delk.f
+--------------------------------
+
+      New subroutine where the matrix elements of a plane wave are
+ computed in real space.  
+
+      The matrix elements of a plane wave in a basis of numerical
+ atomic orbitals are computed in the grid, instead of in
+ the former approach implemented by Daniel Sanchez-Portal,
+ where a Taylor expansion of the plane wave was made assuming
+ small values of the exponent:
+
+      exp(i k r) \sim 1 + i k r
+
+      The reason for this change is the fact that, within the new
+ algorithm, there is no reason to assume that k (or more precisely
+ the vector between consecutive k-points \Delta k)
+ would be small enough to justify the cut of the Taylor expansion.
+ Remember that, in the algorithm described by I. Souza et al.,
+ the larger the number of k-points (that is, the smaller the
+ interval between neighboring points) the smaller the value of the
+ threshold energy for Zener tunneling
+ [see the end of the first paragraph in the
+ left column of the third page of the paper by
+ I. Souza et al., Phys. Rev. Lett. 89, 117602 (2002)].
+
+      Parallelization issues:
+ If vmat is parallelized, delk should work as well, since the 
+ basic loops are maintained without any change.
+
+
+

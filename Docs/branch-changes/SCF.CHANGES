@@ -1,0 +1,1048 @@
+-----------------------------------------------------------------------
+2013-03-04  Alberto Garcia <albertog@icmab.es>   trunk-432-scf-40
+Re-implement SCF.MixAfterConvergence 
+
+The option to control the mixing after scf convergence had
+been quietly ignored after the major changes to the scf loop
+logic. Now it has been reinstated:
+
+SCF.MixAfterConvergence  T
+
+should recover the old behavior.
+
+modified:
+  Src/siesta_forces.F
+  Src/siesta_options.F90
+
+-----------------------------------------------------------------------
+2013-02-21  Alberto Garcia <albertog@icmab.es>   trunk-432-scf-39
+Sync to trunk-432
+
+2013-01-24 Export some MPI symbols explicitly. Remove ob...
+2013-01-21 [merge] Fix possible problems in temporary fi...
+2013-01-21 Rationalize fdf logging and debugging
+2013-01-18 [merge] JobList utility to organize and run mul...
+
+
+-----------------------------------------------------------------------
+2013-02-21  Alberto Garcia <albertog@icmab.es>   trunk-428-scf-39
+Sync to trunk-428
+
+2012-12-13 [merge] Bugfix in spin calculations for TBTra...
+2012-12-10 [merge] More fixes and tests for new transies...
+2012-11-20 [merge] Bug fixes for new transiesta/tbtrans_...
+2012-11-14 Use scratch fdf log files for non-master nodes
+2012-10-31 [merge] Bug fixes for array bounds 
+
+-----------------------------------------------------------------------
+2013-02-21  Alberto Garcia <albertog@icmab.es>   trunk-423-scf-39
+Sync to trunk-423
+
+2012-10-30 [merge] Transiesta and TBTrans enhancements by Nick P. Andersen
+
+Notes: 
+
+- The increase in the width of the dDmax field has been postponed.
+- The full logic of the TranSiesta continuation (changes in now non-existing
+scf_convergence_test) needs to be checked. Note that the timer calls in that
+routine are now in compute_dm.
+- The support for min_nscf has been implemented in a different, clearer way.
+  nscf is set to the maximum of (nscf,min_nscf) in siesta_options.
+
+-----------------------------------------------------------------------
+2013-01-14  Alberto Garcia <albertog@icmab.es>   trunk-422-scf-39
+SVD interface change. Experimental SVD scheme for DM extrapolation.
+
+The SVD interface has been made more complete to accomodate new
+functionality.
+
+Summary of options for DM extrapolation:
+
+If UseDIISforDMExtrapolation is 'true', the program will use a DIIS
+framework instead of Jose Soler's original method for the
+extrapolation of DMs accross geometries.
+
+Further, if UseSVD is 'true', SVD techniques instead of direct matrix
+inversion are used.
+
+If UseSVDExperimental is 'true', the 'forward
+differences' method of Kresse and Furthmuller is used. (Note that this
+option does not yet work very well).
+
+Summary of options for DM mixing with SVD:
+
+If UseSVDinPulay is 'true', SVD techniques instead of direct matrix
+inversion are used in Pulay mixing.
+
+modified:
+  Src/m_new_dm.F90
+  Src/m_pulay.F90
+  Src/m_svd.F90
+  Src/state_analysis.F
+
+-----------------------------------------------------------------------
+2012-11-14  Alberto Garcia <albertog@icmab.es>   trunk-422-scf-38
+Extend SVD procedure to DM Pulay mixing
+
+The implicit inversion in the DIIS procedure is carried out using
+SVD techniques if the user sets
+
+UseSVDInPulay T
+
+The tolerance to discard small singular values is hardwired to 1.e-6
+('rcond' in the sense of the LAPACK routine dgelss).
+
+Rank degradation history information might be used to determine
+the appropriateness of "kicks" (to be implemented).
+
+(+ The 'solve_with_svd' routine is in the new m_svd.F90 module file)
+
+added:
+  Src/m_svd.F90
+modified:
+  Src/Makefile
+  Src/m_new_dm.F90
+  Src/m_pulay.F90
+
+-----------------------------------------------------------------------
+2012-11-13  Alberto Garcia <albertog@icmab.es>   trunk-422-scf-37
+Use SVD to obtain the DM extrapolation coefficients
+
+Sometimes (particularly for consecutive line-minimization steps in CG
+relaxation) the coordinate vectors in the extrapolation history for
+the DM might be linearly dependent. A new method based on
+singular-value decomposition has been implemented. This scheme is
+"guaranteed" to give the best possible answer in the presence of a
+reduced-rank matrix.
+
+The new scheme is the default when DM.AllowExtrapolation is set to .true.
+
+The tolerance to discard small singular values is hardwired to 1.e-6
+('rcond' in the sense of the LAPACK routine dgelss).
+
+When trying to figure out the best DM.HistoryDepth value, it is a good
+idea to monitor the effective rank of the DIIS matrix. 
+
+modified:
+  Src/Fstack.T90
+  Src/m_new_dm.F90
+
+-----------------------------------------------------------------------
+2012-11-07  Alberto Garcia <albertog@icmab.es>   trunk-422-scf-36
+Add option to avoid correcting E_KS at every scf step
+
+If the explicit display of the convergence of E_KS during the scf loop
+is not necessary, the new fdf option
+
+DoNotCorrectEKS T
+
+can be used to deactivate the variationality correction. The *final*
+E_KS value will still be variational, as it is computed with a pure
+density matrix (not mixed after convergence). The forces will also be
+computed with the pure DM.
+
+modified:
+  Src/Makefile
+  Src/compute_EKS_Harris.F90
+  Docs/siesta.tex
+  Docs/siesta.ind
+
+-----------------------------------------------------------------------
+2012-10-26  Alberto Garcia <albertog@icmab.es>   trunk-422-scf-35
+Sync to trunk-422
+
+Fix handling of debugging preprocessor symbol...
+[merge] Add rp and rv options to XML pseudopo...
+[merge] Enable MD continuation runs even if t...
+[merge] Add option to turn off time-reversal ...
+[merge] Use actual number of electrons in opt...
+[merge] Allow doping feature for all systems
+[merge] Fix spin loop in initialization in Ei...
+[merge] New options for wavefunction output. ...
+[merge] Hirshfeld and Voronoi charges. Bader ...
+Use a 'unique' string in fdf log files
+Nullify pointers in diagkp
+Fix bug in fdf_bbackspace. No .ion.nc files f...
+
+removed:
+  Src/fdf/tags
+added:
+  Src/m_partial_charges.F
+  Tests/Reference-xml/si_fatbands.xml
+  Tests/Reference/si_fatbands.out
+  Tests/h2o-pop/
+  Tests/h2o-pop/h2o-pop.fdf
+  Tests/h2o-pop/h2o-pop.pseudos
+  Tests/h2o-pop/makefile
+  Tests/md-anneal-cont/
+  Tests/md-anneal-cont/README
+  Tests/md-anneal-cont/makefile
+  Tests/md-anneal-cont/script.sh
+  Tests/md-cont/
+  Tests/md-cont-no-restart-file/
+  Tests/md-cont-no-restart-file/README
+  Tests/md-cont-no-restart-file/makefile
+  Tests/md-cont-no-restart-file/script.sh
+  Tests/md-cont/README
+  Tests/md-cont/makefile
+  Tests/md-cont/script.sh
+  Tests/md-single-run/
+  Tests/md-single-run/README
+  Tests/md-single-run/makefile
+  Tests/md-single-run/script.sh
+  Tests/si_fatbands/
+  Tests/si_fatbands/makefile
+  Tests/si_fatbands/si_fatbands.fdf
+  Tests/si_fatbands/si_fatbands.pseudos
+  Util/Bands/
+  Util/Bands/Makefile
+  Util/Bands/README
+  Util/Bands/eigfat2plot.f90
+  Util/Bands/f2kcli.F90
+  Util/Bands/fat.gplot
+  Util/Bands/m_getopts.f90
+  Util/Bands/new.gnubands.f90
+  Util/COOP/Tests/si_fatbands/
+  Util/COOP/Tests/si_fatbands/README
+  Util/COOP/Tests/si_fatbands/fatbands.mpr
+  Util/COOP/fat.f90
+  Util/Denchar/Examples/2dplot.py
+  Util/Denchar/Examples/FullExample.fdf
+  Util/Denchar/Examples/Si.psf
+  Util/Denchar/Examples/surf.py
+  Util/Denchar/Src/readwavesx.f
+renamed:
+  Util/gnubands.f => Util/Bands/gnubands.f
+modified:
+  Docs/CHANGES
+  Docs/siesta.ind
+  Docs/siesta.tex
+  Pseudo/atom/pseudoXML.f
+  Src/Makefile
+  Src/bands.F
+  Src/basis_io.F
+  Src/basis_specs.f
+  Src/dhscf.F
+  Src/diagk.F
+  Src/diagkp.F
+  Src/dynamics.f
+  Src/fdf/fdf.F90
+  Src/find_kgrid.F
+  Src/grdsam.F
+  Src/kpoint_grid.F90
+  Src/kpoint_pdos.F90
+  Src/m_new_dm.F90
+  Src/meshsubs.F
+  Src/optical.F
+  Src/reinit.F
+  Src/setup_hamiltonian.F
+  Src/siesta_analysis.F
+  Src/siesta_options.F90
+  Src/struct_init.F
+  Src/writewave.F
+  Tests/Makefile
+  Tests/md_anneal/md_anneal.fdf
+  Util/COOP/Makefile
+  Util/COOP/README
+  Util/COOP/Tests/README
+  Util/COOP/dm_creator.F90
+  Util/COOP/main_vars.f90
+  Util/COOP/mprop.f90
+  Util/COOP/subs.f90
+  Util/Denchar/Docs/CHANGES
+  Util/Denchar/Docs/denchar.tex
+  Util/Denchar/Src/Makefile
+  Util/Denchar/Src/denchar.f
+  Util/Eig2DOS/Eig2DOS.f90
+  Util/Grid/grid2cube.f
+  Util/README
+  Util/pseudo-xml/xml2psf_helper.f
+
+
+-----------------------------------------------------------------------
+2012-06-18  Alberto Garcia <albertog@icmab.es>   trunk-410-scf-34
+Sync to trunk-410
+
+modified:
+  Docs/CHANGES
+  Src/Makefile
+  Src/automatic_cell.f
+  version.info
+
+-----------------------------------------------------------------------
+2012-04-26  Alberto Garcia <albertog@icmab.es>   trunk-409-scf-34
+Fix bug in extrapolation. Cosmetics
+
+Pass the number of atoms in the unit cell, instead of 
+sizing the xa array (which might be enlarged for the supercell).
+The 'extrapolate' routine is now in the m_new_dm module.
+
+Wrap for MPI or remove various printing statements.
+
+removed:
+  Src/extrapolate.f90
+  Src/m_history.f90
+modified:
+  Src/Fstack.T90
+  Src/Makefile
+  Src/fdf/fdf.F90
+  Src/m_check_supercell.f
+  Src/m_new_dm.F90
+  Src/siesta_init.F
+
+-----------------------------------------------------------------------
+2012-04-25  Alberto Garcia <albertog@icmab.es>   trunk-409-scf-33
+Fixes for Marenostrum compilation
+
+Initialized derived types in modules have to have the "save" attribute
+to satisfy xlf. It applies to new objects in sparse_matrices.
+
+(+ other oversights detected by xlf)
+
+modified:
+  Src/siesta_init.F
+  Src/sparse_matrices.F
+  Src/state_analysis.F
+
+-----------------------------------------------------------------------
+2012-04-25  Alberto Garcia <albertog@icmab.es>   trunk-409-scf-32
+Sync with trunk-409. Cosmetic changes in manual and branch name
+
+Changed the branch name to "trunk-scf". Updated the manual with
+the new branch name and corrected a few inconsistencies.
+
+added:
+  Util/Eig2DOS/
+  Util/Eig2DOS/Eig2DOS.f90
+  Util/Eig2DOS/Makefile
+  Util/Eig2DOS/m_getopts.f90
+renamed:
+  Docs/Sparse.CHANGES => Docs/SCF.CHANGES
+  Util/eig2dos.f => Util/Eig2DOS/original.eig2dos.f
+modified:
+  Docs/CHANGES
+  Docs/siesta.ind
+  Docs/siesta.tex
+  Src/iodm_netcdf.F90
+  Src/iodmhs_netcdf.F90
+  Util/README
+
+-----------------------------------------------------------------------
+2012-04-25  Alberto Garcia <albertog@icmab.es>   trunk-407-sparse-31
+Use alloc module and proper 'die' routine in class modules
+
+The class_ modules implementing data structures now use the standard
+Siesta alloc module for their memory handling, and call an MPI-aware
+'die' routine (which, to minimize dependencies, resides in the new
+file die.F90, outside any modules).
+
+added:
+  Src/die.F90
+modified:
+  Src/Fstack.T90
+  Src/Makefile
+  Src/Pair.T90
+  Src/basic_type.inc
+  Src/class_Array2D.F90
+  Src/class_Geometry.F90
+  Src/class_OrbitalDistribution.F90
+  Src/class_SpMatrix.F90
+  Src/class_Sparsity.F90
+
+-----------------------------------------------------------------------
+2012-04-25  Alberto Garcia <albertog@icmab.es>   trunk-407-sparse-30
+Documentation of recent changes. Cosmetics
+
+The manual has been updated to reflect some of the most important
+changes, mostly related to the handling of the self-consistent loop.
+
+Some cosmetic changes to reduce redundant output.
+
++ Renaming of new_dm file.
+
+removed:
+  Src/m_sparse.F
+  Src/new_dm.F
+renamed:
+  Src/my_new_dm.F90 => Src/m_new_dm.F90
+modified:
+  Docs/siesta.ind
+  Docs/siesta.tex
+  Src/Makefile
+  Src/iomd.f
+  Src/siesta_init.F
+  Src/state_init.F
+  Src/m_new_dm.F90
+
+-----------------------------------------------------------------------
+2012-04-24  Alberto Garcia <albertog@icmab.es>   trunk-407-sparse-29
+Support TranSiesta logic in new_dm routine. Configurable debugging
+
+Extend readSpmatrix to read both DM and EDM, and Ef, as needed
+by TranSiesta when dealing with TSDE file (a bit kludgish).
+
+Implemented a simple framework for controlling the object debugging
+information:
+
+DebugObjects T
+
+will cause the IOnode to print a message when allocating and
+deallocating objects.
+
+(Extended basic_object.inc to provide this functionality)
+
+added:
+  Src/object_debug.F90
+modified:
+  Src/Fstack.T90
+  Src/Makefile
+  Src/Pair.T90
+  Src/basic_type.inc
+  Src/check_scf_convergence.F
+  Src/class_Array2D.F90
+  Src/class_Geometry.F90
+  Src/class_OrbitalDistribution.F90
+  Src/class_SpMatrix.F90
+  Src/class_Sparsity.F90
+  Src/my_new_dm.F90
+  Src/readSpMatrix.F90
+  Src/save_density_matrix.F
+  Src/siesta_init.F
+  Src/sparse_matrices.F
+  Src/state_init.F
+
+-----------------------------------------------------------------------
+2012-04-13  Alberto Garcia <albertog@icmab.es>   trunk-407-sparse-28
+Tagging of allocated objects by UUID
+
+A very simple prototype mechanism for keeping track of extant allocated
+data structures has been implemented. Further refinements might include
+an in-memory registry and optional printout.
+
+modified:
+  Src/Fstack.T90
+  Src/Pair.T90
+  Src/basic_type.inc
+  Src/class_Array2D.F90
+  Src/class_Geometry.F90
+  Src/class_OrbitalDistribution.F90
+  Src/class_SpMatrix.F90
+  Src/class_Sparsity.F90
+
+-----------------------------------------------------------------------
+2012-04-12  Alberto Garcia <albertog@icmab.es>   trunk-407-sparse-27
+Completed new framework for extrapolation
+
+The extrapolation of the DM using the history of (geometry,DM) pairs
+has been extended to an arbitrary number of history records, using
+code by J.M. Soler and the new infrastructure for flexible data
+structures.
+
+The size of the history stack is determined by the fdf symbol
+
+DM.HistoryDepth <4 by default>
+
+Fine-tuned the design of a few modules. Still work in progress. 
+
+Added the m_uuid module from FoX, as an experimental feature.
+
+added:
+  Src/extrapolate.f90
+  Src/m_uuid.f90
+modified:
+  Src/Fstack.T90
+  Src/Makefile
+  Src/basic_type.inc
+  Src/class_Array2D.F90
+  Src/class_Fstack_Pair_Geometry_SpMatrix.F90
+  Src/class_Geometry.F90
+  Src/class_OrbitalDistribution.F90
+  Src/class_Pair_Geometry_SpMatrix.F90
+  Src/class_SpMatrix.F90
+  Src/class_Sparsity.F90
+  Src/my_new_dm.F90
+  Src/readSpMatrix.F90
+  Src/restructSpMatrix.F90
+  Src/siesta_init.F
+  Src/state_analysis.F
+
+-----------------------------------------------------------------------
+2012-04-11  Alberto Garcia <albertog@icmab.es>   trunk-407-sparse-26
+New framework for extrapolation
+
+Using a finite stack, the (geometry,DM) pairs for every geometry step are
+saved and potentially used for extrapolation. So far only the latest two
+steps are used.
+
+Re-designed the type modules with the use of 'basic_type.inc' for the
+standard reference-counting functionality.
+
+Added template files Pair.T90 and Fstack.T90.
+
+added:
+  Src/Fstack.T90
+  Src/Pair.T90
+  Src/basic_type.inc
+  Src/class_Geometry.F90
+  Src/class_Pair_Geometry_SpMatrix.F90
+modified:
+  Src/Makefile
+  Src/class_Array2D.F90
+  Src/class_OrbitalDistribution.F90
+  Src/class_SpMatrix.F90
+  Src/class_Sparsity.F90
+  Src/my_new_dm.F90
+  Src/siesta_init.F
+  Src/siesta_options.F90
+  Src/sparse_matrices.F
+  Src/state_analysis.F
+  Src/state_init.F
+
+-----------------------------------------------------------------------
+2012-04-11  Alberto Garcia <albertog@icmab.es>   trunk-407-sparse-25
+Add nrows_g to sparsity type. Simplify distribution handling
+
+The sparsity now holds no_l and no_u as local and global number of
+rows, respectively, and nrows_g is now a function on sparsity and
+sparse-matrix instances.
+
+Removed no_u from the "block-cyclic" part of the orbital distribution type.
+
+Routine readSpMatrix is now simpler as the reference distribution is
+used as is.
+
+modified:
+  Src/class_OrbitalDistribution.F90
+  Src/class_SpMatrix.F90
+  Src/class_Sparsity.F90
+  Src/my_new_dm.F90
+  Src/readSpMatrix.F90
+  Src/restructSpMatrix.F90
+  Src/state_init.F
+
+-----------------------------------------------------------------------
+2012-04-03  Alberto Garcia <albertog@icmab.es>   trunk-407-sparse-24
+Added support for DM extrapolation
+
+The code is now very clear. 
+
+Note that DM and DM_prev_geom are reset if the supercell
+changes (this was a bug in the previous implementation).
+
+added:
+  Src/extrapolateSpMatrix.F90
+modified:
+  Src/Makefile
+  Src/my_new_dm.F90
+  Src/state_init.F
+
+-----------------------------------------------------------------------
+2012-04-03  Alberto Garcia <albertog@icmab.es>   trunk-407-sparse-23
+Bug fixes. Saving of DM_prev_geom
+
+Fixed a number of bugs. Re-wrote the logic for the flow
+of DM and added some printSpMatrix calls. Found a place
+to save DM_prev_geom and the conditions for extrapolation.
+Some rough edges remain.
+
+Moved block_dist to module 'sparse_matrices'.
+
+Updated SiestaXC makefile for class_OrbitalDistribution dependency.
+
+modified:
+  Src/Makefile
+  Src/SiestaXC/makefile
+  Src/initparallel.F
+  Src/my_new_dm.F90
+  Src/parallel.F
+  Src/readSpMatrix.F90
+  Src/sparse_matrices.F
+  Src/state_init.F
+
+-----------------------------------------------------------------------
+2012-03-30  Alberto Garcia <albertog@icmab.es>   trunk-407-sparse-22
+First attempt at DM flow clarification
+
+Wrote my_new_dm, and hooked up readSpMatrix and restructSpMatrix.
+Some rough edges.
+
+added:
+  Src/my_new_dm.F90
+  Src/restructSpMatrix.F90
+modified:
+  Src/Makefile
+  Src/class_SpMatrix.F90
+  Src/readSpMatrix.F90
+  Src/sparse_matrices.F
+  Src/state_init.F
+
+-----------------------------------------------------------------------
+2012-03-30  Alberto Garcia <albertog@icmab.es>   trunk-407-sparse-21
+First implementation of OrbitalDistribution object
+
+Code in class_OrbitalDistribution. The object holds data to handle
+block-cyclic distributions (basically the blocksize), plus pointers
+for a more general distribution (such as one based on domain- or
+spatial-decomposition).
+
+This is supplemented by communicator information.
+
+The code in readSpMatrix.F90 (not hooked up yet) uses the new ideas. In principle,
+it is able to read flexibly any matrix, and distribute it in block-cyclic form.
+
+Still pending: ditribution transformations..., proper serial testing...
+
+added:
+  Src/class_OrbitalDistribution.F90
+  Src/readSpMatrix.F90
+modified:
+  Src/Makefile
+  Src/class_SpMatrix.F90
+  Src/initparallel.F
+  Src/parallel.F
+  Src/parallelsubs.F
+  Src/state_init.F
+
+-----------------------------------------------------------------------
+2012-03-27  Alberto Garcia <albertog@icmab.es>   trunk-407-sparse-20
+First implementation of new refCount paradigm
+
+Used class_Sparsity, class_Array2D, and class_SpMatrix for a cleaner 
+implementation of the reference-counting ideas. Based on code by
+David Car and Michael List.
+
+removed:
+  Src/m_sparse_types.F90
+added:
+  Src/class_Array2D.F90
+  Src/class_SpMatrix.F90
+  Src/class_Sparsity.F90
+modified:
+  Src/Makefile
+  Src/compute_EKS_Harris.F90
+  Src/setup_H0.F
+  Src/setup_hamiltonian.F
+  Src/sparse_matrices.F
+  Src/state_init.F
+
+-----------------------------------------------------------------------
+2012-03-09  Alberto Garcia <albertog@icmab.es>   trunk-407-sparse-19
+Sync to trunk-407
+
+-----------------------------------------------------------------------
+2012-03-07  Alberto Garcia <albertog@icmab.es>   trunk-401-sparse-19
+New options for testing the convergence. Force convergence diagnostic
+
+* Two new options for convergence:
+
+-- Free Energy (E_KS - T_el * S_electronic)
+
+SCF.RequireFreeEnergyConvergence T
+SCF.FreeEnergyTolerance  <Value> <Unit>  (default 1.0e-5 eV)
+
+-- Hamiltonian matrix elements
+
+SCF.RequireHamiltonianConvergence T
+SCF.H.Tolerance  <Value> <Unit>  (default 0.1 mRy)
+
+
+The SCF cycle will end when the appropriate criterion is satisfied. These two
+are *absolute* criteria: they do not depend on the additional convergence of
+the density matrix (as does the "energy convergence" option already implemented).
+
+* When the option to monitor the forces during the SCF cycle is in effect, the
+program will print the maximum absolute value of the change in forces from one
+step to the next. Other statistics could be implemented.
+
+* More documentation on the flow of information in 'siesta_forces'.
+
+modified:
+  Src/Makefile
+  Src/check_scf_convergence.F
+  Src/siesta_forces.F
+  Src/siesta_options.F90
+  Src/write_subs.F
+
+-----------------------------------------------------------------------
+2012-03-06  Alberto Garcia <albertog@icmab.es>   trunk-401-sparse-18
+Allow monitoring of forces during SCF cycle
+
+Using the fdf symbol
+
+MonitorForcesInSCF T
+
+the program will compute the forces and stresses at every scf step. 
+Use in combination with WriteForces.
+
+modified:
+  Src/Makefile
+  Src/siesta_forces.F
+  Src/siesta_options.F90
+
+-----------------------------------------------------------------------
+2012-03-05  Alberto Garcia <albertog@icmab.es>   trunk-401-sparse-17
+Avoid extra debugging output in new sparse-matrix code
+
+Reduce for now the level of debugging output in the experimental
+sparse-matrix code.
+
+modified:
+  Src/m_sparse_types.F90
+
+-----------------------------------------------------------------------
+2012-03-04  Alberto Garcia <albertog@icmab.es>   trunk-401-sparse-16
+Tag storage of DM as 'mixed' or 'dmout' (in progress)
+
+The code for storing the DM on file has been encapsulated in a new
+routine 'save_density_matrix'. This routine is called: a) in the 
+scf cycle, after mixing, and b) after the scf cycle, to store DM_out
+for further offline processing. Note that this is a change from
+previous versions, in which DM_next was always stored.
+
+DM_out corresponds to the last electronic-structure computed, and
+is wave-function-representable.
+
+added:
+  Src/save_density_matrix.F
+modified:
+  Src/Makefile
+  Src/mixer.F
+  Src/siesta_forces.F
+
+-----------------------------------------------------------------------
+2012-03-02  Alberto Garcia <albertog@icmab.es>   trunk-401-sparse-15
+Include dHmax in write_energies
+
+An extra column in the output.
+
+Fixed the logic in siesta_write_energies.
+Fixed wrong units in CML output for dDmax 
+
+modified:
+  Src/check_scf_convergence.F
+  Src/siesta_analysis.F
+  Src/siesta_forces.F
+  Src/write_subs.F
+
+-----------------------------------------------------------------------
+2012-03-02  Alberto Garcia <albertog@icmab.es>   trunk-401-sparse-14
+Clarify TranSiesta logic in SCF loop
+
+A new routine checks whether TranSiesta is compiled in, and
+whether, upon self-consistency, the program is going to switch
+to GF mode and remain in the loop. This is not completely optimal,
+but is an improvement over the previous obscure practice.
+
+The timing calls for the end of the Transiesta step have been
+moved to the transiesta section of compute_dm.
+
+modified:
+  Src/Makefile
+  Src/check_scf_convergence.F
+  Src/compute_dm.F
+  Src/siesta_forces.F
+
+-----------------------------------------------------------------------
+2012-03-02  Alberto Garcia <albertog@icmab.es>   trunk-401-sparse-13
+Fix logic related to Harris runs. Timer and CML calls. Fix MPI makefile. 
+
+Harris "one-shot" runs "do not converge", yet they exit the loop early since nscf=2 (...).
+The logic in siesta_forces has been changed to allow for this. Now nscf=1 for
+Harris runs.
+
+The placement of the timer and CML calls has been set correctly.
+
+The MPI interface library libmpi_f90.a did not include timer_mpi.o.
+
+Use of MPI-only routine in compute_EKS_Harris.F90
+
+modified:
+  Src/MPI/Makefile
+  Src/compute_EKS_Harris.F90
+  Src/siesta_forces.F
+  Src/siesta_options.F90
+
+-----------------------------------------------------------------------
+2012-03-01  Alberto Garcia <albertog@icmab.es>   trunk-401-sparse-12
+Change of logic in siesta_forces to make E_KS variational
+
+A re-ordering of the operations, and a careful consideration of the different
+contributions to the energy, have allowed the computation of E_KS(out), which
+is variational, both when mixing H and when mixing the DM.
+
+There are still some rough edges, notably in TranSiesta operation and the output
+of the DM.
+
+removed:
+  Src/scfconvergence_test.F
+added:
+  Src/check_scf_convergence.F
+  Src/compute_EKS_Harris.F90
+  Src/compute_max_diff.F
+modified:
+  Src/Makefile
+  Src/compute_dm.F
+  Src/mixer.F
+  Src/siesta_forces.F
+  Src/state_init.F
+
+-----------------------------------------------------------------------
+2012-02-28  Alberto Garcia <albertog@icmab.es>   trunk-401-sparse-11
+Monitor both H and DM SCF errors
+
+Both dDmax and dHmax are now computed in 'scfconvergence_test', to
+monitor H and DM convergence. Only dDmax is used as convergence
+criterion, to maintain compatibility, if mixing H, with previous
+levels of SCF convergence.
+
+Dold is now set in 'compute_dm', and Hold is now (always, even if
+mixing the DM) in setup_hamiltonian.
+
+The DM normalization error is now printed only if relevant (> 1%).
+
+modified:
+  Src/compute_dm.F
+  Src/normalize_dm.F
+  Src/post_scf_work.F
+  Src/scfconvergence_test.F
+  Src/setup_hamiltonian.F
+  Src/siesta_init.F
+  Src/sparse_matrices.F
+  Src/state_init.F
+
+-----------------------------------------------------------------------
+2012-02-28  Alberto Garcia <albertog@icmab.es>   trunk-401-sparse-10
+Use electronic entropy from current SCF step
+
+The electronic entropy is computed (in 'compute_dm') once the
+electronic structure is known. The -TS term in the electronic free
+energy was previously computed using the information from the previous
+SCF step (by having it added to Etot in setup_hamiltonian, using an
+intermediate variable). Now it is added in scfconvergence_test, and it
+corresponds to the current SCF step. There is not much theoretical
+justification for the previous choice, and the new one looks more
+appropriate in general, and notably if E_KS(out) is computed (as with
+H mixing).
+
+The CEA group suggested the change quite a long time ago, and has been
+used it in their own versions of the program.
+
+modified:
+  Src/compute_dm.F
+  Src/final_H_f_stress.F
+  Src/local_DOS.F
+  Src/m_energies.F90
+  Src/scfconvergence_test.F
+  Src/setup_hamiltonian.F
+  Src/siesta_init.F
+  Src/siesta_options.F90
+
+-----------------------------------------------------------------------
+2012-02-27  Alberto Garcia <albertog@icmab.es>   trunk-401-sparse-9
+Clarify various issues of DM, H, and energy flow
+
+Mixing after SCF convergence is now a user-settable option, controlled
+by the fdf logical MixAfterConvergence, which is .true. by default.
+
+Some comments have been added (and some other corrected) to clarify
+some issues, in particular the fact that E_KS(DM_out) is computed when
+mixing the Hamiltonian.
+
+The variable 'mix' has been renamed to the more appropriate
+'mix_first_scf_step'.
+
+modified:
+  Src/Makefile
+  Src/m_convergence.f90
+  Src/m_energies.F90
+  Src/mixer.F
+  Src/post_scf_work.F
+  Src/scfconvergence_test.F
+  Src/siesta_forces.F
+  Src/siesta_init.F
+  Src/siesta_options.F90
+
+-----------------------------------------------------------------------
+2012-02-24  Alberto Garcia <albertog@icmab.es>   trunk-401-sparse-8
+Check for convergence (and maybe exit SCF loop) before mixing 
+
+The computation of the maximum difference between X_in and X_out (with
+X either the DM or the Hamiltonian) is now done in
+scfconvergence_test. If convergence has been achieved, mixer is
+bypassed, and the SCF loop is exited. This has the side effect of
+keeping the output DM as input to the post-processing (in particular
+the computation of forces and stresses, and final energies in
+post_scf_work).
+
+Experimentally, it is found that the final E_KS (computed with DM_out)
+is very close to the Harris energy of the last SCF step. This seems to
+be due to the fact that the Hamiltonian is almost converged.
+
+The Harris energy converges very fast. There remains to be explored
+whether the forces computed with DM_out (instead of with DM_predicted) are
+reasonable even for non-perfect convergence in the DM.
+Some tests with Hamiltonian mixing look promising also.
+
+The DM is now written to disk only by mixer, which is fine for re-starts of
+an interrrupted SCF cycle. Another, final copy, should be written in post_scf_work
+after each SCF step.
+
+(To be continued...)
+
+modified:
+  Src/Makefile
+  Src/mixer.F
+  Src/post_scf_work.F
+  Src/scfconvergence_test.F
+  Src/siesta_forces.F
+
+-----------------------------------------------------------------------
+2012-02-24  Alberto Garcia <albertog@icmab.es>   trunk-401-sparse-7
+Avoid updating Eharrs after SCF loop
+
+The Harris energy update DEharr is only computed by compute_dm, and
+corresponds to Tr(H*(DM_out-DM_in)).
+
+In 'post_scf_work' there was an statement
+
+      ! Eharrs = Etot + DEharr
+
+Since this Etot is computed with DM_next (the DM predicted by 'mixer'
+for a hypothetical next SCF iteration) this value for Eharrs is
+suspect. To make things worse, this value is never actually printed,
+since printing routines use Eharrs1, which is the last value of Eharrs
+computed in the SCF cycle (set in 'scfconvergence_test').  Apparently,
+Eharrs1 is saved in case a further grid-cell sampling is carried out,
+presumably to avoid recomputing it with an "impure" H. In fact,
+Eharrs1 might be what we need everywhere, particularly in the
+computation of the FreeEHarris value used if performing
+Harris-oriented runs, as in basis-optimization (the only magnitude
+depending explicitly on Eharrs, and thus exhibiting a mismatch with
+what would be obtained from Eharrs1).  From this point of view, what
+is needed is to remove the above statement (and replace Eharris1 with
+Eharrs elsewhere).
+
+Note also in general that the "Harris forces" are computed by the call
+to 'final_H_f_stress' in 'post_scf_work', which is using the wrong DM!
+This would explain the non-conservation of the energy in some
+Harris-based MD runs.
+
+All this gives further support to the idea that the DM coming out of
+the SCF cycle for post-processing should be the last DM_out...
+
+-----------------------------------------------------------------------
+2012-02-23  Alberto Garcia <albertog@icmab.es>   trunk-401-sparse-6
+Write DM normalization info. Simplify logic in scf loop
+
+The DM normalization info is written unconditionally, for
+information purposes to diagnose possible folding problems.
+
+The variable "first" (meaning iscf==1) has been removed from
+siesta_forces, scfconvergence_test, and write_energies.
+
+modified:
+  Src/Makefile
+  Src/normalize_dm.F
+  Src/scfconvergence_test.F
+  Src/siesta_analysis.F
+  Src/siesta_forces.F
+  Src/write_subs.F
+
+-----------------------------------------------------------------------
+2012-02-22  Alberto Garcia <albertog@icmab.es>   trunk-401-sparse-5
+Sync with trunk-401
+
+-----------------------------------------------------------------------
+2012-02-20  Alberto Garcia <albertog@icmab.es>   trunk-396-sparse-5
+Sync with trunk-396
+
+-----------------------------------------------------------------------
+2012-02-17  Alberto Garcia <albertog@icmab.es>   trunk-391-sparse-5
+Take Escf initialization away from new_dm
+
+It is now moved to state_init, just after the call to new_dm.
+
+modified:
+  Src/Makefile
+  Src/new_dm.F
+  Src/state_init.F
+
+-----------------------------------------------------------------------
+2012-02-17  Alberto Garcia <albertog@icmab.es>   trunk-391-sparse-4
+Avoid re-use of arrays as scratch
+
+Routines in the polarization (KSV) and optical modules
+were re-using some arrays in sparse_matrices as scratch.
+Now they do their own allocation, for clarity.
+
+Also, in post_scf_work, set in more clear terms the questions
+regarding the copying of Dold and Dscf.
+
+modified:
+  Src/born_charge.F
+  Src/final_H_f_stress.F
+  Src/ksv.f
+  Src/optical.F
+  Src/overfsm.f
+  Src/post_scf_work.F
+  Src/siesta_analysis.F
+
+-----------------------------------------------------------------------
+2012-02-17  Alberto Garcia <albertog@icmab.es>   trunk-391-sparse-3
+Generalize the option to mix the Hamiltonian
+
+The option to mix the Hamiltonian instead of the density matrix was 
+already present in TranSiesta. It has now been generalized.
+The preferred option keyword in the fdf file is
+
+MixHamiltonian T
+
+although the previous TS.MixH keyword is also honored if present.
+
+modified:
+  Src/Makefile
+  Src/compute_dm.F
+  Src/m_ts_global_vars.f90
+  Src/m_ts_options.F90
+  Src/mixer.F
+  Src/setup_hamiltonian.F
+  Src/siesta_forces.F
+  Src/siesta_options.F90
+  Src/sparse_matrices.F
+
+-----------------------------------------------------------------------
+2012-02-17  Alberto Garcia <albertog@icmab.es>   trunk-391-sparse-2
+Refinement of the implementation of sparse-matrix types
+
+More debugging statements to trace the association of sparsities to matrices.
+Single variable "sparsity" now lives in the 'sparse_matrices' module, and is
+set only in 'state_init'.
+
+Tested H_vkb flow with multiple geometries.
+
+modified:
+  Src/Makefile
+  Src/hsparse.F
+  Src/m_sparse_types.F90
+  Src/sparse_matrices.F
+  Src/state_init.F
+
+-----------------------------------------------------------------------
+2012-02-16  Alberto Garcia <albertog@icmab.es>   trunk-391-sparse-1
+First prototype implementation of sparse-matrix types
+
+A first test with H_vkb.
+Some rough edges remain.
+
+added:
+  Src/m_sparse_types.F90
+modified:
+  Src/Makefile
+  Src/hsparse.F
+  Src/setup_H0.F
+  Src/setup_hamiltonian.F
+  Src/sparse_matrices.F
+  Src/state_init.F
+
+
+

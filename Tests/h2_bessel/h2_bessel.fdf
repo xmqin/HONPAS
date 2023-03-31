@@ -1,0 +1,37 @@
+SystemName          H2 molecule with Bessel in the middle
+SystemLabel         h2_bessel
+NumberOfAtoms       3
+NumberOfSpecies     2
+
+MeshCutoff  150 Ry
+
+%block ChemicalSpeciesLabel
+ 1  1  H
+ 2  -100  J
+%endblock ChemicalSpeciesLabel
+
+%block PAO.Basis   
+H    1
+n=1 0 1 E 100. 4.0
+    5.0  
+J    1
+n=1 0 1 E 100. 3.0
+    3.5
+%endblock PAO.Basis
+
+Reparametrize.Pseudos
+Restricted.Radial.Grid  .false.
+
+LatticeConstant      15.0 Ang       # Lattice constant alat 
+%block LatticeVectors   
+  1.0  0.0  0.0
+  0.0  1.0  0.0
+  0.0  0.0  1.0
+%endblock LatticeVectors   
+
+AtomicCoordinatesFormat Ang
+%block AtomicCoordinatesAndAtomicSpecies 
+    -0.4    0.0    0.0  1
+     0.4    0.0    0.0  1
+     0.0    0.0    0.0  2
+%endblock AtomicCoordinatesAndAtomicSpecies 

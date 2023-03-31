@@ -1,0 +1,17 @@
+# Gnuplot script to plot 2D files produced by plstm et al
+# 
+# Usage:
+#
+#   Save this script with a "script.name" of your choice, and then:
+#
+#       gnuplot --persist -c script.name filename
+#
+set pm3d
+set pm3d map 
+set hidden
+unset surface
+set key outside
+#set key samplen .2
+#set terminal qt size 440,300
+splot ARG1 using 1:2:3 with lines
+

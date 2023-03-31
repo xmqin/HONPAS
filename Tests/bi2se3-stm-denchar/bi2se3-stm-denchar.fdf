@@ -1,0 +1,185 @@
+#
+# Three quintuple layers of Bi2Se3 to test the calculation of the spin texture.
+# This calculation will produce HSX and WFSX files that can be processed by
+# the Util/COOP/spin_texture utility program.
+#
+# (thanks to Roberto Robles)
+#
+SystemName   bi2se3-stm-denchar
+SystemLabel  bi2se3-stm-denchar
+
+# Geom
+NumberOfAtoms       15
+NumberOfSpecies      2
+%block ChemicalSpeciesLabel
+   1  83 Bi
+   2  34 Se
+%endblock ChemicalSpeciesLabel
+LatticeConstant   4.13800000 Ang
+%block LatticeVectors
+     1.0000000000000000    0.0000000000000000    0.0000000000000000
+    -0.5000000000000000    0.8660254037844386    0.0000000000000000
+     0.0000000000000000    0.0000000000000000   11.7544706113098112
+%endblock LatticeVectors
+AtomicCoordinatesFormat Fractional
+%block AtomicCoordinatesAndAtomicSpecies
+  0.6666666666666667  0.3333333333333333  0.2650624783220366   1   1  Bi
+  0.3333333333333333  0.6666666666666667  0.3423936279930260   1   2  Bi
+  0.3333333333333333  0.6666666666666667  0.4613344252566094   1   3  Bi
+  0.0000000000000000  0.0000000000000000  0.5386655576677342   1   4  Bi
+  0.0000000000000000  0.0000000000000000  0.6576063590530268   1   5  Bi
+  0.6666666666666667  0.3333333333333333  0.7349374737996754   1   6  Bi
+  0.3333333333333333  0.6666666666666667  0.2287521714264216   2   7  Se
+  0.0000000000000000  0.0000000000000000  0.3037280662035826   2   8  Se
+  0.6666666666666667  0.3333333333333333  0.3787039395991627   2   9  Se
+  0.0000000000000000  0.0000000000000000  0.4250241177721818   2  10  Se
+  0.6666666666666667  0.3333333333333333  0.5000000000000000   2  11  Se
+  0.3333333333333333  0.6666666666666667  0.5749758645633420   2  12  Se
+  0.6666666666666667  0.3333333333333333  0.6212960521574118   2  13  Se
+  0.3333333333333333  0.6666666666666667  0.6962719343852299   2  14  Se
+  0.0000000000000000  0.0000000000000000  0.7712478166130481   2  15  Se
+%endblock AtomicCoordinatesAndAtomicSpecies
+
+# Basis 
+PAO.EnergyShift  100 meV   ! Extension of AOs (smaller => more extended)
+PAO.SplitNorm      0.15
+PAO.SplitNormH      0.50
+PAO.SoftDefault      T
+%block PAO.Basis
+ Se   3
+   n=4   0   2   ! n,l,#zetas
+    0.0   0.0    ! default
+   n=4   1   2
+    0.0   0.0
+   n=3   2   1
+    0.0
+ Bi   3  
+   n=6   0   2
+    0.0   0.0
+   n=6   1   2
+    0.0   0.0
+   n=5   2   1
+    0.0
+%endblock PAO.Basis
+
+xc.functional         GGA          # Exchange-correlation functional
+xc.authors            PBE          # Exchange-correlation version
+
+%block DM.InitSpin
+ 1  0.  0. 0.
+ 2  0.  0. 0.
+ 3  0.  0. 0.
+ 4  0.  0. 0.
+ 5  0.  0. 0.
+ 6  0.  0. 0.
+ 7  0.  0. 0.
+ 8  0.  0. 0.
+ 9  0.  0. 0.
+10  0.  0. 0.
+11  0.  0. 0.
+12  0.  0. 0.
+13  0.  0. 0.
+14  0.  0. 0.
+15  0.  0. 0.
+%endblock DM.InitSpin
+
+SolutionMethod  diagon
+
+%block kgrid_Monkhorst_Pack
+   3   0   0   0.0
+   0   3   0   0.0
+   0   0   1   0.0
+%endblock kgrid_Monkhorst_Pack
+
+ ################ SCF options #############
+SolutionMethod  diagon
+ElectronicTemperature   0.0010 eV
+MaxSCFIterations   300
+DM.NumberPulay   3
+DM.MixingWeight     0.0100
+MeshCutoff        300.0000 Ry
+DM.Tolerance        1.E-4
+SCF.H.Converge  F
+UseSaveData     F
+DM.UseSaveDM    T
+SpinOrbit       T
+SaveElectrostaticPotential true
+
+# ---- SPIN TEXTURE
+#
+# We use a 'BandPoints' block to generate the states at chosen k-points
+# These keywords are necessary to generate the HSX and WFSX files
+#
+SaveHS T
+WFS.Write.For.Bands T      
+#
+# These keywords could be used to limit the number of bands stored in the WFSX file
+
+Wfs.band.min 190
+Wfs.band.max 230
+
+BandLinesScale      pi/a
+%block BandPoints
+  0.0 0.0 0.0 1
+  0.2 0.1 0.0 1.
+%endblock BandPoints
+
+
+
+#  *************************************************************************
+#                     Input variables for Denchar
+#  (besides SystemLabel, NumberOfSpecies and ChemicalSpecies, defined above)
+#  *************************************************************************
+
+Write.Denchar true
+Denchar.TypeOfRun      3D
+
+Denchar.PlotCharge          F
+Denchar.PlotWaveFunctions   T
+
+Denchar.CoorUnits       bohr           # Format for coordinate of the points
+                                       # Bohr
+                                       # Ang
+
+Denchar.DensityUnits   Ele/bohr**3     # Units of Charge Density
+                                       # Ele/bohr**3
+                                       # Ele/Ang**3
+                                       # Ele/UnitCell
+
+Denchar.MinX           -0.10  bohr      # Minimum coord of the window in X-dir
+Denchar.MaxX            4.0  bohr      # Maximum coord of the window in X-dir
+
+Denchar.MinY           -0.1  bohr      # Minimum coord of the window in Y-dir
+Denchar.MaxY            5.0  bohr      # Maximum coord of the window in Y-dir
+
+Denchar.MinZ            23.0  bohr      # Maximum coord of the window in X-dir
+Denchar.MaxZ            71.0  bohr      # Maximum coord of the window in X-dir
+
+Denchar.NumberPointsX    30            # Number of points in X-axis
+Denchar.NumberPointsY    30            # Number of points in Y-axis
+Denchar.NumberPointsZ    30            # Number of points in Y-axis
+
+
+#  *************************************************************************
+#                     Input variables for STM
+#  (besides SystemLabel, NumberOfSpecies and ChemicalSpecies, defined above)
+#  *************************************************************************
+STM.DensityUnits   Ele/bohr**3   # Units of Charge Density
+                                     # Ele/bohr**3
+                                     # Ele/Ang**3
+                                     # Ele/UnitCell
+
+STM.MinZ         37.0 Ang     # Minimum coordinate of the window in Z-dir
+STM.MaxZ         40.0 Ang     # Maximum coordinate of the window in Z-dir
+STM.RefZ         37.0 Ang     # Reference plane to propagate wf into vacuum
+STM.VacZ         40.0 Ang     # Reference plane to compute vacuum potential
+
+STM.Emin         -6.3 eV
+STM.Emax         -1.0 eV
+
+STM.NumberPointsX       48         # Number of points in X-axis
+STM.NumberPointsY       48         # Number of points in Y-axis
+STM.NumberPointsZ       48         # Number of points in Z-axis
+
+STM.NumberCellsX         1
+STM.NumberCellsY         1

@@ -1,0 +1,2915 @@
+% Manual for the TBtrans program
+%
+% To generate the printed version:
+%
+% pdflatex tbtrans
+% pdflatex tbtrans
+% splitidx tbtrans.idx (optional if you want a split index)
+% makeindex tbtrans    (optional if you have a current siesta.ind)
+% pdflatex tbtrans
+%
+%
+
+% Include settings appropriate for tbtrans
+\input{tex/init.tex}
+
+% Local command for the software version for printing
+% \unskip helps when space/newline chars are present in the
+% version.info file.
+\providecommand\softwareversion{\input{../version.info}\unskip}
+
+% Title (note that \input above will fail in the title, we however
+% don't care since it is only meaningful for final publications where
+% direct text is used.)
+\title{TBtrans manual \softwareversion}
+
+% Set the date
+\date{January 27, 2021}
+
+% Specify Authors
+\author{%
+    Nick R. Papior%
+}
+
+% Ensure the information is written in the PDF (see tex/setup.tex)
+\setpdfmetadata
+
+\begin{document}
+
+% TITLE PAGE --------------------------------------------------------------
+
+\begin{titlepage}
+
+\begin{center}
+
+\vspace{1cm}
+\ifdeveloper
+ {\Huge \textsc{D e v e l o p e r' s \, \, G u i d e}}
+\else
+ {\Huge \textsc{U s e r' s \, \, G u i d e}}
+\fi
+
+\vspace{1cm}
+\hrulefill
+\vspace{1cm}
+
+{\Huge \textbf{T B t r a n s \, \, \softwareversion}}
+
+\vspace{1cm}
+\hrulefill
+\vspace{0.5cm}
+
+{\Large \printdate}
+
+\vspace{1.5cm}
+{\Large \url{https://gitlab.com/siesta-project/siesta}}
+
+\end{center}
+
+\end{titlepage}
+
+% END TITLE PAGE --------------------------------------------------------------
+
+\newpage
+
+\section*{Contributors to \tbtrans}
+\addcontentsline{toc}{section}{Contributors to \tbtrans}
+
+\tbtrans\ is Copyright \copyright\ 2016-2021 by Nick R. Papior. The
+original \tbtrans\ code was implemented by Mads Brandbyge, Jose
+L. Mozos, Jeremy Taylor, Pablo Ordejon and Kurt Stokbro. The current
+\tbtrans\ is implemented by the following contributors:
+
+\vspace{0.5cm}
+
+\hbox{ \hskip 0.1cm
+\begin{tabular}{ll}
+
+  Nick R\"ubner Papior &
+  \textit{Technical University of Denmark} \\ \\
+
+\end{tabular}
+}
+
+
+\tableofcontents
+
+\newpage
+
+\section{Introduction}
+
+\textit{This Reference Manual contains descriptions of all the input,
+    output and execution features of \tbtrans, but is not a tutorial
+    introduction to the program.}
+
+\tbtrans\ (Tight-Binding transport) is a generic computer program
+which calculates transport and other physical quantities using the
+Green function formalism. 
+%
+It is a stand-alone program which allows \emph{extreme} scale
+tight-binding calculations. 
+\begin{itemize}
+  
+  \item%
+  It uses the basic non-equilibrium Green function formalism and
+  allows extensive customizability and analysis forms.
+
+  \item%
+  \tbtrans\ may be given any type of local-orbital Hamiltonian and
+  calculate transport properties of arbitrary geometries and/or number
+  of electrodes. 
+
+  \item%
+  The \phtrans\ variant may be compiled to obtain thermal (phonon)
+  transport using the same Green function formalism and \emph{all} the
+  same functionalities as those presented in this manual.
+
+\end{itemize}
+As \tbtrans\ output has changed to the flexible NetCDF-4 format you
+are highly encouraged to use the \sisl\cite{sisl} toolsuite which has
+nearly all the necessary tools available to perform advanced
+analysis. If used, please cite \sisl\ appropriately.
+
+A list of the currently implemented features are:
+\begin{itemize}
+
+  \item Density of states (orbital resolved)
+  \begin{itemize}
+    \item Green function DOS
+    \item Scattering DOS
+  \end{itemize}
+
+  \item Hamiltonian interpolation at different voltages
+
+  \item Selective wide-band limit of the electrode(s)
+
+  \item Transmission eigenvalues
+
+  \item Bulk electrode density of state and transmission (directly
+  from the electrode Hamiltonian)
+
+  \item Projected transmission of eigenstates
+
+  \item Orbital resolved ``bond-currents'' which may subsequently be
+  analyzed to yield actual bond-currents
+
+  \item Density matrices using the Green function and/or the
+  spectral density
+  
+  \item COOP and COHP curves using the Green function and/or the
+  spectral density.
+  
+\end{itemize}
+
+
+\vspace{0.5cm}
+{\large \textbf{References:} }
+
+\begin{itemize}
+
+  \item%
+  Description of the \tbtrans\ and \tsiesta\ code in the $N$ terminal
+  generic implementation \cite{Papior2017}.
+
+  \item%
+  \sisl\ is a data analysis/extraction utility for \tbtrans\ which
+  enables easy access to the data stored in the output NetCDF-4 file
+  \cite{sisl}.
+
+\end{itemize}
+
+
+\subsection{\phtrans}
+
+The NEGF formalism also applies to phonons via some simple
+differences. Here is a list of some of the differences:
+\begin{itemize}
+  \item For \phtrans\ all options are \emph{still} prefixed with \fdf*{TBT}!
+  
+  \item The Green function calculation looks like:
+  \begin{equation}
+    \label{eq:PHT:Gf}
+    \mathbf G_{\mathbf q} = [(\omega^2 +i\eta^2)\mathbf I -\mathbf
+    D_{\mathbf q} -\boldsymbol\Sigma_{\mathbf q}(\omega)]^{-1},
+  \end{equation}
+  where $\omega$ is referred to as \emph{energy} in the remaining
+  document.
+  
+  \item Calculating density matrices (\fdf{TBT.DM!Gf},
+  \fdf{TBT.COOP!Gf}, \fdf{TBT.COHP!Gf}) are prefactored with $2\omega$
+  which is currently empirically done.
+\end{itemize}
+
+\note \phtrans\ is not as tested as \tbtrans. Any feedback on all
+parts are most welcome!
+
+
+
+\section{Compilation}
+
+\tbtrans\ may be compiled in the \shell{Util/TS/TBtrans} directory.
+
+To compile \tbtrans\ simply go to the directory and type:
+\begin{shellexample}
+  $ make
+\end{shellexample}
+%$
+This will default to use the \file{arch.make} file in the \shell{Obj}
+directory. To use a different directory you may do:
+\begin{shellexample}
+  $ make OBJDIR=AnotherObjDir
+\end{shellexample}
+%$
+
+\tbtrans\ is tightly intertwined with the \siesta\ source to reduce
+code duplication.
+
+Please see the \siesta\ manual for installing NetCDF easily.
+
+\subsection{The \texttt{arch.make}\ file}
+\label{sec:arch-make}
+
+The compilation is done using a \shell{Makefile} that is provided with
+the code\index{Makefile}. This \shell{Makefile} will generate the
+executable for any of several architectures, with a minimum of tuning
+required from the user and encapsulated in a separate file called
+\file{arch.make}.
+
+\tbtrans\ relies on the following libraries
+\begin{description}
+  \item[BLAS] %
+  it is recommended to use a high-performance library
+  (\href{https://github.com/xianyi/OpenBLAS}{OpenBLAS} or the MKL
+  library from Intel)
+  
+  \begin{itemize}
+    \item If you use your *nix distribution package manager to install
+    BLAS you are bound to have a poor performance. Please try and use
+    performance libraries.
+  \end{itemize}
+
+  To add BLAS to the \file{arch.make} file you need to add the
+  required linker flags to the \shell{LIBS} variable in the
+  \file{arch.make} file.
+
+  Example variables
+\begin{shellexample}
+  # OpenBLAS:
+  LIBS += -L/opt/openblas/lib -lopenblas
+  # or for MKL
+  LIBS += -L/opt/intel/.../mkl/lib/intel64 -lmkl_blas95_lp64 ...
+\end{shellexample}
+
+  \item[LAPACK]%
+  it is recommended to use a high-performance library
+  (\href{https://github.com/xianyi/OpenBLAS}{OpenBLAS}\footnote{OpenBLAS
+      enables the inclusion of the LAPACK routines. This is advised.}
+  or the MKL library from Intel)
+
+  Example variables
+\begin{shellexample}
+  # OpenBLAS (OpenBLAS will default to build in LAPACK 3.6)
+  LIBS += -L/opt/openblas/lib -lopenblas
+  # or for MKL
+  LIBS += -L/opt/intel/.../mkl/lib/intel64 -lmkl_lapack95_lp64 ...
+\end{shellexample}
+
+\end{description}
+
+The above are the minimally required libraries. 
+
+Highly encouraged libraries
+\begin{description}
+  \item[\href{https://www.unidata.ucar.edu/software/netcdf}{NetCDF}] %
+  Note that it should a NetCDF4 compliant compiled
+  library\footnote{Remark that a NetCDF-3 compliant library is not
+      sufficient for \tbtrans.}. This library is required for a
+  multitude of advanced analysis methods such as orbital resolved DOS,
+  bond-currents, $\delta \mathbf H$, eigenstate projections, etc.
+
+  To use this library add these variables to your \file{arch.make}
+  file
+\begin{shellexample}
+  COMP_LIBS += libncdf.a
+  FPPFLAGS += -DCDF -DNCDF -DNCDF_4
+  LIBS += -lnetcdff -lnetcdf -lhdf5_fortran -lhdf5 -lz
+\end{shellexample}
+
+  If you have compiled NetCDF4 with parallel IO you may benefit from
+  parallel IO by adding this compilation flag:
+\begin{shellexample}
+  FPPFLAGS += -DNCDF_PARALLEL
+\end{shellexample}
+
+  To easily install \program{NetCDF} please see the installation file:
+  \shell{Docs/install\_netcdf4.bash}.
+  
+\end{description}
+
+Importantly, \tbtrans\ is compatible with hybrid parallelism using MPI
+and OpenMP or either of them alone. 
+
+\paragraph{MPI}
+To compile using MPI add this to your \file{arch.make} file
+\begin{shellexample}
+ FPPFLAGS += -DMPI
+\end{shellexample}
+
+\paragraph{OpenMP}
+To compile using OpenMP add this to your \file{arch.make} file
+\begin{shellexample}
+ FFLAGS += -fopenmp
+ LIBS += -fopenmp
+\end{shellexample}
+change the corresponding flag according to your compiler.
+
+\paragraph{Running Hybrid parallel \tbtrans}
+%
+Running \tbtrans\ using hybrid parallelism is difficult due to the
+complexity of controlling the threads and processors.
+
+To achieve good performance one \emph{must} ensure that the threads
+and processors are not oversubscribe and are not overlapping.
+For instance if using OpenMPI $\ge1.8.4$ one may run \tbtrans\
+using this command:
+\begin{shellexample}
+ mpirun -np $((PBS_NP/OMP_NUM_THREADS)) \
+   -x OMP_NUM_THREADS \
+   -x OMP_PROC_BIND=true \
+   --map-by ppr:1:socket:pe=$OMP_NUM_THREADS
+\end{shellexample}
+where \shell{PBS\_NP} is the total number of processors,
+\shell{OMP\_NUM\_THREADS} is the number of threads per processor. The
+above command assumes using 1 MPI processor per socket with each
+socket having \shell{OMP\_NUM\_THREADS} cores.
+
+\subsubsection{BLAS GEMM3M kernel}
+
+Several modern BLAS implementations allow the use of GEMM3M kernels
+for complex linear algebra. They should provide a performance
+enhancement for large matrices. To use these routines add this to your
+\file{arch.make} file:
+\begin{shellexample}
+  FPPFLAGS += -DUSE_GEMM3M
+\end{shellexample}
+Note that OpenMP threaded BLAS libraries are known to fail with the
+GEMM3M kernels. 
+
+
+\subsubsection{Intel MKL libraries}
+
+The MKL libraries are very efficient, but may be difficult to obtain a
+correct linking. Here is a short tutorial for linking the MKL BLAS and
+LAPACK libraries correctly.
+
+In the following assume that \shell{MKL\_ROOT} points to the root of
+the MKL installation directory, for instance one may install MKL into
+\shell{/opt/intel/mkl}:
+\begin{shellexample}
+  MKL_ROOT = /opt/intel/mkl
+\end{shellexample}
+where \shell{MKL\_ROOT/lib/intel64} contains the libraries.
+
+The linking depends on the used compiler:
+\begin{description}
+
+  \item[Intel compiler] %
+  \index{compile!Intel}
+
+  The MKL libraries are parallelized using threads and you may also
+  enable threads in \tbtrans:
+  \begin{description}
+    \item[No threading] \mbox{}%
+
+\begin{shellexample}
+  LIBS += -L$(MKL_ROOT)/lib/intel64 -lmkl_lapack95_lp64
+  -lmkl_blas95_lp64 -lmkl_intel_lp64 -lmkl_core -lmkl_sequential
+\end{shellexample}
+%$
+    \item[OpenMP threading] \mbox{}%
+    \index{OpenMP!Intel}
+
+\begin{shellexample}
+  LIBS += -openmp -L$(MKL_ROOT)/lib/intel64 -lmkl_lapack95_lp64
+  -lmkl_blas95_lp64 -lmkl_intel_lp64 -lmkl_core -lmkl_intel_thread
+\end{shellexample}
+  %$  
+  \end{description}
+
+  \item[GNU compiler] %
+  \index{compile!GNU}
+  The MKL libraries are parallelized using threads and you may also
+  enable threads in \tbtrans:
+  \begin{description}
+    \item[No threading] \mbox{}%
+
+\begin{shellexample}
+  LIBS += -L$(MKL_ROOT)/lib/intel64 -lmkl_lapack95_lp64
+  -lmkl_blas95_lp64 -lmkl_gf_lp64 -lmkl_core -lmkl_sequential
+\end{shellexample}
+%$
+    \item[OpenMP threading] \mbox{}%
+    \index{OpenMP!GNU}
+
+\begin{shellexample}
+  LIBS += -fopenmp -L$(MKL_ROOT)/lib/intel64 -lmkl_lapack95_lp64
+  -lmkl_blas95_lp64 -lmkl_gf_lp64 -lmkl_core -lmkl_gnu_thread
+\end{shellexample}
+  %$  
+  \end{description}
+  
+\end{description}
+
+\section{Execution of the Program}
+
+\tbtrans\ should be called with an input file which defines what
+\emph{it should do}. This may either be piped or simply added on the
+input line. The latter method is preferred as one may use flags for
+the executable.
+\begin{shellexample}
+  $ tbtrans < RUN.fdf
+  $ tbtrans RUN.fdf
+\end{shellexample}
+Note that if \tbtrans\ is compiled with MPI support one may call it
+like 
+\begin{shellexample}
+  $ mpirun -np 4 tbtrans RUN.fdf
+\end{shellexample}
+%$
+for $4$ MPI-processors.
+
+\tbtrans\ has these optional flags:
+\begin{description}
+  \item[\fdf*{-h}] print a help instruction
+
+  \item[\fdf*{-out}] specify where all output should be written to
+  (instead of STDOUT)
+  
+  \item[\fdf*{-L}] override \fdf{SystemLabel} flag
+
+  \item[\fdf*{-V}] override \fdf{TBT.Voltage} flag. To denote the
+  unit do as this example: \fdf*{-V 0.2:eV} which sets the voltage to
+  $0.2\,\mathrm{eV}$.
+
+  \item[\fdf*{-D}] override \fdf{TBT.Directory} flag, all output
+  of \tbtrans\ will be put in the corresponding folder (it will be
+  created if non-existing)
+
+  \item[\fdf*{-HS}] specify the \fdf{TBT.HS} variable, quickly
+  override the used Hamiltonian
+
+  \item[\fdf*{-fdf}] specify any given fdf flag on the command line,
+  example \fdf*{-fdf TBT.Voltage:0.2:eV}
+
+\end{description}
+Note that for all flags one may use ``:'' as a replacement for `` '',
+although one may use quotation marks when having a space in the argument.
+
+
+
+\section{fdf-flags}
+
+
+Although \tbtrans\ is a fully independent Green function transport
+code, it is hard-wired with the \tsiesta\ \fdflib\ flags and
+options. If you are familiar with \tsiesta\ and its input flags, then
+the use of \tbtrans\ should be easy.
+
+All fdf-flags for \tbtrans\ are defaulted to their equivalent
+\tsiesta\ flag. Thus if you are using \tsiesta\ as a back-end you
+should generally not change any flags. For instance \fdf{TBT.Voltage}
+defaults to \fdf*{TS.Voltage} if not supplied.
+
+\begin{fdfentry}{SystemLabel}[string]<siesta>
+
+  The label defining this calculation. All relevant output will be
+  prefixed with the \fdf*{SystemLabel}.
+
+  One may start several \tbtrans\ calculations in the same directory
+  if they have different labels.
+
+\end{fdfentry}
+
+\begin{fdfentry}{TBT.Voltage}[energy]<$0\,\mathrm{eV}$>
+  
+  Define the applied bias in the scattering region. 
+
+\end{fdfentry}
+
+\begin{fdfentry}{TBT.Directory}[directory]<./>
+
+  Define the output directory of files from \tbtrans. This allow
+  execution of several \tbtrans\ instances in the same folder and
+  writing their result to different, say, sub-folders. It is
+  particularly useful for interpolation of Hamiltonian's and for
+  testing purposes.
+  
+\end{fdfentry}
+
+\begin{fdfentry}{TBT.Verbosity}[integer]<5>
+
+  Specify how much information \tbtrans\ will print-out (range 0-10).
+
+  For smaller numbers, less information will be printed, and for
+  larger values, more information is printed.
+  
+\end{fdfentry}
+
+\begin{fdfentry}{TBT.Progress}[real]<5.>
+
+  \tbtrans\ prints out an estimated time of completion (ETA) for the
+  calculation. By default this is printed out every 5\% of the
+  total loops ($k$-point $\times$ energy loops). Setting this to 0
+  will print out after every energy loop.
+  
+\end{fdfentry}
+
+
+
+\subsection{Define electronic structure}
+
+
+\begin{fdfentry}{TBT.HS}[file]<\fdf*{<SystemLabel>}.TSHS>
+
+  Define the Hamiltonian file which contains information regarding the
+  Hamiltonian and geometry.
+
+\end{fdfentry}
+
+\begin{fdfentry}{TBT.HS.Files}[block]
+  
+  A list of files which each contain the Hamiltonian for the same
+  geometry at different bias'. 
+  % 
+  Each line has three entries, 1) the \fdf{TBT.HS} file, 2) the value
+  of the bias applied, 3) the unit of the bias.
+
+  \note if this is existing it will assume that you will perform an
+  interpolation of the Hamiltonians to the corresponding bias
+  (\fdf{TBT.Voltage}). 
+
+\end{fdfentry}
+
+\begin{fdfentry}{TBT.HS.Interp}[string]<spline|linear>
+  \fdfdepend{TBT.HS.Files}
+
+  Interpolate all files defined in \fdf{TBT.HS.Files} to the
+  corresponding applied bias.
+
+  Generally \fdf*{spline} produces the best interpolated values and
+  its use is encouraged. The linear interpolation scheme is mainly
+  used for comparison to the \fdf*{spline}. If they are very different
+  from each other then one may be required to perform additional
+  self-consistent calculations at the specific bias due to large
+  changes in the electronic structure.
+
+\end{fdfentry}
+
+Say you have calculated the SCF solution of a certain system at 5
+different applied bias':
+\begin{fdfexample}
+  %block TBT.HS.Files
+    ../V0/siesta.TSHS     0.  eV
+    ../V-0.5/siesta.TSHS -0.5 eV
+    ../V0.5/siesta.TSHS   0.5 eV
+    ../V-1.0/siesta.TSHS -1.0 eV
+    ../V1.0/siesta.TSHS   1.0 eV
+  %endblock
+\end{fdfexample}
+and you wish to calculate the interpolated transmissions and currents
+at steps of $0.1\,\mathrm{eV}$, then you may use this simple loop
+\begin{shellexample}
+  for V in `seq -1.5 0.1 1.5` ; do
+     tbtrans -V $V:eV -D V$V RUN.fdf
+  done
+\end{shellexample}
+which at each execution of \tbtrans\ interpolates the Hamiltonian to
+the corresponding applied bias and store all output files in the
+\shell{V\$V} folder.
+
+\subsubsection{Changing the electronic structure via
+    \texorpdfstring{$\delta$}{d} elements}
+
+\newcommand\dH{\delta\mathbf H}
+\newcommand\dSE{\delta\mathbf\Sigma}
+
+The electronic structure may be altered by changing the Hamiltonian
+elements via a simple additive term
+\begin{equation}
+  \mathbf H \leftarrow \mathbf H + \dH + \dSE,
+\end{equation}
+which allows easy changes to the electronic structure or adding
+additional terms such as imaginary self-energies. One may also use it
+to add magnetic fields etc.
+
+\tbtrans\ uses a distinction between $\dH$ and $\dSE$ only via the
+orbital current calculation. I.e. $\dH$ enters the equations for
+calculating the orbital current, whereas $\dSE$ does not. Otherwise
+the two $\delta$-terms are \emph{completely} identical. In the
+following discussion we will use the term $\delta$ to be either $\dH$
+or $\dSE$.
+
+To use this feature at $k$ points it is important to know that phases
+in \tbtrans\ are defined using the lattice vectors (and \emph{not}
+inter-atomic distances)
+\begin{equation}
+  \mathbf H_k = \mathbf H \cdot e^{i k \cdot \mathbf R}.
+  \label{eq:hk-phase}
+\end{equation}
+\tbtrans\ will add the phases on \emph{all} elements of $\delta$ via
+Eq.~\eqref{eq:hk-phase}. To counter these phases one may simply
+multiply $\delta$ with the negative phase ($-i$). Note that phases are
+only added on super cell elements, \emph{not} unit cell elements.
+
+
+\begin{fdfentry}{TBT.dH}[file]
+
+  Denote a file which contains the $\dH$ information.
+
+  \note that the terms defined in this file are added to the
+  Hamiltonian when calculating the orbital currents, if your terms are
+  not a Hamiltonian change, then consider using \fdf{TBT.dSE} instead.
+
+  This file
+  \emph{must} adhere to these file format notations and is required to
+  be supplied in a NetCDF4 format
+
+  \begin{output}[fontsize=\footnotesize]
+netcdf file.dH {
+dimensions:
+	one = 1 ;
+	n_s = 9 ;
+	xyz = 3 ;
+	no_u = 900 ;
+	spin = 1 ;
+variables:
+	int nsc(xyz) ;
+		nsc:info = "Number of supercells in each unit-cell direction" ;
+
+group: LEVEL-1 {
+  dimensions:
+  	nnzs = 2670 ;
+  variables:
+  	int n_col(no_u) ;
+  		n_col:info = "Number of non-zero elements per row" ;
+  	int list_col(nnzs) ;
+  		list_col:info = "Supercell column indices in the sparse format" ;
+  	int isc_off(n_s, xyz) ;
+  		isc_off:info = "Index of supercell coordinates" ;
+  	double Redelta(spin, nnzs) ;
+  		Redelta:info = "Real part of delta" ;
+  		Redelta:unit = "Ry" ;
+  	double Imdelta(spin, nnzs) ;
+  		Imdelta:info = "Imaginary part of delta" ;
+  		Imdelta:unit = "Ry" ;
+  } // group LEVEL-1
+
+group: LEVEL-2 {
+  dimensions:
+  	nkpt = UNLIMITED ;
+  	nnzs = 2670 ;
+  variables:
+  	double kpt(nkpt, xyz) ;
+  		kpt:info = "k-points for delta values" ;
+  		kpt:unit = "b**-1" ;
+  	... n_col list_col isc_off ...
+  	double delta(nkpt, spin, nnzs) ;
+  		delta:info = "delta" ;
+  		delta:unit = "Ry" ;
+  } // group LEVEL-2
+
+group: LEVEL-3 {
+  dimensions:
+  	ne = UNLIMITED ;
+  	nnzs = 2670 ;
+  variables:
+  	double E(ne) ;
+  		E:info = "Energy points for delta values" ;
+  		E:unit = "Ry" ;
+  	... n_col list_col isc_off ...
+  	double delta(ne, spin, nnzs) ;
+  		delta:info = "delta" ;
+  		delta:unit = "Ry" ;
+  } // group LEVEL-3
+
+group: LEVEL-4 {
+  dimensions:
+  	nkpt = UNLIMITED ;
+  	ne = UNLIMITED ;
+  	nnzs = 2670 ;
+  variables:
+  	double kpt(nkpt, xyz) ;
+  		kpt:info = "k-points for delta values" ;
+  		kpt:unit = "b**-1" ;
+  	double E(ne) ;
+  		E:info = "Energy points for delta values" ;
+  		E:unit = "Ry" ;
+  	... n_col list_col isc_off ...
+  	double delta(nkpt, ne, spin, nnzs) ;
+  		delta:info = "delta" ;
+  		delta:unit = "Ry" ;
+  } // group LEVEL-4
+}
+  \end{output}
+
+  This example file shows how the file should be formatted. Note that
+  one may either define the Hamiltonian as \shell{delta} or as
+  \shell{Redelta} and \shell{Imdelta}. The former is defining $\delta$
+  as a real quantity while the latter makes it an imaginary $\delta$.
+
+  The levels are defined because they have precedence from each other,
+  if the energy point and $k$ point is found in LEVEL-4 it will use
+  this, if not, it will check for the energy point in LEVEL-3, and so
+  on. 
+
+\end{fdfentry}
+
+The remaining options are only applicable if \fdf{TBT.dH} has been
+set. 
+
+\begin{fdflogicalT}{TBT.dH!Parallel}
+
+  Whether the $\delta\mathbf H$ file should be read in parallel. If
+  your architecture supports parallel IO it is beneficial to do so. 
+  %
+  \tbtrans\ performs a basic check whether parallel IO may be
+  possible, if it cannot assert this it will be turned off.
+  
+\end{fdflogicalT}
+
+\begin{fdfentry}{TBT.dSE}[file]
+
+  File has same format as specified for \fdf{TBT.dH}.
+
+  The only difference between a $\dH$ and $\dSE$ file is that the
+  terms in $\dSE$ does \emph{not} enter the calculation of the
+  bond-currents, whereas $\dH$ does, see Eq.~\eqref{eq:bond-current}.
+
+\end{fdfentry}
+
+\subsection{Determine calculated physical quantities}
+\label{sec:physical}
+
+\tbtrans\ can calculate a large variety of physical
+quantities. By default it will only calculate the transmission between
+the electrodes. Calculating as few quantities as possible will
+increase throughput, while requesting many quantities will result in
+much longer run-times.
+
+You are heavily encouraged to compile \tbtrans\ with NetCDF4 support,
+see Sec.~\ref{sec:arch-make}, as quantities will be orbital resolved. 
+
+If \tbtrans\ has been compiled with NetCDF4 support, one may extract
+the projected DOS from the \sysfile{TBT.nc} using \sisl\ (or manual
+scripting). The calculated DOS can \emph{only} be extracted from the
+atoms in the device region (atoms in block
+\fdf{TBT.Atoms!Device}). Hence the \fdf{TBT.Atoms!Device} block is
+\emph{extremely} important when conducting detailed DOS analysis. 
+For instance if the input file has this:
+\begin{fdfexample}
+  %block TBT.Atoms.Device 
+    atom [20 -- 40]
+  %endblock
+\end{fdfexample}
+one may extract the PDOS on a subset of atoms using this \sisl\
+command
+\begin{shellexample}
+  sdata siesta.TBT.nc --atom 20-30 --dos --ados Left --out dos_20-30.dat
+  sdata siesta.TBT.nc --atom 20-30[1-3] --dos --ados Left --out dos_20-30_1-3.dat
+\end{shellexample}
+where the former is the total PDOS on atoms $20$ through $30$, and the
+latter is the PDOS on orbitals 1, 2 and 3 on atoms $20$ through
+$30$. It thus is extremely easy to extract different PDOS once the
+calculation has completed. 
+
+\begin{fdflogicalF}{TBT.T!Bulk}
+
+  Calculate the bulk (pristine) electrode transmission if
+  \fdftrue.
+
+  This generates \sysfile{BTRANS\_<>} and \sysfile{AVBTRANS\_<>}.
+  
+  \note implicitly enables \fdf{TBT.DOS!Elecs} if \fdftrue.
+
+\end{fdflogicalF}
+
+\begin{fdflogicalF}{TBT.DOS!Elecs}
+
+  Calculate the bulk (pristine) electrode DOS if
+  \fdftrue. 
+
+  This generates \sysfile{BDOS\_<>} and \sysfile{AVBDOS\_<>}.
+
+  \note implicitly enables \fdf{TBT.T!Bulk} if \fdftrue.
+
+\end{fdflogicalF}
+
+
+\begin{fdflogicalF}{TBT.DOS!Gf}
+  \fdfdepend{TBT.Atoms!Device}
+
+  Calculate the DOS from the Green function on the atoms in the device
+  region. 
+
+  \note this flag should only be used if there are bound states in the
+  scattering region (or if one wish to uncover whether there are bound
+  states). Due to internal algorithms the DOS from the Green function
+  is computationally more demanding than using \fdf{TBT.DOS!A} and
+  \fdf{TBT.DOS!A.All}.
+
+  This generates \sysfile{DOS} and \sysfile{AVDOS}.
+
+  See \fdf{TBT.Atoms!Device.Connect}.
+
+  In case any of \fdf{TBT.DM!Gf}, \fdf{TBT.COOP!Gf} or
+  \fdf{TBT.COHP!Gf} is \fdftrue\ this flag will be set to \fdftrue\ as
+  well.
+
+\end{fdflogicalF}
+
+\begin{fdflogicalF}{TBT.DOS!A}
+  \fdfdepend{TBT.Atoms!Device}
+
+  Calculate the DOS from the spectral function. This will not
+  calculate the DOS from the last electrode (last in the list
+  \fdf{TBT.Elecs}), see \fdf{TBT.DOS!A.All}. 
+
+  This generates \sysfile{ADOS\_<>} and \sysfile{AVADOS\_<>}.
+
+  See \fdf{TBT.Atoms!Device.Connect}.
+
+  In case any of \fdf{TBT.Current!Orb}, \fdf{TBT.DM!A}, \fdf{TBT.COOP!A} or
+  \fdf{TBT.COHP!A} is \fdftrue\ this flag will be set to \fdftrue\ as
+  well.
+
+\end{fdflogicalF}
+
+\begin{fdflogicalF}{TBT.DOS!A.All}
+  \fdfdepend{TBT.Atoms!Device}
+
+  Calculate the DOS from the spectral function and do so with
+  \emph{all} electrodes.
+
+  This additionally generates \sysfile{ADOS\_<>} and
+  \sysfile{AVADOS\_<>} for the last electrode in \fdf{TBT.Elecs}.
+
+  \note if \fdftrue, this implicitly sets \fdf{TBT.DOS!A} to \fdftrue.
+
+\end{fdflogicalF}
+
+Setting the flags \fdf{TBT.DOS!Gf} and \fdf{TBT.DOS!A.All} to
+\fdftrue\ enables the estimation of bound states in the scattering
+region via this simple expression
+\begin{equation}
+  \rho_{\mathrm{bound-states}} = \rho_{\mathbf G} - 
+  \sum_i \rho_{\mathbf A_i},
+\end{equation}
+where the sum is over all electrodes, $\mathbf G$ and $\mathbf A_i$ are
+the Green and spectral function, respectively. Note that typically
+$\rho_{\mathrm{bound-states}}=0$.
+
+The below two options enables the calculation of the energy resolved
+density matrices. In effect they may be used to construct
+$\mathrm{LDOS}(E)$ profiles using \sisl.
+
+\begin{fdflogicalF}{TBT.DM!Gf}
+  \fdfdepend{TBT.Atoms!Device}
+
+  Calculate the energy and $k$-resolved density matrix for the Green
+  function. The density matrix may be used to construct 
+  real-space LDOS profiles.
+
+\end{fdflogicalF}
+
+\begin{fdflogicalF}{TBT.DM!A}
+  \fdfdepend{TBT.Atoms!Device}
+
+  Calculate the energy and $k$-resolved density matrix for the
+  electrode spectral functions. The density matrix may be used to
+  construct real-space LDOS profiles.
+
+\end{fdflogicalF}
+
+
+In addition to the DOS analysis of the Green and spectral functions,
+the Crystal Orbital Overlap Population and Crystal Orbital Hamilton
+Population may also be calculated. These are only available if
+\tbtrans\ is compiled with NetCDF-4 support.
+
+\begin{fdflogicalF}{TBT.COOP!Gf}
+  \fdfdepend{TBT.Atoms!Device,TBT.DOS!Gf}
+
+  Calculate COOP from the Green function in the device region.
+
+  The COOP curve is calculated as:
+  \begin{equation}
+    \label{eq:COOP-Gf}
+    \mathrm{COOP}_{\mu\nu} = \frac{-1}\pi\Im[\mathbf G_{\mu\nu} \SO_{\nu\mu}].
+  \end{equation}
+  The COOP curves are orbital, energy and $k$-resolved and they may
+  thus result in very large output files.
+
+  \note Untested!
+
+\end{fdflogicalF}
+
+\begin{fdflogicalF}{TBT.COOP!A}
+  \fdfdepend{TBT.Atoms!Device,TBT.DOS!A.All}
+
+  Calculate COOP from the spectral function in the device region.
+
+  The COOP curve is calculated as:
+  \begin{equation}
+    \label{eq:COOP-A}
+    \mathrm{COOP}_{\mu\nu} = \frac{1}{2\pi}\Re[\mathbf A_{\mu\nu} \SO_{\nu\mu}].
+  \end{equation}
+  The COOP curves are orbital, energy and $k$-resolved and they may
+  thus result in very large output files.
+
+  \note Untested!
+
+\end{fdflogicalF}
+
+\begin{fdflogicalF}{TBT.COHP!Gf}
+  \fdfdepend{TBT.Atoms!Device}
+
+  Calculate COHP from the Green function in the device region.
+
+  The COHP curve is calculated as:
+  \begin{equation}
+    \label{eq:COHP-Gf}
+    \mathrm{COHP}_{\mu\nu} = \frac{-1}\pi\Im[\mathbf G_{\mu\nu} \Ham_{\nu\mu}].
+  \end{equation}
+  The COHP curves are orbital, energy and $k$-resolved and they may
+  thus result in very large output files.
+
+  \note Untested!
+
+\end{fdflogicalF}
+
+\begin{fdflogicalF}{TBT.COHP!A}
+  \fdfdepend{TBT.Atoms!Device,TBT.DOS!A.All}
+
+  Calculate COHP from the spectral function in the device region.
+
+  The COHP curve is calculated as:
+  \begin{equation}
+    \label{eq:COHP-A}
+    \mathrm{COHP}_{\mu\nu} = \frac{1}{2\pi}\Re[\mathbf A_{\mu\nu} \Ham_{\nu\mu}].
+  \end{equation}
+  The COHP curves are orbital, energy and $k$-resolved and they may
+  thus result in very large output files.
+
+  \note Untested!
+
+\end{fdflogicalF}
+
+
+
+\begin{fdfentry}{TBT.T!Eig}[integer]<0>
+
+  Specify how many of the transmission eigenvalues will be
+  calculated. 
+
+  This generates \sysfile{TEIG\_<1>\_<2>} and
+  \sysfile{AVTEIG\_<1>\_<2>}, possibly \sysfile{CEIG\_<1>} and
+  \sysfile{AVCEIG\_<1>}. The former is for two different electrodes
+  $i\neq j$, while the latter is for electrode $i=j$.
+  
+  \note if you specify a number of eigenvalues above the available
+  number of eigenvalues, \tbtrans\ will automatically truncate it to a
+  reasonable number.
+
+  \note The transmission eigenvalues for $N>2$ systems is not fully
+  understood and the transmission eigenvalues calculated in \tbtrans\ is
+  done by diagonalizing this sub-matrix:
+  \begin{equation}
+    \mathbf G \boldsymbol \Gamma_i \mathbf G^\dagger \boldsymbol \Gamma_j.
+  \end{equation}
+
+\end{fdfentry}
+
+\begin{fdflogicalF}{TBT.T!All}
+
+  By default \tbtrans\ only calculates transmissions in \emph{one}
+  direction because time-reversal symmetry makes $T_{ij}=T_{ji}$. If
+  one wishes to assert this, or if time-reversal symmetry does not
+  apply for your system, one may set this to \fdftrue\ to explicitly
+  calculate all transmissions.
+
+  This additionally generates \sysfile{TRANS\_<1>\_<2>} and
+  \sysfile{AVTRANS\_<1>\_<2>} for all electrode combinations (and the
+  equivalent eigenvalue files if \fdf{TBT.T!Eig} is \fdftrue.
+
+\end{fdflogicalF}
+
+\begin{fdflogicalF}{TBT.T!Out}
+  
+  The total transmission out of any electrode\footnote{In
+      $N>2$-electrode calculations one \emph{cannot} use this quantity
+      to calculate the total current out of an electrode.} may easily
+  be calculated using only the scattering matrix of the origin
+  electrode and the scattering region Green function.
+  %
+  This enables the calculation of these equations
+  \begin{align}
+    i\Tr[(\mathbf G - \mathbf G^\dagger)\boldsymbol \Gamma_j],
+    \label{eq:G.Gamma}
+    \\
+    \Tr[\mathbf G \boldsymbol \Gamma_j \mathbf G^\dagger\boldsymbol
+    \Gamma_j].
+    \label{eq:G.Gamma.G.Gamma}
+  \end{align}
+  The total transmission out of electrode $j$ may then be calculated
+  as
+  \begin{equation}
+    \label{eq:T-out}
+    T_j = i\Tr[(\mathbf G - \mathbf G^\dagger)\boldsymbol \Gamma_j] 
+    -
+    \Tr[\mathbf G \boldsymbol \Gamma_j \mathbf G^\dagger\boldsymbol \Gamma_j].
+  \end{equation}
+
+  This generates two sets of files: \sysfile{CORR\_<>} and
+  \sysfile{TRANS\_<1>\_<1>} which corresponds to equations
+  Eqs.~\eqref{eq:G.Gamma} and \eqref{eq:G.Gamma.G.Gamma},
+  respectively. To calculate $T_j$ subtract the two files
+  according to Eq.~\eqref{eq:T-out}.
+  
+\end{fdflogicalF}
+
+\begin{fdflogicalF}{TBT.Current!Orb}
+  \fdfdepend{TBT.Atoms!Device,TBT.DOS!A}
+
+  Whether the orbital currents will be calculated and stored.  These
+  will be stored in a sparse matrix format corresponding to the
+  \siesta\ sparse format with only the device atoms in the sparse
+  pattern.
+  
+  Orbital currents are implemented as:
+  \begin{equation}
+    \label{eq:bond-current}
+    J_{\alpha \beta}(E) = i [
+    (\mathbf H_{\beta\alpha} - E\mathbf S_{\beta\alpha}) \mathbf A_{\alpha\beta}(E)
+    - 
+    (\mathbf H_{\alpha\beta} - E\mathbf S_{\alpha\beta}) \mathbf A_{\beta\alpha}(E)],
+  \end{equation}
+  where we have left out the pre-factor ($e/\hbar$)
+  intentionally. \sisl\ may be used to analyze the orbital currents
+  and enables easy transformation of orbital currents to bond currents
+  and activity currents\cite{Papior2017}.
+
+  \note this requires \tbtrans\ to be compiled with NetCDF-4 support,
+  see Sec.~\ref{sec:arch-make}.
+  
+\end{fdflogicalF}
+
+\begin{fdfentry}{TBT.Spin}[integer]<\nonvalue{all}>
+
+  If the Hamiltonian is a polarized calculation one my define the
+  index of the spin to be calculated.
+
+  This allows one to simultaneously calculate the spin-up and
+  spin-down transmissions, for instance
+\begin{shellexample}
+  $ tbtrans -fdf TBT.Spin:1 -D UP RUN.fdf &
+  $ tbtrans -fdf TBT.Spin:2 -D DOWN RUN.fdf &
+\end{shellexample}
+  which will create two folders \program{UP} and \program{DOWN} and
+  output the relevant physical quantities in the respective folders.
+  
+\end{fdfentry}
+
+\begin{fdflogicalT}{TBT.Symmetry!TimeReversal}
+
+  Whether the Hamiltonian and the calculation should use time-reversal
+  symmetry. 
+  Currently this only affects $\mathbf k$-point sampling calculations
+  by not removing any symmetry $\mathbf k$-points.
+
+  If one has $\mathbf k$-point sampling and wishes to use
+  \fdf{TBT.Current!Orb} this should be \fdffalse.
+  
+\end{fdflogicalT}
+
+
+\subsubsection{Device region} 
+
+The scattering region (and thus device region) is formally consisting
+of all atoms besides the electrodes. However, when calculating the
+transmission this choice is very inefficient. Thus to heavily increase
+throughput one may define a smaller device region consisting of a
+subset of atoms in the scattering region.
+
+The choice of atoms \emph{must} separate each electrode from each
+other. \tbtrans\ will stop if this is not enforced.
+
+Remark that the physical quantities such as DOS, spectral DOS, orbital
+currents may only be calculated in the selected device region. 
+
+\begin{fdfentry}{TBT.Atoms!Device}[block/list]%
+  <\nonvalue{all but electrodes}>
+
+  This flag may either be a block, or a list.
+
+  A block with each line denoting the atoms that consists of the
+  device region.
+  %
+  \begin{fdfexample}
+    %block TBT.Atoms.Device
+       atom [ 10 -- 20 ]
+       atom [ 30 -- 40 ]
+       # Atoms removed from the device region
+       # Even though they are specified in other
+       # lines
+       not-atom [ 15, 35]
+    % endblock
+    # Or equivalently as a list   
+    TBT.Atoms.Device [10 -- 14, 16 -- 20, 30 -- 34, 36 -- 40]
+  \end{fdfexample}
+  will limit the device region to atoms [10--14, 16--20, 30--34, 36--40].
+  
+\end{fdfentry}
+
+\begin{fdflogicalF}{TBT.Atoms!Device.Connect}
+
+  Setting this to \fdftrue\ will \emph{extend} the device region to
+  also include atoms that the input device atoms has matrix
+  elements between. This may be important when using non-orthogonal
+  basis sets as one can ensure the full overlap matrix on the selected
+  device atoms.
+  
+  \note this parameter should be set to \fdftrue\ in case accurate DOS
+  calculations are required on the specified device atoms (if using a
+  non-orthogonal basis set).
+
+\end{fdflogicalF}
+
+\begin{fdfentry}{TBT.Atoms!Buffer}[block/list]%
+
+  A block with each line denoting the atoms that are disregarded in
+  the Green function calculation.
+  % 
+  For self-consistent calculations it may be required to introduce
+  buffer atoms which are removed from the SCF cycle. In such cases
+  these atoms should also be removed from the transport calculation.
+  %
+  \begin{fdfexample}
+    %block TBT.Atoms.Buffer
+       atom [ 1 -- 5 ]
+    %endblock
+    # Or equivalently as a list   
+    TBT.Atoms.Buffer [1 -- 5]
+  \end{fdfexample}
+  will remove atoms [1--5] from the calculation.
+  
+\end{fdfentry}
+
+
+\subsubsection{Brillouin zone}
+
+\tbtrans\ allows calculating physical quantities via averaging in the
+Brillouin zone. 
+
+\begin{fdfentry}{TBT.k}[list/block]<\nonvalue{kgrid\_Monkhorst\_Pack}>
+  
+  Specify how to perform Brillouin zone integrations.
+
+  This may be given as a list like this:
+  \begin{fdfexample}
+    TBT.k [A B C]
+  \end{fdfexample}
+  where each integer corresponds to the diagonal elements of the
+  Monkhorst-Pack grid. I.e. 
+  \begin{fdfexample}
+    TBT.k [10 10 1]
+    %block TBT.k
+      10  0 0 0.
+       0 10 0 0.
+       0  0 1 0.
+    %endblock 
+  \end{fdfexample}
+  are equivalent.
+
+
+  If you supply this flag as a block the following options are available:
+  \begin{fdfoptions}
+
+    \option[path]%
+    \fdfindex{TBT.k!path}%
+    
+    Define a Brillouin zone path\footnote{Much like \fdf*{BandLines}
+        in \siesta.} where the $k$-points are equi-spaced.
+    %
+    It may be best described using this example:
+    \begin{fdfexample}
+  path 10
+    from 0.  0.  0.
+    to   0.5 0.5 0.
+  path 20
+    from 0.25 0.25 0.
+    to   0.0  0.5  0.
+    \end{fdfexample}
+
+    This will create $k$-points starting from the $\Gamma$-point and
+    move to the Brillouin zone boundary at [$1/2$, $1/2$, $0$] with
+    spacing to have 10 points.
+
+    There is no requirement that the \fdf*{path}s are
+    connected and one may specify as many paths as wanted.
+
+    \begin{fdfoptions}
+
+      \option[even-path]%
+      It is generally advised to add this flag in the blog
+      (somewhere) if one wants equi-distance $k$-spacings in the
+      Brillouin zone. This flag sums up the total number of $k$-points
+      on the total path and then calculates the exact number of
+      required points required on each path to have the same $\delta
+      k$ in each path.
+
+    \end{fdfoptions}
+
+    \note if any one \fdf*{path} is found in the block the options
+    (explained below) are ignored.
+
+
+    \option[diagonal|diag]%
+    \fdfindex{TBT.k!diagonal}%
+
+    Specify the number of $k$ points in each unit-cell direction
+
+    \fdf*{diagonal 3 3 1} will use 3 $k$ points along the first and
+    second lattice vectors and only one along the third lattice
+    vector.
+
+
+    \option[displacement|displ]%
+    \fdfindex{TBT.k!displacement}%
+
+    Specify the displacement of the Brillouin zone $k$ points along
+    each lattice vector. This input is similar to \fdf*{diagonal} but
+    requires real input.
+
+    \fdf*{displacement 0.5  0.25 0.} will displace the first and
+    second $k$ origin to [$1/2$, $1/4$, $0$].
+
+
+    \option[size]%
+    \fdfindex{TBT.k!size}%
+
+    This reduces the sampled Brillouin zone to only the fractional
+    size of each lattice vector direction.
+
+    This may be used to only sample $k$-points in a reduced Brillouin
+    zone which for instance is useful if one wishes to sample the
+    Dirac point in graphene in an energy range of $-0.5\,\mathrm{eV}$
+    -- $0.5\,\mathrm{eV}$. 
+
+    \fdf*{size 0.5 1. 1.} will reduce the sampled $k$ points along the
+    first reciprocal lattice to be in the range ]$-1/4$, $1/4$], while
+    the other directions are still sampled ]$-1/2$, $1/2$].
+
+    \note expert use only.
+
+    \option[list]%
+    \fdfindex{TBT.k!list}%
+
+    Explicitly specify the sampled $k$-points and (optionally) the
+    associated weights.
+    \begin{fdfexample}
+  list 2
+    0.  0.  0.  0.5
+    0.5 0.5 0.
+    \end{fdfexample}
+    where the integer on the \fdf*{list} line specifies the number of
+    lines that contains $k$ points. Each line \emph{must} be created
+    with $3$ reals which define the $k$ point in units of the
+    reciprocal lattice vectors (]$-1/2$--$1/2$]). 
+
+    An optional 4th value denote the associated weight which is
+    defaulted to $1/N$ where $N$ is the total number of $k$ points.
+
+    \note if this is found it will neglect the other input options
+    (except \fdf*{path}).
+
+    \option[method]%
+    \fdfindex{TBT.k!method}%
+
+    Define how the $k$-points should be created in the Brillouin zone.
+
+    Currently these options are available (\fdf*{Monkhorst-Pack} being
+    the default)
+    \begin{fdfoptions}
+
+      \option[Monkhorst-Pack|MP]%
+      \fdfindex{TBT.k!method!Monkhorst-Pack}%
+
+      Use the regular Monkhorst-Pack sampling (equi-spaced) with
+      simple linear weights.
+
+
+      \option[Gauss-Legendre]%
+      \fdfindex{TBT.k!method!Gauss-Legendre}%
+
+      Use the Gauss-Legendre quadrature and weights for constructing
+      the $k$ points and weights. These $k$ points are not
+      equi-spaced and puts more weight to the $\Gamma$ point.
+
+
+      \option[Simpson-mix]%
+      \fdfindex{TBT.k!method!Simpson-mix}%
+      
+      Use the Newton-Cotes method (Simpson, degree 3) which uses equi-spaced
+      points but non-uniform weights.
+
+
+      \option[Boole-mix]%
+      \fdfindex{TBT.k!method!Boole-mix}%
+
+      Use the Newton-Cotes method (Boole, degree 5) which uses equi-spaced
+      points but non-uniform weights.
+
+    \end{fdfoptions}
+
+    \option[\fdfvalue*{siesta-method}]%
+
+    One may also use the typical \fdf*{kgrid\_Monkhorst\_Pack} method
+    of input as done in \siesta. This is a $3\times3$ block such as:
+    \begin{fdfexample}
+  10  0  0 0.
+   0 15  0 0.
+   0  0  1 0.
+    \end{fdfexample}
+    which uses $10$, $15$ and $1$ $k$-points along the 1st, 2nd and
+    3rd reciprocal lattice vectors. And with $0$ displacement.
+
+    \note it is recommended to use the \fdf*{diagonal} option unless
+    off-diagonal $k$ points are needed.
+
+  \end{fdfoptions}
+  
+\end{fdfentry}
+
+
+\subsubsection{Energy grid}
+
+\tbtrans\ uses a default energy reference as the Fermi level in the
+corresponding \tsiesta\ calculation. I.e. the equilibrium Fermi
+level. Thus one should be aware when using a shifted bias window that
+the calculated properties shifts according to the applied bias. For
+example; if one performs two equivalent 2-terminal calculations A)
+with $\mu_L=V$, $\mu_R=0$ and the other B) with $\mu_L=V/2$,
+$\mu_R=-V/2$ then the calculated properties are equivalent if one
+shifts the energy spectrum of A) by $E \to E - V/2$. Any 2-terminal
+calculation is recommended to be setup with $\mu_L=V/2$ and
+$\mu_R=-V/2$ due to the fixed energy reference, $E_R = 0$.
+
+The Green function is calculated at explicit energies and does not
+rely on diagonalization routines to retrieve the eigenspectrum. This
+is due to the smearing of states from the coupling with the
+semi-infinite electrodes.
+
+It is thus important to define an energy grid for analysis of the DOS
+and transmission.
+
+\begin{fdfentry}{TBT.Contours!Eta}[energy]<$0\,\mathrm{eV}$>
+  
+  The imaginary ($\eta$) part of the Green function in the device
+  region. Note that the electrodes imaginary part may be controlled
+  via \fdf{TBT.Elecs!Eta}.
+
+  This value controls the smearing of the DOS on the energy
+  axis. Generally will the electrode $\eta$ value contribute to a
+  smearing in the device region, while in certain situations an
+  imaginary $\eta$ is required in the device region.
+  
+\end{fdfentry}
+
+\begin{fdfentry}{TBT.Contours}[block]<\emph{see note further down}>
+
+  Each line in this block corresponds to a specific contour.
+  Enabling several lines of input allows to create regions of the
+  energy grid which has a high density and ranges of energies with
+  lower density. Also it allows to bypass energy ranges where the DOS
+  is zero in for instance a semi-conductor.  
+
+  See \fdf{TBT.Contour!<>} for details on specifying the energy contour.
+  
+\end{fdfentry}
+
+\begin{fdfentry}{TBT.Contour!<>}[block]
+
+  Specify a contour named \fdf*{<>} with options within the block.
+
+  The names \fdf*{<>} are taken from the \fdf{TBT.Contours} block.
+
+  The format of this block is made up of at least $3$ lines, in the
+  following order of appearance.
+
+  \begin{fdfoptions}
+
+    \option[from \emph{a} to \emph{b}]%
+    \fdfindex{TBT.Contour!<>!from}%
+
+    Define the integration range on the energy axis.
+    Thus \emph{a} and \emph{b} are energies.
+
+
+    \option[points|delta|file]%
+    \fdfindex{TBT.Contour!<>!points}%
+    \fdfindex{TBT.Contour!<>!delta}%
+    \fdfindex{TBT.Contour!<>!file}%
+
+    Define the number of integration points/energy separation.
+    If specifying the number of points an integer should be supplied.
+
+    If specifying the separation between consecutive points an energy
+    should be supplied (e.g. \fdf*{0.01 eV}).
+
+    Optionally one may specify a file which contains the energy points
+    and their weights.
+
+    This file has the same formatting as the \sysfile{TBT.CC} output
+    with some optional inputs. Below is an example input file.
+    \begin{output}[fontsize=\footnotesize]
+# There are 2 different input options:
+# 1. Re[E] Im[E] W  (optional unit)
+# 2. Re[E] W        (optional unit) (imaginary part will be device Eta)
+# If the unit is specified on any line, all subsequent lines will use
+# the specified unit. Default unit is eV!
+# Empty lines and lines starting with # will be ignored.
+-0.5  0.1    # E = -0.5 eV, weight (for integrating current) of 0.1 eV
+-0.01 0.1 Ry # E = -0.01 Ry and weight 0.1 Ry
+-0.02 0.1    # E = -0.02 Ry (above unit continue) and weight 0.1 Ry
+-0.2  0.1 eV # E = -0.2 eV and weight 0.1 eV
+-0.2 1. 0.1  # E = -0.2 eV and 1. eV eta and weight 0.1 eV
+\end{output}
+
+    If the file specified is \sysfile{TBT.CC} the same energy points
+    will be used. Note that the resulting \sysfile{TBT.nc} file does
+    not store the energies as complex numbers, thus one cannot
+    subsequently extract the $\eta$ value used for the individual
+    energy points.
+
+    \note for \phtrans\ the energies will be squared internally to be
+    in correct units, hence the units should still be $\mathrm{eV}$.
+
+    \option[method]%
+    \fdfindex{TBT.Contour!<>!method}%
+
+    Specify the numerical method used to conduct the integration. Here
+    a number of different numerical integration schemes are accessible
+
+    \begin{fdfoptions}
+      \option[mid|mid-rule]%
+      Use the mid-rule for integration.
+
+      \option[simpson|simpson-mix]%
+      Use the composite Simpson $3/8$ rule (three point Newton-Cotes).
+
+      \option[boole|boole-mix]%
+      Use the composite Booles rule (five point Newton-Cotes).
+ 
+      \option[G-legendre]%
+      Gauss-Legendre quadrature.
+
+      \option[tanh-sinh]%
+      Tanh-Sinh quadrature.
+
+      \note has \fdf*{opt precision <>}.
+
+      \option[user]%
+      User defined input via a file.
+
+    \end{fdfoptions}
+
+    \option[opt]%
+    \fdfindex{TBT.Contour!<>!opt}%
+
+    Specify additional options for the \fdf*{method}. Only a selected
+    subset of the methods have additional options.
+
+  \end{fdfoptions}
+
+\end{fdfentry}
+
+By default the \tbtrans\ energy grid is defined as
+\begin{fdfexample}
+  TBT.Contours.Eta 0. eV
+  %block TBT.Contours
+    line
+  %endblock
+  %block TBT.Contour.line
+     from -2. eV to 2. eV
+      delta 0.01 eV
+        method mid-rule
+  %endblock
+\end{fdfexample}
+
+An example of input using a file (note that regular contour setups may
+be used together with file-inputs)
+\begin{fdfexample}
+  TBT.Contours.Eta 0. eV
+  %block TBT.Contours
+    file
+  %endblock
+  %block TBT.Contour.file
+     from 2. eV to 2.5 eV
+      file my_energies
+  %endblock
+\end{fdfexample}
+Note that the energy specifications are necessary (due to internal
+bookkeeping).
+
+\subsection{Chemical potentials}
+
+
+For $N$ electrodes there will also be $N_\mu$ chemical
+potentials. They are defined via blocks similar to \fdf{TBT.Elecs}.
+If no bias is applied \tbtrans\ will default to a single chemical
+potential with the chemical potential in equilibrium. In this case you
+need not specify any chemical potentials.
+
+By default \tbtrans\ creates a single chemical potential with the
+chemical potential equal to the device Fermi-level. Hence, performing
+non-bias calculations does not require one to specify these blocks.
+
+\begin{fdfentry}{TBT.ChemPots}[block]
+  
+  Each line denotes a new chemical potential which may is further
+  defined in the \fdf{TBT.ChemPot!<>} block.
+  
+\end{fdfentry}
+
+\begin{fdfentry}{TBT.ChemPot!<>}[block]
+
+  Each line defines a setting for the chemical potential named
+  \fdf*{<>}.
+
+  \begin{fdfoptions}
+    
+    \option[chemical-shift|mu]%
+    \fdfindex{TBT.ChemPot!<>!chemical-shift}%
+    \fdfindex{TBT.ChemPot!<>!mu}%
+
+    Define the chemical shift (an energy) for this chemical
+    potential. One may specify the shift in terms of the applied bias
+    using \fdf*{V/<integer>} instead of explicitly typing the energy.
+
+    \option[ElectronicTemperature|Temp|kT]%
+    \fdfindex{TBT.ChemPot.<>!ElectronicTemperature}%
+    \fdfindex{TBT.ChemPot.<>!Temp}%
+    \fdfindex{TBT.ChemPot.<>!kT}%
+
+    Specify the electronic temperature (as an energy or in
+    Kelvin). This defaults to \fdf*{TS.ElectronicTemperature}.
+
+    One may specify this in units of \fdf*{TS.ElectronicTemperature} by
+    using the unit \fdf*{kT}.
+
+  \end{fdfoptions}
+
+  It is important to realize that the parameterization of the voltage
+  into the chemical potentials enables one to have a \emph{single}
+  input file which is never required to be changed, even when changing
+  the applied bias.
+
+\end{fdfentry}
+
+These options complicate the input sequence for regular $2$ electrode
+which is unfortunate. 
+
+
+
+\subsection{Electrode configuration}
+
+The electrodes are defining the semi-infinite region that is coupled
+to the scattering region.
+
+\tbtrans\ is a fully $N$ electrode calculator. Thus the input for such
+setups is rather complicated.
+
+\tbtrans\ defaults to read the \tsiesta\ electrodes and as such one
+may replace \fdf*{TBT} by \fdf*{TS} and \tbtrans\ will still
+work. However, the \fdf*{TBT} has precedence. 
+
+If there is only $1$ chemical potential all electrodes will default
+to use this chemical potential, thus for non-bias calculations there
+is no need to specify the chemical potential
+(\fdf{TBT.Elec.<>!chemical-potential}).  
+
+\begin{fdfentry}{TBT.Elecs}[block]
+
+  Each line denote an electrode which may be queried in
+  \fdf{TBT.Elec.<>} for its setup.
+  
+\end{fdfentry}
+
+\begin{fdfentry}{TBT.Elec.<>}[block]
+
+  Each line represents a setting for electrode \fdf*{<>}.
+  There are a few lines that \emph{must} be present, \fdf*{HS},
+  \fdf*{semi-inf-dir}, \fdf*{electrode-pos}, \fdf*{chem-pot} (only if
+  \fdf{TBT!Voltage} is not $0$).
+
+  If there are some settings that you only want to take effect in
+  \tbtrans\ calculations you can prefix the option with
+  \fdf*{tbt.Eta}, e.g. which will only be used for the \tbtrans\
+  calculations. Note that \emph{all} \fdf*{tbt.*} options must be
+  located at the end of the block. This may be particularly useful
+  with respect to the Green function file options.
+
+  \begin{fdfoptions}
+
+    \option[HS]%
+    \fdfindex*{TBT!Elec.<>!HS}%
+    The electronic structure information from the initial
+    electrode calculation. This file retains the geometrical
+    information as well as the Hamiltonian, overlap matrix and the
+    Fermi-level of the electrode.
+    %
+    This is a file-path and the electrode \sysfile{TSHS} need not be
+    located in the simulation folder.
+
+    \tbtrans\ also reads NetCDF4 files which contain the electronic
+    structure. This may be created using \sisl.
+
+    \option[semi-inf-direction|semi-inf-dir|semi-inf]%
+    \fdfindex*{TBT.Elec.<>!semi-inf-direction}%
+    The semi-infinite direction of the electrode with respect to the
+    electrode unit-cell.
+
+    It may be one of \fdf*{[-+][abc]}, \fdf*{[-+]A[123]}, \fdf*{ab},
+    \fdf*{ac}, \fdf*{bc} or \fdf*{abc}. The latter four all describe a
+    real-space self-energy as described in \cite{1905.11113}.
+
+
+    \note this has nothing to do with the scattering region unit cell,
+    \tbtrans\ will figure out the alignment of the electrode unit-cell
+    and the scattering region unit-cell.
+
+    \option[chemical-potential|chem-pot|mu]%
+    \fdfindex*{TBT.Elec.<>!chemical-potential}%
+    The chemical potential that is associated with this
+    electrode. This is a string that should be present in the
+    \fdf{TBT.ChemPots} block in case there is a bias applied in the
+    calculation. 
+
+    \option[electrode-position|elec-pos]%
+    \fdfindex*{TBT.Elec.<>!electrode-position}%
+    The index of the electrode in the scattering region.
+    This may be given by either \fdf*{elec-pos <idx>}, which refers to
+    the first atomic index of the electrode residing at index
+    \fdf*{<idx>}. Else the electrode position may be given via
+    \fdf*{elec-pos end <idx>} where the last index of the electrode
+    will be located at \fdf*{<idx>}.
+
+    \option[used-atoms]%
+    \fdfindex*{TBT.Elec.<>!used-atoms}%
+    Number of atoms from the electrode calculation that is used in the
+    scattering region as electrode. This may be useful when the
+    periodicity of the electrodes forces extensive electrodes in the
+    semi-infinite direction.
+
+    \note do not set this if you use all atoms in the electrode.
+
+    \option[Bulk]%
+    \fdfindex*{TBT.Elec.<>!Bulk}%
+    Logical controlling whether the Hamiltonian of the electrode
+    region in the scattering region is enforced \emph{bulk} or whether
+    the Hamiltonian is taken from the scattering region elements.
+
+    \option[tbt.Gf/Gf]%
+    \fdfindex*{TBT.Elec.<>!Gf}%
+    String with filename of the surface Green function data. This may
+    be used to place a common surface Green function file in a top
+    directory which may then be used in all calculations using the
+    same electrode and the same contour. 
+    %
+    If many calculations are performed this will heavily increase
+    performance at the cost of disk-space.
+
+    
+    \option[Eta]%
+    \fdfindex*{TBT.Elec.<>!Eta}%
+    \fdfdepend{TBT.Elecs!Eta}%
+    Control the imaginary energy ($\eta$) of the surface Green
+    function for this electrode.
+
+    \note if this energy is negative the complex value associated with
+    the contour is used. This is particularly useful when providing a
+    user-defined contour. Ensure that all imaginary values are larger
+    than $0$ as otherwise \tbtrans\ may seg-fault.
+
+    \note for \phtrans\ calculations you are highly encouraged to
+    change this value since the default ($1\,\mathrm{meV}$) is very
+    low.
+
+    \option[Accuracy]%
+    \fdfindex*{TBT.Elec.<>!Accuracy}%
+    \fdfdepend{TBT.Elecs!Accuracy}%
+    Control the convergence accuracy required for the self-energy
+    calculation when using the Lopez-Sanchez, Lopez-Sanchez iterative
+    scheme.
+
+    \note advanced use \emph{only}.
+
+    \option[Bloch]%
+    \fdfindex*{TBT.Elec.<>!Bloch}%
+    $3$ integers are present on this line which each denote the number
+    of times bigger the scattering region electrode is compared to the
+    electrode, in each lattice direction. Remark that these expansion
+    coefficients are with regard to the electrode unit-cell.
+    This is denoted ``Bloch'' because it is an expansion based on
+    Bloch waves.
+
+    Please see \emph{Matching electrode coordinates: basic rules} in
+    the \siesta\ manual for details.
+
+    \option[Bloch-A/a1|B/a2|C/a3]%
+    \fdfindex{TBT.Elec.<>!Bloch}%
+    Specific Bloch expansions in each of the electrode unit-cell
+    direction. See \fdf*{Bloch} for details.
+
+    \option[pre-expand]%
+    \fdfindex*{TBT.Elec.<>!pre-expand}%
+    String denoting how the expansion of the surface Green function
+    file will be performed. This only affects the Green function file
+    if \fdf*{Bloch} is larger than 1. By default the Green function
+    file will contain the fully expanded surface Green function, but
+    not Hamiltonian and overlap matrices (\fdf*{Green}). One may
+    reduce the file size by setting this to \fdf*{Green} which only
+    expands the surface Green function. Finally \fdf*{none} may be
+    passed to reduce the file size to the bare minimum.
+    %
+    For performance reasons \fdf*{all} is preferred. 
+
+    \option[out-of-core]%
+    \fdfindex*{TBT.Elec.<>!out-of-core}%
+    If \fdftrue\ the GF files are created which contain the surface
+    Green function. Setting this to \fdftrue\ may be advantageous when
+    performing many calculations using the same $k$ and energy grid
+    using the same electrode. In those case this will heavily increase
+    throughput. 
+    % 
+    If \fdffalse\ (default) the surface Green function will be
+    calculated when needed. 
+
+    \note simultaneous calculations may read the same GF file.
+
+    \option[Gf-Reuse]%
+    \fdfindex*{TBT.Elec.<>!Gf-Reuse}%
+    \fdfdepend{TBT.Elec.<>!out-of-core}%
+    Logical deciding whether the surface Green function file should be
+    re-used or deleted.
+    %
+    If this is \fdffalse\ the surface Green function file is deleted
+    and re-created upon start.
+
+    
+    \option[delta-Ef]%
+    \fdfindex*{TBT!Elec.<>!delta-Ef}%
+    Specify an offset for the Fermi-level of the electrode. This will
+    directly be added to the Fermi-level found in the electrode file.
+    
+    \note this option only makes sense for semi-conducting electrodes
+    since it shifts the entire electronic structure. This is because
+    the Fermi-level may be arbitrarily placed anywhere in the band
+    gap. It is the users responsibility to define a value which does
+    not introduce a potential drop between the electrode and device
+    region.
+
+    \option[V-fraction]%
+    \fdfindex*{TBT!Elec.<>!V-fraction}%
+
+    Specify the fraction of the chemical potential shift in the
+    electrode-device coupling region. This corresponds to:
+    \begin{equation}
+      \mathbf H_{\mathfrak eD} \leftarrow \mathbf H_{\mathfrak eD} +
+      \mu_{\mathfrak e} \mathrm{V}_f \mathbf S_{\mathfrak eD}
+    \end{equation}
+    in the coupling region. Consequently the value \emph{must} be
+    between $0$ and $1$.
+
+    \note this option may be used for tight-binding calculations as an
+    empirical applied bias (with the potential drop at the
+    electrode/device interface).
+
+
+    \option[check-kgrid]%
+    \fdfindex*{TBT.Elec.<>!check-kgrid}%
+    For $N$ electrode calculations the $\mathbf k$ mesh will sometimes
+    not be equivalent for the electrodes and the device region
+    calculations. However, \tbtrans\ requires that the device and
+    electrode $\mathbf k$ samplings are commensurate. This flag
+    controls whether this check is enforced. 
+
+    \note only use if fully aware of the implications (for
+    tight-binding calculations this may safely be set to \fdffalse).
+
+  \end{fdfoptions}
+  
+\end{fdfentry}
+
+There are several flags which are globally controlling the variables
+for the electrodes (with \fdf{TBT.Elec.<>} taking precedence).
+
+\begin{fdflogicalT}{TBT.Elecs!Bulk}
+
+  This globally controls how the Hamiltonian is treated in all
+  electrodes. 
+  %
+  See \fdf{TBT.Elec.<>!Bulk}.
+  
+\end{fdflogicalT}
+
+\begin{fdfentry}{TBT.Elecs!Eta}[energy]<$1\,\mathrm{meV}$>
+  
+  Globally control the imaginary energy ($\eta$) used for the surface
+  Green function calculation. This $\eta$ value is \emph{not} used in
+  the device region.
+  %
+  See \fdf{TBT.Elec.<>!Eta} for extended details on the usage of this
+  flag.
+  
+\end{fdfentry}
+
+\begin{fdfentry}{TBT.Elecs!Accuracy}[energy]<$10^{-13}\,\mathrm{eV}$>
+  
+  Globally control the accuracy required for convergence of the self-energy.
+  %
+  See \fdf{TBT!Elec.<>!Accuracy}.
+  
+\end{fdfentry}
+
+\begin{fdflogicalF}{TBT.Elecs!Neglect.Principal}
+
+  If this is \fdffalse\ \tbtrans\ dies if there are connections beyond
+  the principal cell.
+
+  \note set this to \fdftrue\ with care, non-physical results may
+  arise. Use at your own risk!
+
+\end{fdflogicalF}  
+
+\begin{fdflogicalF}{TBT.Elecs!Out-of-core}
+
+  This enables reusing the self-energies by storing them on-disk
+  (\fdftrue). The surface Green function files may be large files but
+  heavily increases throughput if one performs several transport
+  calculations using the same electrodes.
+
+  You are encouraged to set this to \fdftrue\ to reduce computations. 
+  %
+  See \fdf{TBT.Elec.<>!out-of-core}.
+
+  Currently this option is not compatible with \fdf{TBT.T.Bulk} and
+  \fdf{TBT.DOS.Elecs}, and the bulk transmission and bulk DOS will not
+  be calculated if this option is \fdftrue.
+  
+\end{fdflogicalF}
+
+\begin{fdflogicalT}{TBT.Elecs!Gf.Reuse}
+  \fdfdepend{TBT.Elecs!Out-of-core}
+  
+  Globally control whether the surface Green function files should
+  be re-used (\fdftrue) or re-created (\fdffalse).
+  %
+  See \fdf{TBT.Elec.<>!Gf-Reuse}.
+  
+\end{fdflogicalT}
+
+
+\begin{fdfentry}{TBT!Elecs!Coord.EPS}[length]<$10^{-4}\,\mathrm{Bohr}$>
+
+  When using Bloch expansion of the self-energies one may experience
+  difficulties in obtaining perfectly aligned electrode coordinates.
+
+  This parameter controls how strict the criteria for equivalent
+  atomic coordinates is. If \tbtrans\ crashes due to mismatch between
+  the electrode atomic coordinates and the scattering region
+  calculation, one may increase this criteria. This should only be
+  done if one is sure that the atomic coordinates are almost similar
+  and that the difference in electronic structures of the two may be
+  negligible.
+  
+\end{fdfentry}
+
+
+\subsubsection{Principal layer interactions} %
+\index{electrode!principal layer}%
+
+It is \emph{extremely} important that the electrodes only interact
+with one neighboring supercell due to the self-energy
+calculation. \tbtrans\ will print out a block as this
+\begin{fdfexample}
+ <> principal cell is perfect!
+\end{fdfexample}
+if the electrode is correctly setup and it only interacts with its
+neighboring supercell.
+%
+In case the electrode is erroneously setup, something similar to the
+following will be shown in the output file.
+\begin{fdfexample}
+ <> principal cell is extending out with 96 elements:
+    Atom 1 connects with atom 3
+    Orbital 8 connects with orbital 26
+    Hamiltonian value: |H(8,6587)|@R=-2 =  0.651E-13 eV
+    Overlap          :  S(8,6587)|@R=-2 =   0.00    
+\end{fdfexample}
+It is imperative that you have a \emph{perfect} electrode as otherwise
+nonphysical results will occur.
+
+
+\subsection{Calculation settings}
+
+The calculation time is currently governed by two things:
+\begin{enumerate}
+  
+  \item%
+  the size of the device region, 
+
+  \item%
+  and by the partitioning of the block-tri-diagonal matrix.
+  
+\end{enumerate}
+The first may be controlled via \fdf{TBT.Atoms!Device}. If one is only
+interested in transmission coefficients this flag is encouraged to
+select the minimum number of atoms that will successfully run the
+calculation. Please see the flag entry for further details.
+
+Secondly there is, currently, no way to determine the most optimal
+block-partitioning of a banded matrix and \tbtrans\ allows several
+algorithms to determine an optimal partitioning scheme. The following
+flag controls the partitioning for the device region.
+
+
+\begin{fdflogicalF}{TBT!Analyze}
+
+  As the pivoting algorithm \emph{highly} influences the performance
+  and throughput of the transport calculation it is crucial to select
+  the best performing algorithm available. This option tells \tbtrans\
+  to analyze the pivoting table for nearly all the implemented
+  algorithms and print-out information about them.
+
+  \note we advice users to \emph{always} run an analyzation step prior
+  to actual calculation and select the \emph{best} BTD format. This
+  analyzing step is very fast and can be performed on small
+  work-station computers, even on systems of $\gg10,000$ orbitals.
+
+  To run the analyzing step you may do:
+  \begin{shellexample}
+    tbtrans -fdf TBT.Analyze RUN.fdf > analyze.out
+  \end{shellexample}
+  note that there is little gain on using MPI and it should complete
+  within a few minutes, no matter the number of orbitals.
+
+  Choosing the best one may be difficult. Generally one should choose
+  the pivoting scheme that uses the least amount of memory. However,
+  one should also choose the method with the largest block-size being
+  as small as possible. As an example:
+  \begin{output}[fontsize=\footnotesize]
+TBT.BTD.Pivot.Device atom+GPS
+...
+    BTD partitions (7): 
+     [ 2984, 2776, 192, 192, 1639, 4050, 105 ]
+    BTD matrix block size [max] / [average]: 4050 /   1705.429
+    BTD matrix elements in % of full matrix:   47.88707 %
+
+TBT.BTD.Pivot.Device atom+GGPS
+...
+    BTD partitions (6): 
+     [ 2880, 2916, 174, 174, 2884, 2910 ]
+    BTD matrix block size [max] / [average]: 2916 /   1989.667
+    BTD matrix elements in % of full matrix:   48.62867 %
+
+  \end{output}
+  Although the GPS method uses the least amount of memory, the GGPS
+  will likely perform better as the largest block in GPS is $4050$
+  vs. $2916$ for the GGPS method. 
+
+\end{fdflogicalF}
+
+
+\begin{fdfentry}{TBT.BTD!Optimize}[string]<speed|memory>
+
+  When selecting the smallest blocks for the BTD matrix there are
+  certain criteria that may change the size of each block. For very
+  memory consuming jobs one may choose the \fdf*{memory}. 
+
+  \note often both methods provide \emph{exactly} the same BTD matrix
+  due to constraints on the matrix.
+  
+\end{fdfentry}
+
+
+\begin{fdfentry}{TBT.BTD!Pivot.Device}[string]<atom-\nonvalue{largest
+      overlapping electrode}>
+
+  Decide on the partitioning for the BTD matrix. One may denote either
+  \fdf*{atom+} or \fdf*{orb+} as a prefix which does the analysis on
+  the atomic sparsity pattern or the full orbital sparsity pattern,
+  respectively. If neither are used it will default to \fdf*{atom+}.
+
+  \begin{fdfoptions}
+
+    \option[<elec-name>|CG-<elec-name>]%
+    The partitioning will be a connectivity graph starting from the
+    electrode denoted by the name. This name \emph{must} be found in
+    the \fdf{TBT!Elecs} block. One can append more than one electrode
+    to simultaneously start from more than 1 electrode. This may be
+    necessary for multi-terminal calculations.
+
+    \note One may append an optional setting \fdf*{front} or
+    \fdf*{fan} which makes the connectivity graph to consider the
+    geometric front of the atoms. For extreme scale simulations or
+    tight-binding calculations with constrictions this may improve the
+    BTD matrix substantially because it splits the unit-cell into
+    segments of equal width.
+
+    \option[rev-CM] %
+    Use the reverse Cuthill-McKee for pivoting the matrix elements to
+    reduce bandwidth. One may omit \fdf*{rev-} to use the standard
+    Cuthill-McKee algorithm (not recommended).
+
+    This pivoting scheme depends on the initial starting
+    electrodes, append \fdf*{+<elec-name>} to start the Cuthill-McKee
+    algorithm from the specified electrode.
+
+    \option[GPS] %
+    Use the Gibbs-Poole-Stockmeyer algorithm for reducing the
+    bandwidth.
+
+    \option[GGPS] %
+    Use the generalized Gibbs-Poole-Stockmeyer algorithm for reducing
+    the bandwidth.
+
+    \option[PCG] %
+    Use the perphiral connectivity graph algorithm for reducing the
+    bandwidth.
+
+    This pivoting scheme \emph{may} depend on the initial starting
+    electrode(s), append \fdf*{+<elec-name>} to initialize the PCG
+    algorithm from the specified electrode.
+
+  \end{fdfoptions}
+
+  Examples are
+  \begin{fdfexample}
+    TBT.BTD.Pivot.Device atom+GGPS
+    TBT.BTD.Pivot.Device GGPS
+    TBT.BTD.Pivot.Device orb+GGPS
+    TBT.BTD.Pivot.Device orb+PCG
+    TBT.BTD.Pivot.Device orb+PCG+Left
+    TBT.BTD.Pivot.Device orb+rev-CM+Right
+  \end{fdfexample}
+  where the first two are equivalent. The 3rd and 4th are more heavily
+  on analysis and will typically not improve the bandwidth reduction.
+
+\end{fdfentry}
+
+\begin{fdfentry}{TBT.BTD!Pivot.Elec.<>}[string]<atom-\nonvalue{<>}>
+  \fdfdepend{TBT.Atoms!Device}
+
+  If \fdf{TBT.Atoms!Device} has been set to a reduced region the
+  electrode self-energies must be \emph{down-folded} through the atoms
+  not part of the device-region. In this case these down-fold regions
+  can also be considered a BTD matrix which may be optimized
+  separately from the device region BTD matrix.
+
+  This option have all available options as described in
+  \fdf{TBT.BTD!Pivot.Device} but one will generally find the best
+  pivoting scheme by using the default (\fdf*{atom-<>}) which is the
+  atomic connectivity graph from the electrode it-self.
+
+  It may be advantageous to use \fdf*{atom-<>-front} for very large
+  tight-binding calculations where the device region is chosen far
+  from this electrode and normal to the electrode-plane. 
+
+\end{fdfentry}
+
+\begin{fdfentry}{TBT.BTD!Spectral}[string]<propagation|column>
+
+  Method used for calculating the spectral function ($\mathbf A_i$).
+  For 4 or more electrodes the \fdf*{column} option is the default
+  while \fdf*{propagation} is the default for less electrodes.
+
+  \note this option may heavily influence performance. Test for a
+  single $k$-point and single energy point to figure out the
+  implications of using one over the other.
+  
+\end{fdfentry}
+
+\begin{fdflogicalF}{TBT.BTD!Pivot.Graphviz}
+
+  Create Graphviz\footnote{\url{www.graphviz.org}} compatible input
+  files for the pivoting tables for all electrodes,
+  \sysfile{TBT.<elec>.gv}, and the device, \sysfile{TBT.gv}.
+
+  These files may be processed by Graphviz display commands
+  \program{neato} etc.
+
+  \begin{shellexample}
+    neato -x <>
+    neato -x -Tpdf <> -o graph.pdf
+    neato -x -Tpng <> -o graph.png
+  \end{shellexample}
+  
+\end{fdflogicalF}
+
+
+\subsection{Input/Output}
+
+\tbtrans\ IO is mainly relying on the NetCDF4 library and full
+capability is only achieved if compiled with this library.
+
+Several fdf-flags control how \tbtrans\ performs IO.
+
+
+\begin{fdfentry}{TBT.CDF!Precision}[string]<single|float|double>
+
+  Specify the precision used for storing the quantities in the
+  NetCDF4.
+
+  \fdf*{single} takes half the disk-space as \fdf*{double} and will
+  generally retain a sufficient precision of the quantities. 
+
+  \fdf*{single} and \fdf*{float} are equivalent.
+
+  \note all calculations are performed using \fdf*{double} so this is
+  \emph{only} a storage precision.
+  
+\end{fdfentry}
+
+\begin{fdfentry}{TBT.CDF!DOS.Precision}[string]<{<\fdf{TBT.CDF!Precision}>}>
+
+  Specify the precision used for storing DOS in NetCDF4.
+
+\end{fdfentry}
+
+\begin{fdfentry}{TBT.CDF!T.Precision}[string]<{<\fdf{TBT.CDF!Precision}>}>
+
+  Specify the precision used for storing transmission function in NetCDF4.
+
+\end{fdfentry}
+
+\begin{fdfentry}{TBT.CDF!T.Eig.Precision}[string]<{<\fdf{TBT.CDF!Precision}>}>
+
+  Specify the precision used for storing transmission eigenvalues in NetCDF4.
+  
+\end{fdfentry}
+
+\begin{fdfentry}{TBT.CDF!Current.Precision}[string]<{<\fdf{TBT.CDF!Precision}>}>
+
+  Specify the precision used for storing orbital current in NetCDF4.
+
+  \note This is heavily advised to be in single precision as this may
+  easily use large amounts of disk-space if in double precision.
+  
+\end{fdfentry}
+
+\begin{fdfentry}{TBT.CDF!DM.Precision}[string]<{<\fdf{TBT.CDF!Precision}>}>
+
+  Specify the precision used for storing density matrices in NetCDF4.
+
+  \note This is heavily advised to be in single precision as this may
+  easily use large amounts of disk-space if in double precision.
+  
+\end{fdfentry}
+
+\begin{fdfentry}{TBT.CDF!COOP.Precision}[string]<{<\fdf{TBT.CDF!Precision}>}>
+
+  Specify the precision used for storing COOP and COHP curves in NetCDF4.
+
+  \note This is heavily advised to be in single precision as this may
+  easily use large amounts of disk-space if in double precision.
+  
+\end{fdfentry}
+
+\begin{fdfentry}{TBT.CDF!Compress}[integer]<0>
+
+  Specify whether the NetCDF4 files stored will be compressed. This
+  may heavily reduce disk-utilization at the cost of some performance.
+
+  This number must be between 0 (no compression) and 9 (maximum
+  compression). A higher compression is more time consuming and a good
+  compromise between speed and compression is 3.
+
+  \note one may subsequently to a \tbtrans\ compilation compress a
+  NetCDF4 file using:
+\begin{shellexample}
+   nccopy -d 3 siesta.TBT.nc newsiesta.TBT.nc
+ \end{shellexample}
+
+ \note one \emph{can not} do parallel I/O together with compression.
+  
+\end{fdfentry}
+
+\begin{fdflogicalF}{TBT.CDF!MPI}
+
+  Whether the IO is performed in parallel. If using a large amount of
+  MPI processors this may increase performance.
+
+  \note the actual performance increase is \emph{very} dependent on
+  your hardware support for parallel IO.
+
+  \note this automatically sets the compression to 0 (one cannot
+  compress and perform parallel IO).
+
+\end{fdflogicalF}
+
+\subsubsection{Self-energy}
+\label{sec:self-energy}
+
+\tbtrans\ enables the storage of the self-energies from the electrodes
+in selected regions. I.e. in a two electrode setup the self-energies
+may be ``down-folded'' to a region of interest (say molecule etc.) and
+then saved.
+
+This feature enables one to easily use self-energies in Python for
+subsequent analysis etc. It is only available if compiled against
+NetCDF4. 
+
+\begin{fdflogicalF}{TBT!SelfEnergy.Save}
+
+  Store the self-energies of the electrodes. The self-energies are
+  first down-folded into the device region (see
+  \fdf{TBT.Atoms!Device}).
+
+\end{fdflogicalF}
+
+\begin{fdflogicalF}{TBT!SelfEnergy.Save.Mean}
+
+  If \fdftrue\ the down-folded self-energies will be $k$-averaged
+  after \tbtrans\ has finished.
+  
+\end{fdflogicalF}
+
+
+\begin{fdflogicalF}{TBT!SelfEnergy.Only}
+  
+  If \fdftrue\ this will \emph{only} calculate and store the
+  down-folded self-energies. No physical quantities will be calculated
+  and \tbtrans\ will quit. 
+  
+\end{fdflogicalF}
+
+
+\begin{fdfentry}{TBT.CDF!SelfEnergy.Precision}[string]<{<\fdf{TBT.CDF!Precision}>}>
+  \fdfdepend{TBT.CDF!Precision}
+
+  Specify the precision used for storing the self-energies in NetCDF4.
+
+\end{fdfentry}
+
+
+\begin{fdfentry}{TBT.CDF!SelfEnergy.Compress}[integer]%
+  <{<\fdf{TBT.CDF!Compress}>}>
+  \fdfdepend{TBT.CDF!Compress}
+
+  Specify the compression of the self-energies in NetCDF4.
+  
+\end{fdfentry}
+
+
+\begin{fdflogicalF}{TBT.CDF!SelfEnergy.MPI}%
+  \fdfdepend{TBT.CDF!MPI}
+
+  If \fdftrue\ \tbtrans\ will use MPI when writing the NetCDF files
+  containing the downfolded self-energies.
+
+\end{fdflogicalF}
+
+
+\subsubsection{Projected transmissions}
+
+The transmission through a scattering region is determined by the
+electrodes band-structure and the energy levels for the scattering
+part. In for instance molecular electronics it is often useful to
+determine which molecular orbitals are responsible for the
+transmission as well as knowing their hybridization with the substrate
+(electrodes).
+
+\tbtrans\ implements an advanced projection method which splits the
+transmission and DOS into eigenstate projectors.
+
+In the following we concentrate on a $2$ terminal device while it may
+be used for $N$ electrode calculations. 
+%
+One important aspect of projection is that the self-energies that are
+to be projected \emph{must} be fully located on the projection
+region. \tbtrans\ will die if this is not enforced.
+%
+A projection can \emph{only} be performed if the down-folding of the
+self-energies for the projected electrode is fully encapsulated in the
+device region (\fdf{TBT.Atoms!Device}). I.e. one should reduce the
+device region such that any couplings from the electrodes only couple
+into the projection region. Generally for the most simple projections
+the device region should be equivalent to the projection region in
+case there is only one projection region.
+
+These projections should not be confused with local DOS which may be
+obtained if compiled with the NetCDF4 library and via the use of
+\sisl, see Sec.~\ref{sec:physical}.
+
+\note if the \fdf{TBT.Projs} block is defined, then the
+\fdf{TBT.Projs!T} block is required in the input unless
+\fdf{TBT.Projs!Init} is \fdftrue.
+
+
+\begin{fdfentry}{TBT.Projs}[block]
+
+  List of molecular projections used:
+\begin{fdfexample}
+  %block TBT.Projs
+    M-L
+    M-R
+  %endblock
+\end{fdfexample}
+
+  This tells \tbtrans\ that two projections will exist. Each
+  projection setup will be read in \fdf{TBT.Proj!<>}.
+
+  There is no limit to the number of projection molecules.
+  
+\end{fdfentry}
+
+\begin{fdfentry}{TBT.Proj!<>}[block]
+
+  Block that designates a molecular projection by the names specified
+  in the \fdf{TBT.Projs} block.
+
+  This block determines how each projection is interpreted, it
+  consists of several options defined below:
+  \begin{fdfoptions}
+    
+    \option[atom]%
+    \fdfindex{TBT.Proj!<>!atom}%
+    \fdfindex{TBT.Proj!<>!position}%
+    
+    There may be several \fdf*{atom} lines. The full set of atomic
+    indices will be used as a sub-space for the Hamiltonian. 
+    %
+    The atoms may be defined via these variants
+    \begin{fdfoptions}
+      
+      \option[{atom \emph{A} [\emph{B} [\emph{C} [\dots]]]}]%
+      A sequence of atomic indices which are used for the projection.
+
+      % Generic input (compatible with the <= 4.0)
+      \option[{atom from \emph{A} to \emph{B} [step \emph{s}]}]%
+      Here atoms \emph{A} up to and including \emph{B} are
+      used.
+      %
+      If \fdf*{step <s>} is given, the range
+      \emph{A}:\emph{B} will be taken in steps of \emph{s}.
+
+      \begin{fdfexample}
+        atom from 3 to 10 step 2
+      \end{fdfexample}
+      will add atoms 3, 5, 7 and 9.
+
+      \option[{atom from \emph{A} plus/minus \emph{B} [step
+          \emph{s}]}]%
+      Atoms \emph{A} up to and including $\emph{A}+\emph{B}-1$
+      are added to the projection.
+      %
+      If \fdf*{step <s>} is given, the range
+      \emph{A}:$\emph{A}+\emph{B}-1$ will be taken in steps of
+      \emph{s}.
+
+      % Generic input (compatible with the <= 4.0)
+      \option[atom {[<A>, \emph{B} -\mbox{}- \emph{C} [step
+          \emph{s}], \emph{D}]}]%
+      Equivalent to \fdf*{from \dots to} specification, however in a
+      shorter variant. Note that the list may contain arbitrary number
+      of ranges and/or individual indices.
+
+      \begin{fdfexample}
+        atom [2, 3 -- 10 step 2, 6]
+      \end{fdfexample}
+      will add atoms 2, 3, 5, 7, 9 and 6.
+
+    \end{fdfoptions}
+
+
+    \option[Gamma]%
+    \fdfindex{TBT.Proj!<>!Gamma}%
+    
+    Logical variable which determines whether the projectors are the
+    $\Gamma$-point projectors, or the $k$ resolved ones. For
+    $\Gamma$-only calculations this has no effect.
+    % 
+    If the eigenstates are non-dispersive in the Brillouin zone there
+    should be no difference between \fdftrue\ or \fdffalse.
+
+    % I do not think this is a problem. |>e^{i\theta} * e^{-i\theta}<|
+    % == |><|
+    % \beware{Diagonalisation of a $\kk$-point Hamiltonian does not
+    % necessarily retain the
+    % correct phases, i.e. $\ket{\psi}$ and $\ket{\psi}e^{i\theta}$
+    % are both solutions,
+    % whereas the Green functions will always be set up in the
+    % $\ket{\psi}$ basis. Hence
+    % doing $\kk$-point resolved need not be correct. This is not a
+    % problem for the $\Gamma$
+    % point as we force the basis to be a real basis.}
+
+    \note it is \emph{very} important to know the dispersion and
+    possible band-crossings of the eigenstates if this option is
+    \fdffalse. For band-crossings one must manually perform the
+    projections for the $k$-points in a stringent manner as the order
+    of eigenstates are not retained.
+
+
+    \option[proj <P-name>]
+    \fdfindex{TBT.Proj!<>!proj}%
+
+    Allows to define a projection based on the eigenstates for the
+    current molecule.
+
+    The \fdf*{<P-name>} designates the name associated with this
+    projection.
+
+    It is parsed like this, in the following $0$ is the Fermi level
+    (HOMO $=-1$, LUMO $=1$):
+    \begin{fdfoptions}
+
+      \option[level from <E1> to <E2>] %
+      Energy eigenstates \fdf*{E1} and \fdf*{E2} will be part of the
+      molecular orbitals that constitute this projection
+
+      \option[level from <E> plus <N>] %
+      Energy eigenstates between \fdf*{E} and $\fdf*{E}+N-1$ will be
+      part of the molecular orbitals that constitute this projection
+
+      \option[level from <E> minus <N>] %
+      Energy eigenstates between \fdf*{E} and $\fdf*{E}-N+1$ will be
+      part of the molecular orbitals that constitute this projection
+
+      \option[level <E1> <E2> ... <En>] %
+      All eigenstates specified will be part of the molecular orbitals
+      that constitute this projection
+
+      \option[level {[ <list> ]}] %
+      A comma-separated list specification.
+
+      \option[end] %
+      All gathered eigenstates so far will constitute the projection
+      named \fdf*{<P-name>}
+      
+    \end{fdfoptions}
+
+    Note that level $0$ refers to the Fermi level, it will be silently
+    removed as it is not an eigenstate, so you do not need to think
+    about it.
+
+    You can specify named projection blocks as many times as you want.
+
+    To conclude the full projection block here is an example
+    describing three different projections for the left molecule in
+    \begin{fdfexample}
+ %block TBT.Proj.M-L
+   # We have 2 atoms on this molecule
+   atom from 5 plus 2
+   # We only do a Gamma projection
+   Gamma .true.
+   # We will utilise three different projections on 
+   # this molecule
+   proj HOMO
+    level -1
+   end 
+   proj LUMO
+    level 1
+   end
+   proj H-plus-L
+    level from -1 to 1
+   end
+ %endblock
+    \end{fdfexample}
+
+    Similarly for the right molecule we do
+    \begin{fdfexample}
+ %block TBT.Proj.M-R
+   # We have 2 atoms on this molecule
+   atom from 8 plus 2
+   # We only do a Gamma projection
+   Gamma .true.
+   # We will utilise three different projections on 
+   # this molecule
+   proj HOMO
+    level -1
+   end 
+   proj LUMO
+    level 1
+   end
+   proj H-plus-L
+    level from -1 to 1
+   end
+ %endblock
+    \end{fdfexample}
+   
+  \end{fdfoptions}
+ 
+\end{fdfentry}
+
+
+\begin{fdflogicalF}{TBT.Proj!<>!States}%
+
+  Save all states for the projection. The saved quantity can be
+  post-processed to decipher the locality of each projection.
+
+  In the NetCDF file there will be two variables: \code{state} and
+  \code{states} where the former will contain $\SO^{1/2}\ket{i}$,
+  while the latter will contain $\ket{i}$.
+
+  \emph{Needed if you wish to select specific molecular orbitals
+      dependent on the nature of the molecular orbital.}
+  
+\end{fdflogicalF}
+
+
+\begin{fdfentry}{TBT.CDF!Proj.Compress}[integer]<{<\fdf{TBT.CDF!Compress}>}>
+
+  Allows a different compression for the projection file. The
+  projection file is typically larger than the default output file, so
+  compression of them separately might be needed.
+  
+\end{fdfentry}
+
+\begin{fdflogicalF}{TBT.Projs!Init}
+
+  Whether \tbtrans\ will only create the projection tables and then
+  quit.
+
+  As \tbtrans\ allows to re-use the projection file the user can
+  choose to stop right after creation. Specifically it will allow one
+  to swap projection states with other projection states. This can be
+  useful when bias is applied and the hybridisation ``destroys'' the
+  molecule Hamiltonian. After initialising the projection tables the
+  user can manually swap them with those calculated at zero bias, thus
+  retaining the same projection tables for different bias'.
+
+  Note that for spin calculations you need to utilise the
+  \fdf{TBT.Spin} flag to initialise both projection files (spin UP
+  \emph{and} spin DOWN) before proceeding with the calculation.
+  
+\end{fdflogicalF}
+
+\begin{fdflogicalF}{TBT.Projs!Debug}
+
+  Print out additional information regarding the projections. It will
+  print out assertion lines orthogonality.
+
+  \emph{Possibly not useful for other than the developers.}
+  
+\end{fdflogicalF}
+
+\begin{fdfentry}{TBT.Projs!T}[block]%
+
+  As you might specify \emph{many} molecular projections to
+  investigate a lot of details of the system it seems perilous to
+  always calculate all allowed transmission permutations.
+
+  Instead the user has to supply the permutations of transport that is
+  calculated. This block will let the user decide which to calculate
+  and which to not.
+
+  In the following \fdf*{Left}(L)/\fdf*{Right}(R) corresponds to
+  $T=\Tr[\mathbf G\boldsymbol\Gamma_L\mathbf
+  G^\dagger\boldsymbol\Gamma_R]$
+  where \fdf*{Left}, \fdf*{Right} are found in the \fdf{TBT!Elecs}
+  block.
+
+  \begin{fdfoptions}
+
+    \option[from <proj-L> to]%
+    Projects $\boldsymbol\Gamma_L$ on to the \fdf*{<projection>}
+    before doing the R projections.
+
+    The R projections are constructed in the following lines until
+    \fdf*{end} is seen.
+
+    \begin{fdfoptions}
+      
+      \option[<proj-R>]%
+      Projects $\boldsymbol\Gamma_R$ on to the \fdf*{<projection>}
+      which then calculates the transmission
+    \end{fdfoptions}
+  
+  \end{fdfoptions}
+
+  Each projection can be represented in three different ways:
+
+  \begin{fdfoptions}
+    
+    \option[<elec>] %
+    Makes no projection on the scattering matrix
+
+    \option[<elec>.<name>] %
+    Makes all permutations of the projections attached to the molecule
+    named \fdf*{<name>}
+  
+    \option[<elec>.<name>.<P-name>] %
+    Projects the named projection \fdf*{<P-name>} from molecule
+    \fdf*{<name>} onto electrode \fdf*{<elec>}
+
+  \end{fdfoptions}
+
+  An example input for projection two molecules could be:
+  \begin{fdfexample}
+ %block TBT.Projs.T
+   from Left.M-L.HOMO to
+     Right.M-R
+     Right
+   end
+   from Left.M-L.LUMO to
+     Right.M-R.LUMO
+   end
+ %endblock
+  \end{fdfexample}
+  which will be equivalent to the more verbose
+  \begin{fdfexample}
+ %block TBT.Projs.T
+   from Left.M-L.HOMO to
+     Right.M-R.HOMO
+     Right.M-R.LUMO
+     Right.M-R.H-plus-L
+     Right
+   end
+   from Left.M-L.LUMO to
+     Right.M-R.LUMO
+   end
+ %endblock
+  \end{fdfexample}
+  
+\end{fdfentry}
+
+\bgroup
+\def\Gf{\mathbf G}
+\def\Gam{\boldsymbol\Gamma}
+
+This will calculate the transport using all these equations
+\begin{align}
+  \label{eq:T:proj:1}
+  T_{\ket{H_1},\ket{H_2}} &=\Tr\big[\Gf\kb{H_1}{H_1}\Gam_L\kb{H_1}{H_1}\Gf^\dagger\kb{H_2}{H_2}\Gam_R\kb{H_2}{H_2}\big]
+  \\
+  \label{eq:T:proj:2}
+  T_{\ket{H_1},\ket{L_2}} &=\Tr\big[\Gf\kb{H_1}{H_1}\Gam_L\kb{H_1}{H_1}\Gf^\dagger\kb{L_2}{L_2}\Gam_R\kb{L_2}{L_2}\big]
+  \\
+  \label{eq:T:two:one}
+  T_{\ket{H_1},\ket{H_2}+\ket{L_2}}
+  &=\Tr\Big[\Gf\kb{H_1}{H_1}\Gam_L\kb{H_1}{H_1}\Gf^\dagger\big(\kb{H_2}{H_2}+\kb{L_2}{L_2}\big)\Gam_R\big(\kb{H_2}{H_2}+\kb{L_2}{L_2}\big)\Big]
+  \\
+  \label{eq:T:single:one}
+  T_{\ket{H_1},R} &=\Tr\Big[\Gf\kb{H_1}{H_1}\Gam_L\kb{H_1}{H_1}\Gf^\dagger\Gam_R\Big]
+  \\
+  \label{eq:T:proj:5}
+  T_{\ket{L_1},\ket{L_2}} &=\Tr\big[\Gf\kb{L_1}{L_1}\Gam_L\kb{L_1}{L_1}\Gf^\dagger\kb{L_2}{L_2}\Gam_R\kb{L_2}{L_2}\big]
+\end{align}
+\egroup %
+Notice that Eq.~\eqref{eq:T:two:one} is equivalent to
+\eqref{eq:T:single:one} in our two state model.
+
+Note that removing an explicit named projection allows easy creation
+of all available permutations of the projection states associated with
+the molecule.
+
+
+\begin{fdflogicalF}{TBT.Projs!Only}
+
+  Whether \tbtrans\ will not calculate non-projected transmissions. If
+  you are only interested in the projection transmissions and/or have
+  already calculated the non-projected transmissions you can use this
+  option.
+  
+\end{fdflogicalF}
+
+\begin{fdflogicalF}{TBT.Projs!DOS.A}%
+
+  Save the spectral density of states for the projections. In case you
+  have set \fdf{TBT.DOS!A} this will default to that flag.
+
+  In case any of \fdf{TBT.Projs!Current.Orb}, \fdf{TBT.Projs!DM.A},
+  \fdf{TBT.Projs!COOP.A} or \fdf{TBT.Projs!COHP.A} is \fdftrue\ this
+  flag will be set to \fdftrue\ as well.
+
+\end{fdflogicalF}
+
+\begin{fdflogicalF}{TBT.Projs!Current.Orb}%
+
+  Will calculate and save the orbital current for the device with the
+  projections.
+
+  The orbital current will be saved in the same sparsity pattern as
+  the cut-out device region sparsity pattern. 
+  
+\end{fdflogicalF}
+
+\begin{fdflogicalF}{TBT.Projs!DM.A}
+  \fdfdepend{TBT.Atoms!Device}
+
+  Calculate the energy and $k$-resolved density matrix for the
+  projected spectral functions. The density matrix may be used to
+  construct real-space LDOS profiles.
+  
+\end{fdflogicalF}
+
+\begin{fdflogicalF}{TBT.Projs!COOP.A}
+  \fdfdepend{TBT.Atoms!Device}
+
+  Calculate COOP from the projected spectral function in the device
+  region.
+
+\end{fdflogicalF}
+
+\begin{fdflogicalF}{TBT.Projs!COHP.A}
+  \fdfdepend{TBT.Atoms!Device}
+
+  Calculate COHP from the projected spectral function in the device
+  region.
+
+\end{fdflogicalF}
+
+
+\begin{fdflogicalF}{TBT.Projs!T.All}%
+
+  Same as \fdf{TBT.T!All}, but for projections. If differing
+  projections are performed on the scattering states the transmission
+  will not be reversible. You can turn on all projection operations
+  using this flag.
+
+\end{fdflogicalF}
+
+\begin{fdflogicalF}{TBT.Projs!T.Out}%
+
+  Same as \fdf{TBT.T!Out} for projections. 
+  
+\end{fdflogicalF}
+
+
+
+\subsubsection{NetCDF4 support}
+
+\tbtrans\ stores all relevant physical quantities in the
+\sysfile{TBT.nc} file which retains orbital resolved DOS, orbital
+currents, transmissions, transmission eigenvalues, etc. One may use
+\sisl\ to easily analyze and extract quantities from this file using
+Python. 
+
+These files are created if NetCDF4 support is enabled
+\begin{description}
+  \def\fillsee#1{\hfill see \fdf{#1}}
+
+  \item[\sysfile{TBT.nc}] %
+
+  File which contain nearly everything calculated in \tbtrans.
+  The structure of this file is a natural tree structure to
+  accommodate $N$ electrode output.
+
+  \item[\sysfile{TBT.SE.nc}] \fillsee{TBT!SelfEnergy.Save}%
+
+  Down-folded self-energies are stored in this file. 
+
+  \item[\sysfile{TBT.Proj.nc}] \fillsee{TBT.Projs}%
+
+  Stores projected DOS, transmission and/or orbital currents. Using
+  projections for large $k$ and energy sampling will create very large
+  files. Ensure that you have a large amount of disk-space available.
+
+  \item[\sysfile{DOS}] \fillsee{TBT.DOS!Gf}%
+
+  The $k$ resolved density of states from the Green function. 
+
+  \item[\sysfile{AVDOS}] \fillsee{TBT.DOS!Gf}%
+
+  The $k$ averaged density of states from the Green function. 
+
+  \item[\sysfile{ADOS\_<>}] \fillsee{TBT.DOS!A}%
+
+  The $k$ resolved density of states from the electrode name \fdf*{<>}.
+
+  \item[\sysfile{AVADOS\_<>}] \fillsee{TBT.DOS!A}%
+
+  The $k$ averaged density of states from the electrode name \fdf*{<>}.
+
+  \item[\sysfile{TRANS\_<1>\_<2>}] \mbox{}%
+
+  The $k$ resolved transmission from \fdf*{<1>} to \fdf*{<2>}. 
+
+  \item[\sysfile{AVTRANS\_<1>\_<2>}] \mbox{}%
+
+  The $k$ averaged transmission from \fdf*{<1>} to \fdf*{<2>}. 
+
+  \item[\sysfile{CORR\_<1>}] \fillsee{TBT.T!Out}%
+
+  The $k$ resolved correction to the transmission for \fdf*{<1>}.
+
+  \item[\sysfile{AVCORR\_<1>}] \fillsee{TBT.T!Out}%
+
+  The $k$ averaged correction to the transmission for \fdf*{<1>}.
+
+  \item[\sysfile{TEIG\_<1>\_<2>}] \fillsee{TBT.T!Eig}%
+
+  The $k$ resolved transmission eigenvalues from \fdf*{<1>} to
+  \fdf*{<2>}. 
+
+  \item[\sysfile{AVTEIG\_<1>\_<2>}] \fillsee{TBT.T!Eig}%
+
+  The $k$ averaged transmission eigenvalues from \fdf*{<1>} to
+  \fdf*{<2>}. 
+
+  \item[\sysfile{CEIG\_<1>}] \fillsee{TBT.T!Out}%
+
+  The $k$ resolved correction eigenvalues for \fdf*{<1>}.
+
+  \item[\sysfile{AVCEIG\_<1>}] \fillsee{TBT.T!Out}%
+
+  The $k$ averaged correction eigenvalues for \fdf*{<1>}.
+
+  \item[\sysfile{BDOS\_<>}] \fillsee{TBT.DOS!Elecs}/\fdf{TBT.T!Bulk}%
+
+  The $k$ resolved bulk density of states of electrode \fdf*{<>}.
+
+  \item[\sysfile{AVBDOS\_<>}] \fillsee{TBT.DOS!Elecs}/\fdf{TBT.T!Bulk}%
+
+  The $k$ averaged bulk density of states of electrode \fdf*{<>}.
+
+  \item[\sysfile{BTRANS\_<>}] \fillsee{TBT.DOS!Elecs}/\fdf{TBT.T!Bulk}%
+
+  The $k$ resolved bulk transmission of electrode \fdf*{<>}.
+  
+  \item[\sysfile{AVBTRANS\_<>}] \fillsee{TBT.DOS!Elecs}/\fdf{TBT.T!Bulk}%
+
+  The $k$ averaged bulk transmission of electrode \fdf*{<>}.
+
+\end{description}
+
+All the above files will only be created if \tbtrans\ was successfully
+executed and their respective options was enabled.
+
+\subsubsection{No NetCDF4 support}
+
+In case \tbtrans\ is not compiled with NetCDF4 support \tbtrans\ is
+heavily limited in functionality and subsequent analysis. Particularly
+the DOS quantities are not orbital resolved. Also none of the
+quantities will be $k$ averaged, this is required to be done
+externally. 
+
+The following files are created:
+\begin{description}
+  \def\fillsee#1{\hfill see \fdf{#1}}
+
+  \item[\sysfile{DOS}] \fillsee{TBT.DOS!Gf}%
+
+  The $k$ resolved density of states from the Green function. 
+
+  \item[\sysfile{ADOS\_<>}] \fillsee{TBT.DOS!A}%
+
+  The $k$ resolved density of states from the electrode name \fdf*{<>}.
+
+  \item[\sysfile{TRANS\_<1>\_<2>}] \mbox{}%
+
+  The $k$ resolved transmission from \fdf*{<1>} to \fdf*{<2>}. 
+
+  \item[\sysfile{TEIG\_<1>\_<2>}] \fillsee{TBT.T!Eig}%
+
+  The $k$ resolved transmission eigenvalues from \fdf*{<1>} to
+  \fdf*{<2>}. 
+
+  \item[\sysfile{BDOS\_<>}] \fillsee{TBT.DOS!Elecs}/\fdf{TBT.T!Bulk}%
+
+  The $k$ resolved bulk density of states of electrode \fdf*{<>}.
+
+  \item[\sysfile{BTRANS\_<>}] \fillsee{TBT.DOS!Elecs}/\fdf{TBT.T!Bulk}%
+
+  The $k$ resolved bulk transmission of electrode \fdf*{<>}.
+  
+\end{description}
+
+
+\clearpage
+\addcontentsline{toc}{section}{Bibliography}
+\bibliographystyle{plainnat}
+\bibliography{siesta}
+
+% Indices
+\clearpage
+\addcontentsline{toc}{section}{Index}
+\printindex
+
+\printindex[sfiles]
+\printindex[sfdf]
+
+
+\end{document}
+
+
+
+
+%%% Local Variables:
+%%% mode: latex
+%%% ispell-local-dictionary: "american"
+%%% fill-column: 70
+%%% TeX-master: t
+%%% End:

@@ -1,0 +1,39 @@
+SystemName          Water molecule
+SystemLabel         h2o
+NumberOfAtoms       3
+NumberOfSpecies     2
+
+#
+#  NOTE this instruction to read previously generated
+#  basis and KB sets. A pseudopotential is no longer
+#  necessary
+#
+User-Basis .true.
+#
+# Specify the names of the .ion files in which we have
+# the basis information
+#
+%block ChemicalSpeciesLabel
+ 1  8  O_sz
+ 2  1  H_sz
+%endblock ChemicalSpeciesLabel
+
+AtomicCoordinatesFormat  Ang
+%block AtomicCoordinatesAndAtomicSpecies
+ 0.000  0.000  0.000  1
+ 0.757  0.586  0.000  2
+-0.757  0.586  0.000  2
+%endblock AtomicCoordinatesAndAtomicSpecies
+
+#
+# We are going to relax the atomic positions
+#
+MD.type-of-run CG
+MD.num-cg-steps 50              # sanity limit
+MD.max-force-tol 0.04 eV/ang
+#
+Mesh-Cutoff  100 Ry
+#
+Write-Coor-XMOL .true.
+Use-Save-CG   .true.
+Use-Save-XV   .true.

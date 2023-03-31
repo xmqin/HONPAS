@@ -1,0 +1,119 @@
+Util/JobList: utilities to organize and queue multiple jobs
+Jose M. Soler, 2013
+
+The JobList directory contains utilities to organize, to run or queue,
+and to collect results of multiple siesta jobs. It is particularly suited
+for preliminary convergence tests, and it uses only fortran codes and 
+minimal shell scripts.
+
+To compile the utilities, make sure that there is an Obj/arch.make,
+go to Util/JobList/Src, and type 'make'. Then you must include this
+directory in your path or copy the executables where your data are.
+
+The main utility is 'runJobs' which is executed by 'runJobs < myTests'.
+The input data file (myTests in this case) takes the form illustrated 
+by the following example:
+-------------------------------------------------------------------------
+# This is a comment. Next line specifies the queueing command
+%queue mpirun -np 8 siesta < $jobName.fdf > $jobName.out
+
+# This specifies the required data files
+# If not specified, the default is '*.fdf *.vps *.psf *.ion queue.sh'
+%files *.fdf *.psf
+
+# This specifies some magnitudes to be collected from the results
+# This is done a posteriory, not affecting the job execution
+%result energy maxForce
+
+# Basis-set convergence tests of the cohesive energy
+# molecule.fdf and solid.fdf are system geometries
+# dzp.fdf, tzp.fdf, and qzp.fdf are basis sets
+# defaults.fdf contain other job specifications
+%list BasisSet
+  %list Molecule
+    defaults.fdf; molecule.fdf; dzp.fdf
+    defaults.fdf; molecule.fdf; tzp.fdf
+    defaults.fdf; molecule.fdf; qzp.fdf
+  %endlist Molecule
+  %list Solid
+    defaults.fdf; solid.fdf; dzp.fdf
+    defaults.fdf; solid.fdf; tzp.fdf
+    defaults.fdf; solid.fdf; qzp.fdf
+  %endlist Solid
+%endlist BasisSet
+
+# Convergence of the integration grid
+%list MeshCutoff
+  %list Molecule
+    defaults.fdf; molecule.fdf; dzp.fdf; MeshCutoff 100 Ry      
+    defaults.fdf; molecule.fdf; dzp.fdf; MeshCutoff 200 Ry      
+    defaults.fdf; molecule.fdf; dzp.fdf; MeshCutoff 300 Ry      
+    defaults.fdf; molecule.fdf; dzp.fdf; MeshCutoff 500 Ry      
+    defaults.fdf; molecule.fdf; dzp.fdf; MeshCutoff 800 Ry  
+  %endlist Molecule
+  %list Solid
+    defaults.fdf; solid.fdf; dzp.fdf; MeshCutoff 100 Ry      
+    defaults.fdf; solid.fdf; dzp.fdf; MeshCutoff 200 Ry      
+    defaults.fdf; solid.fdf; dzp.fdf; MeshCutoff 300 Ry      
+    defaults.fdf; solid.fdf; dzp.fdf; MeshCutoff 500 Ry      
+    defaults.fdf; solid.fdf; dzp.fdf; MeshCutoff 800 Ry      
+  %endlist Solid
+%endlist MeshCutoff
+-------------------------------------------------------------------------
+
+- Each nonblank line, not begun by # or %, specifies a job to be queued.
+- Specification 'words' are separated by ';'. 
+- Specifications with '.fdf' suffix are input files, which are included 
+  in the job's final data file (using fdf %include statement).
+- Specifications without .fdf suffix are fdf lines, also added to the
+  final data file.
+- Job-specification lines can be continued after a '\' termination.
+- Specifications are included in reverse order. Since the fdf standard
+  is to use the first appearence of a label, this means that the later 
+  specifications take preference. Thus, in the example above, the
+  'MeshCutoff 800 Ry' specification overrides any mesh cutoff 
+  specification in the 'defaults.fdf' file.
+- Each job is run in a directory, created automatically, whose name is a
+  concatenation of the words in its specification line (without the .fdf
+  suffixes). All input and output files are kept in that directory after
+  job termination, independently of the %result specifications.
+- Job directories are further organized in parent directories for each
+  list or sub-list, with the names given in the %list statements.
+- The %queue, %files, and %result statements can be placed and repeated 
+  anywhere (with the same or different values). They act only from their 
+  appearence until the end of the list in which they are (including its 
+  sub-lists). This allows to do different things in different jobs (e.g. 
+  to use a different number of cores for each job). Within a list, the 
+  last %queue, %files, or %result statement is used.
+- If some of the jobs hang or crash, you may kill them, correct any 
+  deficiencies in the input files, and type again 'runJobs < myTests'
+  AFTER the successful jobs have finished. The succesfull jobs will not
+  be resubmitted. Successful termination is assumed either by the
+  presence of the file 0_NORMAL_EXIT (handled by newer versions of Siesta)
+  or, as a fallback, by the presence of a SystemLabel.EIG file. 
+  Thus, you can force re-submission of a job by erasing these files in its 
+  directory (or avoid re-submission by creating or 'touch'ing one of them).
+
+The other utilities are:
+
+'countJobs < myTests' counts the number of jobs in myTests, as well as the
+number of lists and of cores that will be used, without actually running 
+or queueing them (nor creating any directories). The number of cores/job
+is assumed to be the first integer number in the last %queue statement 
+(appearing by itself, not as part of a name). If there is none, a single 
+core/job is assumed.
+
+'getResults < myTests' collects the results specified in the %result
+statements from the output files of all the jobs in myTest (after they
+have finished). Within each list directory, it creates a file named
+$listName.results (where $listName is the name of the list) with the
+specified results of the jobs in the list. Results in different sub-lists
+are separated by blank lines. It also creates a file in the parent
+directory (where myTest is) named jobList.results (literally) with all 
+the results in myTest jobs.
+
+'horizontal < jobList.results' rearranges horizontally (in standard output) 
+the blocks in jobList.results (separated there by blank lines). Thus, it 
+will place the dzp-basis results of Molecule and Solid in the same line, 
+what is convenient for plotting them.
+

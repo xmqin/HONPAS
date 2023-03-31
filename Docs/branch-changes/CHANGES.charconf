@@ -1,0 +1,102 @@
+CHANGES in charge confinement branch
+
+-----------------------------------------------------------------------
+2012-11-02  13:00:00 GMT Emilio Artacho <ea245@cam.ac.uk> trunk-413--charconf-2
+
+Introducing Yukawa screening to the charge confinement option.
+
+The potential added is  Z exp(-lambda*r) / sqrt(r^2 + delta^2)
+
+delta: just for regularisation of singularity (default 0.01 Bohr)
+lambda: yukawa screening to get longer tails (default 0. Bohr^-1)
+Z: as before, charge for confinement
+
+In PAO.Basis: Optional 'Q' in the shell line, followed by at least
+one number (Z), up to three. 
+
+Added description to the manual siesta.tex (including index entries)
+
+Modified files:
+* atom.F
+* basis_specs.f
+* basis_types.f
+* initatom.f
+* version.info (trunk-413--charconf-2)
+* siesta.tex
+* CHANGES.charconf
+
+-----------------------------------------------------------------------
+2012-10-20  13:45:00 GMT Emilio Artacho <ea245@cam.ac.uk> trunk-413--charconf-1
+
+Introducing charge confinement into basis sets
+
+Present soft confinement produces bad polarisation orbitals
+if the original atomic orbitals are unbound or very wide
+(automatic polarisation still gives too wide orbitals).
+
+I first tried with quadratic confinement which should produce 
+gaussian shapes (not quite because of the other terms of the
+potential, but at least gaussian decay up to the soft confined
+region), as used by chemists. But the Gaussians decay way too
+rapidly, when fitting the maximum of r^(l+1)Psi to match the 
+orbitals one polarises. 
+
+A Z/r potential is added to the atomic and soft-confinement
+potentials. Soft-confinement sshould now be used only for the
+soft tail cutting with r_in ~ 0.9 r_c.
+
+For the time being, I kept Z/sqrt(r^2 + del^2). Del and Z
+are read. del could also change shape, but it works best when
+small (0.01 Bohr), just regularising the r->0 behaviour.
+I will remove the del parameter from the PAO.Basis input.
+
+Changes:
+In atom.F:
+* Dimensioned qcoe,qwid in atom_main subroutine in atom.F
+        real(dp), intent(in) :: qcoe(0:lmaxd,nsemx),qwid(0:lmaxd,nsemx)
+  and included it in the list of arguments of atom_main after vcte
+* Included qcoe,qwid in par list (after vcte) in 2 calls to basis_gen, atom_main
+* Included qcoe,qwid in par list (after vcte) in subroutine basis_gen
+  and dimensioned (as above, without intent)
+* Included qcoe,qwid (same position) in call to SPLIT and POLgen from Basis_gen 
+* Included qcoe,qwid (same position) in def of SPLIT, and dimensioned.
+* Included qcoe,qwid(l,nsm) (same pos) in call to build_vsoft from SPLIT
+* Included qcoe,qwid (same position) in def of Polgen, and dimensioned.
+* Included qcoe,qwid(l,nsm) (same pos) in call to build_vsoft from Polgen
+* Included qcoe,qwid (same position) in def of build_vsoft, and dimensioned.
+* Write line with qcoe,qwid in comments to orbitals files (if write_to_file) 
+  in build_vsoft
+* Loop in values of r adding qcoe/sqrt(r**2+qwid**2) to the previous 
+  soft-confined pot. (not done if qcoe > 10000) (within build_vsoft)
+
+In initatom.f:
+* Included in list of variable used when "use basis_types"
+* Included qcoe,qwid(0:lmaxd,1:nsemx,is) in arglist of call to atom_main
+
+In basis_types.f:
+* Added in the declaration of the type shell_t
+* added as a pointer declaration under OLD ARRAYS
+* added: target%qcoe = source%qcoe (same for qwid) in subroutine copy_shell
+* initialised to zero in init_shell (p%qcoe = 0._dp, p%qwid =0._dp)
+* added for writing in print_shell
+* in basis_spec_transfer: nullified and reallocated qcoe,qwid
+* initialised to zero (again) under "Transfer" in basis_spec_transfer
+* introduced "qcoe(l,n,isp) = s%qcoe" and for qwid in Transfer
+* added a writing line for qcoe and qwid in sub write_basis_specs
+* deallocated qcoe,qwid in sub deallocate_spec_arrays
+
+In basis_gen.f:
+* added charge confinement to the description of the routine  
+* added reading of Q and a real in parsing of shell line of PAO.Basis
+  in sub repaobasis (stops if Q appears with no real number; 
+  qcoe=0, qwid=1 if Q absent)
+
+Modified files:
+* atom.F
+* basis_specs.f
+* basis_types.f
+* initatom.f
+* version.info (trunk-413--charconf-1)
+* CHANGES.charconf 
+
+

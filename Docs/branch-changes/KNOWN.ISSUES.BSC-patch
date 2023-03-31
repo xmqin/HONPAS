@@ -1,0 +1,81 @@
+These are the known issues after the merge of the new code from BSC for
+mesh optimization and the new fdf library. We are working on fixing or
+clarifying them, and will appreciate feedback.
+
+-- Numerical differences in tests results with respect to previous
+'trunk' versions.
+
+* The values of the polarization for the first geometry in the 'born'
+and 'born_spin' tests can be different for different numbers of
+processors or different computers, due to the high symmetry of the
+structure and the intrinsic non-uniqueness of the Berry-phase
+approach. Remember that what is meaningful are polarization
+differences among different structures (see for example the .BC
+files).
+
+* There are numerical differences in the tests dealing with
+non-collinear magnetization, which only set in after several
+dozen SCF steps, which makes it hard to debug.
+
+* There are also differences in the 'var_cell' test. These are
+very likely due to the use of the 'Broyden' option for mixing. Note
+that Broyden mixing is (still) an experimental feature. Use standard
+Pulay mixing instead.
+
+We are working on a new test suite with more orthogonality.
+
+-- Changes in behavior of the FDF library
+
+Each MPI processor now gets its own copy of the fdf dictionary in
+memory, thus avoiding interprocess communication and disk access at
+every fdf query.
+
+* While reading Monkhorst-Pack blocks, the new code requires
+explicitly real values in the "shift" parameters. For example, it will
+complain if the third shift parameter is entered as a simple '0',
+instead of '0.0'.
+
+%block kgrid_Monkhorst_Pack
+   8  0  0  0.5
+   0  8  0  0.5
+   0  0  8  0
+%endblock kgrid_Monkhorst_Pack
+
+In a later version we could remove this requierement, or maintain it,
+perhaps with better error messages.
+
+* If the
+
+   label1 label2 ... labelN  < File.fdf
+
+syntax is used, ALL the labels MUST be present in File.fdf.  The old
+version did not enforce this, but it looks like a common-sense
+feature.
+
+-- Other changes
+
+* There might be still some extra debugging output having to do with
+the new mesh distributions. It will be progressively removed.
+
+-- Compiler issues
+
+Unfortunately, compiler releases are very frequent now, and some of them
+cause problems either in the compilation or in the execution of Siesta.
+
+* Particularly troublesome are the problems of the Intel compilers (versions
+11 and 12) with the code in the FoX library. Until a fool-proof workaround
+can be found, the easiest way to proceed is to disable completely the FoX
+functionality by including the symbol
+
+DUMMY_FOX=--enable-dummy
+
+in the arch.make file.
+
+This will have the side effect of preventing the creation of the CML output
+file, and of the pdos.xml file. Note however that the PDOS information is
+replicated in the SystemLabel.PDOS file, in an XML format that should be
+compatible with the processin program in Util/pdosxml.
+
+
+
+

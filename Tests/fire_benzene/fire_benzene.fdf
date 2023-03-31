@@ -1,0 +1,64 @@
+SystemName benzene with FIRE optimizer (Reduced set of variables)
+SystemLabel fire_benzene
+
+NumberOfSpecies 2
+NumberOfAtoms   12
+
+%block ChemicalSpeciesLabel
+1    1 H
+2    6 C
+%endblock ChemicalSpeciesLabel
+
+%block PS.Lmax
+  C 2
+%endblock PS.Lmax
+
+AtomicCoordinatesFormat NotScaledCartesianAng
+
+ZM.ForceTolLength 0.04 eV/Ang
+ZM.ForceTolAngle 0.0001 eV/deg
+ZM.MaxDisplLength 0.1 Ang
+ZM.MaxDisplAngle 20.0 deg
+
+%block Zmatrix
+molecule
+      2 0 0 0 xm1 ym1 zm1 0 0 0
+      2 1 0 0 CC 90.0 60.0 0 0 0
+      2 2 1 0 CC CCC 90.0 0 0 0
+      2 3 2 1 CC CCC 0.0 0 0 0
+      2 4 3 2 CC CCC 0.0 0 0 0
+      2 5 4 3 CC CCC 0.0 0 0 0
+      1 1 2 3 CH CCH 180.0 0 0 0
+      1 2 1 7 CH CCH 0.0 0 0 0
+      1 3 2 8 CH CCH 0.0 0 0 0
+      1 4 3 9 CH CCH 0.0 0 0 0
+      1 5 4 10 CH CCH 0.0 0 0 0
+      1 6 5 11 CH CCH 0.0 0 0 0
+constants
+        ym1 3.68 
+        xm1 3.68
+        zm1 6.9032294
+variables
+        CC 1.417
+        CH 1.112
+        CCH 120.0
+        CCC 120.0
+%endblock Zmatrix
+
+
+ZM.UnitsLength Ang
+ZM.UnitsAngle deg
+
+MD.TypeOfRun FIRE
+MD.NumCGSteps  4
+
+MD.FIRE.TimeStep      0.3 fs
+MD.FIRE.Mass           1.0
+MD.FIRE.Debug          T
+MD.FIRE.Nmin           5
+
+
+MeshCutoff 120 Ry
+PAO.EnergyShift 0.01 Ry
+DM.NumberPulay 5
+DM.MixingWeight 0.3

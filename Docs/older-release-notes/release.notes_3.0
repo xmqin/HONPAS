@@ -1,0 +1,94 @@
+Release Notes for SIESTA-3.0-beta, Sep 30, 2009
+
+(See the Manual for documentation of some of the new features.  A
+complete list of changes can also be found in the Docs/CHANGES file.)
+
+MAJOR NEW FEATURES AND USER-INTERFACE CHANGES SINCE 2.0.2
+
+------ Major additions ----------
+* The TranSiesta functionality is now part of the SIESTA package
+* Modularization of main program (BSC)
+* New program to compute COOP/COHP/PDOS curves for chemical analysis
+* New general-purpose optimizer in Util/Optimizer for bases, 
+  pseudopotentials, etc.
+* New optional filtering procedure to reduce the eggbox effect
+* Reorganization of the Reference Manual.
+
+------ New Utilities -----------
+* New version of denchar in Util/Denchar
+* New scripting framework with eggbox checker and other utilities. 
+* Other assorted utility programs and features 
+* Added a translator for pseudopotential files
+* Integration of new STM-images code.
+
+------ Building and execution framework ------------
+* VPATH-aware compilation for multiple executables with same source tree
+* XML tester (experimental)
+* Update of CMLComp output. Partial integration of FoX XML library
+* NetCDF I/O for DM, H, S, and Grid magnitudes. 
+* Scripting utilities:
+   - Python
+   - Matlab/Octave (for analysis)
+
+------ New functionality -----------------
+* Changes to support synthetic atoms (VCA)
+* More flexible basis-generation options (see below)
+* Charge-density restarts
+* Automatic correction for fictitious dipole in asymmetric slabs
+* Correct treatment of charged slabs 
+* Extended Ordejon-Mauri ordern functional to an odd number of electrons
+* Implementation of the PBEsol functional
+* Implementation of the Wu-Cohen functional
+* Optimization enhancements (fire algorithm, step control).
+* Generalized SCF convergence criteria. 
+* Remove residual (k,-k) pairs of k-points
+* Update of atom to 3.2.8: xml, optimization hooks.
+* Implemented a new molecular-mechanics framework, including Grimme-type vdw.
+* Optional k-point sampling for PDOS calculations
+* New block BandPoints accepts arbitrary k-points
+* Printout of info on interatomic distances
+* Optional stopping if self-consistency is not achieved.
+* Update of A. Postnikov's utilities to V. 0.3
+
+------ Changes in defaults ----------
+* Changes in the conditions of Density Matrix reuse 
+* Make diagonalization the default solution method for all system sizes
+* Change handling of default charge for basis generation
+
+------ Changes in behavior ----------
+* The wavefunction file (formerly .WFS) is now in a packed format,
+  and the extension has been changed to .WFSX. There are utilities
+  to convert back and forth in the Util/WFS directory.
+
+------ Basis generation ---------
+
+ More flexible basis-generation options
+
+* Option to use fractional rc's for multiple zeta
+* New method for split-norm calculation
+* Implementation of basis enthalpy calculation for optimization
+* Allow lifting of even/odd restrictions in radial grid
+* Optional reparametrization of pseudopotentials
+* New ioncat program to extract information from .ion files
+* Change handling of default charge for basis generation
+
+------ Implementation and Optimization -----------
+* Re-design of DM re-use code
+* Fix of zmatrix code to deal with degenerate case
+* Speed improvements in diagk and hsparse
+* A still faster diagk when using eigenvector storage
+
+------ Documentation -----------------------------
+* Reorganization and expansion of the Reference Manual.
+
+------ Known Remaining Issues --------------------
+* Molecular-dynamics restarts do not always work well
+
+
+SIGNIFICANT BUG FIXES OVER 2.0.2
+
+(See Docs/CHANGES file for more details)
+
+Fix evaluation of atomic radial functions near zero.
+Fix bug in verlet restart in parallel (A. Aguado)
+

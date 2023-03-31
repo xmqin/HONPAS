@@ -1,0 +1,7 @@
+#ifndef _FDICT_INCLUDE_DEFINED
+#define _FDICT_INCLUDE_DEFINED
+#define _FDICT_MAJOR_ 0
+#define _FDICT_MINOR_ 7
+#define _FDICT_MICRO_ 2
+#define _FDICT_VERSION_ 0.7.2
+#endif

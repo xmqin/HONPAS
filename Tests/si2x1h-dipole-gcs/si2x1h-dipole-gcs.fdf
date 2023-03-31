@@ -1,0 +1,89 @@
+# Si(100) - asymmetric 2x1 reconstruction
+# Correction for slab dipole invoked
+# Oscar Paz / Pablo Ordejon
+
+%block Grid.CellSampling
+ 0.25 0. 0.
+ 0.5  0. 0.
+ 0.75 0. 0.
+ 0.25 0.25 0.
+ 0.5  0.25 0.
+ 0.75 0.25 0.
+ 0.25 0.5 0.
+ 0.5  0.5 0.
+ 0.75 0.5 0.
+ 0.25 0.75 0.
+ 0.5  0.75 0.
+ 0.75 0.75 0.
+%endblock
+ 
+
+SystemName              Si(100)-2x1 3 layers (H-saturated)
+SystemLabel             si2x1h-dipole-gcs
+NumberOfAtoms           10
+NumberOfSpecies 2
+%block ChemicalSpeciesLabel
+        1       14      Si
+        2       1       H
+%endblock ChemicalSpeciesLabel
+
+PAO.BasisType           split
+PAO.BasisSize            SZ
+
+PAO.EnergyShift 200 meV
+PAO.SplitNorm           0.30
+
+LatticeConstant 3.8184 Ang      # a_s = a_0 / sqrt(2) , a_0 = 5.40 Ang
+
+%block LatticeParameters
+        1.      2.      3.      90.     90.     90.
+%endblock LatticeParameters
+
+AtomicCoordinatesFormat ScaledCartesian
+
+%block AtomicCoordinatesAndAtomicSpecies
+   -0.00002372    0.29326368    0.19010387   1  Si        1
+    0.00001337    0.85385554    0.02205212   1  Si        2
+    0.49997747   -0.00525118    0.33008893   1  Si        3
+    0.50001096    0.97940531    0.34402895   1  Si        4
+    0.50000000    0.50000000    0.70710000   1  Si        5
+    0.50000000    1.50000000    0.70710000   1  Si        6
+    0.20200000    0.50000000    0.95470000   2  H         7
+    0.79800000    0.50000000    0.95470000   2  H         8
+    0.20200000    1.50000000    0.95470000   2  H         9
+    0.79800000    1.50000000    0.95470000   2  H        10
+%endblock AtomicCoordinatesAndAtomicSpecies
+
+%block GeometryConstraints
+        position from 5 to 10
+%endblock GeometryConstraints
+
+kgrid_cutoff            5.0 Ang
+
+XC.functional           LDA
+XC.authors              PZ
+
+MeshCutoff              50. Ry
+
+DM.MixingWeight 0.1
+DM.NumberPulay  3
+SolutionMethod  diagon
+
+MD.TypeOfRun            CG
+MD.NumCGsteps           0
+MD.MaxCGDispl           0.02 Ang
+MD.MaxForceTol  0.02 eV/Ang
+WriteCoorStep           .true.
+WriteForces             .true.
+
+WriteMullikenPop        1
+
+DM.UseSaveDM            .true.
+
+SaveRho                 .true.
+SaveDeltaRho            .true.
+SaveIonicCharge         .true.
+SaveElectrostaticPotential      .true.
+SaveTotalPotential      .true.
+
+SlabDipoleCorrection    .true. 

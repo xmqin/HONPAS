@@ -1,0 +1,150 @@
+-------------------------------------------------
+March 31, 2013  Alberto Garcia  trunk-433--timing-9
+Sync to trunk-433
+
+-------------------------------------------------
+March 31, 2013  Alberto Garcia  trunk-432--timing-9
+wAllow users to enable or disable tree timer
+
+The new timer is not used by default. It is only enabled if the fdf
+file contains the line
+
+  UseTreeTimer T
+
+modified:
+  Src/Makefile
+  Src/siesta_init.F
+  Src/siesta_options.F90
+  Src/timer.F90
+
+-------------------------------------------------
+Feb 5, 2013  Alberto Garcia  trunk-432--timing-8
+More documentation. timer_off is now recursive
+
+The behavior of 'timer_off' now parallels that of 'timer_report'
+regarding the presence and value of the optional argument 'secname'.
+
+modified:
+  Src/timer.F90
+  Src/timer_tree.f90
+
+-------------------------------------------------
+Feb 4, 2013  Alberto Garcia  trunk-432--timing-7
+Implemented restricted (section) reports
+
+A report can cover a single section. By default, it prints
+also the timings of the first-generation descendants.
+
+modified:
+  Src/siesta_forces.F
+  Src/timer.F90
+  Src/timer_tree.f90
+
+-------------------------------------------------
+Feb 3, 2013  Alberto Garcia  trunk-432--timing-6
+Remove hard-coded limit to number of timing subsections
+
+The child array in a given timing section will be resized
+if needed.
+
+Added more comments and removed redundant code.
+
+Added timing calls in setup_H0, fft, and matel.
+
+modified:
+  Src/fft.F
+  Src/matel.f
+  Src/setup_H0.F
+  Src/timer_tree.f90
+
+-------------------------------------------------
+Jan 31, 2013  Alberto Garcia  trunk-432--timing-5
+Added option to close all outstanding timing sections
+
+The call 
+
+  call timer('all', 2)
+
+now triggers a complete stop of all outstanding timing sections.
+
+This is useful for clean early termination of programs under some
+condition (e.g., when only the setup of H is performed).
+
+modified:
+  Src/m_timer.F90
+  Src/siesta_forces.F
+  Src/timer.F90
+  Src/timer_tree.f90
+
+-------------------------------------------------
+Jan 31, 2013  Alberto Garcia  trunk-432--timing-4
+Document timer_tree module. Use 64-bit integers for time counter.
+
+Added documentation and hooks to timer_tree to make it almost
+completely independent of Siesta.
+
+Added new stand-alone 'die' routine (not in a module) that can
+be called from libraries and low-level modules.
+
+The maximum elapsed time without wrap-around in system_clock can
+be increased significantly by using 64-bit integers in the calls.
+This has been implemented.
+
+added:
+  Src/die.F
+modified:
+  Src/Makefile
+  Src/m_walltime.f90
+  Src/timer_tree.f90
+
+-------------------------------------------------
+Jan 28, 2013  Alberto Garcia  trunk-432--timing-3
+Add timing calls for io_dm, io_hsx, and setup_h. Rationalize molmec
+
+'Moleculamechanics' was entering a loop even if no potentials were available.
+For large systems this incurred a substantial overhead.
+
+Added timing calls.
+
+NOTE: The maximum elapsed time without wrap-around in system_clock is
+only 2147 seconds on PGI systems, including Crays (100 times and 1000
+times that for intel and gfortran). Long-running sections might be
+wrongly timed. Perhaps the "date_and_time" call can be used to provide
+a backup check, but it might be expensive.
+
+modified:
+  Src/m_hsx.F
+  Src/m_iodm.F
+  Src/molecularmechanics.F90
+  Src/setup_hamiltonian.F
+
+-------------------------------------------------
+Jan 28, 2013  Alberto Garcia  trunk-432--timing-2
+Further refinements of timing tree
+
+Added %.
+
+Used walltime instead of cputime, restricting it to the master node.
+
+The "old" (by J Soler) and new timing methods now coexist.
+
+The interim call to timer_report for IterSCF has been deactivated for
+now.
+
+modified:
+  Src/Makefile
+  Src/SiestaXC/makefile
+  Src/siesta_forces.F
+  Src/timer.F90
+  Src/timer_tree.f90
+
+-------------------------------------------------
+Jan 27, 2013  Alberto Garcia  trunk-432--timing-1
+First implementation of timing tree
+
+added:
+  Src/timer_tree.f90
+modified:
+  Src/Makefile
+  Src/SiestaXC/makefile
+  Src/timer.F90

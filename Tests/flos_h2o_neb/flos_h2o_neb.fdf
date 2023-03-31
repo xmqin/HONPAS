@@ -1,0 +1,44 @@
+SystemName          Water molecule NEB (FLOS)
+SystemLabel         flos_h2o_neb
+NumberOfAtoms       6
+NumberOfSpecies     2
+
+# Settings required for Lua-NEB
+# This is because Lua-NEB is not controlling
+# which DM to re-use.
+# These flags enables Lua to manage the DM files
+DM.UseSaveDM true
+DM.History.Depth 0
+
+MinSCFIterations 3
+DM.MixingWeight 0.02
+MeshCutoff  250. Ry
+
+%block ChemicalSpeciesLabel
+ 1  8  O      # Species index, atomic number, species label
+ 2  1  H
+%endblock ChemicalSpeciesLabel
+
+LatticeConstant 1. Ang
+%block LatticeVectors
+  15.  0.  0.
+   0. 15.  0.
+   0.  0. 15.
+%endblock
+
+AtomicCoordinatesFormat  Ang
+%block AtomicCoordinatesAndAtomicSpecies
+ 0.000  0.000  0.000  1
+ 0.757  0.586  0.000  2
+-0.757  0.586  0.000  2
+ 0.000  3.500  0.000  1
+ 0.757  2.914  0.000  2
+-0.757  2.914  0.000  2
+%endblock AtomicCoordinatesAndAtomicSpecies
+
+%block Geometry.Constraints
+  atom [1 -- 4]
+%endblock
+
+MD.TypeOfRun LUA
+Lua.Script neb.lua

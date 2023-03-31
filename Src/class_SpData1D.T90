@@ -1,0 +1,270 @@
+! ---
+! Copyright (C) 1996-2016	The SIESTA group
+!  This file is distributed under the terms of the
+!  GNU General Public License: see COPYING in the top directory
+!  or http://www.gnu.org/copyleft/gpl.txt .
+! See Docs/Contributors.txt for a list of contributors.
+! ---
+
+  use class_Sparsity
+  use class_OrbitalDistribution
+
+  implicit none
+
+  character(len=*), parameter :: mod_name="class_"//STR_TYPE_NAME//".F90"
+
+  public :: val, spar, dist, init_val
+  public :: nrows, nrows_g, nnzs, n_col, list_ptr, list_col
+  public :: print_type
+  public :: NEW_TYPE
+
+  integer, parameter :: sp = selected_real_kind(5,10)
+  integer, parameter :: dp = selected_real_kind(10,100)
+
+  type TYPE_NAME_
+    integer            :: refCount = 0
+    character(len=36)  :: id = "null_id"
+    !----------------------
+    character(len=256)   :: name = "null "//STR_TYPE_NAME
+    !> See [[Sparsity(type)]]
+    type(Sparsity)            :: sp
+    !> See [[VAR_TYPE(type)]]
+    type(VAR_TYPE)            :: a
+    !> See [[OrbitalDistribution(type)]]
+    type(OrbitalDistribution) :: dist
+  end type TYPE_NAME_
+
+  type TYPE_NAME
+    type(TYPE_NAME_), pointer :: data => null()
+  end type TYPE_NAME
+
+  interface NEW_TYPE
+    module procedure newSpDataFromData
+    module procedure newSpDataFromDims
+  end interface
+
+  interface init_val
+    module procedure initializeSpData
+  end interface
+
+  interface val
+    module procedure valSpData
+    module procedure valSpData_Idx
+  end interface
+
+  interface spar
+    module procedure sparSpData
+  end interface
+
+  interface dist
+    module procedure distSpData
+  end interface
+
+  interface nrows
+     module procedure nrowsSpData
+  end interface
+
+  interface nrows_g
+     module procedure nrows_gSpData
+  end interface
+
+  interface nnzs
+     module procedure nnzsSpData
+  end interface
+
+  interface n_col
+     module procedure n_colSpData
+  end interface
+
+  interface list_ptr
+     module procedure list_ptrSpData
+  end interface
+
+  interface list_col
+     module procedure list_colSpData
+  end interface
+  
+  interface print_type
+     module procedure printSpData
+  end interface print_type
+
+!==========================
+#include "basic_type.inc"
+!==========================
+  
+  subroutine delete_Data(smdata)
+    type(TYPE_NAME_) :: smdata
+    
+    call delete(smdata%sp)
+    call delete(smdata%a)
+    call delete(smdata%dist)
+  end subroutine delete_Data
+
+  subroutine newSpDataFromData(sp,a,dist,this,name)
+     !........................................
+     ! Constructor
+     !........................................
+    type(TYPE_NAME), intent(inout) :: this
+    type(Sparsity),  intent(in)    :: sp
+    type(VAR_TYPE),   intent(in)   :: a
+    type(OrbitalDistribution),  intent(in) :: dist
+    character(len=*), intent(in), optional :: name
+
+    call init(this)
+    
+    this%data%sp = sp
+    this%data%a = a
+    this%data%dist = dist
+    
+    if (present(name)) then
+       this%data%name = trim(name)
+    else
+       this%data%name = "(SpData from sp, dist, and a)"
+    endif
+    call tag_new_object(this)
+    
+  end subroutine newSpDataFromData
+
+  subroutine newSpDataFromDims(sp,dist,this,name)
+    !........................................
+    ! Constructor
+    !........................................
+    type(TYPE_NAME), intent(inout)        :: this
+    type(Sparsity), intent(in)            :: sp
+    type(OrbitalDistribution), intent(in) :: dist
+    character(len=*), intent(in), optional :: name
+    
+    call init(this)
+    this%data%sp = sp
+    this%data%dist = dist
+    call VAR_NEW_TYPE(this%data%a, &
+         nnzs(sp),"(new from "//STR_TYPE_NAME//")")
+    
+    if (present(name)) then
+       this%data%name = trim(name)
+    else
+       this%data%name = "("//STR_TYPE_NAME//" from sp, and dist)"
+    endif
+    call tag_new_object(this)
+    
+  end subroutine newSpDataFromDims
+  
+  !--------------------------------------------------
+  function valSpData(this) result(p)
+    type(TYPE_NAME), intent(in)  :: this
+#ifdef PREC
+    VAR_TYPE_TYPE(PREC), pointer :: p(:) !=> null()
+#else
+    VAR_TYPE_TYPE, pointer       :: p(:) !=> null()
+#endif
+    
+    p => val(this%data%a)
+  end function valSpData
+
+  function valSpData_Idx(this,idx) result(v)
+    type(TYPE_NAME), intent(in)  :: this
+    integer,         intent(in)  :: idx
+#ifdef PREC
+    VAR_TYPE_TYPE(PREC)          :: v
+#else
+    VAR_TYPE_TYPE                :: v
+#endif
+    
+    v = val(this%data%a,idx)
+  end function valSpData_Idx
+
+  function sparSpData(this) result(p)
+    type(TYPE_NAME), intent(in) :: this
+    type(Sparsity), pointer     :: p !=> null()
+    
+    p => this%data%sp
+  end function sparSpData
+  
+  function distSpData(this) result(p)
+    type(TYPE_NAME), intent(in)        :: this
+    type(OrbitalDistribution), pointer :: p !=> null()
+    
+    p => this%data%dist
+  end function distSpData
+
+!--------------------------------------------------
+  pure function nrowsSpData(this) result (n)
+    type(TYPE_NAME), intent(in) :: this
+    integer                     :: n
+
+    n = nrows(this%data%sp)
+  end function nrowsSpData
+
+  pure function nrows_gSpData(this) result (n)
+    type(TYPE_NAME), intent(in) :: this
+    integer                     :: n
+
+    n = nrows_g(this%data%sp)
+  end function nrows_gSpData
+  
+  pure function nnzsSpData(this) result (n)
+    type(TYPE_NAME), intent(in) :: this
+    integer                     :: n
+
+    if ( initialized(this) ) then
+       n = nnzs(this%data%sp)
+    else
+       n = 0
+    end if
+    
+  end function nnzsSpData
+
+  function n_colSpData(this) result (p)
+    type(TYPE_NAME), intent(in) :: this
+    integer, pointer            :: p(:) !=> null()
+
+    p => n_col(this%data%sp)
+  end function n_colSpData
+
+ function list_ptrSpData(this) result (p)
+   type(TYPE_NAME), intent(in) :: this
+   integer, pointer            :: p(:) !=> null()
+
+   p => list_ptr(this%data%sp)
+ end function list_ptrSpData
+
+ function list_colSpData(this) result (p)
+   type(TYPE_NAME), intent(in) :: this
+   integer, pointer            :: p(:) !=> null()
+
+   p => list_col(this%data%sp)
+ end function list_colSpData
+ 
+ subroutine printSpData(this)
+   type(TYPE_NAME), intent(in)  :: this
+
+   if (.not. initialized(this) ) then
+      print "(a)", STR_TYPE_NAME//" Not Associated"
+      RETURN
+   endif
+   
+   print "(a)", "<"//STR_TYPE_NAME//":"//trim(this%data%name)
+   call print_type(this%data%sp)
+   call print_type(this%data%a)
+   print "(a,i0,a)", "refcount: ",refcount(this),">"
+   
+ end subroutine printSpData
+
+ subroutine initializeSpData(this)
+   type(TYPE_NAME), intent(inout) :: this
+   
+   if ( .not. initialized(this) ) return
+   call init_val(this%data%a)
+
+ end subroutine initializeSpData
+
+#undef TYPE_NAME
+#undef STR_TYPE_NAME
+#undef TYPE_NAME_
+#undef NEW_TYPE
+#undef VAR_TYPE
+#undef VAR_NEW_TYPE
+#undef VAR_TYPE_TYPE
+#ifdef PREC
+#undef PREC
+#endif

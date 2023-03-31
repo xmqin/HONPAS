@@ -1,0 +1,40 @@
+# -----------------------------------------------------------------------------
+SystemName          bulk FeN in ZB structure --- COOP curves
+SystemLabel         fen
+
+NumberOfAtoms       2
+NumberOfSpecies     2
+
+%block ChemicalSpeciesLabel
+ 1  26 Fe
+ 2   7 N
+%endblock ChemicalSpeciesLabel
+
+PAO.BasisSize       DZP
+PAO.EnergyShift     300 meV
+
+LatticeConstant    4.31 Ang
+%block LatticeVectors
+  0.500  0.500  0.000
+  0.000  0.500  0.500
+  0.500  0.000  0.500
+%endblock LatticeVectors
+
+MeshCutoff         150.0 Ry
+
+DM.MixingWeight      0.3 
+DM.NumberPulay       3  
+DM.Tolerance         1.d-4
+ 
+kgridcutoff         10. Ang
+
+SolutionMethod       diagon    
+ElectronicTemperature  25 meV  
+
+AtomicCoordinatesFormat  Fractional
+%block AtomicCoordinatesAndAtomicSpecies
+    0.    0.    0.     1  Fe       1
+    0.25  0.25  0.25   2  N        2
+%endblock AtomicCoordinatesAndAtomicSpecies
+
+COOP.write T

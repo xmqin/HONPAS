@@ -1,0 +1,140 @@
+\documentclass{article}
+
+\usepackage[a4paper]{geometry}
+
+\newcommand\siesta{\textsc{SIESTA}}
+\newcommand\tsiesta{\textsc{TranSIESTA}}
+
+\newcommand{\fdf}[1]{\textbf{#1}}
+\newcommand{\opt}[1]{\textbf{#1}}
+\newcommand{\code}[1]{\texttt{#1}}
+
+\title{Compatibility issues across versions}
+\author{\siesta}
+
+\begin{document}
+
+\maketitle
+
+\clearpage
+
+This list describes the compatibility issues when using different versions of \siesta.
+
+\begin{description}
+  \setlength\itemsep{1pt}
+  \setlength\topsep{1pt}
+
+  \item[4.1]%
+  \begin{itemize}
+    \item %
+    \tsiesta\ has been fully redeveloped. The entire algorithm has been revised and
+    substantial improvements on performance and numerical precision has been achieved. One
+    cannot compare, directly, the results although the transmissions should be (roughly)
+    equivalent.
+
+    \item %
+    \fdf{DM.MixSCF1} is now defaulted to \fdf{true}.
+
+    \item %
+    Nearly all flags regarding the mixing options have changed name. However, the old
+    flags are still read (and used). In future versions they may be fully removed.
+
+    \begin{itemize}
+      \item All mixing routines are re-written. This means that one cannot compare with
+      prior versions in terms of the convergence path. Sometimes they will differ due to numerics.
+    \end{itemize}
+
+    \item \fdf{NumberOfSpecies} and \fdf{NumberOfAtoms} are now defaulted to \# of lines
+    in their respective blocks. If they are specified, however, they will be honoured.
+
+  \end{itemize}
+  
+
+  \item[\emph{any} --- 4.0.2, 4.1] %
+
+  We have increased the size of the
+  internal tables used to compute two-center integrals. Please see
+  \opt{Compat.Matel.NRTAB} for details.
+  
+
+  \item[\emph{any} --- 4.0.2] %
+  In non-collinear-spin calculations, the sign of the fourth spin
+  component of the density matrix is reversed. To re-use old \code{DM} files,
+  they can be converted using the
+  \code{Util/DensityMatrix/dm_noncol_sign_flip4} program.
+
+  In non-collinear-spin calculations, time-reversal symmetry is not
+  considered completely safe to apply. This leads to an increase in
+  the number of k-points used.
+
+  \item[\emph{any} --- 4.0-b2] The following compatibility issues should be remarked when
+  comparing with any later version of \siesta.
+
+  \begin{itemize}
+    \item \emph{Electric field and dipole correction for slab calculations}
+
+    Older versions applied an incorrect dipole correction when also using an
+    electric field (old behaviour may be recovered by forcing \code{SlabDipoleCorrection .false.}). 
+
+    Older versions over-estimated the energy contribution from the dipole correction by a
+    factor of 2 (old behaviour cannot be recovered).
+
+  \item\emph{Changes in the default precision from grid magnitudes}
+
+    The grid functions (charge densities, potentials, etc) were in
+    single precision by default in the 3.X versions, but are in double
+    precision by default for post-3.X versions. The \code{phi}  array that
+    holds the values of the basis orbitals on the real-space grid is kept in
+    single precision. Please take this into account if you compare the
+    results with those of siesta-3.X runs. See the manual in both
+    versions for more information.
+
+  \item\emph{Changes in the geometry used for the analysis of the
+    electronic structure}
+
+  The update of the atomic coordinates after computing the forces on
+  the atoms no longer affects the analysis of the electronic
+  structure at the end of a run. To do the analysis using the actual
+  coordinates used in the computation of the electronic structure, the
+  coordinates are now reset to those values in \code{siesta\_analysis}.  The old
+  behavior can be recovered by using by setting the backward
+  compatibility switch \opt{compat-pre-v4-dynamics} to 'true'.
+
+  This change will slightly alter the output of most calculations and the
+  detailed results of any post-processing. Keep this in mind if you
+  need to maintain coherency within a project.
+
+
+  \item\emph{Changes in the handling of the density-matrix and
+    hamiltonian after convergence of the scf cycle}
+
+    To guarantee that the DM and H used in the electronic-structure
+    analysis correspond to the latest electronic structure computed,
+    there should be no mixing at the end of the scf loop. This
+    behavior, controlled by the value of \opt{scf-mix-after-convergence}, is
+    now the default. The use of DM\_out instead of DM\_mixed provides
+    also a truly variational total-energy and more consistent
+    forces. If the scf cycle is carried out mixing H, H(DM\_in) is
+    recovered by re-setting H to Hold in \code{siesta\_forces} at the end of
+    the cycle.
+
+    Also, to preserve the original H for analysis it is necessary to
+    avoid overwriting it in \code{post\_scf\_work}. This is now done by
+    default, except if the option \opt{scf-recompute-h-after-scf} is
+    'true'.
+
+    There is another switch for pre-v4.0 compatibility in this
+    context: If \opt{compat-pre-v4-dm-h} is 'true', the
+    \opt{scf-mix-after-convergence} and \opt{scf-recompute-h-after-scf}
+    options are activated too.
+
+    This change will slightly alter the output of most calculations
+    and the detailed results of any post-processing. Keep this in mind
+    if you need to maintain coherency within a project.
+    
+  \end{itemize}
+
+\end{description}
+
+
+\end{document}

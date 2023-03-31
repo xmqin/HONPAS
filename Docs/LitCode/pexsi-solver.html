@@ -1,0 +1,2190 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<title>Literate version of PEXSI driver</title>
+<!-- 2016-09-14 Wed 11:31 -->
+<meta  http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta  name="generator" content="Org-mode" />
+<meta  name="author" content="Alberto Garcia" />
+<style type="text/css">
+ <!--/*--><![CDATA[/*><!--*/
+  .title  { text-align: center; }
+  .todo   { font-family: monospace; color: red; }
+  .done   { color: green; }
+  .tag    { background-color: #eee; font-family: monospace;
+            padding: 2px; font-size: 80%; font-weight: normal; }
+  .timestamp { color: #bebebe; }
+  .timestamp-kwd { color: #5f9ea0; }
+  .right  { margin-left: auto; margin-right: 0px;  text-align: right; }
+  .left   { margin-left: 0px;  margin-right: auto; text-align: left; }
+  .center { margin-left: auto; margin-right: auto; text-align: center; }
+  .underline { text-decoration: underline; }
+  #postamble p, #preamble p { font-size: 90%; margin: .2em; }
+  p.verse { margin-left: 3%; }
+  pre {
+    border: 1px solid #ccc;
+    box-shadow: 3px 3px 3px #eee;
+    padding: 8pt;
+    font-family: monospace;
+    overflow: auto;
+    margin: 1.2em;
+  }
+  pre.src {
+    position: relative;
+    overflow: visible;
+    padding-top: 1.2em;
+  }
+  pre.src:before {
+    display: none;
+    position: absolute;
+    background-color: white;
+    top: -10px;
+    right: 10px;
+    padding: 3px;
+    border: 1px solid black;
+  }
+  pre.src:hover:before { display: inline;}
+  pre.src-sh:before    { content: 'sh'; }
+  pre.src-bash:before  { content: 'sh'; }
+  pre.src-emacs-lisp:before { content: 'Emacs Lisp'; }
+  pre.src-R:before     { content: 'R'; }
+  pre.src-perl:before  { content: 'Perl'; }
+  pre.src-java:before  { content: 'Java'; }
+  pre.src-sql:before   { content: 'SQL'; }
+
+  table { border-collapse:collapse; }
+  caption.t-above { caption-side: top; }
+  caption.t-bottom { caption-side: bottom; }
+  td, th { vertical-align:top;  }
+  th.right  { text-align: center;  }
+  th.left   { text-align: center;   }
+  th.center { text-align: center; }
+  td.right  { text-align: right;  }
+  td.left   { text-align: left;   }
+  td.center { text-align: center; }
+  dt { font-weight: bold; }
+  .footpara:nth-child(2) { display: inline; }
+  .footpara { display: block; }
+  .footdef  { margin-bottom: 1em; }
+  .figure { padding: 1em; }
+  .figure p { text-align: center; }
+  .inlinetask {
+    padding: 10px;
+    border: 2px solid gray;
+    margin: 10px;
+    background: #ffffcc;
+  }
+  #org-div-home-and-up
+   { text-align: right; font-size: 70%; white-space: nowrap; }
+  textarea { overflow-x: auto; }
+  .linenr { font-size: smaller }
+  .code-highlighted { background-color: #ffff00; }
+  .org-info-js_info-navigation { border-style: none; }
+  #org-info-js_console-label
+    { font-size: 10px; font-weight: bold; white-space: nowrap; }
+  .org-info-js_search-highlight
+    { background-color: #ffff00; color: #000000; font-weight: bold; }
+  /*]]>*/-->
+</style>
+<script type="text/javascript">
+/*
+@licstart  The following is the entire license notice for the
+JavaScript code in this tag.
+
+Copyright (C) 2012-2013 Free Software Foundation, Inc.
+
+The JavaScript code in this tag is free software: you can
+redistribute it and/or modify it under the terms of the GNU
+General Public License (GNU GPL) as published by the Free Software
+Foundation, either version 3 of the License, or (at your option)
+any later version.  The code is distributed WITHOUT ANY WARRANTY;
+without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE.  See the GNU GPL for more details.
+
+As additional permission under GNU GPL version 3 section 7, you
+may distribute non-source (e.g., minimized or compacted) forms of
+that code without the copy of the GNU GPL normally required by
+section 4, provided you include this license notice and a URL
+through which recipients can access the Corresponding Source.
+
+
+@licend  The above is the entire license notice
+for the JavaScript code in this tag.
+*/
+<!--/*--><![CDATA[/*><!--*/
+ function CodeHighlightOn(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(null != target) {
+     elem.cacheClassElem = elem.className;
+     elem.cacheClassTarget = target.className;
+     target.className = "code-highlighted";
+     elem.className   = "code-highlighted";
+   }
+ }
+ function CodeHighlightOff(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(elem.cacheClassElem)
+     elem.className = elem.cacheClassElem;
+   if(elem.cacheClassTarget)
+     target.className = elem.cacheClassTarget;
+ }
+/*]]>*///-->
+</script>
+</head>
+<body>
+<div id="content">
+<h1 class="title">Literate version of PEXSI driver</h1>
+<div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#sec-1">1. Introduction</a></li>
+<li><a href="#sec-2">2. Auxiliary module for holding the plan</a>
+<ul>
+<li><a href="#sec-2-1">2.1. <span class="todo TODO">TODO</span> Maybe integrate the plan handling in the <code>pexsi_solver</code> module.</a></li>
+</ul>
+</li>
+<li><a href="#sec-3">3. The PEXSI solver code</a>
+<ul>
+<li><a href="#sec-3-1">3.1. Main structure</a></li>
+<li><a href="#sec-3-2">3.2. Routine header</a>
+<ul>
+<li><a href="#sec-3-2-1">3.2.1. Used modules</a></li>
+</ul>
+</li>
+<li><a href="#sec-3-3">3.3. Routine variables</a></li>
+<li><a href="#sec-3-4">3.4. Define communicators</a></li>
+<li><a href="#sec-3-5">3.5. Re-distribute matrices</a></li>
+<li><a href="#sec-3-6">3.6. Set tolerance</a></li>
+<li><a href="#sec-3-7">3.7. Set options</a></li>
+<li><a href="#sec-3-8">3.8. Initialize plan at first scf step</a></li>
+<li><a href="#sec-3-9">3.9. Load H and S matrices</a></li>
+<li><a href="#sec-3-10">3.10. Factorization</a></li>
+<li><a href="#sec-3-11">3.11. Call the solver</a>
+<ul>
+<li><a href="#sec-3-11-1">3.11.1. Set mu bracket with optional inertia-counting phase</a></li>
+<li><a href="#sec-3-11-2">3.11.2. Check whether we have reached the maximum number of solver iterations</a></li>
+<li><a href="#sec-3-11-3">3.11.3. Compute Fermi operator and number of electrons</a></li>
+<li><a href="#sec-3-11-4">3.11.4. Check convergence of solver</a></li>
+</ul>
+</li>
+<li><a href="#sec-3-12">3.12. Get output matrices and compute energies</a></li>
+<li><a href="#sec-3-13">3.13. Copy information to Siesta side</a></li>
+<li><a href="#sec-3-14">3.14. Clean up</a></li>
+<li><a href="#sec-3-15">3.15. Support routines</a>
+<ul>
+<li><a href="#sec-3-15-1">3.15.1. Inertia-count iteration</a></li>
+<li><a href="#sec-3-15-2">3.15.2. On-the-fly tolerance determination</a></li>
+<li><a href="#sec-3-15-3">3.15.3. Decide whether inertia-counting is needed</a></li>
+<li><a href="#sec-3-15-4">3.15.4. Get bracket for inertia-counting</a></li>
+<li><a href="#sec-3-15-5">3.15.5. Get bracket for solver</a></li>
+<li><a href="#sec-3-15-6">3.15.6. Compute current temperature if annealing</a></li>
+<li><a href="#sec-3-15-7">3.15.7. Linear interpolation routine</a></li>
+<li><a href="#sec-3-15-8">3.15.8. Error dispatcher</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<p>
+-*- mode: Org -*-
+</p>
+
+<div id="outline-container-sec-1" class="outline-2">
+<h2 id="sec-1"><span class="section-number-2">1</span> Introduction</h2>
+<div class="outline-text-2" id="text-1">
+<p>
+This is a version of the SIESTA-PEXSI interface for the scf cycle,
+employing an "expert" mode instead of the simple DFT driver included
+with the library. It can also deal with spin polarization.
+</p>
+</div>
+</div>
+
+<div id="outline-container-sec-2" class="outline-2">
+<h2 id="sec-2"><span class="section-number-2">2</span> Auxiliary module for holding the plan</h2>
+<div class="outline-text-2" id="text-2">
+<p>
+The <i>plan</i> feature allows, among other things, the re-use of
+factorization information. 
+</p>
+</div>
+
+<div id="outline-container-sec-2-1" class="outline-3">
+<h3 id="sec-2-1"><span class="section-number-3">2.1</span> <span class="todo TODO">TODO</span> Maybe integrate the plan handling in the <code>pexsi_solver</code> module.</h3>
+<div class="outline-text-3" id="text-2-1">
+<div class="org-src-container">
+
+<pre class="src src-f90">  <span style="color: #a020f0;">module</span> <span style="color: #0000ff;">m_pexsi</span>
+<span style="color: #483d8b;">#ifdef</span> SIESTA__PEXSI
+  <span style="color: #a020f0;">use</span> <span style="color: #0000ff;">precision</span>, <span style="color: #a020f0;">only</span>: dp
+  <span style="color: #a020f0;">use</span> <span style="color: #0000ff;">iso_c_binding</span>
+
+  <span style="color: #228b22;">integer</span>(<span style="color: #008b8b;">c_intptr_t</span>), <span style="color: #a020f0;">public</span> ::<span style="color: #a0522d;"> plan</span>
+
+  <span style="color: #a020f0;">public</span> :: pexsi_initialize_scfloop
+  <span style="color: #a020f0;">public</span> :: pexsi_finalize_scfloop
+
+  <span style="color: #a020f0;">private</span>
+
+  <span style="color: #a020f0;">CONTAINS</span>
+
+    <span style="color: #a020f0;">subroutine</span> <span style="color: #0000ff;">pexsi_initialize_scfloop</span>(World_Comm,npPerPole,mpirank,info)
+      <span style="color: #a020f0;">use</span> <span style="color: #0000ff;">f_ppexsi_interface</span>
+      <span style="color: #228b22;">integer</span>, <span style="color: #a020f0;">intent</span>(in) ::<span style="color: #a0522d;"> npPerPole, mpirank</span>
+      <span style="color: #228b22;">integer</span>, <span style="color: #a020f0;">intent</span>(in) ::<span style="color: #a0522d;"> World_Comm</span>
+      <span style="color: #228b22;">integer</span>, <span style="color: #a020f0;">intent</span>(out)::<span style="color: #a0522d;"> info</span>
+
+      <span style="color: #228b22;">integer</span> ::<span style="color: #a0522d;"> numProcRow, numProcCol</span>
+      <span style="color: #228b22;">integer</span> ::<span style="color: #a0522d;"> outputFileIndex</span>
+
+      <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">get_row_col</span>(npPerPole,numProcRow,numProcCol)
+
+      <span style="color: #b22222;">! </span><span style="color: #b22222;">Set the outputFileIndex to be the pole index.</span>
+      <span style="color: #b22222;">! </span><span style="color: #b22222;">Starting from PEXSI v0.8.0, the first processor for each pole outputs</span>
+      <span style="color: #b22222;">! </span><span style="color: #b22222;">information</span>
+
+      <span style="color: #a020f0;">if</span>( <span style="color: #a020f0;">mod</span>( mpirank, npPerPole ) <span style="color: #a020f0;">.eq.</span> 0 ) <span style="color: #a020f0;">then</span>
+        outputFileIndex = mpirank / npPerPole;
+      <span style="color: #a020f0;">else</span>
+        outputFileIndex = -1;
+      <span style="color: #a020f0;">endif</span>
+
+      plan = f_ppexsi_plan_initialize(<span style="color: #a020f0;">&amp;</span>
+        World_Comm,<span style="color: #a020f0;">&amp;</span>
+        numProcRow,<span style="color: #a020f0;">&amp;</span>
+        numProcCol,<span style="color: #a020f0;">&amp;</span>
+        outputFileIndex,<span style="color: #a020f0;">&amp;</span>
+        info) 
+
+    <span style="color: #a020f0;">end subroutine</span> <span style="color: #0000ff;">pexsi_initialize_scfloop</span>
+
+
+    <span style="color: #a020f0;">subroutine</span> <span style="color: #0000ff;">pexsi_finalize_scfloop</span>()
+      <span style="color: #a020f0;">use</span> <span style="color: #0000ff;">f_ppexsi_interface</span>
+
+      <span style="color: #228b22;">integer</span> ::<span style="color: #a0522d;"> info</span>
+
+      <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">f_ppexsi_plan_finalize</span>( plan, info )
+
+    <span style="color: #a020f0;">end subroutine</span> <span style="color: #0000ff;">pexsi_finalize_scfloop</span>
+
+    <span style="color: #a020f0;">subroutine</span> <span style="color: #0000ff;">get_row_col</span>(np,nrow,ncol)
+      <span style="color: #228b22;">integer</span>, <span style="color: #a020f0;">intent</span>(in)  ::<span style="color: #a0522d;"> np</span>
+      <span style="color: #228b22;">integer</span>, <span style="color: #a020f0;">intent</span>(out) ::<span style="color: #a0522d;"> nrow, ncol</span>
+      <span style="color: #b22222;">!</span>
+      <span style="color: #b22222;">! </span><span style="color: #b22222;">Finds the factors nrow and ncol such that nrow*ncol=np,</span>
+      <span style="color: #b22222;">! </span><span style="color: #b22222;">are as similar as possible, and nrow&gt;=ncol.</span>
+      <span style="color: #b22222;">! </span><span style="color: #b22222;">For prime np, ncol=1, nrow=np.</span>
+
+      ncol  = <span style="color: #a020f0;">floor</span>(<span style="color: #a020f0;">sqrt</span>(<span style="color: #a020f0;">dble</span>(np)))
+      <span style="color: #a020f0;">do</span>
+        nrow = np/ncol
+        <span style="color: #a020f0;">if</span> (nrow*ncol == np) <span style="color: #a020f0;">exit</span>
+        ncol = ncol - 1
+      <span style="color: #a020f0;">enddo</span>
+    <span style="color: #a020f0;">end subroutine</span> <span style="color: #0000ff;">get_row_col</span>
+<span style="color: #483d8b;">#endif</span>
+<span style="color: #a020f0;">end module</span> <span style="color: #0000ff;">m_pexsi</span>
+</pre>
+</div>
+
+<div class="org-src-container">
+
+<pre class="src src-f90"><span style="color: #a020f0;">subroutine</span> <span style="color: #0000ff;">pexsi_initialize_scfloop</span>(World_Comm,npPerPole,mpirank,info)
+  <span style="color: #a020f0;">use</span> <span style="color: #0000ff;">f_ppexsi_interface</span>
+  <span style="color: #228b22;">integer</span>, <span style="color: #a020f0;">intent</span>(in) ::<span style="color: #a0522d;"> npPerPole, mpirank</span>
+  <span style="color: #228b22;">integer</span>, <span style="color: #a020f0;">intent</span>(in) ::<span style="color: #a0522d;"> World_Comm</span>
+  <span style="color: #228b22;">integer</span>, <span style="color: #a020f0;">intent</span>(out)::<span style="color: #a0522d;"> info</span>
+
+  <span style="color: #228b22;">integer</span> ::<span style="color: #a0522d;"> numProcRow, numProcCol</span>
+  <span style="color: #228b22;">integer</span> ::<span style="color: #a0522d;"> outputFileIndex</span>
+
+  <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">get_row_col</span>(npPerPole,numProcRow,numProcCol)
+
+  <span style="color: #b22222;">! </span><span style="color: #b22222;">Set the outputFileIndex to be the pole index.</span>
+  <span style="color: #b22222;">! </span><span style="color: #b22222;">Starting from PEXSI v0.8.0, the first processor for each pole outputs</span>
+  <span style="color: #b22222;">! </span><span style="color: #b22222;">information</span>
+
+  <span style="color: #a020f0;">if</span>( <span style="color: #a020f0;">mod</span>( mpirank, npPerPole ) <span style="color: #a020f0;">.eq.</span> 0 ) <span style="color: #a020f0;">then</span>
+    outputFileIndex = mpirank / npPerPole;
+  <span style="color: #a020f0;">else</span>
+    outputFileIndex = -1;
+  <span style="color: #a020f0;">endif</span>
+
+  plan = f_ppexsi_plan_initialize(<span style="color: #a020f0;">&amp;</span>
+    World_Comm,<span style="color: #a020f0;">&amp;</span>
+    numProcRow,<span style="color: #a020f0;">&amp;</span>
+    numProcCol,<span style="color: #a020f0;">&amp;</span>
+    outputFileIndex,<span style="color: #a020f0;">&amp;</span>
+    info) 
+
+<span style="color: #a020f0;">end subroutine</span> <span style="color: #0000ff;">pexsi_initialize_scfloop</span>
+</pre>
+</div>
+
+<div class="org-src-container">
+
+<pre class="src src-f90"><span style="color: #a020f0;">subroutine</span> <span style="color: #0000ff;">pexsi_finalize_scfloop</span>()
+  <span style="color: #a020f0;">use</span> <span style="color: #0000ff;">f_ppexsi_interface</span>
+
+  <span style="color: #228b22;">integer</span> ::<span style="color: #a0522d;"> info</span>
+
+  <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">f_ppexsi_plan_finalize</span>( plan, info )
+
+<span style="color: #a020f0;">end subroutine</span> <span style="color: #0000ff;">pexsi_finalize_scfloop</span>
+</pre>
+</div>
+
+<div class="org-src-container">
+
+<pre class="src src-f90"><span style="color: #a020f0;">subroutine</span> <span style="color: #0000ff;">get_row_col</span>(np,nrow,ncol)
+  <span style="color: #228b22;">integer</span>, <span style="color: #a020f0;">intent</span>(in)  ::<span style="color: #a0522d;"> np</span>
+  <span style="color: #228b22;">integer</span>, <span style="color: #a020f0;">intent</span>(out) ::<span style="color: #a0522d;"> nrow, ncol</span>
+  <span style="color: #b22222;">!</span>
+  <span style="color: #b22222;">! </span><span style="color: #b22222;">Finds the factors nrow and ncol such that nrow*ncol=np,</span>
+  <span style="color: #b22222;">! </span><span style="color: #b22222;">are as similar as possible, and nrow&gt;=ncol.</span>
+  <span style="color: #b22222;">! </span><span style="color: #b22222;">For prime np, ncol=1, nrow=np.</span>
+
+  ncol  = <span style="color: #a020f0;">floor</span>(<span style="color: #a020f0;">sqrt</span>(<span style="color: #a020f0;">dble</span>(np)))
+  <span style="color: #a020f0;">do</span>
+    nrow = np/ncol
+    <span style="color: #a020f0;">if</span> (nrow*ncol == np) <span style="color: #a020f0;">exit</span>
+    ncol = ncol - 1
+  <span style="color: #a020f0;">enddo</span>
+<span style="color: #a020f0;">end subroutine</span> <span style="color: #0000ff;">get_row_col</span>
+</pre>
+</div>
+</div>
+</div>
+</div>
+
+
+<div id="outline-container-sec-3" class="outline-2">
+<h2 id="sec-3"><span class="section-number-2">3</span> The PEXSI solver code</h2>
+<div class="outline-text-2" id="text-3">
+</div><div id="outline-container-sec-3-1" class="outline-3">
+<h3 id="sec-3-1"><span class="section-number-3">3.1</span> Main structure</h3>
+<div class="outline-text-3" id="text-3-1">
+<p>
+This is the main structure of the code. 
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-f90"><span style="color: #a020f0;">module</span> <span style="color: #0000ff;">m_pexsi_solver</span>
+
+ <span style="color: #a020f0;">use</span> <span style="color: #0000ff;">precision</span>, <span style="color: #a020f0;">only</span>  : dp
+
+ <span style="color: #a020f0;">implicit</span> <span style="color: #228b22;">none</span>
+
+ <span style="color: #228b22;">real</span>(dp), <span style="color: #a020f0;">save</span> ::<span style="color: #a0522d;"> prevDmax  </span><span style="color: #b22222;">! </span><span style="color: #b22222;">For communication of max diff in DM in scf loop</span>
+                             <span style="color: #b22222;">! </span><span style="color: #b22222;">used in the heuristics for N_el tolerance</span>
+ <span style="color: #a020f0;">public</span> :: prevDmax
+<span style="color: #483d8b;">#ifdef</span> SIESTA__PEXSI
+ <span style="color: #a020f0;">public</span> :: pexsi_solver
+
+<span style="color: #a020f0;">CONTAINS</span>
+
+&lt;&lt;routine-header&gt;&gt;
+&lt;&lt;routine-variables&gt;&gt;
+<span style="color: #b22222;">!  </span><span style="color: #b22222;">--------  for serial compilation</span>
+<span style="color: #483d8b;">#ifndef</span> MPI
+    <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">die</span>(<span style="color: #8b2252;">"PEXSI needs MPI"</span>)
+<span style="color: #483d8b;">#else</span>
+&lt;&lt;define-communicators&gt;&gt;
+&lt;&lt;re-<span style="color: #a020f0;">distribute</span>-matrices&gt;&gt;
+&lt;&lt;set-tolerance&gt;&gt;
+&lt;&lt;set-options&gt;&gt;
+&lt;&lt;initialize-plan-at-first-step&gt;&gt;
+&lt;&lt;load-hs-matrices&gt;&gt;
+&lt;&lt;factorization&gt;&gt;
+&lt;&lt;solver-structure&gt;&gt;
+&lt;&lt;get-matrices-and-energy&gt;&gt;
+&lt;&lt;copy-to-siesta-side&gt;&gt;
+&lt;&lt;clean-up&gt;&gt;
+<span style="color: #483d8b;">#endif</span>
+
+<span style="color: #a020f0;">CONTAINS</span>
+
+&lt;&lt;support-routines&gt;&gt;
+
+<span style="color: #a020f0;">end subroutine</span> <span style="color: #0000ff;">pexsi_solver</span>
+<span style="color: #483d8b;">#endif</span>
+<span style="color: #a020f0;">end module</span> <span style="color: #0000ff;">m_pexsi_solver</span>
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-sec-3-2" class="outline-3">
+<h3 id="sec-3-2"><span class="section-number-3">3.2</span> Routine header</h3>
+<div class="outline-text-3" id="text-3-2">
+<div class="org-src-container">
+
+<pre class="src src-f90"><span style="color: #b22222;">! </span><span style="color: #b22222;">This version uses separate distributions for Siesta </span>
+<span style="color: #b22222;">! </span><span style="color: #b22222;">(setup_H et al) and PEXSI.</span>
+<span style="color: #b22222;">!</span>
+<span style="color: #a020f0;">subroutine</span> <span style="color: #0000ff;">pexsi_solver</span>(iscf, no_u, no_l, nspin_in,  <span style="color: #a020f0;">&amp;</span>
+     maxnh, numh, listhptr, listh, H, S, qtot, DM, EDM, <span style="color: #a020f0;">&amp;</span>
+     ef, Entropy, temp, delta_Efermi)
+
+&lt;&lt;used-modules&gt;&gt;
+
+  <span style="color: #a020f0;">implicit</span>          <span style="color: #228b22;">none</span>
+
+  <span style="color: #228b22;">integer</span>, <span style="color: #a020f0;">intent</span>(in)  ::<span style="color: #a0522d;"> iscf  </span><span style="color: #b22222;">! </span><span style="color: #b22222;">scf step number</span>
+  <span style="color: #228b22;">integer</span>, <span style="color: #a020f0;">intent</span>(in)  ::<span style="color: #a0522d;"> maxnh, no_u, no_l, nspin_in</span>
+  <span style="color: #228b22;">integer</span>, <span style="color: #a020f0;">intent</span>(in), <span style="color: #a020f0;">target</span>  ::<span style="color: #a0522d;"> listh(maxnh), numh(no_l), listhptr(no_l)</span>
+  <span style="color: #228b22;">real</span>(dp), <span style="color: #a020f0;">intent</span>(in), <span style="color: #a020f0;">target</span> ::<span style="color: #a0522d;"> H(maxnh,nspin_in), S(maxnh)</span>
+  <span style="color: #228b22;">real</span>(dp), <span style="color: #a020f0;">intent</span>(in) ::<span style="color: #a0522d;"> qtot</span>
+  <span style="color: #228b22;">real</span>(dp), <span style="color: #a020f0;">intent</span>(out), <span style="color: #a020f0;">target</span>::<span style="color: #a0522d;"> DM(maxnh,nspin_in), EDM(maxnh,nspin_in)</span>
+  <span style="color: #228b22;">real</span>(dp), <span style="color: #a020f0;">intent</span>(out)        ::<span style="color: #a0522d;"> ef  </span><span style="color: #b22222;">! </span><span style="color: #b22222;">Fermi energy</span>
+  <span style="color: #228b22;">real</span>(dp), <span style="color: #a020f0;">intent</span>(out)        ::<span style="color: #a0522d;"> Entropy </span><span style="color: #b22222;">! </span><span style="color: #b22222;">Entropy/k, dimensionless</span>
+  <span style="color: #228b22;">real</span>(dp), <span style="color: #a020f0;">intent</span>(in)         ::<span style="color: #a0522d;"> temp   </span><span style="color: #b22222;">! </span><span style="color: #b22222;">Electronic temperature</span>
+  <span style="color: #228b22;">real</span>(dp), <span style="color: #a020f0;">intent</span>(in)         ::<span style="color: #a0522d;"> delta_Efermi  </span><span style="color: #b22222;">! </span><span style="color: #b22222;">Estimated shift in E_fermi</span>
+</pre>
+</div>
+</div>
+
+<div id="outline-container-sec-3-2-1" class="outline-4">
+<h4 id="sec-3-2-1"><span class="section-number-4">3.2.1</span> Used modules</h4>
+<div class="outline-text-4" id="text-3-2-1">
+<div class="org-src-container">
+
+<pre class="src src-f90">    <span style="color: #a020f0;">use</span> <span style="color: #0000ff;">fdf</span>
+    <span style="color: #a020f0;">use</span> <span style="color: #0000ff;">parallel</span>, <span style="color: #a020f0;">only</span>   : SIESTA_worker, BlockSize
+    <span style="color: #a020f0;">use</span> <span style="color: #0000ff;">parallel</span>, <span style="color: #a020f0;">only</span>   : SIESTA_Group, SIESTA_Comm
+    <span style="color: #a020f0;">use</span> <span style="color: #0000ff;">m_mpi_utils</span>, <span style="color: #a020f0;">only</span>: globalize_sum, globalize_max
+    <span style="color: #a020f0;">use</span> <span style="color: #0000ff;">m_mpi_utils</span>, <span style="color: #a020f0;">only</span>: broadcast
+    <span style="color: #a020f0;">use</span> <span style="color: #0000ff;">units</span>,       <span style="color: #a020f0;">only</span>: Kelvin, eV
+    <span style="color: #a020f0;">use</span> <span style="color: #0000ff;">m_redist_spmatrix</span>, <span style="color: #a020f0;">only</span>: aux_matrix, redistribute_spmatrix
+    <span style="color: #a020f0;">use</span> <span style="color: #0000ff;">class_Distribution</span>
+    <span style="color: #a020f0;">use</span> <span style="color: #0000ff;">alloc</span>,             <span style="color: #a020f0;">only</span>: re_alloc, de_alloc
+    <span style="color: #a020f0;">use</span> <span style="color: #0000ff;">siesta_options</span>,    <span style="color: #a020f0;">only</span>: dDtol
+<span style="color: #483d8b;">#ifdef</span> MPI
+    <span style="color: #a020f0;">use</span> <span style="color: #0000ff;">mpi_siesta</span>
+<span style="color: #483d8b;">#endif</span>
+<span style="color: #a020f0;">use</span> <span style="color: #0000ff;">f_ppexsi_interface</span>
+<span style="color: #a020f0;">use</span> <span style="color: #0000ff;">iso_c_binding</span>
+<span style="color: #a020f0;">use</span> <span style="color: #0000ff;">m_pexsi</span>, <span style="color: #a020f0;">only</span>: plan, pexsi_initialize_scfloop
+
+<span style="color: #483d8b;">#ifdef</span> TRACING_SOLVEONLY
+      <span style="color: #a020f0;">use</span> <span style="color: #0000ff;">extrae_module</span>
+<span style="color: #483d8b;">#endif</span>
+</pre>
+</div>
+</div>
+</div>
+</div>
+
+<div id="outline-container-sec-3-3" class="outline-3">
+<h3 id="sec-3-3"><span class="section-number-3">3.3</span> Routine variables</h3>
+<div class="outline-text-3" id="text-3-3">
+<p>
+The local variables for the routine must be declared in a certain
+place for the compiler, but it is more clear to introduce them as they
+are needed. The <code>routine-variables</code> noweb-ref will be used for this
+throughout this document.
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-f90"><span style="color: #228b22;">integer</span>        ::<span style="color: #a0522d;"> ih, i</span>
+<span style="color: #228b22;">integer</span>        ::<span style="color: #a0522d;"> info</span>
+<span style="color: #228b22;">logical</span>        ::<span style="color: #a0522d;"> write_ok</span>
+<span style="color: #b22222;">!</span><span style="color: #b22222;">------------</span>
+<span style="color: #a020f0;">external</span>         :: timer
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-sec-3-4" class="outline-3">
+<h3 id="sec-3-4"><span class="section-number-3">3.4</span> Define communicators</h3>
+<div class="outline-text-3" id="text-3-4">
+<p>
+<code>World_Comm</code>, which is in principle set to Siesta's copy of
+<code>MPI_Comm_World</code>, is the global communicator.
+</p>
+
+<p>
+Some variables need to be broadcast since they were assigned only
+by the <i>SIESTA worker</i>  subset of nodes. They are renamed for clarity.
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-f90"><span style="color: #228b22;">integer</span>          ::<span style="color: #a0522d;"> World_Comm, mpirank, ierr</span>
+<span style="color: #b22222;">!</span>
+<span style="color: #228b22;">real</span>(dp)  ::<span style="color: #a0522d;"> temperature, numElectronExact</span>
+<span style="color: #228b22;">integer</span>   ::<span style="color: #a0522d;"> norbs, scf_step</span>
+<span style="color: #228b22;">real</span>(dp)  ::<span style="color: #a0522d;"> delta_Ef</span>
+<span style="color: #b22222;">!</span>
+<span style="color: #228b22;">integer</span>   ::<span style="color: #a0522d;"> nspin</span>
+</pre>
+</div>
+
+<div class="org-src-container">
+
+<pre class="src src-f90"><span style="color: #b22222;">!</span>
+<span style="color: #b22222;">! </span><span style="color: #b22222;">Our global communicator is a duplicate of the passed communicator</span>
+<span style="color: #b22222;">!</span>
+<span style="color: #a020f0;">call</span> <span style="color: #0000ff;">MPI_Comm_Dup</span>(true_MPI_Comm_World, World_Comm, ierr)
+<span style="color: #a020f0;">call</span> <span style="color: #0000ff;">mpi_comm_rank</span>( World_Comm, mpirank, ierr )
+
+<span style="color: #b22222;">! </span><span style="color: #b22222;">NOTE:  fdf calls will assign values to the whole processor set,</span>
+<span style="color: #b22222;">! </span><span style="color: #b22222;">but some other variables will have to be re-broadcast (see examples</span>
+<span style="color: #b22222;">! </span><span style="color: #b22222;">below)</span>
+
+<span style="color: #a020f0;">call</span> <span style="color: #0000ff;">timer</span>(<span style="color: #8b2252;">"pexsi"</span>, 1)  
+
+<span style="color: #a020f0;">if</span> (SIESTA_worker) <span style="color: #a020f0;">then</span>
+
+   <span style="color: #b22222;">! </span><span style="color: #b22222;">rename some intent(in) variables, which are only</span>
+   <span style="color: #b22222;">! </span><span style="color: #b22222;">defined for the Siesta subset</span>
+
+   norbs = no_u
+   nspin = nspin_in
+   scf_step = iscf
+   delta_Ef = delta_Efermi
+   numElectronExact = qtot 
+
+   <span style="color: #b22222;">! </span><span style="color: #b22222;">Note that the energy units for the PEXSI interface are arbitrary, but</span>
+   <span style="color: #b22222;">! </span><span style="color: #b22222;">H, the interval limits, and the temperature have to be in the</span>
+   <span style="color: #b22222;">! </span><span style="color: #b22222;">same units. Siesta uses Ry units.</span>
+
+   temperature      = temp
+
+   <span style="color: #a020f0;">if</span> (mpirank==0) <span style="color: #a020f0;">write</span>(6,<span style="color: #8b2252;">"(a,f10.2)"</span>) <span style="color: #a020f0;">&amp;</span>
+               <span style="color: #8b2252;">"Electronic temperature (K): "</span>, temperature/Kelvin
+<span style="color: #a020f0;">endif</span>
+<span style="color: #b22222;">!</span>
+<span style="color: #a020f0;">call</span> <span style="color: #0000ff;">broadcast</span>(norbs,comm=World_Comm)
+<span style="color: #a020f0;">call</span> <span style="color: #0000ff;">broadcast</span>(scf_step,comm=World_Comm)
+<span style="color: #a020f0;">call</span> <span style="color: #0000ff;">broadcast</span>(delta_Ef,comm=World_Comm)
+<span style="color: #a020f0;">call</span> <span style="color: #0000ff;">broadcast</span>(numElectronExact,World_Comm)
+<span style="color: #a020f0;">call</span> <span style="color: #0000ff;">broadcast</span>(temperature,World_Comm)
+<span style="color: #a020f0;">call</span> <span style="color: #0000ff;">broadcast</span>(nspin,World_Comm)
+<span style="color: #b22222;">! </span><span style="color: #b22222;">Imported from modules, but set only in Siesta side</span>
+<span style="color: #a020f0;">call</span> <span style="color: #0000ff;">broadcast</span>(prevDmax,comm=World_Comm)
+<span style="color: #a020f0;">call</span> <span style="color: #0000ff;">broadcast</span>(dDtol,comm=World_Comm)
+</pre>
+</div>
+
+<p>
+Now we need to define the Siesta distribution object and the
+communicator and distribution object for the first team of PEXSI
+workers, for the purposes of re-distribution of the relevant
+matrices. The PEXSI library takes care of further redistribution among
+teams.
+</p>
+
+
+<div class="org-src-container">
+
+<pre class="src src-f90"><span style="color: #228b22;">integer</span> ::<span style="color: #a0522d;"> PEXSI_Pole_Group, PEXSI_Spatial_Group, World_Group</span>
+<span style="color: #228b22;">integer</span>, <span style="color: #a020f0;">allocatable</span> ::<span style="color: #a0522d;"> pexsi_pole_ranks_in_world(:)</span>
+<span style="color: #228b22;">integer</span>  ::<span style="color: #a0522d;"> nworkers_SIESTA</span>
+<span style="color: #228b22;">integer</span>, <span style="color: #a020f0;">allocatable</span> ::<span style="color: #a0522d;"> siesta_ranks_in_world(:)</span>
+<span style="color: #228b22;">integer</span> ::<span style="color: #a0522d;"> PEXSI_Pole_Group_in_World</span>
+<span style="color: #228b22;">integer</span>, <span style="color: #a020f0;">allocatable</span> ::<span style="color: #a0522d;"> PEXSI_Pole_ranks_in_World_Spin(:,:)</span>
+<span style="color: #228b22;">integer</span> ::<span style="color: #a0522d;"> PEXSI_Pole_Comm, PEXSI_Spatial_Comm, PEXSI_Spin_Comm</span>
+<span style="color: #228b22;">integer</span> ::<span style="color: #a0522d;"> numNodesTotal</span>
+<span style="color: #228b22;">integer</span> ::<span style="color: #a0522d;"> npPerPole</span>
+<span style="color: #228b22;">logical</span>  ::<span style="color: #a0522d;"> PEXSI_worker</span>
+<span style="color: #b22222;">!</span>
+<span style="color: #228b22;">type(Distribution)</span>   :: <span style="color: #a0522d;">dist1</span>
+<span style="color: #228b22;">type(Distribution)</span>, <span style="color: #a020f0;">allocatable</span>, <span style="color: #a020f0;">target</span>   :: <span style="color: #a0522d;">dist2_spin(:)</span>
+<span style="color: #228b22;">type(Distribution)</span>, <span style="color: #a020f0;">pointer</span> :: <span style="color: #a0522d;">dist2</span>
+<span style="color: #228b22;">integer</span>  ::<span style="color: #a0522d;"> pbs, color, spatial_rank, spin_rank</span>
+</pre>
+</div>
+
+<p>
+Define the Siesta distribution. Note that this is known to all nodes.
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-f90"><span style="color: #a020f0;">call</span> <span style="color: #0000ff;">MPI_Comm_Group</span>(World_Comm,World_Group, ierr)
+<span style="color: #a020f0;">call</span> <span style="color: #0000ff;">MPI_Group_Size</span>(SIESTA_Group, nworkers_SIESTA, ierr)
+<span style="color: #a020f0;">allocate</span>(siesta_ranks_in_world(nworkers_SIESTA))
+<span style="color: #a020f0;">call</span> <span style="color: #0000ff;">MPI_Group_translate_ranks</span>( SIESTA_Group, nworkers_SIESTA, <span style="color: #a020f0;">&amp;</span>
+     (/ (i,i=0,nworkers_SIESTA-1) /), <span style="color: #a020f0;">&amp;</span>
+     World_Group, siesta_ranks_in_world, ierr )
+<span style="color: #a020f0;">call</span> <span style="color: #0000ff;">newDistribution</span>(dist1,World_Comm,siesta_ranks_in_world, <span style="color: #a020f0;">&amp;</span>
+                     TYPE_BLOCK_CYCLIC,BlockSize,<span style="color: #8b2252;">"bc dist"</span>)
+<span style="color: #a020f0;">deallocate</span>(siesta_ranks_in_world)
+<span style="color: #a020f0;">call</span> <span style="color: #0000ff;">MPI_Barrier</span>(World_Comm,ierr)
+</pre>
+</div>
+
+<p>
+Note that the first team of PEXSI workers starts at the root
+node. This means that there is overlap between the Siesta workers and
+the PEXSI workers. This is in principle more economical, but it means
+that we cannot use the MPI intercommunicator technology to exchange
+information (only non-overlapping groups are allowed).
+</p>
+
+<p>
+For possibly spin-polarized calculations, we split the communicator.
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-f90"><span style="color: #a020f0;">call</span> <span style="color: #0000ff;">mpi_comm_size</span>( World_Comm, numNodesTotal, ierr )
+
+npPerPole  = fdf_get(<span style="color: #8b2252;">"PEXSI.np-per-pole"</span>,4)
+<span style="color: #a020f0;">if</span> (nspin*npPerPole &gt; numNodesTotal) <span style="color: #a020f0;">&amp;</span>
+          <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">die</span>(<span style="color: #8b2252;">"PEXSI.np-per-pole is too big for MPI size"</span>)
+
+<span style="color: #b22222;">! </span><span style="color: #b22222;">"Row" communicator for independent PEXSI operations on each spin</span>
+<span style="color: #b22222;">! </span><span style="color: #b22222;">The name refers to "spatial" degrees of freedom.</span>
+color = <span style="color: #a020f0;">mod</span>(mpirank,nspin)    <span style="color: #b22222;">! </span><span style="color: #b22222;">{0,1} for nspin = 2, or {0} for nspin = 1</span>
+<span style="color: #a020f0;">call</span> <span style="color: #0000ff;">MPI_Comm_Split</span>(World_Comm, color, mpirank, PEXSI_Spatial_Comm, ierr)
+
+<span style="color: #b22222;">! </span><span style="color: #b22222;">"Column" communicator for spin reductions</span>
+color = mpirank/nspin       
+<span style="color: #a020f0;">call</span> <span style="color: #0000ff;">MPI_Comm_Split</span>(World_Comm, color, mpirank, PEXSI_Spin_Comm, ierr)
+
+<span style="color: #b22222;">! </span><span style="color: #b22222;">Group and Communicator for first-pole team of PEXSI workers</span>
+<span style="color: #b22222;">!</span>
+<span style="color: #a020f0;">call</span> <span style="color: #0000ff;">MPI_Comm_Group</span>(PEXSI_Spatial_Comm, PEXSI_Spatial_Group, Ierr)
+<span style="color: #a020f0;">call</span> <span style="color: #0000ff;">MPI_Group_incl</span>(PEXSI_Spatial_Group, npPerPole,   <span style="color: #a020f0;">&amp;</span>
+     (/ (i,i=0,npPerPole-1) /),<span style="color: #a020f0;">&amp;</span>
+     PEXSI_Pole_Group, Ierr)
+<span style="color: #a020f0;">call</span> <span style="color: #0000ff;">MPI_Comm_create</span>(PEXSI_Spatial_Comm, PEXSI_Pole_Group,<span style="color: #a020f0;">&amp;</span>
+     PEXSI_Pole_Comm, Ierr)
+
+
+<span style="color: #a020f0;">call</span> <span style="color: #0000ff;">mpi_comm_rank</span>( PEXSI_Spatial_Comm, spatial_rank, ierr )
+<span style="color: #a020f0;">call</span> <span style="color: #0000ff;">mpi_comm_rank</span>( PEXSI_Spin_Comm, spin_rank, ierr )
+PEXSI_worker = (spatial_rank &lt; npPerPole)   <span style="color: #b22222;">! </span><span style="color: #b22222;">Could be spin up or spin down</span>
+
+<span style="color: #b22222;">! </span><span style="color: #b22222;">PEXSI blocksize </span>
+pbs = norbs/npPerPole
+</pre>
+</div>
+
+<p>
+When dealing with spin, we partition the processors in two groups, but
+for the purposes of communication with the Siesta side we still we
+need <i>all</i> the processors to know about the details of the orbital distributions
+involved for <i>both</i> spins. We cannot just use the opaque communicator
+or group handles given by MPI, but we need to define the distributions
+via the actual rank list in the same reference bridge
+communicator. For now, this is World<sub>Comm</sub>.
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-f90"><span style="color: #a020f0;">allocate</span>(pexsi_pole_ranks_in_world(npPerPole))
+<span style="color: #a020f0;">call</span> <span style="color: #0000ff;">MPI_Comm_Group</span>(World_Comm, World_Group, Ierr)
+
+<span style="color: #a020f0;">call</span> <span style="color: #0000ff;">MPI_Group_translate_ranks</span>( PEXSI_Pole_Group, npPerPole, <span style="color: #a020f0;">&amp;</span>
+     (/ (i,i=0,npPerPole-1) /), <span style="color: #a020f0;">&amp;</span>
+     World_Group, pexsi_pole_ranks_in_world, ierr )
+
+<span style="color: #b22222;">! </span><span style="color: #b22222;">Include the actual world ranks in the distribution object</span>
+
+<span style="color: #a020f0;">allocate</span> (PEXSI_Pole_ranks_in_World_Spin(npPerPole,nspin))
+<span style="color: #a020f0;">call</span> <span style="color: #0000ff;">MPI_AllGather</span>(pexsi_pole_ranks_in_world,npPerPole,MPI_integer,<span style="color: #a020f0;">&amp;</span>
+     PEXSI_Pole_Ranks_in_World_Spin(1,1),npPerPole, <span style="color: #a020f0;">&amp;</span>
+     MPI_integer,PEXSI_Spin_Comm,ierr)
+
+<span style="color: #b22222;">! </span><span style="color: #b22222;">Create distributions known to all nodes</span>
+<span style="color: #a020f0;">allocate</span>(dist2_spin(nspin))
+<span style="color: #a020f0;">do</span> ispin = 1, nspin
+   <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">newDistribution</span>(dist2_spin(ispin), World_Comm, <span style="color: #a020f0;">&amp;</span>
+                        PEXSI_Pole_Ranks_in_World_Spin(:,ispin),  <span style="color: #a020f0;">&amp;</span>
+                        TYPE_PEXSI, pbs, <span style="color: #8b2252;">"px dist"</span>)
+<span style="color: #a020f0;">enddo</span>
+<span style="color: #a020f0;">deallocate</span>(pexsi_pole_ranks_in_world,PEXSI_Pole_Ranks_in_World_Spin)
+<span style="color: #a020f0;">call</span> <span style="color: #0000ff;">MPI_Barrier</span>(World_Comm,ierr)
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-sec-3-5" class="outline-3">
+<h3 id="sec-3-5"><span class="section-number-3">3.5</span> Re-distribute matrices</h3>
+<div class="outline-text-3" id="text-3-5">
+<p>
+This is slightly unseemly, but it works. The <code>aux_matrix</code> derived
+types are used to store and retrieve the matrices in either side. The
+code is in external auxiliary modules.
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-f90"><span style="color: #228b22;">type(aux_matrix)</span>, <span style="color: #a020f0;">allocatable</span>, <span style="color: #a020f0;">target</span> :: <span style="color: #a0522d;">m1_spin(:)</span>
+<span style="color: #228b22;">type(aux_matrix)</span> :: <span style="color: #a0522d;">m2</span>
+<span style="color: #228b22;">type(aux_matrix)</span>, <span style="color: #a020f0;">pointer</span> :: <span style="color: #a0522d;">m1</span>
+<span style="color: #228b22;">integer</span> ::<span style="color: #a0522d;"> nrows, nnz, nnzLocal, numColLocal</span>
+<span style="color: #228b22;">integer</span>, <span style="color: #a020f0;">pointer</span>, <span style="color: #a020f0;">dimension</span>(:) ::<span style="color: #a0522d;">  colptrLocal=&gt; null(), rowindLocal=&gt;null()</span>
+<span style="color: #b22222;">!</span>
+<span style="color: #228b22;">real</span>(dp), <span style="color: #a020f0;">pointer</span>, <span style="color: #a020f0;">dimension</span>(:) ::<span style="color: #a0522d;"> </span><span style="color: #a020f0;">&amp;</span>
+        HnzvalLocal=&gt;null(), SnzvalLocal=&gt;null(),  <span style="color: #a020f0;">&amp;</span>
+        DMnzvalLocal =&gt; <span style="color: #a020f0;">null</span>() , EDMnzvalLocal =&gt; <span style="color: #a020f0;">null</span>(), <span style="color: #a020f0;">&amp;</span>
+        FDMnzvalLocal =&gt; <span style="color: #a020f0;">null</span>()
+<span style="color: #b22222;">!</span>
+<span style="color: #228b22;">integer</span> ::<span style="color: #a0522d;"> ispin, pexsi_spin</span>
+</pre>
+</div>
+<div class="org-src-container">
+
+<pre class="src src-f90">pexsi_spin = spin_rank+1  <span style="color: #b22222;">! </span><span style="color: #b22222;">{1,2}</span>
+<span style="color: #b22222;">! </span><span style="color: #b22222;">This is done serially on the Siesta side, each time</span>
+<span style="color: #b22222;">! </span><span style="color: #b22222;">filling in the structures in one PEXSI set</span>
+
+<span style="color: #a020f0;">allocate</span>(m1_spin(nspin))
+<span style="color: #a020f0;">do</span> ispin = 1, nspin
+
+   m1 =&gt; m1_spin(ispin)
+
+   <span style="color: #a020f0;">if</span> (SIESTA_worker) <span style="color: #a020f0;">then</span>
+      m1%norbs = norbs
+      m1%no_l  = no_l
+      m1%nnzl  = <span style="color: #a020f0;">sum</span>(numH(1:no_l))
+      m1%numcols =&gt; numH
+      m1%cols    =&gt; listH
+      <span style="color: #a020f0;">allocate</span>(m1%vals(2))
+      m1%vals(1)%data =&gt; S(:)
+      m1%vals(2)%data =&gt; H(:,ispin)
+
+   <span style="color: #a020f0;">endif</span>  <span style="color: #b22222;">! </span><span style="color: #b22222;">SIESTA_worker</span>
+
+   <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">timer</span>(<span style="color: #8b2252;">"redist_orbs_fwd"</span>, 1)
+
+   <span style="color: #b22222;">! </span><span style="color: #b22222;">Note that we cannot simply wrap this in a pexsi_spin test, as</span>
+   <span style="color: #b22222;">! </span><span style="color: #b22222;">there are Siesta nodes in both spin sets.</span>
+   <span style="color: #b22222;">! </span><span style="color: #b22222;">We must discriminate the PEXSI workers by the distribution info</span>
+   dist2 =&gt; dist2_spin(ispin)
+   <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">redistribute_spmatrix</span>(norbs,m1,dist1,m2,dist2,World_Comm)
+
+   <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">timer</span>(<span style="color: #8b2252;">"redist_orbs_fwd"</span>, 2)
+
+   <span style="color: #a020f0;">if</span> (PEXSI_worker <span style="color: #a020f0;">.and.</span> (pexsi_spin == ispin) ) <span style="color: #a020f0;">then</span>
+
+      nrows = m2%norbs          <span style="color: #b22222;">! </span><span style="color: #b22222;">or simply 'norbs'</span>
+      numColLocal = m2%no_l
+      nnzLocal    = m2%nnzl
+      <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">MPI_AllReduce</span>(nnzLocal,nnz,1,MPI_integer,MPI_sum,PEXSI_Pole_Comm,ierr)
+
+      <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">re_alloc</span>(colptrLocal,1,numColLocal+1,<span style="color: #8b2252;">"colptrLocal"</span>,<span style="color: #8b2252;">"pexsi_solver"</span>)
+      colptrLocal(1) = 1
+      <span style="color: #a020f0;">do</span> ih = 1,numColLocal
+         colptrLocal(ih+1) = colptrLocal(ih) + m2%numcols(ih)
+      <span style="color: #a020f0;">enddo</span>
+
+      rowindLocal =&gt; m2%cols
+      SnzvalLocal =&gt; m2%vals(1)%data
+      HnzvalLocal =&gt; m2%vals(2)%data
+
+      <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">re_alloc</span>(DMnzvalLocal,1,nnzLocal,<span style="color: #8b2252;">"DMnzvalLocal"</span>,<span style="color: #8b2252;">"pexsi_solver"</span>)
+      <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">re_alloc</span>(EDMnzvalLocal,1,nnzLocal,<span style="color: #8b2252;">"EDMnzvalLocal"</span>,<span style="color: #8b2252;">"pexsi_solver"</span>)
+      <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">re_alloc</span>(FDMnzvalLocal,1,nnzLocal,<span style="color: #8b2252;">"FDMnzvalLocal"</span>,<span style="color: #8b2252;">"pexsi_solver"</span>)
+
+      <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">memory_all</span>(<span style="color: #8b2252;">"after setting up H+S for PEXSI (PEXSI_workers)"</span>,PEXSI_Pole_Comm)
+
+   <span style="color: #a020f0;">endif</span> <span style="color: #b22222;">! </span><span style="color: #b22222;">PEXSI worker</span>
+<span style="color: #a020f0;">enddo</span>
+
+<span style="color: #b22222;">! </span><span style="color: #b22222;">Make these available to all</span>
+<span style="color: #b22222;">! </span><span style="color: #b22222;">(Note that the values are those on process 0, which is in the spin=1 set</span>
+<span style="color: #b22222;">! </span><span style="color: #b22222;">In fact, they are only needed for calls to the interface, so the broadcast</span>
+<span style="color: #b22222;">! </span><span style="color: #b22222;">could be over PEXSI_Spatial_Comm only.</span>
+
+<span style="color: #a020f0;">call</span> <span style="color: #0000ff;">MPI_Bcast</span>(nrows,1,MPI_integer,0,World_Comm,ierr)
+<span style="color: #a020f0;">call</span> <span style="color: #0000ff;">MPI_Bcast</span>(nnz,1,MPI_integer,0,World_Comm,ierr)
+
+<span style="color: #a020f0;">call</span> <span style="color: #0000ff;">memory_all</span>(<span style="color: #8b2252;">"after setting up H+S for PEXSI"</span>,World_comm)
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-sec-3-6" class="outline-3">
+<h3 id="sec-3-6"><span class="section-number-3">3.6</span> Set tolerance</h3>
+<div class="outline-text-3" id="text-3-6">
+<p>
+These are wrapped in a test for <code>first_call</code>. Some other operations
+could be done in that case. Maybe we can remove the <code>save</code>'d character
+of some variables (for example, moving the setting of the tolerances outside the
+<code>first_call</code> block). Even the bracket and &mu; values could maybe be
+passed as arguments.
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-f90"><span style="color: #228b22;">real</span>(dp), <span style="color: #a020f0;">save</span> ::<span style="color: #a0522d;"> PEXSINumElectronToleranceMin, </span><span style="color: #a020f0;">&amp;</span>
+            PEXSINumElectronToleranceMax, <span style="color: #a020f0;">&amp;</span>
+            PEXSINumElectronTolerance
+<span style="color: #228b22;">logical</span>, <span style="color: #a020f0;">save</span>  ::<span style="color: #a0522d;"> first_call = .true.</span>
+<span style="color: #228b22;">real</span>(dp), <span style="color: #a020f0;">save</span> ::<span style="color: #a0522d;"> muMin0, muMax0, mu</span>
+<span style="color: #228b22;">real</span>(dp)       ::<span style="color: #a0522d;"> on_the_fly_tolerance</span>
+</pre>
+</div>
+
+<div class="org-src-container">
+
+<pre class="src src-f90"><span style="color: #a020f0;">if</span> (first_call) <span style="color: #a020f0;">then</span>
+
+<span style="color: #b22222;">! </span><span style="color: #b22222;">Initial guess of chemical potential and containing interval</span>
+<span style="color: #b22222;">! </span><span style="color: #b22222;">When using inertia counts, this interval can be wide.</span>
+<span style="color: #b22222;">! </span><span style="color: #b22222;">Note that mu, muMin0 and muMax0 are saved variables</span>
+
+   muMin0           = fdf_get(<span style="color: #8b2252;">"PEXSI.mu-min"</span>,-1.0_dp,<span style="color: #8b2252;">"Ry"</span>)
+   muMax0           = fdf_get(<span style="color: #8b2252;">"PEXSI.mu-max"</span>, 0.0_dp,<span style="color: #8b2252;">"Ry"</span>)
+   mu               = fdf_get(<span style="color: #8b2252;">"PEXSI.mu"</span>,-0.60_dp,<span style="color: #8b2252;">"Ry"</span>)
+
+   PEXSINumElectronToleranceMin =  <span style="color: #a020f0;">&amp;</span>
+         fdf_get(<span style="color: #8b2252;">"PEXSI.num-electron-tolerance-lower-bound"</span>,0.01_dp)
+   PEXSINumElectronToleranceMax =  <span style="color: #a020f0;">&amp;</span>
+         fdf_get(<span style="color: #8b2252;">"PEXSI.num-electron-tolerance-upper-bound"</span>,0.5_dp)
+
+   <span style="color: #b22222;">! </span><span style="color: #b22222;">start with largest tolerance</span>
+   <span style="color: #b22222;">! </span><span style="color: #b22222;">(except if overriden by user)</span>
+   PEXSINumElectronTolerance = fdf_get(<span style="color: #8b2252;">"PEXSI.num-electron-tolerance"</span>,<span style="color: #a020f0;">&amp;</span>
+                                       PEXSINumElectronToleranceMax)
+   first_call = <span style="color: #a020f0;">.false.</span>
+<span style="color: #a020f0;">else</span>
+<span style="color: #b22222;">!</span>
+<span style="color: #b22222;">!  </span><span style="color: #b22222;">Here we could also check whether we are in the first scf iteration</span>
+<span style="color: #b22222;">!  </span><span style="color: #b22222;">of a multi-geometry run...</span>
+<span style="color: #b22222;">!</span>
+   <span style="color: #b22222;">! </span><span style="color: #b22222;">Use a moving tolerance, based on how far DM_out was to DM_in</span>
+   <span style="color: #b22222;">! </span><span style="color: #b22222;">in the previous iteration (except if overriden by user)</span>
+
+   <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">get_on_the_fly_tolerance</span>(prevDmax,on_the_fly_tolerance)
+
+   <span style="color: #b22222;">! </span><span style="color: #b22222;">Override if tolerance is explicitly specified in the fdf file</span>
+   PEXSINumElectronTolerance =  fdf_get(<span style="color: #8b2252;">"PEXSI.num-electron-tolerance"</span>,<span style="color: #a020f0;">&amp;</span>
+                                        on_the_fly_tolerance)
+<span style="color: #a020f0;">endif</span>
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-sec-3-7" class="outline-3">
+<h3 id="sec-3-7"><span class="section-number-3">3.7</span> Set options</h3>
+<div class="outline-text-3" id="text-3-7">
+<p>
+We use the options interface to get a template with default values,
+and then fill in a few custom options based on fdf variables. Note
+that the <code>options</code> derived type is of limited usefulness when the
+simple DFT driver is not used. The most important entries are then the
+factorization flag and the number of processors per pole.
+</p>
+
+<p>
+We also use this section to define other user-level options. This is a
+bit of a mess, since the logic of the <i>expert</i> interface uses a mixed
+grab-bag of <code>options</code> entries and other variables, such as
+<code>inertiaMaxIter</code>.
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-f90"><span style="color: #228b22;">type(f_ppexsi_options)</span> :: <span style="color: #a0522d;">options</span>
+<span style="color: #b22222;">!</span>
+<span style="color: #228b22;">integer</span>                ::<span style="color: #a0522d;"> isSIdentity</span>
+<span style="color: #228b22;">integer</span>                ::<span style="color: #a0522d;"> verbosity</span>
+<span style="color: #228b22;">integer</span>                ::<span style="color: #a0522d;"> inertiaMaxIter</span>
+<span style="color: #b22222;">!</span>
+<span style="color: #228b22;">real</span>(dp), <span style="color: #a020f0;">save</span>         ::<span style="color: #a0522d;"> energyWidthInertiaTolerance</span>
+<span style="color: #228b22;">real</span>(dp)               ::<span style="color: #a0522d;"> pexsi_temperature, two_kT</span>
+</pre>
+</div>
+
+<div class="org-src-container">
+
+<pre class="src src-f90"><span style="color: #b22222;">!</span>
+<span style="color: #a020f0;">call</span> <span style="color: #0000ff;">f_ppexsi_set_default_options</span>( options )
+
+options%muPEXSISafeGuard = fdf_get(<span style="color: #8b2252;">"PEXSI.mu-pexsi-safeguard"</span>,0.05_dp,<span style="color: #8b2252;">"Ry"</span>)
+options%maxPEXSIIter = fdf_get(<span style="color: #8b2252;">"PEXSI.mu-max-iter"</span>,10)
+
+isSIdentity = 0
+
+options%numPole  = fdf_get(<span style="color: #8b2252;">"PEXSI.num-poles"</span>,40)
+options%gap      = fdf_get(<span style="color: #8b2252;">"PEXSI.gap"</span>,0.0_dp,<span style="color: #8b2252;">"Ry"</span>)
+
+<span style="color: #b22222;">! </span><span style="color: #b22222;">deltaE is in theory the spectrum width, but in practice can be much smaller</span>
+<span style="color: #b22222;">! </span><span style="color: #b22222;">than | E_max - mu |.  It is found that deltaE that is slightly bigger</span>
+<span style="color: #b22222;">! </span><span style="color: #b22222;">than  | E_min - mu | is usually good enough.</span>
+
+options%deltaE     = fdf_get(<span style="color: #8b2252;">"PEXSI.delta-E"</span>,3.0_dp,<span style="color: #8b2252;">"Ry"</span>) <span style="color: #b22222;">! </span><span style="color: #b22222;">Lin: 10 Ry...</span>
+
+<span style="color: #b22222;">! </span><span style="color: #b22222;">Ordering flag:</span>
+<span style="color: #b22222;">!   </span><span style="color: #b22222;">1: Use METIS</span>
+<span style="color: #b22222;">!   </span><span style="color: #b22222;">0: Use PARMETIS/PTSCOTCH</span>
+options%ordering = fdf_get(<span style="color: #8b2252;">"PEXSI.ordering"</span>,1)
+
+<span style="color: #b22222;">! </span><span style="color: #b22222;">Number of processors for symbolic factorization</span>
+<span style="color: #b22222;">! </span><span style="color: #b22222;">Only relevant for PARMETIS/PT_SCOTCH</span>
+options%npSymbFact = fdf_get(<span style="color: #8b2252;">"PEXSI.np-symbfact"</span>,1)
+
+verbosity = fdf_get(<span style="color: #8b2252;">"PEXSI.verbosity"</span>,1)
+options%verbosity = verbosity
+
+<span style="color: #a020f0;">call</span> <span style="color: #0000ff;">get_current_temperature</span>(pexsi_temperature)
+options%temperature = pexsi_temperature
+<span style="color: #b22222;">!</span>
+<span style="color: #b22222;">!  </span><span style="color: #b22222;">Set guard smearing for later use</span>
+<span style="color: #b22222;">!</span>
+two_kT = 2.0_dp * pexsi_temperature
+
+options%numElectronPEXSITolerance = PEXSINumElectronTolerance
+
+<span style="color: #b22222;">! </span><span style="color: #b22222;">Stop inertia count if mu has not changed much from iteration to iteration.</span>
+
+options%muInertiaTolerance =  <span style="color: #a020f0;">&amp;</span>
+     fdf_get(<span style="color: #8b2252;">"PEXSI.inertia-mu-tolerance"</span>,0.05_dp,<span style="color: #8b2252;">"Ry"</span>)
+
+<span style="color: #b22222;">! </span><span style="color: #b22222;">One-sided expansion of interval if correct mu falls outside it</span>
+options%muInertiaExpansion =  <span style="color: #a020f0;">&amp;</span>
+     fdf_get(<span style="color: #8b2252;">"PEXSI.lateral-expansion-inertia"</span>,3.0_dp*eV,<span style="color: #8b2252;">"Ry"</span>) 
+
+
+<span style="color: #b22222;">! </span><span style="color: #b22222;">Other user options</span>
+
+<span style="color: #b22222;">! </span><span style="color: #b22222;">Maximum number of iterations for computing the inertia                                          </span>
+<span style="color: #b22222;">! </span><span style="color: #b22222;">in a given scf step (until a proper bracket is obtained)                                        </span>
+inertiaMaxIter   = fdf_get(<span style="color: #8b2252;">"PEXSI.inertia-max-iter"</span>,5)
+
+<span style="color: #b22222;">! </span><span style="color: #b22222;">Energy-width termination tolerance for inertia-counting</span>
+<span style="color: #b22222;">! </span><span style="color: #b22222;">By default, it is the same as the mu tolerance, to match</span>
+<span style="color: #b22222;">! </span><span style="color: #b22222;">the criterion in the simple DFT driver</span>
+energyWidthInertiaTolerance =  <span style="color: #a020f0;">&amp;</span>
+     fdf_get(<span style="color: #8b2252;">"PEXSI.inertia-energy-width-tolerance"</span>, <span style="color: #a020f0;">&amp;</span>
+             options%muInertiaTolerance,<span style="color: #8b2252;">"Ry"</span>)
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-sec-3-8" class="outline-3">
+<h3 id="sec-3-8"><span class="section-number-3">3.8</span> Initialize plan at first scf step</h3>
+<div class="outline-text-3" id="text-3-8">
+<p>
+Each spin-set of PEXSI processors has its own plan.
+</p>
+<div class="org-src-container">
+
+<pre class="src src-f90"><span style="color: #a020f0;">if</span> (scf_step == 1) <span style="color: #a020f0;">then</span>
+   <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">pexsi_initialize_scfloop</span>(PEXSI_Spatial_Comm,npPerPole,spatial_rank,info)
+   <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">check_info</span>(info,<span style="color: #8b2252;">"initialize_plan"</span>)
+<span style="color: #a020f0;">endif</span>
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-sec-3-9" class="outline-3">
+<h3 id="sec-3-9"><span class="section-number-3">3.9</span> Load H and S matrices</h3>
+<div class="outline-text-3" id="text-3-9">
+<p>
+In this version H and S are symmetric. We associate them with the plan
+(I really do not know very well what happens behind the
+scenes. Presumably no copy is made.)
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-f90"><span style="color: #a020f0;">call</span> <span style="color: #0000ff;">f_ppexsi_load_real_symmetric_hs_matrix</span>(<span style="color: #a020f0;">&amp;</span>
+      plan,<span style="color: #a020f0;">&amp;</span>
+      options,<span style="color: #a020f0;">&amp;</span>
+      nrows,<span style="color: #a020f0;">&amp;</span>
+      nnz,<span style="color: #a020f0;">&amp;</span>
+      nnzLocal,<span style="color: #a020f0;">&amp;</span>
+      numColLocal,<span style="color: #a020f0;">&amp;</span>
+      colptrLocal,<span style="color: #a020f0;">&amp;</span>
+      rowindLocal,<span style="color: #a020f0;">&amp;</span>
+      HnzvalLocal,<span style="color: #a020f0;">&amp;</span>
+      isSIdentity,<span style="color: #a020f0;">&amp;</span>
+      SnzvalLocal,<span style="color: #a020f0;">&amp;</span>
+      info) 
+
+<span style="color: #a020f0;">call</span> <span style="color: #0000ff;">check_info</span>(info,<span style="color: #8b2252;">"load_real_sym_hs_matrix"</span>)
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-sec-3-10" class="outline-3">
+<h3 id="sec-3-10"><span class="section-number-3">3.10</span> Factorization</h3>
+<div class="outline-text-3" id="text-3-10">
+<p>
+This is only done at the beginning of the scf cycle. Presumably it
+could be done once and for all for one of the spins, but we have no
+way to transfer the info from the spin-up to the spin-down manifold.
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-f90"><span style="color: #a020f0;">if</span> (scf_step == 1) <span style="color: #a020f0;">then</span>
+   <span style="color: #b22222;">! </span><span style="color: #b22222;">This is only needed for inertia-counting</span>
+   <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">f_ppexsi_symbolic_factorize_real_symmetric_matrix</span>(<span style="color: #a020f0;">&amp;</span>
+        plan, <span style="color: #a020f0;">&amp;</span>
+        options,<span style="color: #a020f0;">&amp;</span>
+        info)
+   <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">check_info</span>(info,<span style="color: #8b2252;">"symbolic_factorize_real_symmetric_matrix"</span>)
+
+   <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">f_ppexsi_symbolic_factorize_complex_symmetric_matrix</span>(<span style="color: #a020f0;">&amp;</span>
+        plan, <span style="color: #a020f0;">&amp;</span>
+        options,<span style="color: #a020f0;">&amp;</span>
+        info)
+   <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">check_info</span>(info,<span style="color: #8b2252;">"symbolic_factorize_complex_symmetric_matrix"</span>)
+<span style="color: #a020f0;">endif</span>
+options%isSymbolicFactorize = 0 <span style="color: #b22222;">! </span><span style="color: #b22222;">We do not need it anymore</span>
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-sec-3-11" class="outline-3">
+<h3 id="sec-3-11"><span class="section-number-3">3.11</span> Call the solver</h3>
+<div class="outline-text-3" id="text-3-11">
+<p>
+This was too black of a black box, and there was very little control
+of the operations, including the proper handling of the convergence conditions.
+</p>
+
+<p>
+The structure of the solver call is now as follows:
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-f90"><span style="color: #228b22;">real</span>(dp), <span style="color: #a020f0;">allocatable</span> ::<span style="color: #a0522d;"> numElectronSpin(:), numElectronDrvMuSpin(:)</span>
+<span style="color: #228b22;">integer</span> ::<span style="color: #a0522d;"> numTotalPEXSIIter</span>
+<span style="color: #228b22;">integer</span> ::<span style="color: #a0522d;"> numTotalInertiaIter</span>
+</pre>
+</div>
+
+<div class="org-src-container">
+
+<pre class="src src-f90"><span style="color: #b22222;">!</span>
+numTotalInertiaIter = 0
+
+<span style="color: #a020f0;">call</span> <span style="color: #0000ff;">timer</span>(<span style="color: #8b2252;">"pexsi-solver"</span>, 1)
+
+&lt;&lt;optionally-do-initial-phase-of-inertia-counting&gt;&gt;
+
+numTotalPEXSIIter = 0
+<span style="color: #a020f0;">allocate</span>(numElectronSpin(nspin),numElectronDrvMuSpin(nspin))
+
+<span style="color: #008b8b;">solver_loop</span>: <span style="color: #a020f0;">do</span>
+   &lt;&lt;check-for-solver-iterations&gt;&gt;
+   &lt;&lt;compute-fermi-operator&gt;&gt;
+   numTotalPEXSIIter =  numTotalPEXSIIter + 1
+   &lt;&lt;check-solver-convergence&gt;&gt;
+<span style="color: #a020f0;">end do</span><span style="color: #008b8b;"> solver_loop</span>
+
+<span style="color: #a020f0;">deallocate</span>(numElectronSpin,numElectronDrvMuSpin)
+<span style="color: #a020f0;">call</span> <span style="color: #0000ff;">timer</span>(<span style="color: #8b2252;">"pexsi-solver"</span>, 2)
+</pre>
+</div>
+</div>
+
+
+<div id="outline-container-sec-3-11-1" class="outline-4">
+<h4 id="sec-3-11-1"><span class="section-number-4">3.11.1</span> Set mu bracket with optional inertia-counting phase</h4>
+<div class="outline-text-4" id="text-3-11-1">
+<p>
+This check for inertia-couting is for the initial phase of the scf loop
+</p>
+<div class="org-src-container">
+
+<pre class="src src-f90"><span style="color: #a020f0;">if</span> (need_inertia_counting()) <span style="color: #a020f0;">then</span>
+   <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">get_bracket_for_inertia_count</span>( )  
+   <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">do_inertia_count</span>(plan,muMin0,muMax0,mu)
+<span style="color: #a020f0;">else</span>
+   <span style="color: #b22222;">!  </span><span style="color: #b22222;">Maybe there is no need for bracket, just for mu estimation</span>
+   <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">get_bracket_for_solver</span>()
+<span style="color: #a020f0;">endif</span>
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-sec-3-11-2" class="outline-4">
+<h4 id="sec-3-11-2"><span class="section-number-4">3.11.2</span> Check whether we have reached the maximum number of solver iterations</h4>
+<div class="outline-text-4" id="text-3-11-2">
+<div class="org-src-container">
+
+<pre class="src src-f90"><span style="color: #a020f0;">if</span> (numTotalPEXSIIter &gt; options%maxPEXSIIter ) <span style="color: #a020f0;">then</span>
+   <span style="color: #b22222;">! </span><span style="color: #b22222;">Do not die immediately, and trust further DM normalization</span>
+   <span style="color: #b22222;">! </span><span style="color: #b22222;">to fix the number of electrons for unstable cases</span>
+   <span style="color: #b22222;">! </span><span style="color: #b22222;">call die("too many PEXSI iterations")</span>
+   <span style="color: #a020f0;">if</span> (mpirank == 0) <span style="color: #a020f0;">then</span>
+      <span style="color: #a020f0;">write</span>(6,<span style="color: #8b2252;">"(a)"</span>) <span style="color: #8b2252;">" ** Maximum number of PEXSI-solver iterations reached without convergence"</span>
+      <span style="color: #a020f0;">write</span>(6,<span style="color: #8b2252;">"(a)"</span>) <span style="color: #8b2252;">" .... an attempt will be made to normalize the density-matrix"</span>
+      <span style="color: #a020f0;">write</span>(6,<span style="color: #8b2252;">"(a)"</span>) <span style="color: #8b2252;">" This will succeed or not depending on the normalization tolerance (see manual)"</span>
+   <span style="color: #a020f0;">endif</span>
+<span style="color: #a020f0;">endif</span>
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-sec-3-11-3" class="outline-4">
+<h4 id="sec-3-11-3"><span class="section-number-4">3.11.3</span> Compute Fermi operator and number of electrons</h4>
+<div class="outline-text-4" id="text-3-11-3">
+<div class="org-src-container">
+
+<pre class="src src-f90"><span style="color: #228b22;">real</span>(dp) ::<span style="color: #a0522d;"> numElectronDrvMuPEXSI, numElectronPEXSI</span>
+<span style="color: #228b22;">real</span>(dp) ::<span style="color: #a0522d;"> numElectron_out, numElectronDrvMu_out</span>
+</pre>
+</div>
+
+<div class="org-src-container">
+
+<pre class="src src-f90"><span style="color: #a020f0;">if</span>(mpirank == 0) <span style="color: #a020f0;">then</span>
+   <span style="color: #a020f0;">write</span> (6,<span style="color: #8b2252;">"(a,f9.4,a,f9.5)"</span>) <span style="color: #8b2252;">'Computing DM for mu(eV): '</span>, mu/eV, <span style="color: #a020f0;">&amp;</span>
+        <span style="color: #8b2252;">' Tol: '</span>, PEXSINumElectronTolerance
+   <span style="color: #a020f0;">write</span> (6,<span style="color: #8b2252;">"(a,f9.4,f9.5)"</span>) <span style="color: #8b2252;">'Monitoring bracket: '</span>, muMin0/eV, muMax0/eV
+<span style="color: #a020f0;">endif</span>
+
+<span style="color: #a020f0;">call</span> <span style="color: #0000ff;">f_ppexsi_calculate_fermi_operator_real</span>(<span style="color: #a020f0;">&amp;</span>
+     plan,<span style="color: #a020f0;">&amp;</span>
+     options,<span style="color: #a020f0;">&amp;</span>
+     mu,<span style="color: #a020f0;">&amp;</span>
+     numElectronExact,<span style="color: #a020f0;">&amp;</span>
+     numElectron_out,<span style="color: #a020f0;">&amp;</span>
+     numElectronDrvMu_out,<span style="color: #a020f0;">&amp;</span>
+     info)
+
+<span style="color: #a020f0;">call</span> <span style="color: #0000ff;">check_info</span>(info,<span style="color: #8b2252;">"fermi_operator"</span>)
+
+<span style="color: #b22222;">! </span><span style="color: #b22222;">Per spin</span>
+numElectron_out = numElectron_out / nspin
+numElectronDrvMu_out =  numElectronDrvMu_out / nspin
+
+<span style="color: #b22222;">! </span><span style="color: #b22222;">Gather the results for both spins on all processors</span>
+
+<span style="color: #a020f0;">call</span> <span style="color: #0000ff;">MPI_AllGather</span>(numElectron_out,1,MPI_Double_precision,<span style="color: #a020f0;">&amp;</span>
+      numElectronSpin,1,MPI_Double_precision,PEXSI_Spin_Comm,ierr)
+<span style="color: #a020f0;">call</span> <span style="color: #0000ff;">MPI_AllGather</span>(numElectronDrvMu_out,1,MPI_Double_precision,<span style="color: #a020f0;">&amp;</span>
+      numElectronDrvMuSpin,1,MPI_Double_precision,PEXSI_Spin_Comm,ierr)
+
+numElectronPEXSI = <span style="color: #a020f0;">sum</span>(numElectronSpin(1:nspin))
+numElectronDrvMuPEXSI = <span style="color: #a020f0;">sum</span>(numElectronDrvMuSpin(1:nspin))
+
+<span style="color: #a020f0;">if</span> (mpirank == 0) <span style="color: #a020f0;">then</span>
+   <span style="color: #a020f0;">write</span>(6,<span style="color: #8b2252;">"(a,f10.4)"</span>) <span style="color: #8b2252;">"Fermi Operator. mu: "</span>, mu/eV
+   <span style="color: #a020f0;">if</span> (nspin == 2) <span style="color: #a020f0;">then</span>
+      <span style="color: #a020f0;">write</span>(6,<span style="color: #8b2252;">"(a,2f10.4,a,f10.4)"</span>) <span style="color: #8b2252;">"Fermi Operator. numElectron(Up,Down): "</span>, <span style="color: #a020f0;">&amp;</span>
+                     numElectronSpin(1:nspin), <span style="color: #8b2252;">" Total: "</span>, numElectronPEXSI
+      <span style="color: #a020f0;">write</span>(6,<span style="color: #8b2252;">"(a,2f10.4,a,f10.4)"</span>) <span style="color: #8b2252;">"Fermi Operator. dN_e/dmu(Up,Down): "</span>, <span style="color: #a020f0;">&amp;</span>
+                     numElectronDrvMuSpin(1:nspin)*eV, <span style="color: #8b2252;">" Total: "</span>, numElectronDrvMuPEXSI*eV
+   <span style="color: #a020f0;">else</span>
+      <span style="color: #a020f0;">write</span>(6,<span style="color: #8b2252;">"(a,f10.4)"</span>) <span style="color: #8b2252;">"Fermi Operator. numElectron: "</span>, numElectronPEXSI
+      <span style="color: #a020f0;">write</span>(6,<span style="color: #8b2252;">"(a,f10.4)"</span>) <span style="color: #8b2252;">"Fermi Operator. dN_e/dmu: "</span>, numElectronDrvMuPEXSI*eV
+   <span style="color: #a020f0;">endif</span>
+<span style="color: #a020f0;">endif</span>
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-sec-3-11-4" class="outline-4">
+<h4 id="sec-3-11-4"><span class="section-number-4">3.11.4</span> Check convergence of solver</h4>
+<div class="outline-text-4" id="text-3-11-4">
+<p>
+This section could use some more heuristics. The simple DFT driver by
+Lin uses the size of the jump in Newton's step to flag problems and
+fall back to inertia-counting. An alternative is to monitor whether we
+have actually overstepped our bracket, and if so, expand it to contain
+the new point before calling the inertia-counting routine.
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-f90"><span style="color: #228b22;">real</span>(dp) ::<span style="color: #a0522d;"> deltaMu</span>
+</pre>
+</div>
+
+<div class="org-src-container">
+
+<pre class="src src-f90"><span style="color: #a020f0;">if</span> (<span style="color: #a020f0;">abs</span>(numElectronPEXSI-numElectronExact) &gt; PEXSINumElectronTolerance) <span style="color: #a020f0;">then</span>
+
+   deltaMu = - (numElectronPEXSI - numElectronExact) / numElectronDrvMuPEXSI
+   <span style="color: #b22222;">! </span><span style="color: #b22222;">The simple DFT driver uses the size of the jump to flag problems:</span>
+   <span style="color: #b22222;">! </span><span style="color: #b22222;">if (abs(deltaMu) &gt; options%muPEXSISafeGuard) then</span>
+
+   <span style="color: #a020f0;">if</span> ( ((mu + deltaMu) &lt; muMin0) <span style="color: #a020f0;">.or.</span> ((mu + deltaMu) &gt; muMax0) ) <span style="color: #a020f0;">then</span>
+      <span style="color: #a020f0;">if</span> (mpirank ==0) <span style="color: #a020f0;">then</span>
+         <span style="color: #a020f0;">write</span>(6,<span style="color: #8b2252;">"(a,f9.3)"</span>) <span style="color: #8b2252;">"DeltaMu: "</span>, deltaMu, <span style="color: #8b2252;">" is too big. Falling back to IC"</span>
+      <span style="color: #a020f0;">endif</span>
+
+      <span style="color: #b22222;">! </span><span style="color: #b22222;">We choose for now to expand the bracket to include the jumped-to point</span>
+
+      muMin0 = <span style="color: #a020f0;">min</span>(muMin0,mu+deltaMu)
+      muMax0 = <span style="color: #a020f0;">max</span>(muMax0,mu+deltaMu)
+
+      <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">do_inertia_count</span>(plan,muMin0,muMax0,mu)
+
+      <span style="color: #a020f0;">cycle</span> <span style="color: #008b8b;">solver_loop</span>
+
+   <span style="color: #a020f0;">endif</span>
+   mu = mu + deltaMu
+   <span style="color: #a020f0;">cycle</span> <span style="color: #008b8b;">solver_loop</span>
+<span style="color: #a020f0;">else</span>
+   <span style="color: #b22222;">! </span><span style="color: #b22222;">Converged</span>
+   <span style="color: #a020f0;">if</span> (mpirank == 0) <span style="color: #a020f0;">then</span>
+      <span style="color: #a020f0;">write</span>(6,<span style="color: #8b2252;">"(a,f10.4)"</span>) <span style="color: #8b2252;">"PEXSI solver converged. mu: "</span>, mu/eV
+   <span style="color: #a020f0;">endif</span>
+   <span style="color: #a020f0;">exit</span> <span style="color: #008b8b;">solver_loop</span>
+<span style="color: #a020f0;">endif</span>
+</pre>
+</div>
+</div>
+</div>
+</div>
+
+<div id="outline-container-sec-3-12" class="outline-3">
+<h3 id="sec-3-12"><span class="section-number-3">3.12</span> Get output matrices and compute energies</h3>
+<div class="outline-text-3" id="text-3-12">
+<p>
+This section is still done by the PEXSI group processors. But note
+that the energies are not set if we do not use the simple DFT driver.
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-f90"><span style="color: #228b22;">real</span>(dp)       ::<span style="color: #a0522d;"> bs_energy, eBandH, free_bs_energy</span>
+<span style="color: #228b22;">real</span>(dp)       ::<span style="color: #a0522d;"> buffer1</span>
+</pre>
+</div>
+<div class="org-src-container">
+
+<pre class="src src-f90"><span style="color: #a020f0;">if</span>( PEXSI_worker ) <span style="color: #a020f0;">then</span>
+   <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">f_ppexsi_retrieve_real_symmetric_dft_matrix</span>(<span style="color: #a020f0;">&amp;</span>
+        plan,<span style="color: #a020f0;">&amp;</span>
+        DMnzvalLocal,<span style="color: #a020f0;">&amp;</span>
+        EDMnzvalLocal,<span style="color: #a020f0;">&amp;</span>
+        FDMnzvalLocal,<span style="color: #a020f0;">&amp;</span>
+        eBandH,<span style="color: #a020f0;">&amp;</span>          <span style="color: #b22222;">! </span><span style="color: #b22222;">Will not be available</span>
+        bs_energy,<span style="color: #a020f0;">&amp;</span>
+        free_bs_energy,<span style="color: #a020f0;">&amp;</span>
+        info)
+   <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">check_info</span>(info,<span style="color: #8b2252;">"retrieve_real_symmetric_dft_matrix"</span>)
+
+   <span style="color: #a020f0;">if</span> (nspin == 2) <span style="color: #a020f0;">then</span>
+      <span style="color: #b22222;">! </span><span style="color: #b22222;">The matrices have to be divided by two...</span>
+      DMnzvalLocal(:) = 0.5_dp * DMnzvalLocal(:)
+      EDMnzvalLocal(:) = 0.5_dp * EDMnzvalLocal(:)
+      <span style="color: #b22222;">!!! </span><span style="color: #b22222;">Watch out with this. Internals??</span>
+      FDMnzvalLocal(:) = 0.5_dp * FDMnzvalLocal(:)
+   <span style="color: #a020f0;">endif</span>
+
+<span style="color: #a020f0;">endif</span>
+
+<span style="color: #a020f0;">if</span> ((mpirank == 0) <span style="color: #a020f0;">.and.</span> (verbosity &gt;= 1)) <span style="color: #a020f0;">then</span>
+   <span style="color: #a020f0;">write</span>(6,<span style="color: #8b2252;">"(a,i3)"</span>) <span style="color: #8b2252;">" #&amp;s Number of solver iterations: "</span>, numTotalPEXSIIter
+   <span style="color: #a020f0;">write</span>(6,<span style="color: #8b2252;">"(a,i3)"</span>) <span style="color: #8b2252;">" #&amp;s Number of inertia iterations: "</span>, numTotalInertiaIter
+   <span style="color: #a020f0;">write</span>(6,<span style="color: #8b2252;">"(a,f12.5,f12.4,2x,a2)"</span>) <span style="color: #8b2252;">"mu, N_e:"</span>, mu/eV, <span style="color: #a020f0;">&amp;</span>
+        numElectronPEXSI, <span style="color: #8b2252;">"&amp;s"</span>
+<span style="color: #a020f0;">endif</span>
+
+<span style="color: #a020f0;">if</span> (PEXSI_worker) <span style="color: #a020f0;">then</span>
+
+   free_bs_energy = 0.0_dp
+   bs_energy = 0.0_dp
+   eBandH = 0.0_dp
+   <span style="color: #a020f0;">do</span> i = 1,nnzLocal
+      free_bs_energy = free_bs_energy + SnzvalLocal(i) * <span style="color: #a020f0;">&amp;</span>
+           ( FDMnzvalLocal(i) ) 
+      bs_energy = bs_energy + SnzvalLocal(i) * <span style="color: #a020f0;">&amp;</span>
+           ( EDMnzvalLocal(i) )
+      eBandH = eBandH + HnzvalLocal(i) * <span style="color: #a020f0;">&amp;</span>
+           ( DMnzvalLocal(i) )
+   <span style="color: #a020f0;">enddo</span>
+
+   <span style="color: #b22222;">! </span><span style="color: #b22222;">First, reduce over the Pole_comm</span>
+
+   <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">globalize_sum</span>( free_bs_energy, buffer1, comm=PEXSI_Pole_Comm )
+   free_bs_energy = buffer1 
+   <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">globalize_sum</span>( bs_energy, buffer1, comm=PEXSI_Pole_Comm )
+   bs_energy = buffer1
+   <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">globalize_sum</span>( eBandH, buffer1, comm=PEXSI_Pole_Comm )
+   eBandH = buffer1
+
+   <span style="color: #b22222;">! </span><span style="color: #b22222;">Now, reduce over both spins</span>
+
+   <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">globalize_sum</span>( free_bs_energy, buffer1, comm=PEXSI_Spin_Comm )
+   <span style="color: #b22222;">! </span><span style="color: #b22222;">Note that we need an extra term: mu*N for the free energy</span>
+   free_bs_energy = buffer1 + mu*numElectronPEXSI
+   <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">globalize_sum</span>( bs_energy, buffer1, comm=PEXSI_Spin_Comm )
+   bs_energy = buffer1
+   <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">globalize_sum</span>( eBandH, buffer1, comm=PEXSI_Spin_Comm )
+   eBandH = buffer1
+
+   <span style="color: #b22222;">! </span><span style="color: #b22222;">This output block will be executed only if World's root node is</span>
+   <span style="color: #b22222;">! </span><span style="color: #b22222;">in one of the leading pole groups. This might not be so</span>
+
+   <span style="color: #a020f0;">if</span> ((mpirank == 0) <span style="color: #a020f0;">.and.</span> (verbosity &gt;= 2)) <span style="color: #a020f0;">then</span>
+      <span style="color: #a020f0;">write</span>(6, <span style="color: #8b2252;">"(a,f12.4)"</span>) <span style="color: #8b2252;">"#&amp;s Tr(S*EDM) (eV) = "</span>, bs_energy/eV
+      <span style="color: #a020f0;">write</span>(6,<span style="color: #8b2252;">"(a,f12.4)"</span>) <span style="color: #8b2252;">"#&amp;s Tr(H*DM) (eV) = "</span>, eBandH/eV
+      <span style="color: #a020f0;">write</span>(6,<span style="color: #8b2252;">"(a,f12.4)"</span>) <span style="color: #8b2252;">"#&amp;s Tr(S*FDM) + mu*N (eV) = "</span>, (free_bs_energy)/eV
+   <span style="color: #a020f0;">endif</span>
+
+   ef = mu
+   <span style="color: #b22222;">! </span><span style="color: #b22222;">Note that we use the S*EDM version of the band-structure energy</span>
+   <span style="color: #b22222;">! </span><span style="color: #b22222;">to estimate the entropy, by comparing it to S*FDM This looks</span>
+   <span style="color: #b22222;">! </span><span style="color: #b22222;">consistent, but note that the EDM is not used in Siesta to</span>
+   <span style="color: #b22222;">! </span><span style="color: #b22222;">estimate the total energy, only the DM (via the density) (that</span>
+   <span style="color: #b22222;">! </span><span style="color: #b22222;">is, the XC and Hartree correction terms to Ebs going into Etot</span>
+   <span style="color: #b22222;">! </span><span style="color: #b22222;">are estimated using the DM)</span>
+
+   Entropy = - (free_bs_energy - bs_energy) / temp
+
+   <span style="color: #b22222;">! </span><span style="color: #b22222;">ef and Entropy are now known to the leading-pole processes</span>
+<span style="color: #a020f0;">endif</span> <span style="color: #b22222;">! </span><span style="color: #b22222;">PEXSI_worker</span>
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-sec-3-13" class="outline-3">
+<h3 id="sec-3-13"><span class="section-number-3">3.13</span> Copy information to Siesta side</h3>
+<div class="outline-text-3" id="text-3-13">
+<div class="org-src-container">
+
+<pre class="src src-f90"><span style="color: #a020f0;">do</span> ispin = 1, nspin
+
+   m1 =&gt; m1_spin(ispin)
+
+   <span style="color: #a020f0;">if</span> (PEXSI_worker <span style="color: #a020f0;">.and.</span> (pexsi_spin == ispin)) <span style="color: #a020f0;">then</span>
+      <span style="color: #b22222;">! </span><span style="color: #b22222;">Prepare m2 to transfer</span>
+
+      <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">de_alloc</span>(FDMnzvalLocal,<span style="color: #8b2252;">"FDMnzvalLocal"</span>,<span style="color: #8b2252;">"pexsi_solver"</span>)
+      <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">de_alloc</span>(colPtrLocal,<span style="color: #8b2252;">"colPtrLocal"</span>,<span style="color: #8b2252;">"pexsi_solver"</span>)
+
+      <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">de_alloc</span>(m2%vals(1)%data,<span style="color: #8b2252;">"m2%vals(1)%data"</span>,<span style="color: #8b2252;">"pexsi_solver"</span>)
+      <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">de_alloc</span>(m2%vals(2)%data,<span style="color: #8b2252;">"m2%vals(2)%data"</span>,<span style="color: #8b2252;">"pexsi_solver"</span>)
+
+      m2%vals(1)%data =&gt; DMnzvalLocal(1:nnzLocal)
+      m2%vals(2)%data =&gt; EDMnzvalLocal(1:nnzLocal)
+
+   <span style="color: #a020f0;">endif</span>
+
+   <span style="color: #b22222;">! </span><span style="color: #b22222;">Prepare m1 to receive the results</span>
+   <span style="color: #a020f0;">if</span> (SIESTA_worker) <span style="color: #a020f0;">then</span>
+      <span style="color: #a020f0;">nullify</span>(m1%vals(1)%data)    <span style="color: #b22222;">! </span><span style="color: #b22222;">formerly pointing to S</span>
+      <span style="color: #a020f0;">nullify</span>(m1%vals(2)%data)    <span style="color: #b22222;">! </span><span style="color: #b22222;">formerly pointing to H</span>
+      <span style="color: #a020f0;">deallocate</span>(m1%vals)
+      <span style="color: #a020f0;">nullify</span>(m1%numcols)         <span style="color: #b22222;">! </span><span style="color: #b22222;">formerly pointing to numH</span>
+      <span style="color: #a020f0;">nullify</span>(m1%cols)            <span style="color: #b22222;">! </span><span style="color: #b22222;">formerly pointing to listH</span>
+   <span style="color: #a020f0;">endif</span>
+
+   <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">timer</span>(<span style="color: #8b2252;">"redist_orbs_bck"</span>, 1)
+   dist2 =&gt; dist2_spin(ispin)
+   <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">redistribute_spmatrix</span>(norbs,m2,dist2,m1,dist1,World_Comm)
+   <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">timer</span>(<span style="color: #8b2252;">"redist_orbs_bck"</span>, 2)
+
+   <span style="color: #a020f0;">if</span> (PEXSI_worker <span style="color: #a020f0;">.and.</span> (pexsi_spin == ispin)) <span style="color: #a020f0;">then</span>
+      <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">de_alloc</span>(DMnzvalLocal, <span style="color: #8b2252;">"DMnzvalLocal"</span>, <span style="color: #8b2252;">"pexsi_solver"</span>)
+      <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">de_alloc</span>(EDMnzvalLocal,<span style="color: #8b2252;">"EDMnzvalLocal"</span>,<span style="color: #8b2252;">"pexsi_solver"</span>)
+
+      <span style="color: #a020f0;">nullify</span>(m2%vals(1)%data)    <span style="color: #b22222;">! </span><span style="color: #b22222;">formerly pointing to DM</span>
+      <span style="color: #a020f0;">nullify</span>(m2%vals(2)%data)    <span style="color: #b22222;">! </span><span style="color: #b22222;">formerly pointing to EDM</span>
+      <span style="color: #a020f0;">deallocate</span>(m2%vals)
+      <span style="color: #b22222;">! </span><span style="color: #b22222;">allocated in the direct transfer</span>
+      <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">de_alloc</span>(m2%numcols,<span style="color: #8b2252;">"m2%numcols"</span>,<span style="color: #8b2252;">"pexsi_solver"</span>)
+      <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">de_alloc</span>(m2%cols,   <span style="color: #8b2252;">"m2%cols"</span>,   <span style="color: #8b2252;">"pexsi_solver"</span>)
+   <span style="color: #a020f0;">endif</span>
+
+   <span style="color: #b22222;">! </span><span style="color: #b22222;">We assume that Siesta's root node also belongs to one of the</span>
+   <span style="color: #b22222;">! </span><span style="color: #b22222;">leading-pole PEXSI communicators.</span>
+   <span style="color: #b22222;">! </span><span style="color: #b22222;">Note that by wrapping the broadcasts for SIESTA_workers we</span>
+   <span style="color: #b22222;">! </span><span style="color: #b22222;">do not make ef and Entropy known to the non-leading PEXSI processes.</span>
+
+   <span style="color: #a020f0;">if</span> (SIESTA_worker) <span style="color: #a020f0;">then</span>
+      <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">broadcast</span>(ef,comm=SIESTA_Comm)
+      <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">broadcast</span>(Entropy,comm=SIESTA_Comm)
+      <span style="color: #b22222;">! </span><span style="color: #b22222;">In future, m1%vals(1,2) could be pointing to DM and EDM,</span>
+      <span style="color: #b22222;">! </span><span style="color: #b22222;">and the 'redistribute' routine check whether the vals arrays are</span>
+      <span style="color: #b22222;">! </span><span style="color: #b22222;">associated, to use them instead of allocating them.</span>
+      DM(:,ispin)  = m1%vals(1)%data(:)    
+      EDM(:,ispin) = m1%vals(2)%data(:)    
+      <span style="color: #b22222;">! </span><span style="color: #b22222;">Check no_l</span>
+      <span style="color: #a020f0;">if</span> (no_l /= m1%no_l) <span style="color: #a020f0;">then</span>
+         <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">die</span>(<span style="color: #8b2252;">"Mismatch in no_l"</span>)
+      <span style="color: #a020f0;">endif</span>
+      <span style="color: #b22222;">! </span><span style="color: #b22222;">Check listH</span>
+      <span style="color: #a020f0;">if</span> (<span style="color: #a020f0;">any</span>(listH(:) /= m1%cols(:))) <span style="color: #a020f0;">then</span>
+         <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">die</span>(<span style="color: #8b2252;">"Mismatch in listH"</span>)
+      <span style="color: #a020f0;">endif</span>
+
+      <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">de_alloc</span>(m1%vals(1)%data,<span style="color: #8b2252;">"m1%vals(1)%data"</span>,<span style="color: #8b2252;">"pexsi_solver"</span>)
+      <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">de_alloc</span>(m1%vals(2)%data,<span style="color: #8b2252;">"m1%vals(2)%data"</span>,<span style="color: #8b2252;">"pexsi_solver"</span>)
+      <span style="color: #a020f0;">deallocate</span>(m1%vals)
+      <span style="color: #b22222;">! </span><span style="color: #b22222;">allocated in the direct transfer</span>
+      <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">de_alloc</span>(m1%numcols,<span style="color: #8b2252;">"m1%numcols"</span>,<span style="color: #8b2252;">"pexsi_solver"</span>) 
+      <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">de_alloc</span>(m1%cols,   <span style="color: #8b2252;">"m1%cols"</span>,   <span style="color: #8b2252;">"pexsi_solver"</span>)
+
+   <span style="color: #a020f0;">endif</span>
+<span style="color: #a020f0;">enddo</span>
+<span style="color: #a020f0;">call</span> <span style="color: #0000ff;">timer</span>(<span style="color: #8b2252;">"pexsi"</span>, 2)
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-sec-3-14" class="outline-3">
+<h3 id="sec-3-14"><span class="section-number-3">3.14</span> Clean up</h3>
+<div class="outline-text-3" id="text-3-14">
+<p>
+We cannot finalize the plan now if we are going to reuse
+it in subsequent iterations&#x2026; This is done by <code>siesta_forces</code> at the
+end of the scf cycle.
+</p>
+
+<p>
+Here we only clean up the communicators and groups and the distributions.
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-f90"><span style="color: #a020f0;">call</span> <span style="color: #0000ff;">delete</span>(dist1)
+<span style="color: #a020f0;">do</span> ispin = 1, nspin
+  <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">delete</span>(dist2_spin(ispin))
+<span style="color: #a020f0;">enddo</span>
+<span style="color: #a020f0;">deallocate</span>(dist2_spin)
+<span style="color: #a020f0;">deallocate</span>(m1_spin)
+
+<span style="color: #a020f0;">call</span> <span style="color: #0000ff;">MPI_Comm_Free</span>(PEXSI_Spatial_Comm, ierr)
+<span style="color: #a020f0;">call</span> <span style="color: #0000ff;">MPI_Comm_Free</span>(PEXSI_Spin_Comm, ierr)
+<span style="color: #a020f0;">call</span> <span style="color: #0000ff;">MPI_Comm_Free</span>(World_Comm, ierr)
+
+<span style="color: #b22222;">! </span><span style="color: #b22222;">This communicator was created from a subgroup.</span>
+<span style="color: #b22222;">! </span><span style="color: #b22222;">As such, it is MPI_COMM_NULL for those processes</span>
+<span style="color: #b22222;">! </span><span style="color: #b22222;">not in the subgroup (non PEXSI_workers). Only</span>
+<span style="color: #b22222;">! </span><span style="color: #b22222;">defined communicators can be freed</span>
+<span style="color: #a020f0;">if</span> (PEXSI_worker) <span style="color: #a020f0;">then</span>
+   <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">MPI_Comm_Free</span>(PEXSI_Pole_Comm, ierr)
+<span style="color: #a020f0;">endif</span>
+
+<span style="color: #a020f0;">call</span> <span style="color: #0000ff;">MPI_Group_Free</span>(PEXSI_Spatial_Group, ierr)
+<span style="color: #a020f0;">call</span> <span style="color: #0000ff;">MPI_Group_Free</span>(PEXSI_Pole_Group, ierr)
+<span style="color: #a020f0;">call</span> <span style="color: #0000ff;">MPI_Group_Free</span>(World_Group, ierr)
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-sec-3-15" class="outline-3">
+<h3 id="sec-3-15"><span class="section-number-3">3.15</span> Support routines</h3>
+<div class="outline-text-3" id="text-3-15">
+<p>
+Several routines, including the implementation of the inertia-count
+support and bracket handling.
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-f90">&lt;&lt;inertia-count-iteration&gt;&gt;
+&lt;&lt;get-on-the-fly-tolerance&gt;&gt;
+&lt;&lt;need-inertia-counting&gt;&gt;
+&lt;&lt;get-bracket-for-inertia-count&gt;&gt;
+&lt;&lt;get-bracket-for-solver&gt;&gt;
+&lt;&lt;get-current-temperature&gt;&gt;
+&lt;&lt;linear-interpolation-routine&gt;&gt;
+&lt;&lt;check-info&gt;&gt;
+</pre>
+</div>
+</div>
+
+<div id="outline-container-sec-3-15-1" class="outline-4">
+<h4 id="sec-3-15-1"><span class="section-number-4">3.15.1</span> Inertia-count iteration</h4>
+<div class="outline-text-4" id="text-3-15-1">
+<div class="org-src-container">
+
+<pre class="src src-f90"><span style="color: #a020f0;">subroutine</span> <span style="color: #0000ff;">do_inertia_count</span>(plan,muMin0,muMax0,muInertia)
+  <span style="color: #a020f0;">use</span> <span style="color: #0000ff;">iso_c_binding</span>, <span style="color: #a020f0;">only</span> : <span style="color: #008b8b;">c_intptr_t</span>
+  <span style="color: #a020f0;">use</span> <span style="color: #0000ff;">m_convergence</span>
+
+  <span style="color: #228b22;">integer</span>(<span style="color: #008b8b;">c_intptr_t</span>)      ::<span style="color: #a0522d;"> plan</span>
+  <span style="color: #228b22;">real</span>(dp), <span style="color: #a020f0;">intent</span>(inout)  ::<span style="color: #a0522d;"> muMin0, muMax0</span>
+  <span style="color: #228b22;">real</span>(dp), <span style="color: #a020f0;">intent</span>(out)    ::<span style="color: #a0522d;"> muInertia</span>
+
+  <span style="color: #228b22;">real</span>(dp)            ::<span style="color: #a0522d;">   muMinInertia, muMaxInertia</span>
+  <span style="color: #228b22;">integer</span>             ::<span style="color: #a0522d;">   nInertiaRounds</span>
+
+  <span style="color: #228b22;">real</span>(dp), <span style="color: #a020f0;">parameter</span> ::<span style="color: #a0522d;">   eps_inertia = 0.1_dp</span>
+  <span style="color: #228b22;">type(converger_t)</span>   ::   <span style="color: #a0522d;">conv_mu</span>
+  <span style="color: #228b22;">logical</span>             ::<span style="color: #a0522d;">   bad_lower_bound, bad_upper_bound</span>
+  <span style="color: #228b22;">logical</span>             ::<span style="color: #a0522d;">   interval_problem, one_more_round</span>
+  <span style="color: #228b22;">real</span>(dp)            ::<span style="color: #a0522d;">   inertia_electron_width</span>
+  <span style="color: #228b22;">real</span>(dp)            ::<span style="color: #a0522d;">   inertia_original_electron_width</span>
+  <span style="color: #228b22;">real</span>(dp)            ::<span style="color: #a0522d;">   inertia_energy_width</span>
+  <span style="color: #228b22;">real</span>(dp)            ::<span style="color: #a0522d;">   muLower, muUpper</span>
+  <span style="color: #228b22;">integer</span>             ::<span style="color: #a0522d;">   numMinICountShifts, numShift</span>
+  <span style="color: #228b22;">integer</span>             ::<span style="color: #a0522d;">   numNodesSpatial</span>
+
+  <span style="color: #228b22;">real</span>(dp), <span style="color: #a020f0;">allocatable</span> ::<span style="color: #a0522d;"> shiftList(:), inertiaList(:)</span>
+  <span style="color: #228b22;">real</span>(dp), <span style="color: #a020f0;">allocatable</span> ::<span style="color: #a0522d;"> inertiaList_out(:)</span>
+
+  <span style="color: #228b22;">integer</span> ::<span style="color: #a0522d;"> imin, imax</span>
+
+  &lt;&lt;determine-number-of-shifts&gt;&gt;
+
+  nInertiaRounds = 0
+
+  <span style="color: #008b8b;">refine_interval</span>: <span style="color: #a020f0;">do</span>
+      numTotalInertiaIter = numTotalInertiaIter + 1
+      &lt;&lt;refine-interval-by-inertia-count&gt;&gt;
+  <span style="color: #a020f0;">enddo</span><span style="color: #008b8b;"> refine_interval</span>
+
+  <span style="color: #a020f0;">deallocate</span>(shiftList,inertiaList)
+
+ <span style="color: #a020f0;">end subroutine</span> <span style="color: #0000ff;">do_inertia_count</span>
+</pre>
+</div>
+</div>
+
+<ol class="org-ol"><li><a id="sec-3-15-1-1" name="sec-3-15-1-1"></a>Determine number of inertia-count shifts<br  /><div class="outline-text-5" id="text-3-15-1-1">
+<p>
+This is based on the total number of processors available per spin, in such a 
+way that each group of <code>npPerPole</code> processors deals with a shift. If
+the number of groups is smaller than the total number of shifts,
+several sequential passes are needed, but this is done internally by
+the library. Note that there is a minimum number of shifts, to get
+decent accuracy.
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-f90"><span style="color: #b22222;">! </span><span style="color: #b22222;">Minimum number of sampling points for inertia counts                                            </span>
+numMinICountShifts = fdf_get(<span style="color: #8b2252;">"PEXSI.inertia-min-num-shifts"</span>, 10)
+<span style="color: #a020f0;">call</span> <span style="color: #0000ff;">mpi_comm_size</span>( PEXSI_Spatial_Comm, numNodesSpatial, ierr )
+numShift = numNodesSpatial/npPerPole
+<span style="color: #a020f0;">do</span>
+   <span style="color: #a020f0;">if</span> (numShift &lt; numMinICountShifts) <span style="color: #a020f0;">then</span>
+      numShift = numShift + numNodesSpatial/npPerPole
+   <span style="color: #a020f0;">else</span>
+      <span style="color: #a020f0;">exit</span>
+   <span style="color: #a020f0;">endif</span>
+<span style="color: #a020f0;">enddo</span>
+
+<span style="color: #a020f0;">allocate</span>(shiftList(numShift), inertiaList(numShift))
+<span style="color: #a020f0;">allocate</span>(inertiaList_out(numShift))
+</pre>
+</div>
+</div>
+</li>
+
+
+<li><a id="sec-3-15-1-2" name="sec-3-15-1-2"></a>Refine interval by inertia count<br  /><div class="outline-text-5" id="text-3-15-1-2">
+<p>
+This is the body of the old <i>expert</i> inertia-count loop.
+We begin by setting up the shift list and calling the workhorse
+routine (which does not do anything extra inside, just compute
+the T=0K inertia).
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-f90">options%muMin0 = muMin0
+options%muMax0 = muMax0
+
+<span style="color: #a020f0;">if</span> (mpirank == 0) <span style="color: #a020f0;">then</span>
+   <span style="color: #a020f0;">write</span> (6,<span style="color: #8b2252;">"(a,2f9.4,a,a,i4)"</span>) <span style="color: #8b2252;">'Calling inertiaCount: ['</span>, <span style="color: #a020f0;">&amp;</span>
+        muMin0/eV, muMax0/eV, <span style="color: #8b2252;">"] (eV)"</span>, <span style="color: #a020f0;">&amp;</span>
+        <span style="color: #8b2252;">" Nshifts: "</span>, numShift
+<span style="color: #a020f0;">endif</span>
+
+<span style="color: #a020f0;">call</span> <span style="color: #0000ff;">timer</span>(<span style="color: #8b2252;">"pexsi-inertia-ct"</span>, 1)
+
+<span style="color: #a020f0;">do</span> i = 1, numShift
+   shiftList(i) = muMin0 + (i-1) * (muMax0-muMin0)/(numShift-1)
+<span style="color: #a020f0;">enddo</span>
+
+<span style="color: #a020f0;">call</span> <span style="color: #0000ff;">f_ppexsi_inertia_count_real_symmetric_matrix</span>(<span style="color: #a020f0;">&amp;</span>
+     plan,<span style="color: #a020f0;">&amp;</span>
+     options,<span style="color: #a020f0;">&amp;</span>
+     numShift,<span style="color: #a020f0;">&amp;</span>
+     shiftList,<span style="color: #a020f0;">&amp;</span>
+     inertiaList_out,<span style="color: #a020f0;">&amp;</span>
+     info) 
+
+<span style="color: #a020f0;">call</span> <span style="color: #0000ff;">check_info</span>(info,<span style="color: #8b2252;">"inertia-count"</span>)
+
+<span style="color: #b22222;">! </span><span style="color: #b22222;">All-Reduce to add the (two) spin inertias</span>
+<span style="color: #b22222;">! </span><span style="color: #b22222;">so that all processors have the complete inertiaList(:)</span>
+<span style="color: #a020f0;">call</span> <span style="color: #0000ff;">MPI_AllReduce</span>(inertiaList_out, inertiaList, <span style="color: #a020f0;">&amp;</span>
+     numShift, MPI_Double_precision, <span style="color: #a020f0;">&amp;</span>
+     MPI_Sum, PEXSI_Spin_Comm, ierr)
+
+<span style="color: #b22222;">! </span><span style="color: #b22222;">If nspin=1, each state is doubly occupied</span>
+<span style="color: #b22222;">! </span>
+inertiaList(:) = 2 * inertiaList(:) / nspin
+
+
+<span style="color: #a020f0;">call</span> <span style="color: #0000ff;">timer</span>(<span style="color: #8b2252;">"pexsi-inertia-ct"</span>, 2)
+</pre>
+</div>
+
+<p>
+Now we need to make sure that the results make sense. First, that
+we had &mu; in our starting interval. If not, we immediately expand the
+bounds and go back to the top of the loop.
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-f90">interval_problem = <span style="color: #a020f0;">.false.</span>
+
+<span style="color: #a020f0;">if</span>(mpirank == 0) <span style="color: #a020f0;">then</span>
+   bad_lower_bound = (inertiaList(1) &gt; (numElectronExact - 0.1)) 
+   bad_upper_bound = (inertiaList(numShift) &lt; (numElectronExact + 0.1)) 
+<span style="color: #a020f0;">endif</span>
+
+<span style="color: #a020f0;">call</span> <span style="color: #0000ff;">broadcast</span>(bad_lower_bound,comm=World_Comm)
+<span style="color: #a020f0;">call</span> <span style="color: #0000ff;">broadcast</span>(bad_upper_bound,comm=World_Comm)
+
+<span style="color: #a020f0;">if</span> (bad_lower_bound) <span style="color: #a020f0;">then</span>
+   interval_problem =  <span style="color: #a020f0;">.true.</span>
+   muMin0 = muMin0 - options%muInertiaExpansion <span style="color: #b22222;">! </span><span style="color: #b22222;">0.5</span>
+   <span style="color: #a020f0;">if</span> (mpirank==0) <span style="color: #a020f0;">then</span>
+      <span style="color: #a020f0;">write</span> (6,<span style="color: #8b2252;">"(a,2f12.4,a,2f10.4)"</span>) <span style="color: #8b2252;">'Wrong inertia-count interval (lower end). Counts: '</span>, <span style="color: #a020f0;">&amp;</span>
+           inertiaList(1), inertiaList(numShift), <span style="color: #a020f0;">&amp;</span>
+           <span style="color: #8b2252;">' New interval: '</span>, muMin0/eV, muMax0/eV
+   <span style="color: #a020f0;">endif</span>
+<span style="color: #a020f0;">endif</span>
+<span style="color: #a020f0;">if</span> (bad_upper_bound) <span style="color: #a020f0;">then</span>
+   interval_problem =  <span style="color: #a020f0;">.true.</span>
+   muMax0 = muMax0 + options%muInertiaExpansion <span style="color: #b22222;">! </span><span style="color: #b22222;">0.5</span>
+   <span style="color: #a020f0;">if</span> (mpirank==0) <span style="color: #a020f0;">then</span>
+      <span style="color: #a020f0;">write</span> (6,<span style="color: #8b2252;">"(a,2f12.4,a,2f10.4)"</span>) <span style="color: #8b2252;">'Wrong inertia-count interval (upper end). Counts: '</span>, <span style="color: #a020f0;">&amp;</span>
+           inertiaList(1), inertiaList(numShift), <span style="color: #a020f0;">&amp;</span>
+           <span style="color: #8b2252;">' New interval: '</span>, muMin0/eV, muMax0/eV
+   <span style="color: #a020f0;">endif</span>
+<span style="color: #a020f0;">endif</span>
+
+<span style="color: #a020f0;">if</span> (interval_problem) <span style="color: #a020f0;">then</span>
+   <span style="color: #b22222;">! </span><span style="color: #b22222;">do nothing more, stay in loop</span>
+   <span style="color: #a020f0;">cycle</span> <span style="color: #008b8b;">refine_interval</span>
+<span style="color: #a020f0;">endif</span>
+</pre>
+</div>
+
+<p>
+If we did have &mu; in the interval, we consider this a bona-fide
+inertia-count iteration and update the counter.
+</p>
+
+<p>
+Next, we scan the list of inertia values to obtain a new interval for
+&mu;. For now, we use the T=0 values, without any broadening.
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-f90">nInertiaRounds = nInertiaRounds + 1
+
+imin = 1; imax = numShift
+
+<span style="color: #a020f0;">do</span> i = 1, numShift
+   <span style="color: #a020f0;">if</span> (inertiaList(i) &lt; numElectronExact - eps_inertia) <span style="color: #a020f0;">then</span>
+      imin = <span style="color: #a020f0;">max</span>(imin,i)
+   <span style="color: #a020f0;">endif</span>
+   <span style="color: #a020f0;">if</span> (inertiaList(i) &gt; numElectronExact + eps_inertia) <span style="color: #a020f0;">then</span>
+      imax = <span style="color: #a020f0;">min</span>(imax,i)
+   <span style="color: #a020f0;">endif</span>
+<span style="color: #a020f0;">enddo</span>
+muMaxInertia = shiftList(imax)
+muMinInertia = shiftList(imin)
+
+<span style="color: #b22222;">! </span><span style="color: #b22222;">Get the band edges by interpolation</span>
+muLower = interpolate(inertiaList,shiftList,numElectronExact-eps_inertia)
+muUpper = interpolate(inertiaList,shiftList,numElectronExact+eps_inertia)
+
+muInertia = 0.5_dp * (muUpper + muLower)
+
+<span style="color: #a020f0;">if</span> (mpirank == 0) <span style="color: #a020f0;">then</span>
+   <span style="color: #a020f0;">write</span> (6,<span style="color: #8b2252;">"(a,i3,f10.4,i3,f10.4)"</span>) <span style="color: #8b2252;">'imin, muMinInertia, imax, muMaxInertia: '</span>,<span style="color: #a020f0;">&amp;</span>
+          imin, muMinInertia/eV, imax, muMaxInertia/eV
+   <span style="color: #a020f0;">write</span> (6,<span style="color: #8b2252;">"(a,2f10.4,a,f10.4)"</span>) <span style="color: #8b2252;">'muLower, muUpper: '</span>, muLower/eV, muUpper/eV, <span style="color: #a020f0;">&amp;</span>
+        <span style="color: #8b2252;">' mu estimated: '</span>, muInertia/eV
+<span style="color: #a020f0;">endif</span>
+</pre>
+</div>
+
+<p>
+Now we have to decide whether we are satisfied with the estimation of
+&mu; and the new bracket. We have several possible criteria: the actual
+width in energy of the bracket, the width in "states" (both of the
+original interval and the narrower interval), and the behavior of &mu;
+itself with successive iterations.
+</p>
+
+<p>
+The problem with the "states" measures is that they depend on the size
+of the system. Energy measures (width and convergence of &mu;) are more
+universal. Setting the change in &mu; to 0.8 eV is the default, and
+double that for the interval width.
+</p>
+
+<p>
+We also exit the loop if we have done too many IC iterations.
+</p>
+
+<p>
+<b>Note</b>: We can probably do this for all processors, without need to
+ wrap the tests in <code>(mpirank =</code> 0)= and broadcasting later. But proper
+ documentation in the PEXSI library about these issues is lacking.
+</p>
+
+<div class="org-src-container">
+
+<pre class="src src-f90">  <span style="color: #a020f0;">if</span> (mpirank==0) <span style="color: #a020f0;">then</span>
+
+     inertia_energy_width = (muMaxInertia - muMinInertia)
+     <span style="color: #b22222;">! </span><span style="color: #b22222;">Note that this is the width of the starting interval...</span>
+     inertia_original_electron_width = (inertiaList(numShift) - inertiaList(1))
+     inertia_electron_width = (inertiaList(imax) - inertiaList(imin))
+
+     <span style="color: #a020f0;">write</span> (6,<span style="color: #8b2252;">"(a,2f9.4,a,f9.4,3(a,f10.3))"</span>) <span style="color: #8b2252;">' -- new bracket (eV): ['</span>, <span style="color: #a020f0;">&amp;</span>
+          muMinInertia/eV, muMaxInertia/eV,  <span style="color: #a020f0;">&amp;</span>
+          <span style="color: #8b2252;">"] estimated mu: "</span>, muInertia/eV, <span style="color: #a020f0;">&amp;</span>
+          <span style="color: #8b2252;">" Nel width: "</span>, inertia_electron_width, <span style="color: #a020f0;">&amp;</span>
+          <span style="color: #8b2252;">" (Base: "</span>, inertia_original_electron_width, <span style="color: #a020f0;">&amp;</span>
+          <span style="color: #8b2252;">" ) E width: "</span>, inertia_energy_width/eV
+
+     <span style="color: #a020f0;">if</span> (nInertiaRounds == 1) <span style="color: #a020f0;">then</span>
+        <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">reset</span>(conv_mu)
+        <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">set_tolerance</span>(conv_mu,options%muInertiaTolerance)
+     <span style="color: #a020f0;">endif</span>
+     <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">add_value</span>(conv_mu, muInertia)
+
+
+     one_more_round = <span style="color: #a020f0;">.true.</span>
+
+<span style="color: #b22222;">!!</span><span style="color: #b22222;">$     if (inertia_original_electron_width &lt; inertiaNumElectronTolerance) then</span>
+<span style="color: #b22222;">!!</span><span style="color: #b22222;">$        write (6,"(a)") 'Leaving inertia loop: electron tolerance'</span>
+<span style="color: #b22222;">!!</span><span style="color: #b22222;">$        one_more_round = .false.</span>
+<span style="color: #b22222;">!!</span><span style="color: #b22222;">$     endif</span>
+<span style="color: #b22222;">!!</span><span style="color: #b22222;">$     if (inertia_electron_width &lt; inertiaMinNumElectronTolerance) then</span>
+<span style="color: #b22222;">!!</span><span style="color: #b22222;">$        write (6,"(a)") 'Leaving inertia loop: minimum workable electron tolerance'</span>
+<span style="color: #b22222;">!!</span><span style="color: #b22222;">$        one_more_round = .false.</span>
+<span style="color: #b22222;">!!</span><span style="color: #b22222;">$     endif</span>
+
+     <span style="color: #b22222;">! </span><span style="color: #b22222;">This is the first clause of Lin's criterion</span>
+     <span style="color: #b22222;">! </span><span style="color: #b22222;">in the simple DFT driver. The second clause is the same as the next one</span>
+     <span style="color: #b22222;">! </span><span style="color: #b22222;">when the energy-width tolerance is the same as the mu tolerance (my default)</span>
+     <span style="color: #b22222;">! </span><span style="color: #b22222;">I am not sure about the basis for this</span>
+     <span style="color: #a020f0;">if</span> (<span style="color: #a020f0;">abs</span>(muMaxInertia -numElectronExact) &lt; eps_inertia ) <span style="color: #a020f0;">then</span>
+        <span style="color: #a020f0;">write</span> (6,<span style="color: #8b2252;">"(a,f12.6)"</span>) <span style="color: #8b2252;">"Leaving inertia loop: |muMaxInertia-N_e|: "</span>, <span style="color: #a020f0;">&amp;</span>
+             <span style="color: #a020f0;">abs</span>(muMaxInertia -numElectronExact)
+        one_more_round = <span style="color: #a020f0;">.false.</span>
+     <span style="color: #a020f0;">endif</span>
+     <span style="color: #a020f0;">if</span> (inertia_energy_width &lt; energyWidthInertiaTolerance) <span style="color: #a020f0;">then</span>
+        <span style="color: #a020f0;">write</span> (6,<span style="color: #8b2252;">"(a,f12.6)"</span>) <span style="color: #8b2252;">'Leaving inertia loop: energy width tolerance: '</span>, <span style="color: #a020f0;">&amp;</span>
+         energyWidthInertiaTolerance/eV
+        one_more_round = <span style="color: #a020f0;">.false.</span>
+     <span style="color: #a020f0;">endif</span>
+     <span style="color: #a020f0;">if</span> (is_converged(conv_mu)) <span style="color: #a020f0;">then</span>
+        <span style="color: #a020f0;">write</span> (6,<span style="color: #8b2252;">"(a,f12.6)"</span>) <span style="color: #8b2252;">'Leaving inertia loop: mu tolerance: '</span>, options%muInertiaTolerance/eV
+        one_more_round = <span style="color: #a020f0;">.false.</span>
+     <span style="color: #a020f0;">endif</span>
+     <span style="color: #a020f0;">if</span> (nInertiaRounds == inertiaMaxIter) <span style="color: #a020f0;">then</span>
+        <span style="color: #a020f0;">write</span> (6,<span style="color: #8b2252;">"(a)"</span>) <span style="color: #8b2252;">'Leaving inertia loop: too many rounds'</span>
+        one_more_round = <span style="color: #a020f0;">.false.</span>
+     <span style="color: #a020f0;">endif</span>
+  <span style="color: #a020f0;">endif</span>
+  <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">broadcast</span>(one_more_round,comm=World_Comm)
+
+  <span style="color: #a020f0;">if</span> (one_more_round) <span style="color: #a020f0;">then</span>
+     <span style="color: #b22222;">! </span><span style="color: #b22222;">stay in loop</span>
+     <span style="color: #b22222;">! </span><span style="color: #b22222;">These values should be guarded, in case the refined interval</span>
+     <span style="color: #b22222;">! </span><span style="color: #b22222;">is too tight. Use 2*kT</span>
+     <span style="color: #b22222;">! </span>
+     muMin0 = muMinInertia - two_kT
+     muMax0 = muMaxInertia + two_kT
+  <span style="color: #a020f0;">else</span>
+     <span style="color: #a020f0;">exit</span> <span style="color: #008b8b;">refine_interval</span>
+  <span style="color: #a020f0;">endif</span>
+</pre>
+</div>
+</div>
+</li></ol>
+</div>
+
+<div id="outline-container-sec-3-15-2" class="outline-4">
+<h4 id="sec-3-15-2"><span class="section-number-4">3.15.2</span> On-the-fly tolerance determination</h4>
+<div class="outline-text-4" id="text-3-15-2">
+<div class="org-src-container">
+
+<pre class="src src-f90"><span style="color: #b22222;">!</span>
+<span style="color: #b22222;">! </span><span style="color: #b22222;">This routine encodes the heuristics to compute the</span>
+<span style="color: #b22222;">! </span><span style="color: #b22222;">tolerance dynamically.</span>
+<span style="color: #b22222;">!</span>
+<span style="color: #a020f0;">subroutine</span> <span style="color: #0000ff;">get_on_the_fly_tolerance</span>(dDmax,tolerance)
+<span style="color: #228b22;">real</span>(dp), <span style="color: #a020f0;">intent</span>(in)  ::<span style="color: #a0522d;"> dDmax</span>
+<span style="color: #228b22;">real</span>(dp), <span style="color: #a020f0;">intent</span>(out) ::<span style="color: #a0522d;"> tolerance</span>
+
+<span style="color: #228b22;">real</span>(dp) ::<span style="color: #a0522d;"> tolerance_preconditioner</span>
+<span style="color: #228b22;">real</span>(dp) ::<span style="color: #a0522d;"> tolerance_target_factor, tolerance_exp</span>
+<span style="color: #228b22;">real</span>(dp), <span style="color: #a020f0;">save</span> ::<span style="color: #a0522d;"> previous_tolerance</span>
+<span style="color: #228b22;">logical</span> ::<span style="color: #a0522d;"> new_algorithm</span>
+
+new_algorithm = fdf_get(<span style="color: #8b2252;">"PEXSI.dynamical-tolerance"</span>,<span style="color: #a020f0;">.false.</span>)
+<span style="color: #b22222;">!</span>
+<span style="color: #b22222;">!</span>
+<span style="color: #a020f0;">if</span> (new_algorithm) <span style="color: #a020f0;">then</span>
+
+<span style="color: #b22222;">!   </span><span style="color: #b22222;">By default, the tolerance goes to the (minimum) target </span>
+<span style="color: #b22222;">!   </span><span style="color: #b22222;">at a level 5 times dDtol</span>
+
+   tolerance_target_factor = fdf_get(<span style="color: #8b2252;">"PEXSI.tolerance-target-factor"</span>,5.0_dp)
+
+<span style="color: #b22222;">!</span>
+<span style="color: #b22222;">!  </span><span style="color: #b22222;">This can range in a (0.5,2.0) interval, approximately</span>
+
+   tolerance_preconditioner = fdf_get(<span style="color: #8b2252;">"PEXSI.tolerance-preconditioner"</span>,1.0_dp)
+
+   <span style="color: #a020f0;">if</span> (scf_step &gt; 1 ) <span style="color: #a020f0;">then</span>
+
+      tolerance_exp = <span style="color: #a020f0;">log10</span>(dDmax/(tolerance_target_factor*dDtol))
+      <span style="color: #b22222;">! </span>
+  <span style="color: #b22222;">!   </span><span style="color: #b22222;">range = log10(PEXSINumElectronToleranceMax/PEXSINumElectronToleranceMin)</span>
+      tolerance_exp = <span style="color: #a020f0;">max</span>(tolerance_exp,0.0_dp)*tolerance_preconditioner
+      tolerance = PEXSINumElectronToleranceMin * 10.0_dp**tolerance_exp
+      tolerance = <span style="color: #a020f0;">min</span>(tolerance,PEXSINumElectronToleranceMax)
+
+      <span style="color: #a020f0;">if</span> (tolerance &gt; previous_tolerance) <span style="color: #a020f0;">then</span>
+         <span style="color: #a020f0;">if</span> (mpirank==0) <span style="color: #a020f0;">write</span>(6,<span style="color: #8b2252;">"(a,f10.2)"</span>) <span style="color: #a020f0;">&amp;</span>
+              <span style="color: #8b2252;">"Will not raise PEXSI solver tolerance to: "</span>, <span style="color: #a020f0;">&amp;</span>
+              tolerance
+         tolerance = previous_tolerance
+      <span style="color: #a020f0;">endif</span>
+      previous_tolerance = tolerance
+   <span style="color: #a020f0;">else</span>
+      <span style="color: #b22222;">! </span><span style="color: #b22222;">No heuristics for now for first step</span>
+      <span style="color: #b22222;">! </span><span style="color: #b22222;">Note that this should really change in MD or geometry optimization</span>
+      previous_tolerance = <span style="color: #a020f0;">huge</span>(1.0_dp)
+      tolerance = PEXSINumElectronToleranceMax
+
+   <span style="color: #a020f0;">endif</span>
+<span style="color: #a020f0;">else</span>
+   tolerance = <span style="color: #a020f0;">Max</span>(PEXSINumElectronToleranceMin, <span style="color: #a020f0;">&amp;</span>
+                              <span style="color: #a020f0;">Min</span>(dDmax*1.0, PEXSINumElectronToleranceMax))
+<span style="color: #a020f0;">endif</span>
+
+<span style="color: #a020f0;">if</span> (mpirank==0) <span style="color: #a020f0;">write</span>(6,<span style="color: #8b2252;">"(a,f10.2)"</span>) <span style="color: #a020f0;">&amp;</span>
+     <span style="color: #8b2252;">"Current PEXSI solver tolerance: "</span>, tolerance
+
+<span style="color: #a020f0;">end subroutine</span> <span style="color: #0000ff;">get_on_the_fly_tolerance</span>
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-sec-3-15-3" class="outline-4">
+<h4 id="sec-3-15-3"><span class="section-number-4">3.15.3</span> Decide whether inertia-counting is needed</h4>
+<div class="outline-text-4" id="text-3-15-3">
+<div class="org-src-container">
+
+<pre class="src src-f90"><span style="color: #b22222;">!</span><span style="color: #b22222;">------------------------------------------------------------------</span>
+<span style="color: #b22222;">! </span><span style="color: #b22222;">This function will determine whether an initial inertia-counting</span>
+<span style="color: #b22222;">! </span><span style="color: #b22222;">stage is needed, based on user input and the level of convergence</span>
+<span style="color: #b22222;">!</span>
+<span style="color: #b22222;">! </span><span style="color: #b22222;">Variables used through host association for now:</span>
+<span style="color: #b22222;">!</span>
+<span style="color: #b22222;">!      </span><span style="color: #b22222;">scf_step</span>
+<span style="color: #b22222;">!      </span><span style="color: #b22222;">prevDmax, safe_dDmax_NoInertia</span>
+<span style="color: #b22222;">!</span>
+<span style="color: #b22222;">! </span><span style="color: #b22222;">Some logging output is done, so this function is not pure.</span>
+
+<span style="color: #a020f0;">function</span> <span style="color: #0000ff;">need_inertia_counting</span>() <span style="color: #a020f0;">result</span>(do_inertia_count)
+<span style="color: #228b22;">logical</span> ::<span style="color: #a0522d;"> do_inertia_count</span>
+
+<span style="color: #228b22;">real</span>(dp) ::<span style="color: #a0522d;"> safe_dDmax_NoInertia</span>
+<span style="color: #228b22;">integer</span>  ::<span style="color: #a0522d;"> isInertiaCount, numInertiaCounts</span>
+
+<span style="color: #b22222;">! </span><span style="color: #b22222;">Use inertia counts?</span>
+<span style="color: #b22222;">! </span><span style="color: #b22222;">The use of this input variable is deprecated. Warn the user</span>
+<span style="color: #b22222;">! </span><span style="color: #b22222;">only if there is a disagreement.</span>
+
+isInertiaCount = fdf_get(<span style="color: #8b2252;">"PEXSI.inertia-count"</span>,-1)
+<span style="color: #b22222;">! </span><span style="color: #b22222;">For how many scf steps?</span>
+numInertiaCounts = fdf_get(<span style="color: #8b2252;">"PEXSI.inertia-counts"</span>,3)
+
+<span style="color: #a020f0;">if</span> ((isInertiaCount == 0) <span style="color: #a020f0;">.and.</span> (numInertiaCounts &gt; 0)) <span style="color: #a020f0;">then</span> 
+   <span style="color: #a020f0;">if</span> (mpirank == 0) <span style="color: #a020f0;">write</span>(6,<span style="color: #8b2252;">"(a,i4)"</span>)  <span style="color: #a020f0;">&amp;</span>
+        <span style="color: #8b2252;">"Warning: Inertia-counts turned off by legacy parameter"</span> // <span style="color: #a020f0;">&amp;</span>
+        <span style="color: #8b2252;">" PEXSI.inertia-count"</span>
+   numInertiaCounts = 0
+<span style="color: #a020f0;">endif</span>
+
+safe_dDmax_NoInertia = fdf_get(<span style="color: #8b2252;">"PEXSI.safe-dDmax-no-inertia"</span>,0.05)
+
+do_inertia_count = <span style="color: #a020f0;">.false.</span>
+
+write_ok = ((mpirank == 0) <span style="color: #a020f0;">.and.</span> (verbosity &gt;= 1))
+
+<span style="color: #a020f0;">if</span> (numInertiaCounts &gt; 0) <span style="color: #a020f0;">then</span>
+  <span style="color: #a020f0;">if</span> (scf_step <span style="color: #a020f0;">.le.</span> numInertiaCounts) <span style="color: #a020f0;">then</span>
+     <span style="color: #a020f0;">if</span> (write_ok) <span style="color: #a020f0;">write</span>(6,<span style="color: #8b2252;">"(a,i4)"</span>)  <span style="color: #a020f0;">&amp;</span>
+      <span style="color: #8b2252;">"&amp;o Inertia-count step scf_step&lt;numIC"</span>, scf_step
+     do_inertia_count = <span style="color: #a020f0;">.true.</span>
+  <span style="color: #a020f0;">endif</span>
+<span style="color: #a020f0;">else  if</span> (numInertiaCounts &lt; 0) <span style="color: #a020f0;">then</span>
+   <span style="color: #a020f0;">if</span> (scf_step &lt;= -numInertiaCounts) <span style="color: #a020f0;">then</span>
+      <span style="color: #a020f0;">if</span> (write_ok) <span style="color: #a020f0;">write</span>(6,<span style="color: #8b2252;">"(a,i4)"</span>) <span style="color: #a020f0;">&amp;</span>
+           <span style="color: #8b2252;">"&amp;o Inertia-count step scf_step&lt;-numIC "</span>, scf_step
+      do_inertia_count = <span style="color: #a020f0;">.true.</span>
+   <span style="color: #a020f0;">else if</span> (prevDmax &gt; safe_dDmax_NoInertia) <span style="color: #a020f0;">then</span>
+      <span style="color: #a020f0;">if</span> (write_ok) <span style="color: #a020f0;">write</span>(6,<span style="color: #8b2252;">"(a,i4)"</span>) <span style="color: #a020f0;">&amp;</span>
+           <span style="color: #8b2252;">"&amp;o Inertia-count step as prevDmax &gt; safe_Dmax "</span>, scf_step
+      do_inertia_count = <span style="color: #a020f0;">.true.</span>
+   <span style="color: #a020f0;">endif</span>
+<span style="color: #a020f0;">endif</span>
+
+<span style="color: #a020f0;">end function</span> <span style="color: #0000ff;">need_inertia_counting</span>
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-sec-3-15-4" class="outline-4">
+<h4 id="sec-3-15-4"><span class="section-number-4">3.15.4</span> Get bracket for inertia-counting</h4>
+<div class="outline-text-4" id="text-3-15-4">
+<div class="org-src-container">
+
+<pre class="src src-f90"><span style="color: #b22222;">!</span><span style="color: #b22222;">---------------------------------------------------------------</span>
+<span style="color: #b22222;">!  </span><span style="color: #b22222;">Chooses the proper interval for the call to the driver</span>
+<span style="color: #b22222;">!  </span><span style="color: #b22222;">in case we need a stage of inertia counting  </span>
+<span style="color: #b22222;">!</span>
+<span style="color: #a020f0;">subroutine</span> <span style="color: #0000ff;">get_bracket_for_inertia_count</span>()
+
+ <span style="color: #228b22;">real</span>(dp)       ::<span style="color: #a0522d;"> safe_width_ic</span>
+ <span style="color: #228b22;">real</span>(dp)       ::<span style="color: #a0522d;"> safe_dDmax_Ef_inertia</span>
+
+ safe_width_ic = fdf_get(<span style="color: #8b2252;">"PEXSI.safe-width-ic-bracket"</span>,4.0_dp*eV,<span style="color: #8b2252;">"Ry"</span>)
+ safe_dDmax_Ef_Inertia = fdf_get(<span style="color: #8b2252;">"PEXSI.safe-dDmax-ef-inertia"</span>,0.1)
+
+write_ok = ((mpirank == 0) <span style="color: #a020f0;">.and.</span> (verbosity &gt;= 1))
+
+ <span style="color: #b22222;">! </span><span style="color: #b22222;">Proper bracketing                                                           </span>
+ <span style="color: #a020f0;">if</span> (scf_step &gt; 1) <span style="color: #a020f0;">then</span>
+   <span style="color: #a020f0;">if</span> (prevDmax &lt; safe_dDmax_Ef_inertia) <span style="color: #a020f0;">then</span>
+      <span style="color: #b22222;">! </span><span style="color: #b22222;">Shift brackets using estimate of Ef change from previous iteration </span>
+      <span style="color: #b22222;">!                                                                    </span>
+      <span style="color: #a020f0;">if</span> (write_ok) <span style="color: #a020f0;">write</span>(6,<span style="color: #8b2252;">"(a)"</span>) <span style="color: #a020f0;">&amp;</span>
+         <span style="color: #8b2252;">"&amp;o Inertia-count bracket shifted by Delta_Ef"</span>
+      <span style="color: #b22222;">! </span><span style="color: #b22222;">This might be risky, if the final interval of the previous iteration   </span>
+      <span style="color: #b22222;">! </span><span style="color: #b22222;">is too narrow. We should broaden it by o(kT)                           </span>
+      <span style="color: #b22222;">! </span><span style="color: #b22222;">The usefulness of delta_Ef is thus debatable...                        </span>
+
+      muMin0 = muMin0 + delta_Ef - two_kT
+      muMax0 = muMax0 + delta_Ef + two_kT
+   <span style="color: #a020f0;">else</span>
+      <span style="color: #b22222;">! </span><span style="color: #b22222;">Use a large enough interval around the previous estimation of   </span>
+      <span style="color: #b22222;">! </span><span style="color: #b22222;">mu (the gap edges are not available...)  </span>
+      <span style="color: #a020f0;">if</span> (write_ok) <span style="color: #a020f0;">write</span>(6,<span style="color: #8b2252;">"(a)"</span>) <span style="color: #8b2252;">"&amp;o Inertia-count safe bracket"</span>
+<span style="color: #b22222;">!      </span><span style="color: #b22222;">muMin0 = min(muLowerEdge - 0.5*safe_width_ic, muMinInertia)</span>
+      muMin0 = <span style="color: #a020f0;">min</span>(mu - 0.5*safe_width_ic, muMin0)
+<span style="color: #b22222;">!      </span><span style="color: #b22222;">muMax0 = max(muUpperEdge + 0.5*safe_width_ic, muMaxInertia)</span>
+      muMax0 = <span style="color: #a020f0;">max</span>(mu + 0.5*safe_width_ic, muMax0)
+   <span style="color: #a020f0;">endif</span>
+ <span style="color: #a020f0;">else</span>
+    <span style="color: #a020f0;">if</span> (write_ok) <span style="color: #a020f0;">write</span>(6,<span style="color: #8b2252;">"(a)"</span>) <span style="color: #a020f0;">&amp;</span>
+       <span style="color: #8b2252;">"&amp;o Inertia-count called with iscf=1 parameters"</span>
+ <span style="color: #a020f0;">endif</span>
+<span style="color: #a020f0;">end subroutine</span> <span style="color: #0000ff;">get_bracket_for_inertia_count</span>
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-sec-3-15-5" class="outline-4">
+<h4 id="sec-3-15-5"><span class="section-number-4">3.15.5</span> Get bracket for solver</h4>
+<div class="outline-text-4" id="text-3-15-5">
+<div class="org-src-container">
+
+<pre class="src src-f90"><span style="color: #a020f0;">subroutine</span> <span style="color: #0000ff;">get_bracket_for_solver</span>()
+
+    <span style="color: #228b22;">real</span>(dp)       ::<span style="color: #a0522d;"> safe_width_solver</span>
+    <span style="color: #228b22;">real</span>(dp)       ::<span style="color: #a0522d;"> safe_dDmax_Ef_solver</span>
+
+safe_width_solver = fdf_get(<span style="color: #8b2252;">"PEXSI.safe-width-solver-bracket"</span>,4.0_dp*eV,<span style="color: #8b2252;">"Ry"</span>)
+safe_dDmax_Ef_solver = fdf_get(<span style="color: #8b2252;">"PEXSI.safe-dDmax-ef-solver"</span>,0.05)
+
+write_ok = ((mpirank == 0) <span style="color: #a020f0;">.and.</span> (verbosity &gt;= 1))
+
+<span style="color: #b22222;">! </span><span style="color: #b22222;">Do nothing for now</span>
+<span style="color: #b22222;">! </span><span style="color: #b22222;">No setting of  muMin0 and muMax0 yet, pending clarification of flow</span>
+
+  <span style="color: #a020f0;">if</span> (scf_step &gt; 1) <span style="color: #a020f0;">then</span>
+     <span style="color: #a020f0;">if</span> (prevDmax &lt; safe_dDmax_Ef_solver) <span style="color: #a020f0;">then</span>
+        <span style="color: #a020f0;">if</span> (write_ok) <span style="color: #a020f0;">write</span>(6,<span style="color: #8b2252;">"(a)"</span>) <span style="color: #8b2252;">"&amp;o Solver mu shifted by delta_Ef"</span>
+        mu = mu + delta_Ef
+     <span style="color: #a020f0;">endif</span>
+     <span style="color: #b22222;">! </span><span style="color: #b22222;">Always provide a safe bracket around mu, in case we need to fallback</span>
+     <span style="color: #b22222;">! </span><span style="color: #b22222;">to executing a cycle of inertia-counting</span>
+     <span style="color: #a020f0;">if</span> (write_ok) <span style="color: #a020f0;">write</span>(6,<span style="color: #8b2252;">"(a)"</span>) <span style="color: #8b2252;">"&amp;o Safe solver bracket around mu"</span>
+     muMin0 = mu - 0.5*safe_width_solver
+     muMax0 = mu + 0.5*safe_width_solver
+  <span style="color: #a020f0;">else</span>
+     <span style="color: #a020f0;">if</span> (write_ok) <span style="color: #a020f0;">write</span>(6,<span style="color: #8b2252;">"(a)"</span>) <span style="color: #8b2252;">"&amp;o Solver called with iscf=1 parameters"</span>
+     <span style="color: #b22222;">! </span><span style="color: #b22222;">do nothing. Keep mu, muMin0 and muMax0 as they are inherited</span>
+  <span style="color: #a020f0;">endif</span>
+<span style="color: #a020f0;">end subroutine</span> <span style="color: #0000ff;">get_bracket_for_solver</span>
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-sec-3-15-6" class="outline-4">
+<h4 id="sec-3-15-6"><span class="section-number-4">3.15.6</span> Compute current temperature if annealing</h4>
+<div class="outline-text-4" id="text-3-15-6">
+<p>
+We use a saved variable for keeping track of the previous temperature.
+</p>
+<div class="org-src-container">
+
+<pre class="src src-f90"><span style="color: #228b22;">real</span>(dp), <span style="color: #a020f0;">save</span> ::<span style="color: #a0522d;"> previous_pexsi_temperature</span>
+</pre>
+</div>
+<div class="org-src-container">
+
+<pre class="src src-f90"><span style="color: #b22222;">!</span><span style="color: #b22222;">------------------------------------------------------</span>
+<span style="color: #b22222;">! </span><span style="color: #b22222;">If using the "annealing" feature, this routine computes</span>
+<span style="color: #b22222;">! </span><span style="color: #b22222;">the current temperature to use in the PEXSI solver</span>
+<span style="color: #b22222;">!</span>
+<span style="color: #a020f0;">subroutine</span> <span style="color: #0000ff;">get_current_temperature</span>(pexsi_temperature)
+  <span style="color: #228b22;">real</span>(dp), <span style="color: #a020f0;">intent</span>(out) ::<span style="color: #a0522d;"> pexsi_temperature</span>
+
+ <span style="color: #228b22;">logical</span>  ::<span style="color: #a0522d;"> use_annealing</span>
+ <span style="color: #228b22;">real</span>(dp) ::<span style="color: #a0522d;"> annealing_preconditioner, temp_factor</span>
+ <span style="color: #228b22;">real</span>(dp) ::<span style="color: #a0522d;"> annealing_target_factor</span>
+
+ use_annealing = fdf_get(<span style="color: #8b2252;">"PEXSI.use-annealing"</span>,<span style="color: #a020f0;">.false.</span>)
+ <span style="color: #a020f0;">if</span> (use_annealing) <span style="color: #a020f0;">then</span>
+   annealing_preconditioner = fdf_get(<span style="color: #8b2252;">"PEXSI.annealing-preconditioner"</span>,1.0_dp)
+<span style="color: #b22222;">!   </span><span style="color: #b22222;">By default, the temperature goes to the target at a level 10 times dDtol</span>
+   annealing_target_factor = fdf_get(<span style="color: #8b2252;">"PEXSI.annealing-target-factor"</span>,10.0_dp)
+
+   <span style="color: #a020f0;">if</span> (scf_step &gt; 1 ) <span style="color: #a020f0;">then</span>
+
+      <span style="color: #b22222;">! </span><span style="color: #b22222;">Examples for target_factor = 10, dDtol=0.0001:</span>
+      <span style="color: #b22222;">! </span><span style="color: #b22222;">prevDmax=0.1, preconditioner=1, factor=3</span>
+      <span style="color: #b22222;">! </span><span style="color: #b22222;">prevDmax=0.1, preconditioner=2, factor=5</span>
+      <span style="color: #b22222;">! </span><span style="color: #b22222;">prevDmax=0.1, preconditioner=3, factor=7</span>
+      <span style="color: #b22222;">! </span><span style="color: #b22222;">prevDmax&lt;=0.001, factor = 1</span>
+      <span style="color: #b22222;">! </span><span style="color: #b22222;">prevDmax&lt;0.001, factor = 1</span>
+
+      temp_factor = (<span style="color: #a020f0;">log10</span>(prevDmax/(annealing_target_factor*dDtol)))
+      temp_factor = 1 + annealing_preconditioner * <span style="color: #a020f0;">max</span>(0.0_dp, temp_factor)
+
+      pexsi_temperature = temp_factor * temperature
+      <span style="color: #a020f0;">if</span> (pexsi_temperature &gt; previous_pexsi_temperature) <span style="color: #a020f0;">then</span>
+         <span style="color: #a020f0;">if</span> (mpirank==0) <span style="color: #a020f0;">write</span>(6,<span style="color: #8b2252;">"(a,f10.2)"</span>) <span style="color: #a020f0;">&amp;</span>
+              <span style="color: #8b2252;">"Will not raise PEXSI temperature to: "</span>, <span style="color: #a020f0;">&amp;</span>
+              pexsi_temperature/Kelvin
+         pexsi_temperature = previous_pexsi_temperature
+      <span style="color: #a020f0;">endif</span>
+      previous_pexsi_temperature = pexsi_temperature
+   <span style="color: #a020f0;">else</span>
+      <span style="color: #b22222;">! </span><span style="color: #b22222;">No heuristics for now for first step</span>
+      previous_pexsi_temperature = <span style="color: #a020f0;">huge</span>(1.0_dp)
+      pexsi_temperature = temperature
+      <span style="color: #b22222;">!   </span><span style="color: #b22222;">Keep in mind for the future if modifying T at the 1st step</span>
+      <span style="color: #b22222;">!      </span><span style="color: #b22222;">previous_pexsi_temperature = pexsi_temperature</span>
+   <span style="color: #a020f0;">endif</span>
+<span style="color: #a020f0;">else</span>
+      pexsi_temperature = temperature
+<span style="color: #a020f0;">endif</span>
+<span style="color: #a020f0;">if</span> (mpirank==0) <span style="color: #a020f0;">write</span>(6,<span style="color: #8b2252;">"(a,f10.2)"</span>) <span style="color: #a020f0;">&amp;</span>
+     <span style="color: #8b2252;">"Current PEXSI temperature (K): "</span>, pexsi_temperature/Kelvin
+<span style="color: #a020f0;">end subroutine</span> <span style="color: #0000ff;">get_current_temperature</span>
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-sec-3-15-7" class="outline-4">
+<h4 id="sec-3-15-7"><span class="section-number-4">3.15.7</span> Linear interpolation routine</h4>
+<div class="outline-text-4" id="text-3-15-7">
+<p>
+A very simple routine.
+</p>
+<div class="org-src-container">
+
+<pre class="src src-f90"><span style="color: #a020f0;">function</span> <span style="color: #0000ff;">interpolate</span>(xx,yy,x) <span style="color: #a020f0;">result</span>(val)
+<span style="color: #b22222;">!</span>
+<span style="color: #b22222;">! </span><span style="color: #b22222;">Interpolate linearly in the (monotonically increasing!) arrays xx and yy</span>
+<span style="color: #b22222;">!</span>
+<span style="color: #228b22;">integer</span>, <span style="color: #a020f0;">parameter</span> ::<span style="color: #a0522d;"> dp = selected_real_kind(10,100)</span>
+
+<span style="color: #228b22;">real</span>(dp), <span style="color: #a020f0;">intent</span>(in) ::<span style="color: #a0522d;"> xx(:), yy(:)</span>
+<span style="color: #228b22;">real</span>(dp), <span style="color: #a020f0;">intent</span>(in) ::<span style="color: #a0522d;"> x</span>
+<span style="color: #228b22;">real</span>(dp)             ::<span style="color: #a0522d;"> val</span>
+
+<span style="color: #228b22;">integer</span> ::<span style="color: #a0522d;"> i, n</span>
+
+n = <span style="color: #a020f0;">size</span>(xx)
+<span style="color: #a020f0;">if</span> (<span style="color: #a020f0;">size</span>(yy) /= n) <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">die</span>(<span style="color: #8b2252;">"Mismatch in array sizes in interpolate"</span>)
+
+<span style="color: #a020f0;">if</span> ( (x &lt; xx(1)) <span style="color: #a020f0;">.or.</span> (x &gt; xx(n))) <span style="color: #a020f0;">then</span>
+   <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">die</span>(<span style="color: #8b2252;">"Interpolate: x not in range"</span>)
+<span style="color: #a020f0;">endif</span>
+
+<span style="color: #a020f0;">do</span> i = 2, n
+   <span style="color: #a020f0;">if</span> (x &lt;= xx(i)) <span style="color: #a020f0;">then</span>
+      val = yy(i-1) + (x-xx(i-1)) * (yy(i)-yy(i-1))/(xx(i)-xx(i-1))
+      <span style="color: #a020f0;">exit</span>
+   <span style="color: #a020f0;">endif</span>
+<span style="color: #a020f0;">enddo</span>
+
+<span style="color: #a020f0;">end function</span> <span style="color: #0000ff;">interpolate</span>
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-sec-3-15-8" class="outline-4">
+<h4 id="sec-3-15-8"><span class="section-number-4">3.15.8</span> Error dispatcher</h4>
+<div class="outline-text-4" id="text-3-15-8">
+<div class="org-src-container">
+
+<pre class="src src-f90"><span style="color: #a020f0;">subroutine</span> <span style="color: #0000ff;">check_info</span>(info,str)
+<span style="color: #228b22;">integer</span>, <span style="color: #a020f0;">intent</span>(in) ::<span style="color: #a0522d;"> info</span>
+<span style="color: #228b22;">character</span>(len=*), <span style="color: #a020f0;">intent</span>(in) ::<span style="color: #a0522d;"> str</span>
+
+    <span style="color: #a020f0;">if</span>(mpirank == 0) <span style="color: #a020f0;">then</span>
+       <span style="color: #a020f0;">if</span> (info /= 0) <span style="color: #a020f0;">then</span>
+          <span style="color: #a020f0;">write</span>(6,*) <span style="color: #a020f0;">trim</span>(str) // <span style="color: #8b2252;">" info : "</span>, info
+          <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">die</span>(<span style="color: #8b2252;">"Error exit from "</span> // <span style="color: #a020f0;">trim</span>(str) // <span style="color: #8b2252;">" routine"</span>)
+       <span style="color: #a020f0;">endif</span>
+      <span style="color: #a020f0;">call</span> <span style="color: #0000ff;">pxfflush</span>(6)
+    <span style="color: #a020f0;">endif</span>       
+<span style="color: #a020f0;">end subroutine</span> <span style="color: #0000ff;">check_info</span>
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<p class="author">Author: Alberto Garcia</p>
+<p class="date">Created: 2016-09-14 Wed 11:31</p>
+<p class="creator"><a href="http://www.gnu.org/software/emacs/">Emacs</a> 24.5.1 (<a href="http://orgmode.org">Org</a> mode 8.2.10)</p>
+<p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
+</div>
+</body>
+</html>

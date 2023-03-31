@@ -1,0 +1,74 @@
+MPROP processes wave-functions, and the Hamiltonian and overlap-matrix
+from Siesta to produce COOP/COHP curves, and (partial) densities of
+states.
+
+M. Llunell (U. Barcelona) prepared an early prototype.
+A. Garcia  (ICMAB-CSIC) made significant corrections and improvements to
+           make it work seamlessly with Siesta, and optimized it.
+
+To use it, you first need to tell Siesta to produce the required information,
+by including the fdf directive
+
+COOP.Write  .true.
+
+in the input file. Copy the resulting .WFSX and .HSX files.
+
+Then, prepare a .mpr file like those you can find in the Tests directory, and
+execute mprop (type 'mprop -h' for usage notes).
+See the Docs directory for some extra documentation (work in progress).
+
+----------------------------------------------------------------------
+
+FAT computes the projections of eigenvectors (typically from a
+band-structure calculation in which output of wave-functions has been
+requested with the new option "Write.WFS.For.Bands") onto specified
+orbital sets (the specification follows the syntax of PDOS
+calculations with MPROP). The resulting "fatbands" can be plotted with
+the tools in Util/Bands.
+
+----------------------------------------------------------------------
+
+DM_CREATOR selects the states in a given energy interval to prepare a
+"fake" density matrix that can be later used, for example, to plot the
+charge density associated to those states. 
+
+----------------------------------------------------------------------
+
+SPIN_TEXTURE computes the "spin texture" of the nk spinor states
+stored in a WFSX file. The selection of states is on the basis of an
+eigenvalue interval (the whole range of energies in the file by
+default), or by band range.
+
+The WFSX file can be created during a Siesta calculation in several ways
+
+-- Using the 'COOP.Write T' option: a wave-function set using the
+   k-point sampling of the BZ used in the scf cycle will be written (see manual).
+
+-- Using the 'BandPoints' or 'BandLines' blocks (see manual), *together* with the options
+
+   	 SaveHS T
+	 Wfs.Write.For.Bands T
+
+-- Using the WaveFuncKpoints block, *together* with the option
+   	 SaveHS T
+
+(The 'SaveHS T' option is needed to generate information about the
+overlap matrix, which is needed by the program.)
+
+
+In general what one needs depends on the system. Many times simply
+having the spin texture along the directions of maximum symmetry, the
+same ones used to plot the band structure, is enough. In those
+cases BandLines serves perfectly. A regular sampling can be
+interesting when one does not know anything about the shape of the band
+and is interested in the texture of spin in the whole area of the
+Brillouin Zone. It would be the brute force option.
+
+In cases with Dirac cones (graphene, topological insulators), a radial
+sampling around the Dirac point (or in concentric circles with
+equispaced points) is usually what gives the best information.
+
+This is one of the cases where users should know what they need,
+there is no generic recipe.
+
+See the header of the 'read_spin_texture.f90' file for hints about plotting.

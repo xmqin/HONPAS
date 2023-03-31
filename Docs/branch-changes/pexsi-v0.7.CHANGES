@@ -1,0 +1,279 @@
+------------------------------------------------------------
+December 22, 2014  A. Garcia        trunk-464--pexsi-v0.7-14
+Clarifications in the manual. Non-square np-per-pole.
+
+Made some clarifications in the manual on the basis of feedback from
+Lin Lin.
+
+- The restriction of being a perfect square for np-per-pole has been lifted. 
+
+- New default of 1 for PEXSI.np-symbfact.
+
+- Clearer labeling for different ways of computing the band-structure
+  energy (displayed when verbosity >= 2)
+
+modified:
+  Docs/siesta.tex
+  Src/m_pexsi.f90
+  Src/m_pexsi_dos.F90
+  Src/m_pexsi_driver.F90
+  Src/m_pexsi_local_dos.F90
+
+------------------------------------------------------------
+December 17, 2014  A. Garcia        trunk-464--pexsi-v0.7-13
+Some more documentation. Update of PEXSI tests.
+
+added:
+  Tests/sih-pexsi/
+  Tests/sih-pexsi/makefile
+  Tests/sih-pexsi/sih-pexsi.fdf
+  Tests/sih-pexsi/sih-pexsi.pseudos
+modified:
+  Docs/siesta.tex
+  Src/obj_setup.sh
+  Tests/si64-pexsi/si64-pexsi.fdf
+
+------------------------------------------------------------
+December 17, 2014  A. Garcia        trunk-464--pexsi-v0.7-12
+Sync to trunk-464. More documentation on sparse-matrix i/o.
+
+Improve the documentation of the new framework for H and DM output.
+Add Util/DensityMatrix/dmUnblock.F90
+
+464:  Merge fixes from rc-4.0: constr. forces, MPI compilation, mm.potentials
+463:  Added restart file for smooth continuation of annealing runs (F. Corsetti)
+462:  Improved MPI version of siesta as a subroutine (J.M.Soler)
+461:  %files added to Util/JobList options (J.M.Soler)
+460:  New GGA and VDW functionals (M.Fritz & J.M.Soler)
+
+added:
+  Docs/gga.CHANGES
+  Docs/rc-4.0.CHANGES
+  Src/SiestaXC/Testers/Reference/
+  Src/SiestaXC/Testers/test6.f90
+  Src/SiestaXC/Testers/test6.m
+  Tests/anneal-cont/
+  Tests/anneal-cont/README
+  Tests/anneal-cont/makefile
+  Tests/anneal-cont/script.sh
+  Util/DensityMatrix/dmUnblock.F90
+  Util/JobList/Examples/Ice/dummyFile
+  Util/SiestaSubroutine/ProtoNEB/
+renamed:
+  Src/SiestaXC/Testers/test2.f90 => Src/SiestaXC/Testers/test2.F90
+modified:
+  Docs/CHANGES
+  Docs/siesta.tex
+  Pseudo/atom/Docs/atom.tex
+  Pseudo/atom/pseudoXML.f
+  Pseudo/atom/pxf.F90
+  Pseudo/atom/velect.f
+  Pseudo/atom/version.h
+  Src/MPI/Makefile
+  Src/SiestaXC/Testers/makefile
+  Src/SiestaXC/Testers/test1.f90
+  Src/SiestaXC/Testers/test3.F90
+  Src/SiestaXC/Testers/test4.F90
+  Src/SiestaXC/Testers/test5.f90
+  Src/SiestaXC/atomxc.F90
+  Src/SiestaXC/cellxc.F90
+  Src/SiestaXC/ggaxc.f
+  Src/SiestaXC/ldaxc.f
+  Src/SiestaXC/makefile
+  Src/SiestaXC/siestaxc.F90
+  Src/SiestaXC/vdwxc.F90
+  Src/SiestaXC/vv_vdwxc.F90
+  Src/SiestaXC/xcmod.f90
+  Src/atom.F
+  Src/dynamics.f
+  Src/fsiesta_mpi.F90
+  Src/molecularmechanics.F90
+  Src/write_subs.F
+  Src/xc.f
+  Util/DensityMatrix/README
+  Util/DensityMatrix/makefile
+  Util/JobList/Examples/Ice/iceChecks.jobs
+  Util/JobList/README
+  Util/JobList/Src/jobList.f90
+  Util/SiestaSubroutine/README
+  Src/SiestaXC/Testers/test2.F90
+
+
+----------------------------------------------------------------
+December 16, 2014  A. Garcia        trunk-459--pexsi-59--v0.7-11
+More documentation. Cosmetic changes in output
+
+Improve the documentation of some features. 
+Remove very low-level output and wrap other according to verbosity levels
+(work in progress).
+
+modified:
+  Docs/siesta.tex
+  Src/m_pexsi_dos.F90
+  Src/m_pexsi_driver.F90
+  Src/m_pexsi_local_dos.F90
+  Src/m_redist_spmatrix.F90
+
+----------------------------------------------------------------
+December 15, 2014  A. Garcia        trunk-459--pexsi-59--v0.7-10
+Document the PEXSI features and update interface to v0.7.3
+
+Wrote the first version of a new section of the manual devoted to
+PEXSI.
+
+Updated the interpretation of the PEXSI.safe-width-ef-solver parameter
+to make it consistent with the psimilar parameter for
+inertia-counting.
+
+Deprecated the use of the parameter PEXSI.inertia-count.
+
+A minor cosmetic change in f_ppexsi_interface.f90 in the official
+v0.7.3.
+
+modified:
+  Docs/siesta.tex
+  Src/f_ppexsi_interface.f90
+  Src/m_pexsi_driver.F90
+  Src/Sys/macosx-pexsi.make
+
+--------------------------------------------------------------
+December 3, 2014  A. Garcia        trunk-459--pexsi-59--v0.7-9
+Fix factor-of-two in DOS from inertia-count
+
+The inertia-count routine counts eigenvalues. Hence, we need
+a factor of two for properly getting the integrated density of states.
+
+modified:
+  Src/m_pexsi_dos.F90
+
+--------------------------------------------------------------
+December 2, 2014  A. Garcia        trunk-459--pexsi-59--v0.7-8
+Re-implemented the local DOS feature
+
+Used the selected-inversion interface.
+The number of processors per pole for this operation can
+be independently specified by
+
+   PEXSI.LocalDOS.npPerPole  N
+
+In the absence of this line, the value of PEXSI.npPerPole is used.
+
+NOTE: Due to the extra call to dhscf to convert the reduced DM to the
+LDOS (which is a "charge density" at the desired energy), the file
+Rho.grid.nc is overwritten with the LDOS information. There is
+currently no way to avoid this. The file can be re-generated from the
+SystemLabel.RHO file after the Siesta run using the Util/Grid/grid2cdf
+program.
+
+renamed:
+  Src/m_pexsi_local_dos.F90_old => Src/m_pexsi_local_dos.F90
+modified:
+  Src/Makefile
+  Src/siesta_analysis.F
+  Src/m_pexsi_local_dos.F90
+
+--------------------------------------------------------------
+December 1, 2014  A. Garcia        trunk-459--pexsi-59--v0.7-7
+Fix formatting problems in long source lines
+
+Some lines included backslashes that confused some compilers.  Other
+long lines in the PEXSI modules have now been split to fit within the
+classic 80 columns.
+
+modified:
+  Src/m_pexsi_dos.F90
+  Src/m_pexsi_driver.F90
+
+-------------------------------------------------------------
+November 26, 2014  A. Garcia        trunk-459--pexsi-59--v0.7-6
+Re-implement DOS calculation
+
+Use call to the raw inertia-count routine.
+Do not try to re-use the plan, as it would complicate
+the program flow.
+
+renamed:
+  Src/m_pexsi_dos.F90_old => Src/m_pexsi_dos.F90
+modified:
+  Src/Makefile
+  Src/siesta_analysis.F
+  Src/m_pexsi_dos.F90
+
+--------------------------------------------------------------
+November 13, 2014  A. Garcia        trunk-459--pexsi-59--v0.7-5
+Provide a safe bracket around mu for the solver
+
+Revised the heuristics for the 'solver-only' calls to add a bracket
+in case a fall-back to inertia-counting is needed.
+
+modified:
+  Src/m_pexsi_driver.F90
+
+--------------------------------------------------------------
+November 6, 2014  A. Garcia        trunk-459--pexsi-59--v0.7-4
+Add a new 'options' field for mu0, to initialize the solver.
+
+The heuristics for the 'solver-only' calls have to be revised,
+since there is in principle no need for a bracket, but a 
+fall-back to inertia-counting is possible.
+
+modified:
+  Src/f_ppexsi_interface.f90
+  Src/m_pexsi_driver.F90
+
+--------------------------------------------------------------
+November 4, 2014  A. Garcia        trunk-459--pexsi-59--v0.7-3
+Use heuristics for re-use of inertia-count brackets
+
+Take some code from the old version to provide heuristics for the
+optimization of initial brackets during the SCF loop. So far only
+the inertia-count stage is treated.
+
+Re-organized the code into internal subroutines for clarity.
+
+modified:
+  Src/m_pexsi_driver.F90
+
+--------------------------------------------------------------
+October 27, 2014  A. Garcia        trunk-459--pexsi-59--v0.7-2
+Reuse plan in simple KSDFT driver
+
+Store the 'plan' in a new m_pexsi module, and 
+initialize and finalize as needed.
+
+Still no optimization of initial bracket during the SCF loop.
+
+added:
+  Src/m_pexsi.f90
+modified:
+  Src/Makefile
+  Src/m_pexsi_driver.F90
+  Src/siesta_forces.F
+
+--------------------------------------------------------------
+October 14, 2014  A. Garcia        trunk-459--pexsi-59--v0.7-1
+Simple KSDFT driver from new interface
+
+Proof of concept.
+No plan reuse.
+No optimization of initial bracket during the SCF loop.
+
+removed:
+  Src/m_pexsi_interface.f90
+added:
+  Docs/pexsi-v0.7.CHANGES
+  Src/Sys/macosx-pexsi.make
+  Src/f_ppexsi_interface.f90
+  Src/m_pexsi_driver.F90
+  Tests/si64-pexsi/
+  Tests/si64-pexsi/makefile
+  Tests/si64-pexsi/si64-pexsi.fdf
+  Tests/si64-pexsi/si64-pexsi.pseudos
+renamed:
+  Src/m_pexsi_dos.F90 => Src/m_pexsi_dos.F90_old
+  Src/m_pexsi_local_dos.F90 => Src/m_pexsi_local_dos.F90_old
+  Src/m_pexsi_solver.F90 => Src/m_pexsi_solver.F90_old
+modified:
+  Src/Makefile
+  Src/siesta_analysis.F
+

@@ -1,0 +1,40 @@
+We provide an experimental python scripting framework built on top of the
+'Atomic Simulation Environment' (see https://wiki.fysik.dtu.dk/ase2)
+NOTE: You need "ASE version 2", not the new version 3.
+
+There are objects implementing the "Siesta as server" feature, and
+also hooks for file-oriented-communication usage.
+
+The scripts
+
+h2o.py
+bond.py
+client.py
+ase.py
+ase_relax.py
+ase_newton.py
+ase_verlet.py
+
+perform Siesta calculations (calling the program directly or
+using it as a server). Their interface to Siesta is implemented
+in modules in the Siesta directory.
+
+The script eggbox_checker.py is useful to diagnose the eggbox effect.
+
+The script simplex_optim.py is a crude driver for a basis set
+optimization (better to use Util/Optimizer)
+
+Please note that the location of the Siesta executable must
+be specified in the scripts at this point.
+
+Directory scripts/ contains some general-purpose utilities.
+
+Users can create their own scripts to customize the "outer geometry loop"
+in Siesta, or to perform various repetitive calculations in compact form.
+
+Note that the interfaces in this framework are still evolving and are 
+subject to change. 
+
+Suggestions for improvements can be sent to Alberto Garcia
+(albertog@icmab.es)
+

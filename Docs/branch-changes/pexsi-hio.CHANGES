@@ -1,0 +1,68 @@
+---------------------------------------------------------------
+October 14, 2013   Alberto Garcia    trunk-445--pexsi-46--hio-2
+Optionally read the Hamiltonian for analysis
+
+With the option
+
+   read-H-from-file T
+
+the program will attempt to read H from the file "H_IN". This is
+useful when performing analyses which only need H (and S), but not
+the DM. 
+
+For example, to compute bands, or (p)DOS:
+
+(... options for bands or (p)DOS...)
+max-scf-iterations 0
+read-H-from-file T
+
+Optionally, since the Fermi level is not computed in these cases, it
+can be set directly in the fdf file:
+
+   manual-fermi-level -3.05 eV
+
+The program might still attempt to initialize the DM, and print messages
+mentioning DM input. These are cosmetic issues, but the user should be
+aware that this options are to be used with care.
+
+
+modified:
+  Src/siesta_analysis.F
+
+---------------------------------------------------------------
+October 14, 2013   Alberto Garcia    trunk-445--pexsi-46--hio-1
+Save Hamiltonian and/or DM with proper filenames
+
+New file names:
+
+DM_MIXED: Useful for checkpointing
+DM_OUT:   Last DM computed
+
+H_MIXED:  Useful for checkpointing
+H_DMGEN:  Last H from which the electronic structure was computed
+
+The "mixed" files are produced only in the appropriate runs (MixDM
+(default), or MixHamiltonian).
+
+Other options affecting which files are written:
+
+- Checkpointing options:
+
+WriteDM
+WriteH
+
+- Analysis options:
+
+WriteDM.end.of.cycle
+WriteH.end.of.cycle
+
+- Backwards compatibility:
+
+SCF.MixAfterConvergence
+
+modified:
+  Src/Makefile
+  Src/m_iodm.F
+  Src/save_density_matrix.F
+  Src/siesta_forces.F
+  Src/siesta_options.F90

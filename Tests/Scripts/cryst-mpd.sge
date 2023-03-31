@@ -1,0 +1,48 @@
+#!/bin/bash
+#
+#$ -pe mpi 2
+#$ -cwd
+#$ -j y
+#$ -S /bin/bash
+#$ -V
+#
+echo "This job executes in: "
+cat $TMPDIR/machines
+#
+HOST=`hostname`
+echo Local MPD console on $HOST
+#
+# Make a list of unique host names
+#
+grep -v $HOST $TMPDIR/machines | sort | uniq  > mpd.hosts
+NODES=`wc mpd.hosts | awk '{print $1}'`
+#
+# Boot the MPI2 engine.
+#
+mpdboot --rsh=ssh --totalnum=$NODES --file=mpd.hosts
+sleep 10
+#
+# Inspect if all MPI nodes have been activated.
+#
+mpdtrace -l
+#
+# Check the connectivity.
+#
+mpdringtest 100
+#
+# Check if you can run trivial non-MPI jobs.
+#
+mpdrun -l -n $NSLOTS hostname
+#
+# Execute your MPI program.
+#
+prog_default="../../../Src/siesta"
+prog=${SIESTA:-${prog_default}}
+#
+make SIESTA="mpiexec -n $NSLOTS $prog"
+#
+# Shut down the MPI2 engine and exit the script.
+#
+echo "shutting down mpd..."
+mpdallexit
+exit 0

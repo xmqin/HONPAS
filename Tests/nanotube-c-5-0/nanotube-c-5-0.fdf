@@ -1,0 +1,77 @@
+#  C(5,0)
+
+SystemName          c50tube
+SystemLabel         nanotube-c-5-0 
+
+NumberOfAtoms       20
+NumberOfSpecies     1
+
+%block ChemicalSpeciesLabel
+ 1  6   C_2
+%endblock ChemicalSpeciesLabel
+
+LatticeConstant    25.0 Ang   # Lattice constant alat
+
+%block LatticeVectors               # Lattice vectors, in units of alat
+ 1.0      0.0000     0.0
+-0.50     0.86602540378444   0.00
+ 0.0      0.0       0.1704      # distance along z ==> dCC=1.42  AA
+%endblock LatticeVectors
+
+%block kgrid_Monkhorst_Pack
+ 1 0 0   0.0
+ 0 1 0   0.0
+ 0 0 50   0.5
+%endblock kgrid_Monkhorst_Pack
+
+%block PAO.Basis                 # Define Basis set
+C_2           3   0.010            # Label, l-shells, ionic net charge
+ n=2   0   2                         # n, l, Nzeta
+   6.099      4.192
+   1.000      1.000
+ n=2   1   2                         # n, l, Nzeta
+   4.994      3.105
+   1.000      1.000
+ n=3   2   1                         # n, l, Nzeta
+   4.192
+   1.000
+%endblock PAO.Basis
+
+MeshCutoff           300. Ry         # OK for carbon (see Emilio)
+LongOutput   true
+
+# SCF options
+DM.NumberPulay         3            # One Pulay every 5 iter
+DM.MixingWeight       0.15          # New DM amount for next SCF cycle
+DM.Tolerance          5.d-4         # Tolerance in maximum difference
+DM.UseSaveDM          true            # to use continuae..ion files
+SolutionMethod        diagon        # OrderN or Diagon
+ElectronicTemperature  25 meV       # Temp. for Fermi smearing
+
+MD.NumCGsteps        0
+
+
+
+AtomicCoordinatesFormat    Ang  # Format for inates
+%block AtomicCoordinatesAndAtomicSpecies
+    2.05815253    0.00000005   -0.00514455   1  C          1
+    1.66460705    1.21076605    0.71453767   1  C          2
+    1.66460711    1.21076647    2.12546263   1  C          3
+    2.05815296    0.00000047    2.84514465   1  C          4
+    0.63688939    1.95916716   -0.00500262   1  C          5
+   -0.63688894    1.95916590    0.71500218   1  C          6
+   -0.63688917    1.95916561    2.12499787   1  C          7
+    0.63688896    1.95916634    2.84500249   1  C          8
+   -1.66460648    1.21076599   -0.00453819   1  C          9
+   -2.05815276    0.00000073    0.71514444   1  C         10
+   -2.05815258    0.00000022    2.12485528   1  C         11
+   -1.66460743    1.21076602    2.84453725   1  C         12
+   -1.66460700   -1.21076524   -0.00453762   1  C         13
+   -0.63688959   -1.95916680    0.71500261   1  C         14
+   -0.63688943   -1.95916713    2.12499762   1  C         15
+   -1.66460732   -1.21076587    2.84453747   1  C         16
+    0.63688916   -1.95916651   -0.00500246   1  C         17
+    1.66460721   -1.21076640    0.71453747   1  C         18
+    1.66460716   -1.21076570    2.12546235   1  C         19
+    0.63688907   -1.95916543    2.84500187   1  C         20
+%endblock AtomicCoordinatesAndAtomicSpecies

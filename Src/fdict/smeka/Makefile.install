@@ -1,0 +1,55 @@
+_SMEKA_install = 1
+
+# Basic implementation of installing the different
+# libraries etc.
+
+INSTALL ?= install
+
+.PHONY: install
+.NOTPARALLEL: install
+install: smeka-install-lib smeka-install
+
+
+.PHONY: smeka-install-lib
+.NOTPARALLEL: smeka-install-lib
+smeka-install-lib: smeka-install-init-dir
+# Note that the x flag is common practice for libraries
+# although it may surprise first-time users.
+ifneq ($(LIBRARIES),)
+	$(INSTALL) -pm $(_OCT_rwxrxrx) -t $(DESTDIR)$(LIB_DIR) $(LIBRARIES)
+endif
+
+
+.PHONY: smeka-install-init-dir
+.NOTPARALLEL: smeka-install-init-dir
+smeka-install-init-dir:
+	-$(MKDIR) $(MKDIR_FLAG_PARENT) $(DESTDIR)$(INC_DIR)
+	-$(MKDIR) $(MKDIR_FLAG_PARENT) $(DESTDIR)$(LIB_DIR)
+	-$(MKDIR) $(MKDIR_FLAG_PARENT) $(DESTDIR)$(BIN_DIR)
+
+
+# Issuing uninstall will forcefully remove the installation directory
+.PHONY: smeka-uninstall-install
+.NOTPARALLEL: smeka-uninstall-install
+smeka-uninstall-install:
+	@$(ECHO) ""
+	@$(ECHO) "The directory tree:"
+	@$(ECHO) "  $(PREFIX)"
+	@$(ECHO) "will be deleted!"
+	@$(ECHO) "You may abort the operation within 2 secs by pressing:"
+	@$(ECHO) ""
+	@$(ECHO) "  Ctrl + C or ^C"
+	@$(ECHO) ""
+	@$(SLEEP) 2
+	@$(RM) $(RM_FLAG_FORCE) $(RM_FLAG_RECURSE) $(DESTDIR)$(PREFIX)
+uninstall: smeka-uninstall-install
+
+
+# Simple way to ALWAYS do user defined stuff at the end
+.PHONY: smeka-install
+.NOTPARALLEL: smeka-install
+smeka-install:
+
+# Local Variables:
+#  mode: makefile-gmake
+# End:
