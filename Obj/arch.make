@@ -34,24 +34,26 @@ SYS = nag
 SP_KIND = 4
 DP_KIND = 8
 KINDS = $(SP_KIND) $(DP_KIND)
+MKLROOT= /public/software/intel/2019/mkl/lib/intel64
+MKL_LIBS=-L$(MKLROOT) -lmkl_intel_lp64 -lmkl_core -lmkl_sequential -lmkl_scalapack_lp64 -lmkl_blacs_intelmpi_lp64
+#BLACS_LIBS=-L$(MKLROOT) -lmkl_blacs_intelmpi_lp64
+#SCALAPACK_LIBS=-L$(MKLROOT) -lmkl_scalapack_lp64
 
-
-#MKLROOT= 
-MKL_LIBS=-L$(MKLROOT) -lmkl_intel_lp64 -lmkl_core -lmkl_sequential
-BLACS_LIBS=-L$(MKLROOT) -lmkl_blacs_intelmpi_lp64
-SCALAPACK_LIBS=-L$(MKLROOT) -lmkl_scalapack_lp64
-
-LIBINT_LIBS=./libint_install/lib/libderiv.a ./libint_install/lib/libint.a
-
-LDFLAGS =
-
-COMP_LIBS = 
-#libsiestaLAPACK.a libsiestaBLAS.a
+LIBINT_LIBS = /public/home/xmqin/MathLibs/libint/1.1.5/intel/lib/libderiv.a /public/home/xmqin/MathLibs/libint/1.1.5/intel/lib/libint.a
 
 FPPFLAGS = -DMPI $(DEFS_PREFIX)-DFC_HAVE_ABORT $(DEFS_PREFIX)-DHAVE_LIBINT
 
-LIBS= $(SCALAPACK_LIBS) $(BLACS_LIBS) $(LAPACK_LIBS) $(BLAS_LIBS) $(MKL_LIBS) $(LIBINT_LIBS) -lpthread -lstdc++ $(NETCDF_LIBS)
+LIBS = $(MKL_LIBS) $(LIBINT_LIBS) -lpthread -lstdc++ $(NETCDF_LIBS)
 
+#INCFLAGS += -I/public/home/xmqin/MathLibs/netcdf/4.9.2/intel/include -I/public/home/xmqin/MathLibs/netcdf-fortran/4.6.0/intel/include
+#LDFLAGS += -L/public/home/xmqin/MathLibs/zlib/1.2.13/lib -Wl,-rpath,/public/home/xmqin/MathLibs/zlib/1.2.13/lib
+#LDFLAGS += -L/public/home/xmqin/MathLibs/hdf5/1.14.0/intel/lib -Wl,-rpath,/public/home/xmqin/MathLibs/hdf5/1.14.0/intel/lib
+#LDFLAGS += -L/public/home/xmqin/MathLibs/netcdf/4.9.2/intel/lib -Wl,-rpath,/public/home/xmqin/MathLibs/netcdf/4.9.2/intel/lib
+#LDFLAGS += -L/public/home/xmqin/MathLibs/netcdf-fortran/4.6.0/intel/lib -Wl,-rpath,/public/home/xmqin/MathLibs/netcdf-fortran/4.6.0/intel/lib
+#LIBS += -lnetcdff -lnetcdf -lhdf5_hl -lhdf5 -lz
+#COMP_LIBS += libncdf.a libfdict.a
+#FPPFLAGS += -DCDF -DNCDF -DNCDF_4
+#
 MPI_INTERFACE=libmpi_f90.a
 MPI_INCLUDE=.
 # Dependency rules ---------

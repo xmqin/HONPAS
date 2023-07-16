@@ -744,9 +744,15 @@ endif
     integer :: iuo, juo, kuo, luo, llo, ishell, jshell, kshell, lshell, &
       iushell, jushell, kushell, lushell, index_ij, index_kl, &
       io_trans, jo_trans, ko_trans, lo_trans, ia, ja, ka, la
-    real(dp) :: gint_deriv(1:12)
+    real(dp) :: gint_deriv(1:12), spin_factor
 
     ! -------------------------------------------------------------------------
+
+    if(nspin.eq.1) then
+       spin_factor = 1.0d0
+    else
+       spin_factor = 2.0d0
+    endif
 
     ncells = hfx_sys%norb / hfx_sys%nuotot
 
@@ -793,30 +799,30 @@ endif
       !   VEE(1[0]  2[H] | 4[N]  3[G])  (u0v[R])|n[R"]m[R'])
       if((D2Sindx(jo,lo).ne.0) .and. (D2Sindx(io,ko).ne.0)) then
       Fal(1:3,ia) = Fal(1:3,ia) &
-       +0.25d0*0.25d0*gint_deriv(1:3)*Dscf(D2Sindx(jo,lo),ispin)*Dscf(D2Sindx(io,ko),ispin)
+       +0.25d0*0.25d0*spin_factor*gint_deriv(1:3)*Dscf(D2Sindx(jo,lo),ispin)*Dscf(D2Sindx(io,ko),ispin)
 
       Fal(1:3,ja) = Fal(1:3,ja) &
-       +0.25d0*0.25d0*gint_deriv(4:6)*Dscf(D2Sindx(jo,lo),ispin)*Dscf(D2Sindx(io,ko),ispin)
+       +0.25d0*0.25d0*spin_factor*gint_deriv(4:6)*Dscf(D2Sindx(jo,lo),ispin)*Dscf(D2Sindx(io,ko),ispin)
 
       Fal(1:3,ka) = Fal(1:3,ka) &
-       +0.25d0*0.25d0*gint_deriv(7:9)*Dscf(D2Sindx(jo,lo),ispin)*Dscf(D2Sindx(io,ko),ispin)
+       +0.25d0*0.25d0*spin_factor*gint_deriv(7:9)*Dscf(D2Sindx(jo,lo),ispin)*Dscf(D2Sindx(io,ko),ispin)
 
       Fal(1:3,la) = Fal(1:3,la) &
-       +0.25d0*0.25d0*gint_deriv(10:12)*Dscf(D2Sindx(jo,lo),ispin)*Dscf(D2Sindx(io,ko),ispin)
+       +0.25d0*0.25d0*spin_factor*gint_deriv(10:12)*Dscf(D2Sindx(jo,lo),ispin)*Dscf(D2Sindx(io,ko),ispin)
       endif
 
       if((D2Sindx(jo,ko).ne.0) .and. (D2Sindx(io,lo).ne.0)) then
       Fal(1:3,ia) = Fal(1:3,ia) &
-       +0.25d0*0.25d0*gint_deriv(1:3)*Dscf(D2Sindx(jo,ko),ispin)*Dscf(D2Sindx(io,lo),ispin)
+       +0.25d0*0.25d0*spin_factor*gint_deriv(1:3)*Dscf(D2Sindx(jo,ko),ispin)*Dscf(D2Sindx(io,lo),ispin)
 
       Fal(1:3,ja) = Fal(1:3,ja) &
-       +0.25d0*0.25d0*gint_deriv(4:6)*Dscf(D2Sindx(jo,ko),ispin)*Dscf(D2Sindx(io,lo),ispin)
+       +0.25d0*0.25d0*spin_factor*gint_deriv(4:6)*Dscf(D2Sindx(jo,ko),ispin)*Dscf(D2Sindx(io,lo),ispin)
 
       Fal(1:3,ka) = Fal(1:3,ka) &
-       +0.25d0*0.25d0*gint_deriv(7:9)*Dscf(D2Sindx(jo,ko),ispin)*Dscf(D2Sindx(io,lo),ispin)
+       +0.25d0*0.25d0*spin_factor*gint_deriv(7:9)*Dscf(D2Sindx(jo,ko),ispin)*Dscf(D2Sindx(io,lo),ispin)
 
       Fal(1:3,la) = Fal(1:3,la) &
-       +0.25d0*0.25d0*gint_deriv(10:12)*Dscf(D2Sindx(jo,ko),ispin)*Dscf(D2Sindx(io,lo),ispin)
+       +0.25d0*0.25d0*spin_factor*gint_deriv(10:12)*Dscf(D2Sindx(jo,ko),ispin)*Dscf(D2Sindx(io,lo),ispin)
       endif
 
 
@@ -829,30 +835,30 @@ endif
 
       if((D2Sindx(io_trans,lo_trans).ne.0) .and. (D2Sindx(juo,ko_trans).ne.0)) then
       Fal(1:3,ja) = Fal(1:3,ja) &
-       +0.25d0*0.25d0*gint_deriv(4:6)*Dscf(D2Sindx(io_trans,lo_trans),ispin)*Dscf(D2Sindx(juo,ko_trans),ispin)
+       +0.25d0*0.25d0*spin_factor*gint_deriv(4:6)*Dscf(D2Sindx(io_trans,lo_trans),ispin)*Dscf(D2Sindx(juo,ko_trans),ispin)
 
       Fal(1:3,ia) = Fal(1:3,ia) &
-        +0.25d0*0.25d0*gint_deriv(1:3)*Dscf(D2Sindx(io_trans,lo_trans),ispin)*Dscf(D2Sindx(juo,ko_trans),ispin)
+        +0.25d0*0.25d0*spin_factor*gint_deriv(1:3)*Dscf(D2Sindx(io_trans,lo_trans),ispin)*Dscf(D2Sindx(juo,ko_trans),ispin)
 
       Fal(1:3,ka) = Fal(1:3,ka) &
-        +0.25d0*0.25d0*gint_deriv(7:9)*Dscf(D2Sindx(io_trans,lo_trans),ispin)*Dscf(D2Sindx(juo,ko_trans),ispin)
+        +0.25d0*0.25d0*spin_factor*gint_deriv(7:9)*Dscf(D2Sindx(io_trans,lo_trans),ispin)*Dscf(D2Sindx(juo,ko_trans),ispin)
 
       Fal(1:3,la) = Fal(1:3,la) &
-        +0.25d0*0.25d0*gint_deriv(10:12)*Dscf(D2Sindx(io_trans,lo_trans),ispin)*Dscf(D2Sindx(juo,ko_trans),ispin)
+        +0.25d0*0.25d0*spin_factor*gint_deriv(10:12)*Dscf(D2Sindx(io_trans,lo_trans),ispin)*Dscf(D2Sindx(juo,ko_trans),ispin)
       endif
 
       if((D2Sindx(io_trans,ko_trans).ne.0) .and.(D2Sindx(juo,lo_trans).ne.0)) then
       Fal(1:3,ja) = Fal(1:3,ja) &
-       +0.25d0*0.25d0*gint_deriv(4:6)*Dscf(D2Sindx(io_trans,ko_trans),ispin)*Dscf(D2Sindx(juo,lo_trans),ispin)
+       +0.25d0*0.25d0*spin_factor*gint_deriv(4:6)*Dscf(D2Sindx(io_trans,ko_trans),ispin)*Dscf(D2Sindx(juo,lo_trans),ispin)
 
       Fal(1:3,ia) = Fal(1:3,ia) &
-        +0.25d0*0.25d0*gint_deriv(1:3)*Dscf(D2Sindx(io_trans,ko_trans),ispin)*Dscf(D2Sindx(juo,lo_trans),ispin)
+        +0.25d0*0.25d0*spin_factor*gint_deriv(1:3)*Dscf(D2Sindx(io_trans,ko_trans),ispin)*Dscf(D2Sindx(juo,lo_trans),ispin)
 
       Fal(1:3,ka) = Fal(1:3,ka) &
-        +0.25d0*0.25d0*gint_deriv(7:9)*Dscf(D2Sindx(io_trans,ko_trans),ispin)*Dscf(D2Sindx(juo,lo_trans),ispin)
+        +0.25d0*0.25d0*spin_factor*gint_deriv(7:9)*Dscf(D2Sindx(io_trans,ko_trans),ispin)*Dscf(D2Sindx(juo,lo_trans),ispin)
 
       Fal(1:3,la) = Fal(1:3,la) &
-        +0.25d0*0.25d0*gint_deriv(10:12)*Dscf(D2Sindx(io_trans,ko_trans),ispin)*Dscf(D2Sindx(juo,lo_trans),ispin)
+        +0.25d0*0.25d0*spin_factor*gint_deriv(10:12)*Dscf(D2Sindx(io_trans,ko_trans),ispin)*Dscf(D2Sindx(juo,lo_trans),ispin)
       endif
 
       ! 3.VEE(3[0]  4[N-G] | 1[-G] 2[H-G]) (m0n[R"-R']|u[-R']v[R-R'])
@@ -864,30 +870,30 @@ endif
 
       if((D2Sindx(lo_trans,jo_trans).ne.0) .and. (D2Sindx(kuo,io_trans).ne.0))then
       Fal(1:3,ka) = Fal(1:3,ka) &
-       +0.25d0*0.25d0*gint_deriv(7:9)*Dscf(D2Sindx(lo_trans,jo_trans),ispin)*Dscf(D2Sindx(kuo,io_trans),ispin)
+       +0.25d0*0.25d0*spin_factor*gint_deriv(7:9)*Dscf(D2Sindx(lo_trans,jo_trans),ispin)*Dscf(D2Sindx(kuo,io_trans),ispin)
 
       Fal(1:3,ia) = Fal(1:3,ia) &
-       +0.25d0*0.25d0*gint_deriv(1:3)*Dscf(D2Sindx(lo_trans,jo_trans),ispin)*Dscf(D2Sindx(kuo,io_trans),ispin)
+       +0.25d0*0.25d0*spin_factor*gint_deriv(1:3)*Dscf(D2Sindx(lo_trans,jo_trans),ispin)*Dscf(D2Sindx(kuo,io_trans),ispin)
 
       Fal(1:3,ja) = Fal(1:3,ja) &
-       +0.25d0*0.25d0*gint_deriv(4:6)*Dscf(D2Sindx(lo_trans,jo_trans),ispin)*Dscf(D2Sindx(kuo,io_trans),ispin)
+       +0.25d0*0.25d0*spin_factor*gint_deriv(4:6)*Dscf(D2Sindx(lo_trans,jo_trans),ispin)*Dscf(D2Sindx(kuo,io_trans),ispin)
 
       Fal(1:3,la) = Fal(1:3,la) &
-       +0.25d0*0.25d0*gint_deriv(10:12)*Dscf(D2Sindx(lo_trans,jo_trans),ispin)*Dscf(D2Sindx(kuo,io_trans),ispin)
+       +0.25d0*0.25d0*spin_factor*gint_deriv(10:12)*Dscf(D2Sindx(lo_trans,jo_trans),ispin)*Dscf(D2Sindx(kuo,io_trans),ispin)
       endif
 
       if((D2Sindx(lo_trans,io_trans).ne.0) .and. (D2Sindx(kuo,jo_trans).ne.0))then
       Fal(1:3,ka) = Fal(1:3,ka) &
-       +0.25d0*0.25d0*gint_deriv(7:9)*Dscf(D2Sindx(lo_trans,io_trans),ispin)*Dscf(D2Sindx(kuo,jo_trans),ispin)
+       +0.25d0*0.25d0*spin_factor*gint_deriv(7:9)*Dscf(D2Sindx(lo_trans,io_trans),ispin)*Dscf(D2Sindx(kuo,jo_trans),ispin)
 
       Fal(1:3,ia) = Fal(1:3,ia) &
-       +0.25d0*0.25d0*gint_deriv(1:3)*Dscf(D2Sindx(lo_trans,io_trans),ispin)*Dscf(D2Sindx(kuo,jo_trans),ispin)
+       +0.25d0*0.25d0*spin_factor*gint_deriv(1:3)*Dscf(D2Sindx(lo_trans,io_trans),ispin)*Dscf(D2Sindx(kuo,jo_trans),ispin)
 
       Fal(1:3,ja) = Fal(1:3,ja) &
-       +0.25d0*0.25d0*gint_deriv(4:6)*Dscf(D2Sindx(lo_trans,io_trans),ispin)*Dscf(D2Sindx(kuo,jo_trans),ispin)
+       +0.25d0*0.25d0*spin_factor*gint_deriv(4:6)*Dscf(D2Sindx(lo_trans,io_trans),ispin)*Dscf(D2Sindx(kuo,jo_trans),ispin)
 
       Fal(1:3,la) = Fal(1:3,la) &
-        +0.25d0*0.25d0*gint_deriv(10:12)*Dscf(D2Sindx(lo_trans,io_trans),ispin)*Dscf(D2Sindx(kuo,jo_trans),ispin)
+        +0.25d0*0.25d0*spin_factor*gint_deriv(10:12)*Dscf(D2Sindx(lo_trans,io_trans),ispin)*Dscf(D2Sindx(kuo,jo_trans),ispin)
       endif
 
 ! 4.VEE(4[0]  3[G-N] | 1[-N] 2[H-N])  (n0m[R'-R"]|u[-R"]v[R-R"])
@@ -899,31 +905,31 @@ endif
 
       if((D2Sindx(ko_trans,jo_trans).ne.0) .and. (D2Sindx(luo,io_trans).ne.0)) then
       Fal(1:3,la) = Fal(1:3,la) &
-       +0.25d0*0.25d0*gint_deriv(10:12)*Dscf(D2Sindx(ko_trans,jo_trans),ispin)*Dscf(D2Sindx(luo,io_trans),ispin)
+       +0.25d0*0.25d0*spin_factor*gint_deriv(10:12)*Dscf(D2Sindx(ko_trans,jo_trans),ispin)*Dscf(D2Sindx(luo,io_trans),ispin)
 
       Fal(1:3,ia) = Fal(1:3,ia) &
-       +0.25d0*0.25d0*gint_deriv(1:3)*Dscf(D2Sindx(ko_trans,jo_trans),ispin)*Dscf(D2Sindx(luo,io_trans),ispin)
+       +0.25d0*0.25d0*spin_factor*gint_deriv(1:3)*Dscf(D2Sindx(ko_trans,jo_trans),ispin)*Dscf(D2Sindx(luo,io_trans),ispin)
 
       Fal(1:3,ja) = Fal(1:3,ja) &
-       +0.25d0*0.25d0*gint_deriv(4:6)*Dscf(D2Sindx(ko_trans,jo_trans),ispin)*Dscf(D2Sindx(luo,io_trans),ispin)
+       +0.25d0*0.25d0*spin_factor*gint_deriv(4:6)*Dscf(D2Sindx(ko_trans,jo_trans),ispin)*Dscf(D2Sindx(luo,io_trans),ispin)
 
       Fal(1:3,ka) = Fal(1:3,ka) &
-       +0.25d0*0.25d0*gint_deriv(7:9)*Dscf(D2Sindx(ko_trans,jo_trans),ispin)*Dscf(D2Sindx(luo,io_trans),ispin)
+       +0.25d0*0.25d0*spin_factor*gint_deriv(7:9)*Dscf(D2Sindx(ko_trans,jo_trans),ispin)*Dscf(D2Sindx(luo,io_trans),ispin)
 
       endif
 
       if((D2Sindx(ko_trans,io_trans).ne.0) .and. (D2Sindx(luo,jo_trans).ne.0)) then
       Fal(1:3,la) = Fal(1:3,la) &
-       +0.25d0*0.25d0*gint_deriv(10:12)*Dscf(D2Sindx(ko_trans,io_trans),ispin)*Dscf(D2Sindx(luo,jo_trans),ispin)
+       +0.25d0*0.25d0*spin_factor*gint_deriv(10:12)*Dscf(D2Sindx(ko_trans,io_trans),ispin)*Dscf(D2Sindx(luo,jo_trans),ispin)
 
       Fal(1:3,ia) = Fal(1:3,ia) &
-       +0.25d0*0.25d0*gint_deriv(1:3)*Dscf(D2Sindx(ko_trans,io_trans),ispin)*Dscf(D2Sindx(luo,jo_trans),ispin)
+       +0.25d0*0.25d0*spin_factor*gint_deriv(1:3)*Dscf(D2Sindx(ko_trans,io_trans),ispin)*Dscf(D2Sindx(luo,jo_trans),ispin)
 
       Fal(1:3,ja) = Fal(1:3,ja) &
-       +0.25d0*0.25d0*gint_deriv(4:6)*Dscf(D2Sindx(ko_trans,io_trans),ispin)*Dscf(D2Sindx(luo,jo_trans),ispin)
+       +0.25d0*0.25d0*spin_factor*gint_deriv(4:6)*Dscf(D2Sindx(ko_trans,io_trans),ispin)*Dscf(D2Sindx(luo,jo_trans),ispin)
 
       Fal(1:3,ka) = Fal(1:3,ka) &
-       +0.25d0*0.25d0*gint_deriv(7:9)*Dscf(D2Sindx(ko_trans,io_trans),ispin)*Dscf(D2Sindx(luo,jo_trans),ispin)
+       +0.25d0*0.25d0*spin_factor*gint_deriv(7:9)*Dscf(D2Sindx(ko_trans,io_trans),ispin)*Dscf(D2Sindx(luo,jo_trans),ispin)
       endif
 
     enddo

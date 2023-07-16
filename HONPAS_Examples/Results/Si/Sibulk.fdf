@@ -1,0 +1,109 @@
+SystemName      Bulk Silisin
+SystemLabel     Sibulk
+NumberOfSpecies	        1
+NumberOfAtoms           2
+%block ChemicalSpeciesLabel
+  1  14  Si
+%endblock ChemicalSpeciesLabel
+
+%include coord.fdf
+
+%block PAO.Basis
+Si     3     .1124063
+ n=3    0    2   E      125.1657256       5.4841374
+   5.5286848            4.1057123
+   1.00000000000000        1.00000000000000
+ n=3    1    2   E      35.2294275       5.9545977
+   6.4197861            3.9634531
+   1.00000000000000        1.00000000000000
+ n=3    2    1   E      60.6374417       1.9644615
+   5.0273537
+   1.00000000000000
+%endblock PAO.Basis
+
+%block NAO2GTO
+Si   5
+3  0  1  5
+    0.15909326E+00     0.64313340E+00
+    0.86836496E+00     0.19646324E+01
+    0.12157109E+01    -0.48790497E+01
+    0.17019953E+01     0.28506480E+01
+    0.29060337E+01    -0.30906785E+00
+3  0  2  5
+    0.38851164E+00     0.36778081E+01
+    0.54391628E+00    -0.32463429E+01
+    0.20857016E+01    -0.22290855E+01
+    0.29199823E+01     0.30415158E+01
+    0.40879751E+01    -0.10575846E+01
+3  1  1  3
+    0.12389670E+00     0.15037097E+00
+    0.39288390E+00     0.39394490E+00
+    0.72096461E+00    -0.14865807E+00
+3  1  2  4
+    0.41852167E+00     0.18709405E+01
+    0.58593033E+00    -0.17806838E+01
+    0.82030244E+00     0.66768749E+00
+    0.11484234E+01    -0.14524648E+00
+3  2  1  3
+    0.37873881E+00     0.44332754E+00
+    0.15521261E+01     0.84621145E+00
+    0.31042691E+01    -0.16133756E+00
+%endblock NAO2GTO
+
+#WriteIonPlotFiles .true.
+
+xc.functional      GGA    # Default vaxc.authors         HSE    # Default value
+xc.authors        HSE06    # Default value
+
+ElectronicTemperature  25 meV
+
+#DM.UseSaveDM            T
+MeshCutoff              250. Ry     # Equivalent planewave cutoff for the grid
+MaxSCFIterations        50         # Maximum number of SCF iterations per step
+DM.MixingWeight         0.2         # New DM amount for next SCF cycle
+DM.Tolerance            1.d-4       # Tolerance in maximum difference
+                                    # between input and output DM
+DM.NumberPulay          6          # Number of SCF steps between pulay mixing
+
+# Eigenvalue problem: order-N or diagonalization
+
+SolutionMethod          diagon      # OrderN or Diagon
+
+%block kgrid_Monkhorst_Pack
+   8  0  0  0.5
+   0  8  0  0.5
+   0  0  8  0.5
+%endblock kgrid_Monkhorst_Pack
+
+MD.TypeOfRun            cg          # Type of dynamics:
+MD.NumCGsteps  100
+MD.VariableCell   .false.
+MD.MaxForceTol  0.01 eV/Ang
+#WriteMDXmol   .true.
+WriteForces  .true.
+WriteCoorStep
+
+BandLinesScale ReciprocalLatticeVectors
+%block BandLines
+1   0.375 0.375 0.75  K
+40   0.0  0.0  0.0     \Gamma
+40   0.5  0.0  0.5     X
+40   0.5  0.25  0.75  W
+40   0.5  0.5  0.5     L
+40   0.0  0.0  0.0     \Gamma
+%endblock BandLines
+
+HFX.MinimumNumberGaussians        3
+HFX.MaximumNumberGaussians        5
+
+HFX.UseFittedNAOs                 T
+HFX.TruncateDM                    T
+HFX.FarField                      T
+HFX.FarFieldTolerance     0.100E-05
+HFX.PairListTolerance     0.100E-05
+HFX.SchwarzTolerance      0.100E-05
+HFX.StoreERIsTolerance    0.100E-05
+HFX.GaussianEPS                 0.100E-04
+HFX.Dynamic_parallel              F
+HFX.FragSize               10000
+

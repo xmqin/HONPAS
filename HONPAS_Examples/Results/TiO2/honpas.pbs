@@ -1,0 +1,19 @@
+#!/bin/bash -x
+#PBS -N honpas
+#PBS -l nodes=1:ppn=24
+#PBS -j oe
+#PBS -q check
+#define variables
+
+echo $PBS_O_WORKDIR
+NCPUS=`wc -l $PBS_NODEFILE | awk '{print $1}'`
+echo $NCPUS
+#
+#
+#running jobs
+#
+cd $PBS_O_WORKDIR
+
+mpirun -np $NCPUS -machinefile $PBS_NODEFILE  /public/home/xmqin/Paper/honpas_2.0-beta/Obj/honpas < TiO2.fdf |tee TiO2.out
+
+

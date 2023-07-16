@@ -103,15 +103,15 @@ module nao2gto_types
     integer   ::  potential_type = -1
     integer   ::  min_num_gaus   =  3
     integer   ::  max_num_gaus   =  6
-    real(dp)  ::  omega = -1.0_dp
-    real(dp)  ::  cutoff_radius = -1.0_dp
-    real(dp)  ::  eps_farfield = -1.0_dp
-    real(dp)  ::  eps_pairlist = -1.0_dp
-    real(dp)  ::  eps_schwarz = -1.0_dp
-    real(dp)  ::  eps_stored = -1.0_dp
+    real(dp)  ::  omega = 0.11_dp
+    real(dp)  ::  cutoff_radius = 1.0d-6
+    real(dp)  ::  eps_farfield = 1.0d-6
+    real(dp)  ::  eps_pairlist = 1.0d-6
+    real(dp)  ::  eps_schwarz = 1.0d-6
+    real(dp)  ::  eps_stored = 1.0d-6
     real(dp)  ::  threshold_exp_gaus = 1.4_dp
     real(dp)  ::  tolerance_gaus = 1.d-3
-    real(dp)  ::  gto_eps = 1.d-4
+    real(dp)  ::  gto_eps = 1.d-5
   end type hfx_options_type
 
   !> \brief Data type to store information about orbital pairs

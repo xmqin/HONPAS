@@ -1,0 +1,29 @@
+#!/bin/bash -x
+#PBS -N honpas
+#PBS -l nodes=1:ppn=18
+#PBS -j oe
+#PBS -q check
+#define variables
+
+echo $PBS_O_WORKDIR
+NCPUS=`wc -l $PBS_NODEFILE | awk '{print $1}'`
+echo $NCPUS
+#
+#
+#running jobs
+#
+cd $PBS_O_WORKDIR
+
+mpirun -np $NCPUS -machinefile $PBS_NODEFILE /public/home/xmqin/Paper/honpas_v1.2/Obj/honpas < SiC.fdf |tee SiC.out
+wait
+
+/public/home/xmqin/Paper/honpas_v1.2/Util/Bands/gnubands < SiC.bands > band_plot
+wait
+
+LUMO=`sed -n "826p"  band_plot | awk '{printf "%12.6f \n", $2 }'`
+HOMO=`sed -n "902p"  band_plot | awk '{printf "%12.6f \n", $2 }'`
+Eg=`echo $LUMO - $HOMO |bc -l`
+
+echo " " $LUMO " " $HOMO " "  $E_eV  " "  $Eg >> ./Eg.dat
+
+

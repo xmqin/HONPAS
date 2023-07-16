@@ -1,0 +1,151 @@
+只在 . 存在：1
+./fdf 和 /public/home/xmqin/FrontChem/Paper/honpas_v1.2/Src/fdf 有共同的子目录
+./fdict 和 /public/home/xmqin/FrontChem/Paper/honpas_v1.2/Src/fdict 有共同的子目录
+./hfx 和 /public/home/xmqin/FrontChem/Paper/honpas_v1.2/Src/hfx 有共同的子目录
+./Include 和 /public/home/xmqin/FrontChem/Paper/honpas_v1.2/Src/Include 有共同的子目录
+./Libs 和 /public/home/xmqin/FrontChem/Paper/honpas_v1.2/Src/Libs 有共同的子目录
+./MPI 和 /public/home/xmqin/FrontChem/Paper/honpas_v1.2/Src/MPI 有共同的子目录
+diff ./nao2gto_hfx.F90 /public/home/xmqin/FrontChem/Paper/honpas_v1.2/Src/nao2gto_hfx.F90
+880c880
+<     real(dp) time1, time2, time_tot
+---
+>     real(dp) time_start, time_end
+886a887
+>     
+913c914,915
+< 
+---
+>       call cpu_time(time_start)
+>      !write(6,*) "node ", node, hfx_optdata%Dynamic_parallel, hfx_optdata%frag_size
+922c924
+< !        write(6,*) node, list_ij%nelement, list_kl%nelement, number_task
+---
+>         write(6,*) node, list_ij%nelement, list_kl%nelement, number_task
+1467c1469,1470
+< !    call cpu_time(time2)
+---
+> 
+>    call cpu_time(time_end)
+1470,1471c1473
+< !    if(node.eq.0)
+< !     write(6,*) "HFX time : ", time2-time1, " s  on ", node
+---
+> !    if(node.eq.0)  write(6,*) "HFX time : ", time_end - time_start , " s "
+diff ./nao2gto_hfx_force.F90 /public/home/xmqin/FrontChem/Paper/honpas_v1.2/Src/nao2gto_hfx_force.F90
+292a293,294
+>     real(dp) :: time_start, time_end
+> 
+301a304
+>       call cpu_time(time_start)
+311,313c314
+< !        write(6,*) node, list_ij%nelement, list_kl%nelement, number_task
+< 
+< !        call cpu_time(time_start3)
+---
+>         write(6,*) node, list_ij%nelement, list_kl%nelement, number_task
+463c464
+<              DM_max = 2.0_dp*max( Dscf_max(D2Sindx(io, ko))*Dscf_max(D2Sindx(jo,lo)), &
+---
+>              DM_max = 2.0_dp * max( Dscf_max(D2Sindx(io, ko))*Dscf_max(D2Sindx(jo,lo)), &
+640c641
+<              DM_max = 2.0_dp*max( Dscf_max(D2Sindx(io, ko))*Dscf_max(D2Sindx(jo,lo)), &
+---
+>              DM_max = 2.0_dp * max( Dscf_max(D2Sindx(io, ko))*Dscf_max(D2Sindx(jo,lo)), &
+720a722,726
+> 
+>       call cpu_time(time_end)
+> 
+> !    if(IOnode)  write(6,*) "HFX Force time : ", time_end - time_start , " s "
+>  
+diff ./nao2gto_io.F90 /public/home/xmqin/FrontChem/Paper/honpas_v1.2/Src/nao2gto_io.F90
+533a534
+> !         spp%orbnl_z(inlz)
+559,560c560,563
+<           if( l > 0)  hfx_opts%max_num_gaus = 4
+<           if (spp%orbnl_ispol(inlz)) hfx_opts%max_num_gaus = 3
+---
+>           if( l == 1)  hfx_opts%max_num_gaus = 4
+> !          if (spp%orbnl_ispol(inlz)) hfx_opts%max_num_gaus = 3
+>           if( l >= 2)  hfx_opts%max_num_gaus =  hfx_opts%min_num_gaus
+> 
+683c686
+<             gtos(isp)%pgf_radius(ipgf,inlz)= exp_radius(l, zeta, 1.0d-4, 1.0_dp ) !
+---
+>             gtos(isp)%pgf_radius(ipgf,inlz)= exp_radius(l, zeta, hfx_opts%gto_eps, 1.0_dp ) !
+1286c1289
+<     write(*,'(A,8X,L12)') "HFX.FragSize", hfx_opts%frag_size
+---
+>     write(*,'(A,8X,I12)') "HFX.FragSize", hfx_opts%frag_size
+diff ./nao2gto_prescreen.F90 /public/home/xmqin/FrontChem/Paper/honpas_v1.2/Src/nao2gto_prescreen.F90
+1380,1381c1380,1381
+< !    call mneighb(hfx_sys%cell, 2.0_dp*rmaxo, na, hfx_sys%xa, 0, 0, nnia )
+< !    call re_alloc(index, 1, maxna, name='index', routine='build_pair_list')
+---
+>     call mneighb(hfx_sys%cell, 2.0_dp*rmaxo, na, hfx_sys%xa, 0, 0, nnia )
+>     call re_alloc(index, 1, maxna, name='index', routine='build_pair_list')
+1418c1418
+< !      call mneighb(hfx_sys%cell, 2.0_dp*rmaxo, na, hfx_sys%xa, ia, 0, nnia)
+---
+>       call mneighb(hfx_sys%cell, 2.0_dp*rmaxo, na, hfx_sys%xa, ia, 0, nnia)
+1429,1432c1429,1432
+< !      call ordix (r2ij, 1, nnia, index)
+< !      call iorder(jna,  1, nnia, index)
+< !      call order (r2ij, 1, nnia, index)
+< !      call order (xij,  3, nnia, index)
+---
+>       call ordix (r2ij, 1, nnia, index)
+>       call iorder(jna,  1, nnia, index)
+>       call order (r2ij, 1, nnia, index)
+>       call order (xij,  3, nnia, index)
+1472c1472
+< !        do jn = 1, nnia
+---
+>         do jn = 1, nnia
+1475,1476c1475,1476
+< !          ja = jna(jn)
+<          do ja = 1, na
+---
+>           ja = jna(jn)
+> !         do ja = 1, na
+1623c1623
+< !    call de_alloc(index, name='index', routine='build_pair_list')
+---
+>     call de_alloc(index, name='index', routine='build_pair_list')
+1763a1764,1772
+>     real(dp) :: eps_new
+> 
+>     if( hfx_opts%eps_schwarz >1.0E-6_dp ) then
+>       eps_new = 1.0E-6_dp
+>     else
+>       eps_new = hfx_opts%eps_schwarz
+>     endif
+> 
+> !   write(6,*) "calc_pair_dist_radii: eps_schwarz ", hfx_opts%eps_schwarz
+1892c1901
+< &                      ra=ra, rb=rb, rp=rp, zetp=zetp, eps=1.0d-6, &
+---
+> &                      ra=ra, rb=rb, rp=rp, zetp=zetp, eps=eps_new, &
+diff ./nao2gto_types.F90 /public/home/xmqin/FrontChem/Paper/honpas_v1.2/Src/nao2gto_types.F90
+106,111c106,111
+<     real(dp)  ::  omega = -1.0_dp
+<     real(dp)  ::  cutoff_radius = -1.0_dp
+<     real(dp)  ::  eps_farfield = -1.0_dp
+<     real(dp)  ::  eps_pairlist = -1.0_dp
+<     real(dp)  ::  eps_schwarz = -1.0_dp
+<     real(dp)  ::  eps_stored = -1.0_dp
+---
+>     real(dp)  ::  omega = 0.11_dp
+>     real(dp)  ::  cutoff_radius = 1.0d-6
+>     real(dp)  ::  eps_farfield = 1.0d-6
+>     real(dp)  ::  eps_pairlist = 1.0d-6
+>     real(dp)  ::  eps_schwarz = 1.0d-6
+>     real(dp)  ::  eps_stored = 1.0d-6
+114c114
+<     real(dp)  ::  gto_eps = 1.d-4
+---
+>     real(dp)  ::  gto_eps = 1.d-5
+./ncdf 和 /public/home/xmqin/FrontChem/Paper/honpas_v1.2/Src/ncdf 有共同的子目录
+./Orphans 和 /public/home/xmqin/FrontChem/Paper/honpas_v1.2/Src/Orphans 有共同的子目录
+./SiestaXC 和 /public/home/xmqin/FrontChem/Paper/honpas_v1.2/Src/SiestaXC 有共同的子目录
+./wxml 和 /public/home/xmqin/FrontChem/Paper/honpas_v1.2/Src/wxml 有共同的子目录
+./xmlparser 和 /public/home/xmqin/FrontChem/Paper/honpas_v1.2/Src/xmlparser 有共同的子目录
