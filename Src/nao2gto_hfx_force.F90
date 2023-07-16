@@ -748,7 +748,7 @@ endif
 
     ! -------------------------------------------------------------------------
 
-    if(nspin.eq.1) then
+    if(hfx_sys%nspin .eq.1) then
        spin_factor = 1.0d0
     else
        spin_factor = 2.0d0
