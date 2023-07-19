@@ -679,8 +679,8 @@ contains
 !          if(zeta.le.0.1) then
 !             gtos(isp)%pgf_radius(ipgf,inlz)= exp_radius(l, zeta, 0.5d-3, 1.0_dp )
 !          else
-!            gtos(isp)%pgf_radius(ipgf,inlz)= exp_radius(l, zeta, hfx_opts%gto_eps, 1.0_dp ) ! gcca) !1.0_dp)
-            gtos(isp)%pgf_radius(ipgf,inlz)= exp_radius(l, zeta, 1.0d-4, 1.0_dp ) !
+            gtos(isp)%pgf_radius(ipgf,inlz)= exp_radius(l, zeta, hfx_opts%gto_eps, 1.0_dp ) ! gcca) !1.0_dp)
+!            gtos(isp)%pgf_radius(ipgf,inlz)= exp_radius(l, zeta, 1.0d-4, 1.0_dp ) !
 !          endif
 !!         For debugging
           write(6,'(a,3i5,f12.5)')                                           &
@@ -1435,6 +1435,7 @@ contains
     hfx_opts%threshold_exp_gaus = fdf_get("HFX.SeparationExponents", 1.4)
     hfx_opts%tolerance_gaus = fdf_get("HFX.ToleranceFit", 1.d-3)
     hfx_opts%is_fitted_nao = fdf_get("HFX.UseFittedNAOs", .true.)
+    hfx_opts%gto_eps = fdf_get( "HFX.GaussianEPS", 1.0d-5)
     hfx_opts%Dynamic_parallel = fdf_get("HFX.Dynamic_parallel", .false.)
     hfx_opts%frag_size = fdf_get("HFX.FragSize", 10000)
 
