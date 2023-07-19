@@ -1,9 +1,12 @@
 ! 
-! Copyright (C) 1996-2016	The SIESTA group
-!  This file is distributed under the terms of the
-!  GNU General Public License: see COPYING in the top directory
-!  or http://www.gnu.org/copyleft/gpl.txt.
-! See Docs/Contributors.txt for a list of contributors.
+! This file is part of the SIESTA package.
+!
+! Copyright (c) Fundacion General Universidad Autonoma de Madrid:
+! E.Artacho, J.Gale, A.Garcia, J.Junquera, P.Ordejon, D.Sanchez-Portal
+! and J.M.Soler, 1996- .
+! 
+! Use of this software constitutes agreement with the full conditions
+! given in the SIESTA license, as signed by all legitimate users.
 !
       module atmfuncs
 
@@ -23,6 +26,11 @@ C     different chemical species in the calculation:
 
       implicit none 
 !
+      type(species_info), pointer        :: spp
+      type(rad_func), pointer            :: op
+      type(rad_func), pointer            :: pp
+      type(rad_func), pointer            :: func   
+!
       character(len=79) message
       integer, parameter               :: max_l = 5
       integer, parameter               :: max_ilm = (max_l+1)*(max_l+1)
@@ -38,12 +46,11 @@ C     different chemical species in the calculation:
       public  :: lofio, symfio, cnfigfio, zetafio, mofio
       public  :: labelfis, lomaxfis, nztfl, rphiatm, lmxkbfis
       public  :: phiatm, all_phi
-      public  :: pol   ! Added JMS Dec.2009
-
-      public  :: orb_gindex, kbproj_gindex, vna_gindex, dftu_gindex
       private
-      
+                          !
       contains
+!
+!
 
       subroutine chk(name,is)
       character(len=*), intent(in) :: name
@@ -168,70 +175,8 @@ C  Distances in Bohr
 
       end function rchlocal
 
-!         AMENOFIS
+!----------AMENOFIS
 !
-!---- Global index helpers------------------------------
-
-      FUNCTION orb_gindex (IS,IO)
-      integer orb_gindex
-      integer, intent(in) :: is    ! Species index
-      integer, intent(in) :: io    ! Orbital index (within atom)
-
-C Returns the global index of a basis orbital
-
-      call chk('orb_gindex',is)
-      if ( (io .gt. species(is)%norbs) .or.
-     $     (io .lt. 1))   call die("orb_gindex: Wrong io")
-
-      orb_gindex = species(is)%orb_gindex(io)
-      end function orb_gindex
-
-      FUNCTION kbproj_gindex (IS,IO)
-      integer kbproj_gindex
-      integer, intent(in) :: is    ! Species index
-      integer, intent(in) :: io    ! KBproj index 
-                                   ! (within atom, <0, for compatibility)
-
-C Returns the global index of a KB projector
-
-      integer :: ko
-
-      call chk('kbproj_gindex',is)
-      ko = -io
-
-      if ( (ko .gt. species(is)%nprojs) .or.
-     $     (ko .lt. 1)) then
-         call die("kbproj_gindex: Wrong io")
-      endif
-
-      kbproj_gindex = species(is)%pj_gindex(ko)
-      end function kbproj_gindex
-
-      FUNCTION dftu_gindex (IS,IO)
-      integer dftu_gindex
-      integer, intent(in) :: is    ! Species index
-      integer, intent(in) :: io    ! Orbital index (within atom)
-
-C Returns the global index of a DFT+U projector
-
-      call chk('dftu_gindex',is)
-      if ( (io .gt. species(is)%nprojsdftu) .or.
-     $     (io .lt. 1))   call die("dftu_gindex: Wrong io")
-
-      dftu_gindex = species(is)%pjdftu_gindex(io)
-      end function dftu_gindex
-
-      FUNCTION vna_gindex (IS)
-      integer vna_gindex
-      integer, intent(in) :: is    ! Species index
-
-C Returns the global index for a Vna function
-
-      call chk('vna_gindex',is)
-      vna_gindex = species(is)%vna_gindex
-      end function vna_gindex
-!------------------------------------------------
-
       FUNCTION ATMPOPFIO (IS,IO)
       real(dp) atmpopfio
       integer, intent(in) :: is    ! Species index
@@ -283,16 +228,15 @@ C                    IO < 0 => Kleynman-Bylander projectors
 C                    IO = 0 => Local pseudopotential
 C************************OUTPUT*****************************************
 C   INTEGER LOFIO  : Quantum number L of orbital or KB projector
-      type(species_info), pointer :: spp
 
       call chk('lofio',is)
-
+      
       spp => species(is)
       if (io.gt.0) then
-         if (io.gt.spp%norbs)  call die("lofio: No such orbital")
+         if (io.gt.spp%norbs)  call die("No such orbital")
          lofio = spp%orb_l(io)
       else if (io.lt.0) then
-         if (-io.gt.spp%nprojs)  call die("lofio: No such projector")
+         if (-io.gt.spp%nprojs)  call die("No such projector")
          lofio = spp%pj_l(-io)
       else
          lofio = 0
@@ -314,16 +258,15 @@ C                    IO < 0 => Kleynman-Bylander projectors
 C                    IO = 0 => Local pseudopotential
 C************************OUTPUT*****************************************
 C   INTEGER MOFIO  : Quantum number m of orbital or KB projector
-      type(species_info), pointer :: spp
 
       call chk('mofio',is)
       
       spp => species(is)
       if (io.gt.0) then
-         if (io.gt.spp%norbs)  call die("mofio: No such orbital")
+         if (io.gt.spp%norbs)  call die("No such orbital")
          mofio = spp%orb_m(io)
       else if (io.lt.0) then
-         if (-io.gt.spp%nprojs)  call die("mofio: No such projector")
+         if (-io.gt.spp%nprojs)  call die("No such projector")
          mofio = spp%pj_m(-io)
       else
          mofio = 0
@@ -343,13 +286,12 @@ C    INTEGER  IO   : Orbital index (within atom)
 C                    IO > 0 => Basis orbitals
 C************************OUTPUT*****************************************
 C   INTEGER ZETAFIO  : Zeta number of orbital
-      type(species_info), pointer :: spp
 
       call chk('mofio',is)
 
       spp => species(is)
       if (io.gt.0) then
-         if (io.gt.spp%norbs)  call die("zetafio: No such orbital")
+         if (io.gt.spp%norbs)  call die("No such orbital")
          zetafio = spp%orbnl_z(spp%orb_index(io))
       else 
          call die('zetafio only deals with orbitals')
@@ -368,18 +310,19 @@ C   INTEGER ZETAFIO  : Zeta number of orbital
 C  Returns cutoff radius of Kleynman-Bylander projectors and
 C  atomic basis orbitals.
 C  Distances in Bohr
-      type(species_info), pointer :: spp
 
       call chk('rcut',is)
       
       spp => species(is)
       if (io.gt.0) then
-         if (io.gt.spp%norbs)  call die("rcut: No such orbital")
+         if (io.gt.spp%norbs)  call die("No such orbital")
 
-         rcut = spp%orbnl(spp%orb_index(io))%cutoff
+         op => spp%orbnl(spp%orb_index(io))
+         rcut = op%cutoff
       else if (io.lt.0) then
-         if (-io.gt.spp%nprojs)  call die("rcut: No such projector")
-         rcut = spp%pjnl(spp%pj_index(-io))%cutoff
+         if (-io.gt.spp%nprojs)  call die("No such projector")
+         pp => spp%pjnl(spp%pj_index(-io))
+         rcut = pp%cutoff
       else
          rcut = spp%vna%cutoff
       endif
@@ -402,32 +345,29 @@ C                    IO < 0 => Kleynman-Bylander projectors
 C   INTEGER SYMFIO  : Symmetry of the orbital or KB projector
 C  2) Returns 's' for IO = 0
 
+
       integer ilm, i, lorb, morb
-      integer, parameter  :: lmax_sym=4
-
-      character(len=11)  sym_label((lmax_sym+1)*(lmax_sym+1)) 
-
-      data  sym_label(1)
-     .  / 's' /
-      data (sym_label(i),i=2,4)
-     .  / 'py', 'pz', 'px' /
-      data (sym_label(i),i=5,9)
-     .  / 'dxy', 'dyz', 'dz2', 'dxz', 'dx2-y2' / 
-      data (sym_label(i),i=10,16)
-     .  / 'fy(3x2-y2)', 'fxyz', 'fz2y', 'fz3',
-     .    'fz2x', 'fz(x2-y2)', 'fx(x2-3y2)' /
-      data (sym_label(i),i=17,25)
-     .  / 'gxy(x2-y2)', 'gzy(3x2-y2)', 'gz2xy', 'gz3y', 'gz4',
-     .    'gz3x', 'gz2(x2-y2)', 'gzx(x2-3y2)', 'gx4+y4' /
-      type(species_info), pointer :: spp
+      integer, parameter  :: lmax_sym=3
+   
+      character(len=6)  sym_label((lmax_sym+1)*(lmax_sym+1)) 
+      character(len=7)  paste
+         
+      external paste
+C
+        data  sym_label(1)          / 's' /
+        data (sym_label(i),i=2,4)   / 'py', 'pz', 'px' /
+        data (sym_label(i),i=5,9)   / 'dxy', 'dyz', 'dz2',
+     .                                'dxz', 'dx2-y2' / 
+        data (sym_label(i),i=10,16) / 'f', 'f', 'f', 'f', 
+     .                                'f', 'f', 'f' /
 
       call chk('rcut',is)
       
       spp => species(is)
       if (io.gt.0) then
-         if (io.gt.spp%norbs)  call die("symfio: No such orbital")
+         if (io.gt.spp%norbs)  call die("No such orbital")
       else if (io.lt.0) then
-         if (-io.gt.spp%nprojs)  call die("symfio: No such projector")
+         if (-io.gt.spp%nprojs)  call die("No such projector")
       else
          symfio = 's'
       endif
@@ -440,7 +380,7 @@ C  2) Returns 's' for IO = 0
       else
          ilm=lorb*lorb+lorb+morb+1  
          if(pol(is,io)) then 
-            symfio='P'//sym_label(ilm)
+            symfio=paste('P',sym_label(ilm))
          else
             symfio=sym_label(ilm) 
          endif 
@@ -457,12 +397,12 @@ C  2) Returns 's' for IO = 0
                                    ! io>0 => basis orbitals
 
 C If true, the orbital IO is a perturbative polarization orbital
-      type(species_info), pointer :: spp
 
       spp => species(is)
       if ( (io .gt. species(is)%norbs) .or.
      $     (io .le. 0))   call die("pol: Wrong io")
 
+      spp => species(is)
       pol = spp%orbnl_ispol(spp%orb_index(io))
       
       end function pol
@@ -479,7 +419,6 @@ C       <Psi|V_KB|Psi'> = <Psi|V_local|Psi'> +
 C                 Sum_lm( epsKB_l * <Psi|Phi_lm> * <Phi_lm|Psi'> )
 C  where Phi_lm is returned by subroutine PHIATM.
 C  Energy in Rydbergs.
-      type(species_info), pointer :: spp
 
       integer ik
 
@@ -501,14 +440,13 @@ C  Energy in Rydbergs.
 C Returns local part of neutral-atom Kleynman-Bylander pseudopotential.
 C Distances in Bohr,  Energies in Rydbergs
 C  2) Returns exactly zero when |R| > RCUT(IS,0)
-      type(rad_func), pointer :: func
 
       real(dp) rmod, dvdr
 
       call chk('vna_sub',is)
 
-      v = 0.0_dp
-      grv(1:3) = 0.0_dp
+      v=0.0_dp
+      grv(1:3)=0.0_dp
 
       if (floating(is)) return
 
@@ -518,7 +456,7 @@ C  2) Returns exactly zero when |R| > RCUT(IS,0)
       if (rmod .gt. func%cutoff) return
 
       call rad_get(func,rmod,v,dvdr)
-      rmod = rmod + tiny20
+      rmod=rmod+tiny20
       grv(1:3) = dvdr * r(1:3)/rmod
  
       end subroutine vna_sub
@@ -533,14 +471,13 @@ C Returns 'local-pseudotential charge density'.
 C Distances in Bohr, Energies in Rydbergs
 C Density in electrons/Bohr**3
 C  2) Returns exactly zero when |R| > Rchloc
-      type(rad_func), pointer :: func
 
       real(dp) :: rmod, dchdr
 
       call chk('psch',is)
 
-      ch = 0.0_dp 
-      grch(1:3) = 0.0_dp 
+      ch=0.0_dp 
+      grch(1:3)=0.0_dp 
 
       if (floating(is)) return
 
@@ -549,7 +486,7 @@ C  2) Returns exactly zero when |R| > Rchloc
       if (rmod .gt. func%cutoff) return
 
       call rad_get(func,rmod,ch,dchdr)
-      rmod = rmod + tiny20
+      rmod=rmod+tiny20
       grch(1:3) = dchdr * r(1:3)/rmod
 
       end subroutine psch
@@ -564,24 +501,22 @@ C Returns returns pseudo-core charge density for non-linear core correction
 C in the xc potential.
 C Distances in Bohr, Energies in Rydbergs, Density in electrons/Bohr**3
 C  2) Returns exactly zero when |R| > Rcore
-      type(rad_func), pointer :: func
 
       real(dp) rmod, dchdr
 
       call chk('chcore_sub',is)
 
-      ch = 0.0_dp
-      grch(1:3) = 0.0_dp
+      ch=0.0_dp
+      grch(1:3)=0.0_dp
 
       if (floating(is)) return
 
       func => species(is)%core
       rmod = sqrt(sum(r*r))
-      rmod = rmod + tiny20                   ! Moved here. JMS, Dec.2012
       if (rmod .gt. func%cutoff) return
 
       call rad_get(func,rmod,ch,dchdr)
-!      rmod=rmod+tiny20                   ! Removed. JMS, Dec.2012
+      rmod=rmod+tiny20
       grch(1:3) = dchdr * r(1:3)/rmod
  
       end subroutine chcore_sub
@@ -611,15 +546,13 @@ C    where epsKB_l is returned by function EPSKB
 C 5) Prints a message and stops when no data exits for IS and/or IO
 C 6) Returns exactly zero when |R| > RCUT(IS,IO)
 C 7) PHIATM with IO = 0 is strictly equivalent to VNA_SUB
-      type(species_info), pointer :: spp
-      type(rad_func), pointer :: func
 
       real(dp) rmod, phir, dphidr
       real(dp) rly(max_ilm), grly(3,max_ilm)
-      integer l, m, ik, ilm
+      integer i, l, m, ik, ilm
 
-      phi = 0.0_dp
-      grphi(1:3) = 0.0_dp
+      phi=0.0_dp
+      grphi(1:3)=0.0_dp
 
       spp => species(is)
       if (io.gt.0) then
@@ -654,9 +587,9 @@ C 7) PHIATM with IO = 0 is strictly equivalent to VNA_SUB
          ilm = l*l + l + m + 1
          call rlylm( l, r, rly, grly )
          phi = phir * rly(ilm)
-         grphi(1)=dphidr*rly(ilm)*r(1)/rmod+phir*grly(1,ilm)
-         grphi(2)=dphidr*rly(ilm)*r(2)/rmod+phir*grly(2,ilm)
-         grphi(3)=dphidr*rly(ilm)*r(3)/rmod+phir*grly(3,ilm)
+         do i = 1,3
+            grphi(i)=dphidr*rly(ilm)*r(i)/rmod+phir*grly(i,ilm)
+         enddo
 
       endif
 
@@ -689,8 +622,6 @@ C                   Sum_lm( epsKB_l * <Psi|Phi_lm> * <Phi_lm|Psi'> )
 C    where epsKB_l is returned by function EPSKB
 C 6) Returns exactly zero when |R| > RCUT(IS,IO)
 C 7) RPHIATM with ITYPE = 0 is strictly equivalent to VNA_SUB
-      type(species_info), pointer :: spp
-      type(rad_func), pointer :: func
 
       real(dp) rmod, phir
       integer l, m, ik
@@ -738,17 +669,16 @@ C 7) RPHIATM with ITYPE = 0 is strictly equivalent to VNA_SUB
       end subroutine rphiatm
 
 
-      subroutine all_phi( is, it, r, maxnphi, nphi, phi, grphi )
-      integer,   intent(in) :: is     ! Species index
-      integer,   intent(in) :: it     ! Orbital-type switch:
-                                      ! IT > 0 => Basis orbitals
-                                      ! IT < 0 => KB projectors
-      real(dp),  intent(in) :: r(3)   ! Point vector, relative to atom
-      integer,  intent(in) :: maxnphi ! Maximum number of phi's
-      integer,  intent(out) :: nphi   ! Number of phi's
-      real(dp), intent(out) :: phi(maxnphi) ! Basis orbital, KB projector, or
-                                      !  local pseudopotential
-      real(dp), optional, intent(out) :: grphi(3,maxnphi) ! Gradient of phi
+      subroutine all_phi(is,it,r,nphi,phi, grphi)
+      integer, intent(in) :: is     ! Species index
+      integer, intent(in) :: it     ! Orbital-type switch:
+                                    ! IT > 0 => Basis orbitals
+                                    ! IT < 0 => KB projectors
+      real(dp), intent(in)  :: r(3)   ! Point vector, relative to atom
+      integer, intent(out):: nphi   ! Number of phi's
+      real(dp), intent(out) :: phi(:) ! Basis orbital, KB projector, or
+                                    !  local pseudopotential
+      real(dp), optional, intent(out) :: grphi(:,:) ! Gradient of phi
 
 C  Returns Kleynman-Bylander local pseudopotential, nonlocal projectors,
 C  and atomic basis orbitals (and their gradients).
@@ -768,15 +698,16 @@ C 5) Prints a message and stops when no data exits for IS
 C 6) Returns exactly zero when |R| > RCUT(IS,IO)
 C 8) If arrays phi or grphi are too small, returns with the required
 C    value of nphi
-      type(species_info), pointer :: spp
 
-      integer i, jlm, l, lmax, m, maxlm
+      integer i, jlm, l, lmax, m, maxlm, n
       double precision  rmod, phir, dphidr
       real(dp) rly(max_ilm), grly(3,max_ilm)
 
-      integer :: ilm(maxnphi)
-      double precision :: rmax(maxnphi)
-      logical :: within(maxnphi)
+      integer, parameter :: maxphi=100
+
+      integer :: ilm(maxphi)
+      double precision :: rmax(maxphi)
+      logical :: within(maxphi)
 
       call chk('all_phi',is)
       spp => species(is)
@@ -790,23 +721,36 @@ C    value of nphi
          call die("all_phi: Please use phiatm to get Vna...")
       endif
       
-      if (nphi.gt.maxnphi) call die('all_phi: maxphi too small')
+      if (nphi.gt.maxphi) call die('all_phi: maxphi too small')
 
       if (it.gt.0) then
          do i = 1, nphi
             l = spp%orb_l(i)
             m = spp%orb_m(i)
             ilm(i) = l*(l+1)+m+1
-            rmax(i) = spp%orbnl(spp%orb_index(i))%cutoff
+            op => spp%orbnl(spp%orb_index(i))
+            rmax(i) = op%cutoff
          enddo
       else
          do i = 1, nphi
-            rmax(i) = spp%pjnl(spp%pj_index(i))%cutoff
+            pp => spp%pjnl(spp%pj_index(i))
+            rmax(i) = pp%cutoff
             l = spp%pj_l(i)
             m = spp%pj_m(i)
             ilm(i) = l*(l+1)+m+1
          enddo
       endif
+
+!     Check size of output arrays
+      if (present(grphi)) then
+        if (size(grphi,1).ne.3)
+     .    call die('all_phi: incorrect first dimension of grphi')
+        n = min( size(phi), size(grphi,2) )
+      else
+        n = size(phi)
+      endif
+!     Return if the caller did not provide arrays large enough...
+      if (n.lt.nphi) return
 
 !     Initialize orbital values
       phi(1:nphi) = 0._dp
@@ -832,11 +776,14 @@ C    value of nphi
         if (.not.within(i)) cycle i_loop
           
 !       Find radial part
+
         if (it.gt.0) then
-          call rad_get(spp%orbnl(spp%orb_index(i)),rmod,phir,dphidr)
-        else
-          call rad_get(spp%pjnl(spp%pj_index(i)),rmod,phir,dphidr)
-        end if
+           func => spp%orbnl(spp%orb_index(i))
+        else 
+           func => spp%pjnl(spp%pj_index(i))
+        endif
+
+        call rad_get(func,rmod,phir,dphidr)
 
 !       Multiply radial and angular parts
         jlm = ilm(i)
@@ -863,7 +810,6 @@ C Returns electrostatic correction to the ions interaction energy
 C due to the overlap of the two 'local pseudopotential charge densities'
 C Distances in Bohr, Energies in Rydbergs
 C  2) Returns exactly zero when |R| > Rchloc
-      type(rad_func), pointer :: func
 
       integer ismx, ismn, indx
       real(dp) r_local
@@ -899,7 +845,6 @@ C  2) Returns exactly zero when |R| > Rchloc
       integer, intent(in)  :: l    ! Angular momentum of the basis funcs
 C Returns the number of different basis functions
 C with the same angular momentum and for a given species
-      type(species_info), pointer :: spp
 
       integer i
 
@@ -920,8 +865,7 @@ C with the same angular momentum and for a given species
 
 C Returns the number of different KB projectors
 C with the same angular momentum and for a given species
-      type(species_info), pointer :: spp
-
+      
       integer i
 
       call chk('nkbl_func',is)

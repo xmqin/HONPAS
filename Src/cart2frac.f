@@ -1,9 +1,12 @@
 ! 
-! Copyright (C) 1996-2016	The SIESTA group
-!  This file is distributed under the terms of the
-!  GNU General Public License: see COPYING in the top directory
-!  or http://www.gnu.org/copyleft/gpl.txt.
-! See Docs/Contributors.txt for a list of contributors.
+! This file is part of the SIESTA package.
+!
+! Copyright (c) Fundacion General Universidad Autonoma de Madrid:
+! E.Artacho, J.Gale, A.Garcia, J.Junquera, P.Ordejon, D.Sanchez-Portal
+! and J.M.Soler, 1996- .
+! 
+! Use of this software constitutes agreement with the full conditions
+! given in the SIESTA license, as signed by all legitimate users.
 !
       subroutine cart2frac(na,xc,yc,zc,rv,xyzfrac)
 C
@@ -23,23 +26,21 @@ C  xyzfrac(3,na) = fractional X coordinate
 C
 C  Julian Gale, NRI, Curtin University, May 2004
 C
-      use precision
-
       implicit none
 C
 C  Passed variables
 C
       integer, intent(in)     :: na
-      real(dp),  intent(inout)  :: xc(na)
-      real(dp),  intent(inout)  :: yc(na)
-      real(dp),  intent(inout)  :: zc(na)
-      real(dp),  intent(out)    :: xyzfrac(3,na)
-      real(dp),  intent(in)     :: rv(3,3)
+      real*8,  intent(inout)  :: xc(na)
+      real*8,  intent(inout)  :: yc(na)
+      real*8,  intent(inout)  :: zc(na)
+      real*8,  intent(out)    :: xyzfrac(3,na)
+      real*8,  intent(in)     :: rv(3,3)
 C
 C  Local variables
 C
       integer                 :: i
-      real(dp)                  :: rmat(3,3)
+      real*8                  :: rmat(3,3)
 C
 C  Copy lattice vectors to scratch array
 C
@@ -91,15 +92,14 @@ C
 C  Invert matrix A by Gaussian elimination and apply to
 C  multiple vectors x
 C
-      use precision
       use sys, only : die
       implicit none
 C
 C  Passed variables
 C
       integer, intent(in)     :: m
-      real(dp),  intent(inout)  :: a(3,3)
-      real(dp),  intent(inout)  :: xf(3,m)
+      real*8,  intent(inout)  :: a(3,3)
+      real*8,  intent(inout)  :: xf(3,m)
 C
 C  Local variables
 C
@@ -110,9 +110,9 @@ C
       integer                 :: j
       integer                 :: k
       integer                 :: kk
-      real(dp)                  :: delt
-      real(dp)                  :: u
-      real(dp)                  :: x
+      real*8                  :: delt
+      real*8                  :: u
+      real*8                  :: x
 C
       delt = 1.0d-10
       do k = 1,2

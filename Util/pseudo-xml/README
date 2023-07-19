@@ -1,0 +1,39 @@
+xml2psf converts pseudopotential files in xml format
+to the classic "psf" format.
+
+The XML format is that defined in Junquera,Garcia,Verstraete
+(to be published).
+
+Installation:
+
+Make sure that there is a file called "arch.make" in 
+the top build directory (Src in most cases).
+
+xml2psf needs the XML parser functionality (SAX interface),
+which is by default assumed to be in ../../Src/xmlparser.
+
+(NOTE: This setup is not yet "VPATH-friendly")
+
+Usage:
+
+xml2psf expects to find the XML pseudo in "PSXML", and
+writes the result of the conversion to "PSF", so a typical
+workflow could be:
+
+ln -sf Mypseudo.xml PSXML
+./xml2psf
+mv PSF Mypseudo.psf
+
+A Fe.xml file has been provided for testing purposes.
+
+Caveats:
+
+This version does not update the "total ps generation charge 
+density" field in the psf file. You need to modify the source
+if you intent to use with hybrid atoms (which is very unlikely).
+
+pseudopotential.f is a stripped-down version of the file found 
+in the main Src directory.
+
+Alberto Garcia, using code from Javier Junquera and Alberto Garcia.
+

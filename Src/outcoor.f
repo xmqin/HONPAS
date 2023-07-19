@@ -1,9 +1,12 @@
 ! 
-! Copyright (C) 1996-2016	The SIESTA group
-!  This file is distributed under the terms of the
-!  GNU General Public License: see COPYING in the top directory
-!  or http://www.gnu.org/copyleft/gpl.txt.
-! See Docs/Contributors.txt for a list of contributors.
+! This file is part of the SIESTA package.
+!
+! Copyright (c) Fundacion General Universidad Autonoma de Madrid:
+! E.Artacho, J.Gale, A.Garcia, J.Junquera, P.Ordejon, D.Sanchez-Portal
+! and J.M.Soler, 1996- .
+! 
+! Use of this software constitutes agreement with the full conditions
+! given in the SIESTA license, as signed by all legitimate users.
 !
       subroutine outcoor(cell, xa, na, cohead, writec) 
 c *******************************************************************
@@ -28,7 +31,7 @@ c *******************************************************************
 
       use atmfuncs,  only : labelfis
       use siesta_geom,  only : isa
-      use fdf, only : fdf_physical, fdf_string, leqi
+      use fdf, only : fdf_physical, fdf_string
       use precision, only : dp
       use units, only : Ang
       use sys,   only: die
@@ -46,7 +49,7 @@ c Internal variables and arrays
 
       character         acf*22, acf_default*22, acfout*22, 
      .                  pieceh*20, titl*60
-      logical           frstme
+      logical           leqi, frstme
       integer           ia, ix
       real(dp)          recell(3,3), alat
 
@@ -143,6 +146,6 @@ c writing the coordinates
      .  ((xap(ix,ia),ix=1,3),isa(ia),ia,trim(labelfis(isa(ia))),ia=1,na)
 
 C Deallocate local memory
-      call de_alloc( xap, name='xap', routine='outcoor')
+      call de_alloc( xap, name='xap' )
 
       end subroutine outcoor

@@ -1,0 +1,169 @@
+Release Notes for SIESTA-3.0-rc2, July 5, 2010
+
+GENERAL NOTES
+
+Since the release of Siesta-3.0-rc1 in April 2010, we have fixed
+a few bugs and made other improvements (see below). This version,
+tagged siesta-3.0-rc2, (which stands for "3.0 release-candidate number 2"),
+is one step closer to the "stable" siesta-3.0 release.
+
+Users of versions 11.X of the Intel fortran compiler should note that
+we have been unable to find robust workarounds for the bugs in that
+compiler.  Until the bugs are fixed we recommend users to stick to
+version 10.X of the compiler.
+
+
+CHANGES SINCE SIESTA-3.0-rc1
+
+(A complete list of changes can be found in the Docs/CHANGES file.)
+
+SUMMARY
+
+* Compute and print band-structure energies
+* Make the HSX format the default for H,S files
+* New hook to output the initial charge density
+* Fixes and new functionality in Pulay mixing
+* Clarify the meaning of the supercell options in the Vibra manual
+* Fixes and improvements in the optical spectra code
+* Updates and fixes to the TranSiesta/tbtrans
+* Fix bug in re-positioning of MD file
+* Use larger output fields for atm diagnostic files
+
+BUG FIXES AND IMPROVEMENTS
+
+* Fixes and improvements in the optical spectra code
+  
+  * Fixed a bug in optical.F: the call to subroutine kgridinit nwas
+    causing problems and providing results that were not compatible any
+    longer with those of subroutine kgrid.
+  
+  * Modified call to subroutine transition_rate: wmin and wmax passed to
+    subroutine so that only the relevant transition probabilities are
+    explicitly calculated.
+
+* Updates and fixes to the TranSiesta/tbtrans code
+  
+  This patch includes bug fixes (in TranSiesta and tbtrans), a cleanup
+  involving removal of dead code, proper declarations of variables, and
+  a new prototype test framework for TranSiesta and tbtrans.
+
+  * The new_dm module now has a cleaner Transiesta related structure.
+  The possibility of doing a "continuation run" (where a .TSDE file is
+  read and the run starts with a TS calculated density matrix), is
+  handled by calling the routine read_dynamic_ts_dm.  Since Transiesta
+  also stores and reads Escf, the variable EDM_tmp has been created and
+  is used in the same way as D_tmp.  The routine change_sparsity is also
+  used for Escf. These changes fix a bug introduced in 3.0-rc1, but they
+  have not been heavily tested yet in all circumstances.
+
+  * The original version of TBTrans (by M. Brandbyge) was not
+  parallelized.  Some of the original properties computed by tbtrans
+  (the transmission function and the pdos) have been "ported" to work
+  also in the parallelized version of the code, but some have not. Those
+  who have not, have been, for now, deleted (atompdos, coop and NetCDF
+  related things).
+  
+  * The transmission function is now multiplied by two in the
+  case of non spin-polarized calculations. As a consequence, the
+  computed current is multiplied too.
+  
+  * The printed value of the pdos (averaged over all the k-points),
+  when running in parallel with more than one node, was not correct:
+  only the values coming from the node=0 were being printed. This has
+  been fixed.
+  
+  * Some smaller changes were done on the way the results are written
+  in the output files (e.g. including blank lines in between values
+  for each k-point, so that the file can be directly plotted with
+  xmgrace).  Also changed the name of the routine "Tsiokp"
+  (m_tbt_kpoints.F90) to "get_kp_on_node" since it represents better
+  what it really does.
+
+* Fixes and new functionality in Pulay mixing
+  
+  * The "kick" functionality intended to "shake" periodically the
+  Pulay mixing procedure has been re-implemented, with the added
+  feature that the Pulay history is completely reset after a kick.
+
+  * Additionally, support has been added to specify whether the first
+  density-matrix residual of the SCF cycle and the first residual after
+  a kick are included in the Pulay history. It can be argued that in
+  these cases the "output" DM might be significantly different from the
+  "input" DM. To preserve backwards compatibility, these residuals are
+  kept in the Pulay history unless the fdf variable
+  
+        DM.Pulay.Avoid.First.After.Kick
+  
+  is set to "true" in the input file.
+  
+  * The above changes have forced a temporary disabling of the "Pulay on
+    file" feature, which will be re-implemented in a form that works
+    well in parallel.
+
+* Fix bug in repositioning of MD file
+
+  The MD file repositioning code in iomd.f gave problems in some
+  systems. It has been removed, and substituted by an explicit
+  'position="append"' clause in the open statement.
+
+* Use larger output fields for atm diagnostic files
+
+  The atm program generates, among others, the files FOURIER_QMAX and
+  ECONF_DIFFS, which contain information useful for optimization
+  runs. The output fields were quite tight and sometimes
+  overflowed. They have beeen made larger.
+
+NEW FEATURES
+
+* Make the HSX format the default for H,S files
+  
+  The old HS format was highly inefficient, as each piece of data was
+  written to its own record. In addition, it only contained information
+  about the inter-orbital vectors Xij if k-points were used in the
+  calculation.
+  
+  The new HSX file format was introduced at the time of the first
+  COOP/COHP implementation. It is more tightly packed, and the real
+  arrays (H, S, and Xij) are written in single-precision.
+  
+  The HSX format is now the default in Siesta (TranSiesta has its own
+  format).
+  
+  The programs hsx2hs and hs2hsx in Util/HSX are provided to facilitate
+  the transition. Note however that an HS file written by Siesta during
+  a Gamma-only calculation will not contain information about the
+  inter-orbital vectors Xij, and hs2hsx will refuse to create an HSX
+  file from it.
+
+* Hook to output the initial charge density
+  
+  If the fdf variable SaveInitialChargeDensity is "true", the program
+  generates a RHO_INIT (and a RhoInit.grid.nc file if netCDF is compiled
+  in) containing the charge density used to start the first
+  self-consistency step, and it stops. Note that if an initial density
+  matrix (DM file) is used, it is not normalized. This is useful to
+  generate the charge density associated to "partial" DMs.
+
+* Created a test directory (ts_fast) to test TranSIESTA and TBTrans.
+
+* Compute and print band-structure energy. Updates to Util/COOP/mprop
+  
+  * The band-structure energy Ebs = Tr(DM*H) is now computed at every 
+    iteration and printed at the beginning and end of the SCF cycle, both
+    in the output file and in the CML file. The calculation is done in  
+    compute_dm, so DM is the "output DM" from the diagonalization of H.
+  
+  * The mprop program has been updated to output the integrated
+    band-structure energy as a function of energy as a third column in
+    the integrated-dos file. The " -n " option has been documented.
+  
+  * Creation of Util/COOP/Docs, and addition of some notes on the units
+    and meaning of the COOP and COHP curves.
+
+COSMETIC CHANGES
+
+* Clarify the meaning of the supercell options in the Vibra manual
+  
+  New wording to make it clear that the supercell options refer
+  to the number of augmentation shells around the unit cell.
+

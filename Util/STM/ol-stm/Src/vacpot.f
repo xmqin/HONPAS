@@ -1,10 +1,3 @@
-! ---
-! Copyright (C) 1996-2016	The SIESTA group
-!  This file is distributed under the terms of the
-!  GNU General Public License: see COPYING in the top directory
-!  or http://www.gnu.org/copyleft/gpl.txt .
-! See Docs/Contributors.txt for a list of contributors.
-! ---
 
       subroutine vacpot(V0)
 
@@ -18,79 +11,134 @@ C P. Ordejon, November 2004
 
       use fdf
       use precision
-      use m_gridfunc
-      use units, only: eV, Ang
 
       implicit none
 
-      type(gridfunc_t) :: gf
-      real(dp) :: V0
+      double precision
+     .  V0
+
 
 C Internal variables
 
-      integer nspin, lun, n3, i, npt
-      real, dimension(:,:), allocatable ::  average
-      real(dp) :: z_coord, zvac, delta
+      integer 
+     .  Ind, ic, ix, iy, iz, ip, mesh(3), np, nspin, npt,
+     .  k1, k2, k3, unit1
 
-      character  sname*75, fname*80
-      external :: io_assign, io_close
+      real, dimension(:), allocatable ::
+     .  VH
 
-! Read value of the vacuum Z position
-      zvac = fdf_physical('STM.VacZ',huge(1.0_dp),'Bohr')
-      if (zvac .gt. 1.0e10_dp) then
+      double precision
+     .  cell(3,3), dxdm(3,3), z, zvac
+
+      character
+     .  sname*75, fname*80, paste*80
+
+      logical
+     .  found
+
+      external 
+     .  io_assign, io_close, paste
+
+
+C Initialize variables
+
+      V0 = 0.0d0
+      npt = 0
+
+C Read value of the vacuum Z position
+      zvac = fdf_physical('STM.VacZ',1.0d40,'Bohr')
+      if (zvac .gt. 0.99999d40) then
         write(6,*) 'ERROR: You must specify STM.VacZ in input'
         stop
       endif
 
-! Assign file name and open file
+C Assign file name and open file
       sname = fdf_string('SystemLabel','siesta')
-      fname = trim(sname)//'.VH'
-      call read_gridfunc(fname,gf)
-      IF (.not. monoclinic_z(gf%cell)) then
+      fname = paste( sname, '.VH' )
+      call io_assign(unit1)
+      inquire( file=fname, exist=found)
+      if (.not. found) then
+        write(6,*) 'ERROR: File ', fname, ' is not present'
+        stop
+      endif
+      open(unit=unit1, file=fname, status='old', form='unformatted')
+
+C Read info from VH file...
+      read(unit1) cell
+      read(unit1) mesh, nspin
+      np = mesh(1) * mesh(2) * mesh(3)
+      if (nspin .ne. 1) stop 'error: wrong spin in VH file'
+      allocate (VH(np))
+      call memory('A','S',np,'readvh')
+      Ind=0
+      do iz=1,mesh(3)
+        do iy=1,mesh(2)
+C read in potential
+          read(unit1) (VH(Ind+ip),ip=1,mesh(1))
+          Ind=Ind+mesh(1)
+        enddo
+      enddo
+      call io_close(unit1)
+C 
+
+      IF (.not. monoclinic(cell)) then
         WRITE(6,*) 'error: the code only accepts monoclinic cells'
         WRITE(6,*) '       with Z as the vertical axis'
         STOP
       ENDIF
-      if (gf%nspin .ne. 1) stop 'error: wrong spin in VH file'
-      call get_planar_average(gf,3,average)
 
-! Print V_ave(z) file for plotting
-      call io_assign(lun)
-      open(unit=lun,file=trim(sname)//'.v_ave_z',form="formatted",
-     $     status="unknown", position="rewind")
-      write(lun,"(a)") "#    z (Ang)     V_ave(z) (eV) "
-      delta = gf%cell(3,3) / gf%n(3)
-      n3 = size(average,dim=1)
-      do i = 1, n3
-         z_coord = gf%origin(3) + (i-1) * delta
-         write(lun,"(f10.4,1x,f10.4)") z_coord/Ang, average(i,1)/eV
+      do ic = 1,3
+        do ix = 1,3
+          dxdm(ix,ic) = cell(ix,ic) / mesh(ic)
+        enddo
       enddo
-      call io_close(lun)
 
-      ! Find V0 by rough interpolation, as it was done in the
-      ! old version.
-      ! Since we should be in a flattish region, just average over
-      ! close points. If there are no close points, we are out of range.
+C Loop on mesh points
+      do k1 = 0,mesh(1)-1
+      do k2 = 0,mesh(2)-1
+C z-direction is scanned from top to bottom
+      do k3 = mesh(3)-1,0,-1
 
-      V0 = 0.0_dp
-      npt = 0
-      do i = 1, n3
-         z_coord = gf%origin(3) + (i-1) * delta
-         if (abs(z_coord-zvac) < delta) then
-            npt = npt + 1
-            V0 = V0 + average(i,1)
-         endif
+C        Find mesh index of this point
+        ip = 1 + k1 + mesh(1) * k2 + mesh(1) * mesh(2) * k3
+
+C Calculate Z coordinate of this point:
+        z = dxdm(3,3) * k3
+
+        if (dabs(z-zvac) .lt. dxdm(3,3)) then
+          V0 = V0 + VH(ip)
+          npt = npt+1
+        endif
       enddo
-      if (npt == 0) then
-         call die("Zvac out of range")
-      endif
+      enddo
+      enddo
 
-!     Potentials in Siesta are dumped to VH file in Ry. 
-!     Convert to eV
+      V0 = V0/npt
 
-      V0 = V0/eV/npt
+C Potentials in Siesta are dumped to VH file in Ry. 
+C Convert to eV
+
+      V0 = V0 * 13.60581454d0
 
       write(6,*) 'Vacuum potential V0= ',V0,' eV'
+      write(6,*)
+
+      CONTAINS
+      function monoclinic(cell)
+      real(dp), intent(in) :: cell(3,3)
+      logical monoclinic
+
+      real(dp), parameter :: tol = 1.0e-8_dp
+
+      monoclinic =  (abs(CELL(3,1)) < tol
+     $         .and. abs(CELL(3,2)) < tol
+     $         .and. abs(CELL(1,3)) < tol
+     $         .and. abs(CELL(2,3)) < tol )
+
+      print *, "monoclinic: ", monoclinic
+      print *, cell
+
+      end function monoclinic
 
       end
 

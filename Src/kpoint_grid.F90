@@ -1,10 +1,3 @@
-! ---
-! Copyright (C) 1996-2016	The SIESTA group
-!  This file is distributed under the terms of the
-!  GNU General Public License: see COPYING in the top directory
-!  or http://www.gnu.org/copyleft/gpl.txt .
-! See Docs/Contributors.txt for a list of contributors.
-! ---
 MODULE Kpoint_grid
 !
 ! Contains data structures and routines to deal with the kpoint-grid
@@ -15,48 +8,61 @@ MODULE Kpoint_grid
 
   implicit none
 
-  public :: setup_kpoint_grid, scf_kgrid_first_time, gamma_scf, &
-            nkpnt, kweight, kpoint, kscell, kdispl
-  public :: eff_kgrid_cutoff
-
   private
   
-  logical                  :: scf_kgrid_first_time = .true.
-  logical                  :: gamma_scf
-  integer                  :: nkpnt             ! Total number of k-points
-  real(dp)                 :: eff_kgrid_cutoff  ! Effective kgrid_cutoff
+  logical, public, save   :: scf_kgrid_first_time = .true.
+  logical, public, save   :: gamma_scf
+  integer, public, save   :: maxk              ! 
+  integer, public, save   :: nkpnt             ! Total number of k-points
+  real(dp)                :: eff_kgrid_cutoff  ! Effective kgrid_cutoff
 
-  real(dp),        pointer :: kweight(:) => null()
-  real(dp),        pointer :: kpoint(:,:) => null()
+  real(dp), pointer, public, save :: kweight(:) 
+  real(dp), pointer, public, save :: kpoint(:,:)
 
-  integer,  dimension(3,3) :: kscell = 0
-  real(dp), dimension(3)   :: kdispl = 0.0_dp
-  logical                  :: user_requested_mp = .false.
-  logical                  :: user_requested_cutoff = .false.
+  integer,  dimension(3,3), save  :: kscell = 0
+  real(dp), dimension(3), save    :: kdispl = 0.0_dp
 
-  logical, save            :: time_reversal_symmetry = .true.
-  logical                  :: firm_displ = .false.
+  logical, save     :: user_requested_mp = .false.
+  logical, save     :: user_requested_cutoff = .false.
+
+  logical, save     :: time_reversal_symmetry = .true.
+  logical, save     :: firm_displ = .false.
+
+  public :: setup_kpoint_grid
 
   CONTAINS
 
   subroutine setup_Kpoint_grid( ucell )
   USE parallel, only  : Node
-  USE fdf, only       : fdf_defined, fdf_get
+  USE fdf, only       : fdf_defined, fdf_boolean
   USE m_find_kgrid, only : find_kgrid
-  use m_spin, only: TrSym
+
+#ifdef MPI
+  USE mpi_siesta
+#endif
 
     implicit none
     real(dp) :: ucell(3,3)
     logical  :: spiral
 
+#ifdef MPI
+    integer :: MPIerror
+#endif
+
     if (scf_kgrid_first_time) then
-       spiral = fdf_defined('SpinSpiral')
+       nullify(kweight,kpoint)
+       if (Node.eq.0) then
+          spiral = fdf_defined('SpinSpiral')
           ! Allow the user to control the use of time-reversal-symmetry
           ! By default, it is on, except for "spin-spiral" calculations
-          ! and/or non-collinear calculations
-       time_reversal_symmetry = fdf_get(             &
-            "TimeReversalSymmetryForKpoints",   &
-            (.not. spiral) .and. TrSym)
+          time_reversal_symmetry = fdf_boolean(             &
+                        "TimeReversalSymmetryForKpoints",   &
+                        (.not. spiral))
+       endif
+#ifdef MPI
+       call MPI_Bcast(time_reversal_symmetry,1,MPI_logical,0,  &
+                      MPI_Comm_World,MPIerror)
+#endif
        call setup_scf_kscell(ucell, firm_displ)
 
        scf_kgrid_first_time = .false.
@@ -74,6 +80,7 @@ MODULE Kpoint_grid
                     time_reversal_symmetry,             &
                     nkpnt,kpoint,kweight, eff_kgrid_cutoff)
 
+    maxk = nkpnt
     gamma_scf =  (nkpnt == 1 .and.  &
                   dot_product(kpoint(:,1),kpoint(:,1)) < 1.0e-20_dp)
 
@@ -106,8 +113,10 @@ MODULE Kpoint_grid
       use precision,  only : dp
       use parallel,   only : Node
       use m_minvec,   only : minvec
-      use sys,        only : die
       use fdf
+#ifdef MPI
+      use mpi_siesta
+#endif
 
       implicit          none
 
@@ -116,7 +125,10 @@ MODULE Kpoint_grid
       logical, intent(out)   :: firm_displ
 
 ! Internal variables
-      integer           i, j, factor(3,3), expansion_factor
+      integer           i, iu, j,  factor(3,3), expansion_factor
+#ifdef MPI
+      integer           MPIerror
+#endif
       real(dp)          scmin(3,3),  vmod, cutoff
       real(dp)          ctransf(3,3)
       logical           mp_input
@@ -125,58 +137,56 @@ MODULE Kpoint_grid
       integer, dimension(3,3), parameter :: unit_matrix =  &
                          reshape ((/1,0,0,0,1,0,0,0,1/), (/3,3/))
 
-      type(block_fdf)            :: bfdf
-      type(parsed_line), pointer :: pline
+      if (Node.eq.0) then
 
+         mp_input = fdf_block('kgrid_Monkhorst_Pack',iu)
+         if ( mp_input ) then
+            user_requested_mp = .true.
+            do i = 1,3
+               read(iu,*) (kscell(j,i),j=1,3), kdispl(i)
+            enddo
+            firm_displ = .true.
 
-      mp_input = fdf_block('kgrid_Monkhorst_Pack',bfdf)
-      if ( mp_input ) then
-         user_requested_mp = .true.
-         do i= 1, 3
-            if (.not. fdf_bline(bfdf,pline))            &
-              call die('setup_scf_kscell: ERROR in ' // &
-                       'kgrid_Monkhorst_Pack block')
-            kscell(1,i) = fdf_bintegers(pline,1)
-            kscell(2,i) = fdf_bintegers(pline,2)
-            kscell(3,i) = fdf_bintegers(pline,3)
-            if ( fdf_bnvalues(pline) > 3 ) then
-              kdispl(i) = mod(fdf_bvalues(pline,4), 1._dp)
-            else
-              kdispl(i) = 0._dp
-            end if
-         enddo
-         call fdf_bclose(bfdf)
-         firm_displ = .true.
+         else
 
-      else
+            cutoff = fdf_physical('kgrid_cutoff',defcut,'Bohr')
+            if (cutoff /= defcut) then
+            !!  write(6,"(a,f10.5)") "Kgrid cutoff input: ", cutoff
+               user_requested_cutoff = .true.
+            endif
 
-         cutoff = fdf_physical('kgrid_cutoff',defcut,'Bohr')
-         if (cutoff /= defcut) then
-         !!  write(6,"(a,f10.5)") "Kgrid cutoff input: ", cutoff
-            user_requested_cutoff = .true.
-         endif
+            kdispl(1:3) = 0.0_dp  ! Might be changed later
+            firm_displ = .false.  ! In future we might add new options
+                                  ! for user-specified displacements
+            
+            ! Find equivalent rounded unit-cell
+            call minvec( cell, scmin, ctransf )
 
-         kdispl(1:3) = 0.0_dp  ! Might be changed later
-         firm_displ = .false.  ! In future we might add new options
-                               ! for user-specified displacements
-         
-         ! Find equivalent rounded unit-cell
-         call minvec( cell, scmin, ctransf )
-
-         expansion_factor = 1
-         do j = 1,3
-            factor(j,1:3) = 0
-            vmod = sqrt(dot_product(scmin(1:3,j),scmin(1:3,j)))
-            factor(j,j) = int(2.0_dp*cutoff/vmod) + 1
-            expansion_factor = expansion_factor * factor(j,j)
-         enddo
-         ! Generate actual supercell skeleton
-         kscell = matmul(ctransf, factor)
-         ! Avoid confusing permutations
-         if (expansion_factor == 1) then
-            kscell = unit_matrix
+            expansion_factor = 1
+            do j = 1,3
+               factor(j,1:3) = 0
+               vmod = sqrt(dot_product(scmin(1:3,j),scmin(1:3,j)))
+               factor(j,j) = int(2.0_dp*cutoff/vmod) + 1
+               expansion_factor = expansion_factor * factor(j,j)
+            enddo
+            ! Generate actual supercell skeleton
+            kscell = matmul(ctransf, factor)
+            ! Avoid confusing permutations
+            if (expansion_factor == 1) then
+               kscell = unit_matrix
+            endif
          endif
       endif
+
+#ifdef MPI
+      call MPI_Bcast(kscell(1,1),9,MPI_integer,0,MPI_Comm_World, MPIerror)
+      call MPI_Bcast(kdispl,3,MPI_double_precision,0,MPI_Comm_World, MPIerror)
+      call MPI_Bcast(firm_displ,1,MPI_logical,0,MPI_Comm_World, MPIerror)
+      call MPI_Bcast(user_requested_mp,1,MPI_logical,0,   &
+                     MPI_Comm_World, MPIerror)
+      call MPI_Bcast(user_requested_cutoff,1,MPI_logical,0,   &
+                     MPI_Comm_World, MPIerror)
+#endif
 
     end subroutine setup_scf_kscell
 

@@ -1,16 +1,8 @@
-! ---
-! Copyright (C) 1996-2016	The SIESTA group
-!  This file is distributed under the terms of the
-!  GNU General Public License: see COPYING in the top directory
-!  or http://www.gnu.org/copyleft/gpl.txt .
-! See Docs/Contributors.txt for a list of contributors.
-! ---
 module subs
 
 use precision
 
 public :: ival, manual, manual_dm_creator, orbital, txt2wrd
-public :: manual_spin_texture
 
 private
 
@@ -72,9 +64,6 @@ CONTAINS
       character(len=len(txt)) ::  atx, ntx
       integer :: i_, i0, lng, il
 
-      logical :: non_nl_string
-      integer :: stat, nprin
-      
       atx=txt
       ntx=txt
       lng=len_trim(txt)
@@ -90,39 +79,9 @@ CONTAINS
       l=-1
       k=-1
 
-      i_=index(txt,'_',back=.true.)
+      i_=index(txt,'_')
       if (i_.eq.1) return  ! Error
 
-      ! The use of 'back' above will account for specs of
-      ! the form:
-      ! Si_surf_3s
-      ! 
-      ! Now we need to account for specs of the form:
-      ! Si_surf
-      ! We check that 'surf' is not a valid 'nl' spec
-
-      non_nl_string = .true.
-      if (i_ > 1) then
-         if ((i_+2) <= lng) then
-            read(txt(i_+1:i_+1),fmt='(i1)',iostat=stat) nprin
-            if (stat == 0) then
-               ! A valid integer
-               if ((nprin <= 8) .and. (nprin>0)) then
-                  select case (txt(i_+2:i_+2))
-                  case ( 's', 'p', 'd', 'f', 'g', 'h' )
-                     non_nl_string = .false.
-                  end select
-               endif
-            endif
-         endif
-      endif
-
-      if (non_nl_string) then
-         ! The whole spec looks like a bona-fide species name.
-         ! Behave as if we did not find any '_'
-         i_ = 0
-      endif
-      
       i0=i_-1
       if (i_.eq.0) i0=lng
       ntx=txt(1:i0)//repeat(' ',20-i0)
@@ -283,6 +242,8 @@ CONTAINS
       write(6,*) "Options:"
       write(6,*) "           -h:  print manual                    "
       write(6,*) "           -d:  debug                    "
+      write(6,*) "           -l:  print summary of energy information         "
+      write(6,*) "   -s SMEAR  :  set value of smearing parameter (default 0.5 eV)"
       write(6,*) "   -m Min_e  :  set lower bound of energy range                    "
       write(6,*) "   -M Max_e  :  set upper bound of energy range                    "
       write(6,*)
@@ -292,6 +253,8 @@ CONTAINS
       write(6,*)
       write(6,"('* OUTPUT FORMAT')")
       write(6,*) 
+      write(6,*) " SLabel.alldos  :  full-range approximate DOS curve"
+      write(6,*) " SLabel.intdos  :  full-range integrated-DOS curve"
       write(6,*) " DMOUT    :  Partial DM"
       write(6,*) " DM.nc (optional)  :  Partial DM in netcdf form"
       write(6,"('    [A control .stt file will always be generated]')")
@@ -299,37 +262,6 @@ CONTAINS
       stop
 
       end subroutine manual_dm_creator
-
-      subroutine manual_spin_texture
-
-      write(6,"('* SPIN_TEXTURE PROGRAM')")
-      write(6,"('  Alberto Garcia, ICMAB-CSIC, 2019')")
-      write(6,"('  Roberto Robles, ICN2, 2018')")
-      write(6,*)
-      write(6,"('    Computes the spin texture from')")
-      write(6,"('    a set of spinor wavefunctions obtained with SIESTA.')")
-      write(6,"('  ')")
-      write(6,*) "Usage: spin_texture [ options ] SIESTA_SYSTEM_LABEL"
-      write(6,*) "Options:"
-      write(6,*) "           -h:  print manual                    "
-      write(6,*) "           -d:  debug                    "
-      write(6,*) "   -m Min_e  :  set lower bound of energy range                    "
-      write(6,*) "   -M Max_e  :  set upper bound of energy range                    "
-      write(6,*) "   -b Min_band  :  set minimum band index to be used               "
-      write(6,*) "   -B Max_band  :  set maximum band index to be used               "
-      write(6,*)
-      write(6,"('* INPUT FILES')")
-      write(6,"('    [output files from SIESTA >=  2.4.1]')")
-      write(6,"('    SLabel.WFSX and SLabel.HSX (new format)')")
-      write(6,*)
-      write(6,"('* OUTPUT FORMAT')")
-      write(6,*) 
-      write(6,"(a)") 'spin-texture information in standard output'
-      write(6,"('    [A .stt file with basis and k-point info will also be generated]')")
-      write(6,*)
-      stop
-
-    end subroutine manual_spin_texture
 
 
 end module subs

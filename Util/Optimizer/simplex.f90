@@ -1,10 +1,3 @@
-! ---
-! Copyright (C) 1996-2016	The SIESTA group
-!  This file is distributed under the terms of the
-!  GNU General Public License: see COPYING in the top directory
-!  or http://www.gnu.org/copyleft/gpl.txt .
-! See Docs/Contributors.txt for a list of contributors.
-! ---
 !
 ! Simplex redesign
 ! Alberto Garcia, March 2007
@@ -98,7 +91,7 @@ do
      print *, p(i,:), " --- ", y(i)
    enddo
 
-   call amoeba(p,y,nvars,ftol,energy,iter,maxeval=itmax)
+   call amoeba(p,y,nvars+1,nvars,nvars,ftol,energy,iter,req_itmax=itmax)
 
    print *, "Amoeba cycle finished in ", iter, " iterations."
    print *,  "Points in simplex and values:"

@@ -15,7 +15,7 @@ integer, parameter, private            :: STACK_SIZE_INIT = 10
 real, parameter, private            :: STACK_SIZE_MULT = 1.5
 
 type, private :: elstack_item
-  character(len=200) :: data
+  character(len=100) :: data
 end type
 
 type, public :: elstack_t
@@ -158,7 +158,7 @@ type(elstack_t), intent(in)   :: elstack
 character(len=*), intent(out) :: string
 integer   :: i, length, j
 
-string = ' '
+string = ""
 j = 0
 do i = 1, elstack%n_items
    length = len_trim(elstack%stack(i)%data)

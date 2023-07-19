@@ -1,9 +1,12 @@
 ! 
-! Copyright (C) 1996-2016	The SIESTA group
-!  This file is distributed under the terms of the
-!  GNU General Public License: see COPYING in the top directory
-!  or http://www.gnu.org/copyleft/gpl.txt.
-! See Docs/Contributors.txt for a list of contributors.
+! This file is part of the SIESTA package.
+!
+! Copyright (c) Fundacion General Universidad Autonoma de Madrid:
+! E.Artacho, J.Gale, A.Garcia, J.Junquera, P.Ordejon, D.Sanchez-Portal
+! and J.M.Soler, 1996- .
+! 
+! Use of this software constitutes agreement with the full conditions
+! given in the SIESTA license, as signed by all legitimate users.
 !
 module iodmhs_netcdf
 
@@ -74,15 +77,12 @@ subroutine setup_dmhs_netcdf_file( maxnd, nbasis, nspin,    &
       integer  :: MPIerror, stat(MPI_STATUS_SIZE), count, BNode, tag
       integer  :: max_norbs, max_nnzs, ipt, io, iog
 
-      if (Node == 0) then
-         nullify ( norbs_node, nnzs_node)
-         call re_alloc( norbs_node, 0, Nodes-1, name='norbs_node', routine='setup_dmhs_netcdf_file')
-         call re_alloc( nnzs_node, 0, Nodes-1,  name='nnzs_node', routine='setup_dmhs_netcdf_file' )
-      else
-         nullify ( norbs_node, nnzs_node)
-         call re_alloc( norbs_node, 0, 0, name='norbs_node', routine='setup_dmhs_netcdf_file' )
-         call re_alloc( nnzs_node, 0, 0,  name='nnzs_node', routine='setup_dmhs_netcdf_file' )
-      endif
+!     Allocate arrays in all nodes to avoid spurious warning from compiler
+
+      nullify ( norbs_node, nnzs_node)
+      call re_alloc( norbs_node, 0, Nodes-1, name='norbs_node', routine='iodm_netcdf' )
+      call re_alloc( nnzs_node, 0, Nodes-1,  name='nnzs_node', routine='iodm_netcdf' )
+
       call mpi_gather(nbasis,1,MPI_Integer, norbs_node(:),1,MPI_integer,0,MPI_Comm_World, mpierror)
       call mpi_gather(maxnd,1,MPI_Integer, nnzs_node(:) ,1,MPI_integer,0,MPI_Comm_World, mpierror)
       if (Node == 0) then
@@ -150,15 +150,15 @@ subroutine setup_dmhs_netcdf_file( maxnd, nbasis, nspin,    &
 #ifdef MPI
       if (Node == 0) then
          nullify( numd_buf )
-         call re_alloc( numd_buf, 1, max_norbs, name='numd_buf', routine='setup_dmhs_netcdf_file' )
+         call re_alloc( numd_buf, 1, max_norbs, name='numd_buf', routine='iodm_netcdf' )
          nullify( listd_buf )
-         call re_alloc( listd_buf, 1, max_nnzs, name='listd_buf', routine='setup_dmhs_netcdf_file' )
+         call re_alloc( listd_buf, 1, max_nnzs, name='listd_buf', routine='iodm_netcdf' )
          nullify( s_buf )
-         call re_alloc( s_buf, 1, max_nnzs, name='s_buf', routine='setup_dmhs_netcdf_file' )
+         call re_alloc( s_buf, 1, max_nnzs, name='s_buf', routine='iodm_netcdf' )
 !
          nullify( numd_global, global_row_pointer )
-         call re_alloc( numd_global, 1, norbs, name='numd_global', routine='setup_dmhs_netcdf_file' )
-         call re_alloc( global_row_pointer, 1, norbs, name='row_poiner_global', routine='setup_dmhs_netcdf_file' )
+         call re_alloc( numd_global, 1, norbs, name='numd_global', routine='iodm_netcdf' )
+         call re_alloc( global_row_pointer, 1, norbs, name='row_poiner_global', routine='iodm_netcdf' )
       endif
 
       do BNode = 0, Nodes - 1
@@ -272,13 +272,13 @@ subroutine setup_dmhs_netcdf_file( maxnd, nbasis, nspin,    &
 
       enddo           ! Bnode
 !
-      call de_alloc(norbs_node,name="norbs_node", routine="setup_dmhs_netcdf_file")
-      call de_alloc(nnzs_node,name="nnzs_node", routine="setup_dmhs_netcdf_file")
-      call de_alloc(numd_global,name="numd_global", routine="setup_dmhs_netcdf_file")
-      call de_alloc(global_row_pointer,name="global_row_pointer", routine="setup_dmhs_netcdf_file")
-      call de_alloc(numd_buf,name="numd_buf", routine="setup_dmhs_netcdf_file")
-      call de_alloc(listd_buf,name="listd_buf", routine="setup_dmhs_netcdf_file")
-      call de_alloc(s_buf,name="s_buf", routine="setup_dmhs_netcdf_file")
+      call de_alloc(norbs_node,name="norbs_node", routine="iodm_netcdf")
+      call de_alloc(nnzs_node,name="nnzs_node", routine="iodm_netcdf")
+      call de_alloc(numd_global,name="numd_global", routine="iodm_netcdf")
+      call de_alloc(global_row_pointer,name="global_row_pointer", routine="iodm_netcdf")
+      call de_alloc(numd_buf,name="numd_buf", routine="iodm_netcdf")
+      call de_alloc(listd_buf,name="listd_buf", routine="iodm_netcdf")
+      call de_alloc(s_buf,name="s_buf", routine="iodm_netcdf")
 #else
       call check( nf90_put_var(ncid,overlap_id,overlap_matrix,count=(/maxnd/)))
 #endif
@@ -325,15 +325,12 @@ integer               :: step_no, step_location
       integer  :: MPIerror, stat(MPI_STATUS_SIZE), count, BNode, tag
       integer  :: max_norbs, max_nnzs, ipt, io, iog, ispin
 
-      if (Node == 0) then
-         nullify ( norbs_node, nnzs_node)
-         call re_alloc( norbs_node, 0, Nodes-1, name='norbs_node', routine='write_dmh_netcdf' )
-         call re_alloc( nnzs_node, 0, Nodes-1,  name='nnzs_node', routine='write_dmh_netcdf' )
-      else
-         nullify ( norbs_node, nnzs_node)
-         call re_alloc( norbs_node, 0, 0, name='norbs_node', routine='write_dmh_netcdf' )
-         call re_alloc( nnzs_node, 0, 0,  name='nnzs_node', routine='write_dmh_netcdf' )
-      endif
+!     Allocate arrays in all nodes to avoid spurious warning from compiler
+
+      nullify ( norbs_node, nnzs_node)
+      call re_alloc( norbs_node, 0, Nodes-1, name='norbs_node', routine='iodm_netcdf' )
+      call re_alloc( nnzs_node, 0, Nodes-1,  name='nnzs_node', routine='iodm_netcdf' )
+
       call mpi_gather(nbasis,1,MPI_Integer, norbs_node(:),1,MPI_integer,0,MPI_Comm_World, mpierror)
       call mpi_gather(maxnd,1,MPI_Integer, nnzs_node(:) ,1,MPI_integer,0,MPI_Comm_World, mpierror)
       if (Node == 0) then
@@ -361,11 +358,11 @@ endif
 if (Node == 0) then
 
    nullify( numd_global, global_row_pointer )
-   call re_alloc( numd_global, 1, norbs, name='numd_global', routine='write_dmh_netcdf' )
-   call re_alloc( global_row_pointer, 1, norbs, name='row_poiner_global', routine='write_dmh_netcdf' )
+   call re_alloc( numd_global, 1, norbs, name='numd_global', routine='iodm_netcdf' )
+   call re_alloc( global_row_pointer, 1, norbs, name='row_poiner_global', routine='iodm_netcdf' )
 
    nullify( dp_buf )
-   call re_alloc( dp_buf, 1, max_nnzs, name='dp_buf', routine='write_dmh_netcdf' )
+   call re_alloc( dp_buf, 1, max_nnzs, name='dp_buf', routine='iodm_netcdf' )
 
    call check( nf90_get_var(ncid,numd_id,numd_global(1:norbs),count=(/norbs/)))
    call check( nf90_get_var(ncid,row_pointer_id,global_row_pointer,count=(/norbs/)))
@@ -478,11 +475,11 @@ endif
 
    enddo        ! ispin
 
-      call de_alloc(norbs_node,name="norbs_node", routine="write_dmh_netcdf")
-      call de_alloc(nnzs_node,name="nnzs_node", routine="write_dmh_netcdf")
-      call de_alloc(numd_global,name="numd_global", routine="write_dmh_netcdf")
-      call de_alloc(global_row_pointer,name="global_row_pointer", routine="write_dmh_netcdf")
-      call de_alloc(dp_buf,name="dp_buf", routine="write_dmh_netcdf")
+      call de_alloc(norbs_node,name="norbs_node", routine="iodm_netcdf")
+      call de_alloc(nnzs_node,name="nnzs_node", routine="iodm_netcdf")
+      call de_alloc(numd_global,name="numd_global", routine="iodm_netcdf")
+      call de_alloc(global_row_pointer,name="global_row_pointer", routine="iodm_netcdf")
+      call de_alloc(dp_buf,name="dp_buf", routine="iodm_netcdf")
 
 #else
 call check( nf90_put_var(ncid, dm_in_id, dmin(1:maxnd,1:nspin),  & 

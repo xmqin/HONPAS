@@ -16,78 +16,10 @@ module m_wcml_coma
   integer, private, parameter ::  dp = selected_real_kind(14,100)
 
   public :: cmlAddBand
-  public :: cmlAddKpoint
   public :: cmlStartBandList
   public :: cmlEndBandList
 
 Contains
-
-  subroutine cmlAddKPoint(xf, coords, weight, kptfmt, wtfmt &
-       ,dictRef,convention,title,id,ref,label)
-    type(xmlf_t), intent(inout)             :: xf
-    real(kind=dp), dimension(3), intent(in) :: coords
-    real(kind=dp), intent(in), optional     :: weight
-    character(len=*), intent(in), optional   :: kptfmt
-    character(len=*), intent(in), optional   :: wtfmt
-    character(len=*), intent(in), optional :: dictRef
-    character(len=*), intent(in), optional :: convention
-    character(len=*), intent(in), optional :: title
-    character(len=*), intent(in), optional :: id
-    character(len=*), intent(in), optional :: ref
-    character(len=*), intent(in), optional :: label
-    call cmlStartKpoint(xf, coords, weight, kptfmt, wtfmt &
-         ,dictRef,convention,title,id,ref,label)
-    call cmlEndKpoint(xf)
-  end subroutine cmlAddKPoint
-
-  subroutine cmlStartKPoint(xf, coords, weight, kptfmt, wtfmt &
-       ,dictRef,convention,title,id,ref,label)
-    type(xmlf_t), intent(inout)              :: xf
-    real(kind=dp), dimension(3), intent(in)  :: coords
-    real(kind=dp), intent(in), optional      :: weight
-    character(len=*), intent(in), optional   :: kptfmt
-    character(len=*), intent(in), optional   :: wtfmt
-    character(len=*), intent(in), optional :: dictRef
-    character(len=*), intent(in), optional :: convention
-    character(len=*), intent(in), optional :: title
-    character(len=*), intent(in), optional :: id
-    character(len=*), intent(in), optional :: ref
-    character(len=*), intent(in), optional :: label
-
-    character(len=60) :: aux_str
-    
-    call xml_NewElement(xf, "kpoint")
-    if (present(dictRef)) call xml_addAttribute(xf, "dictRef", dictRef)
-    if (present(convention)) call xml_addAttribute(xf, "convention", convention)
-    if (present(title)) call xml_addAttribute(xf, "title", title)
-    if (present(id)) call xml_addAttribute(xf, "id", id)
-    if (present(ref)) call xml_addAttribute(xf, "ref", ref)
-    if (present(label)) call xml_addAttribute(xf, "label", label)
-
-    if (present(kptfmt)) then
-       write(aux_str,fmt=kptfmt) coords
-    else
-       write(aux_str,fmt="(3f12.8)") coords
-    endif
-    call xml_AddAttribute(xf, "coords", trim(aux_str))
-
-       
-    if (present(weight)) then
-       if (present(wtfmt)) then
-          write(aux_str,fmt=wtfmt) weight
-       else
-          write(aux_str,fmt="(f12.8)") weight
-       endif
-       
-       call xml_AddAttribute(xf, "weight", trim(aux_str))
-    endif
-    
-  end subroutine cmlStartKPoint
-
-  subroutine cmlEndKpoint(xf)
-    type(xmlf_t), intent(inout) :: xf
-    call xml_EndElement(xf, "kpoint")
-  end subroutine cmlEndKpoint
   
   subroutine cmlAddBand(xf, kpoint, kweight, bands, kptfmt, eigfmt)
 

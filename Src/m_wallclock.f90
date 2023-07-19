@@ -1,9 +1,12 @@
 ! 
-! Copyright (C) 1996-2016	The SIESTA group
-!  This file is distributed under the terms of the
-!  GNU General Public License: see COPYING in the top directory
-!  or http://www.gnu.org/copyleft/gpl.txt.
-! See Docs/Contributors.txt for a list of contributors.
+! This file is part of the SIESTA package.
+!
+! Copyright (c) Fundacion General Universidad Autonoma de Madrid:
+! E.Artacho, J.Gale, A.Garcia, J.Junquera, P.Ordejon, D.Sanchez-Portal
+! and J.M.Soler, 1996- .
+! 
+! Use of this software constitutes agreement with the full conditions
+! given in the SIESTA license, as signed by all legitimate users.
 !
 module m_wallclock
 !
@@ -14,11 +17,10 @@ module m_wallclock
 use m_walltime, only: wall_time
 
 public :: wallclock
-public :: wallclock_shutdown
 
 integer, parameter, private :: dp = selected_real_kind(14,200)
 
-integer, private,  save    :: wt = -1
+integer, private,  save    :: wt
 logical, private,  save    :: first = .true.
 
 private
@@ -40,16 +42,6 @@ call wall_time(t)
 write(wt,"(a,f18.3)") str, t
 
 end subroutine wallclock
-
-subroutine wallclock_shutdown()
-
-  if ( wt >= 0 ) then
-     call io_close(wt)
-     ! Signal it has to be opened again.
-     first = .true.
-  end if
-
-end subroutine wallclock_shutdown
 
 end module m_wallclock
 

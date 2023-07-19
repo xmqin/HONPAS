@@ -1,11 +1,14 @@
 ! 
-! Copyright (C) 1996-2016	The SIESTA group
-!  This file is distributed under the terms of the
-!  GNU General Public License: see COPYING in the top directory
-!  or http://www.gnu.org/copyleft/gpl.txt.
-! See Docs/Contributors.txt for a list of contributors.
+! This file is part of the SIESTA package.
 !
-      subroutine pdosk( nspin, nuo, no, maxspn, maxnh, 
+! Copyright (c) Fundacion General Universidad Autonoma de Madrid:
+! E.Artacho, J.Gale, A.Garcia, J.Junquera, P.Ordejon, D.Sanchez-Portal
+! and J.M.Soler, 1996- .
+! 
+! Use of this software constitutes agreement with the full conditions
+! given in the SIESTA license, as signed by all legitimate users.
+!
+      subroutine pdosk( nspin, nuo, no, maxspn, maxuo, maxnh, 
      .                  maxo, numh, listhptr, listh, H, S,
      .                  E1, E2, nhist, sigma, 
      .                  xij, indxuo, nk, kpoint, wk, eo, 
@@ -22,6 +25,7 @@ C INTEGER nuo               : Number of atomic orbitals in the unit cell
 C INTEGER NO                : Number of atomic orbitals in the supercell
 C INTEGER maxspn            : Second dimension of eo and qo 
 C                             (maximum number of differents spin polarizations)
+C INTEGER maxuo             : Maximum number of atomic orbitals in the unit cell
 C INTEGER maxnh             : Maximum number of orbitals interacting
 C                             with any orbital
 C INTEGER maxo              : First dimension of eo
@@ -56,7 +60,7 @@ C REAL*8  dpr(nhist,nuo,2): Proyected density of states
 C **********************************************************************
 
       use precision
-      use parallel,     only : Node, Nodes, BlockSize
+      use parallel,     only : Node, Nodes
       use parallelsubs, only : GetNodeOrbs, LocalToGlobalOrb
       use units,        only : pi
       use alloc,        only : re_alloc, de_alloc
@@ -68,7 +72,7 @@ C **********************************************************************
       implicit none
 
       integer
-     .  nspin, nuo, no, maxspn, maxnh, NK, 
+     .  nspin, nuo, no, maxspn, maxuo, maxnh, NK, 
      .  maxo, nhist, nuotot
 
       integer
@@ -87,7 +91,7 @@ C Internal variables ---------------------------------------------------
 
       real(dp)
      .  kxij, Ckxij, Skxij, delta, ener, diff, pipj1, pipj2, 
-     .  pipjS1, gauss, norm, wksum
+     .  pipjS1, pipjS2, gauss, norm, wksum
 
 #ifdef MPI
       integer ::
@@ -96,10 +100,6 @@ C Internal variables ---------------------------------------------------
 #endif
 
       external  cdiag
-
-#ifdef DEBUG
-      call write_debug( '    PRE pdosk' )
-#endif
 
 C Initialize some variables
       delta = (E2 - E1)/nhist
@@ -141,8 +141,7 @@ C H(k) = Sum(R) exp(i*k*R) * H(R)
 
 C Diagonalize for each k point
           call cdiag( Haux, Saux, nuotot, nuo, nuotot,
-     .                eo(1,ispin,IK), psi, nuotot, 1, ierror,
-     $                BlockSize)
+     .                eo(1,ispin,IK), psi, nuotot, 1, ierror )
 
 C Check error flag and take appropriate action
           if (ierror.gt.0) then
@@ -174,8 +173,7 @@ C Repeat diagonalisation with increased memory to handle clustering
               enddo
             enddo
             call cdiag( Haux, Saux, nuotot, nuo, nuotot,
-     .                  eo(1,ispin,IK), psi, nuotot, 1, ierror,
-     $                  BlockSize )
+     .                  eo(1,ispin,IK), psi, nuotot, 1, ierror )
           endif
 
 C Recalculate again the overlap matrix in k-space
@@ -197,11 +195,10 @@ C Calculates the phases k*r_ij
      .               kpoint(3,IK) * xij(3,ind) 
               ckxij = cos(kxij)
               skxij = sin(kxij)
-! Since we are doing element wise multiplications (and not dot-products)
-! we might as well setup the transpose S(k)^T == S(-k) because this will
-! mean that we can do a simpler multiplication further down
+C Calculates the hamiltonian and the overlap in k space
+C H(k) = Sum(R) exp(i*k*R) * H(R)
               Saux(1,juo,iuo) = Saux(1,juo,iuo) + S(ind) * ckxij
-              Saux(2,juo,iuo) = Saux(2,juo,iuo) + S(ind) * skxij
+              Saux(2,juo,iuo) = Saux(2,juo,iuo) - S(ind) * skxij
             enddo
           enddo
 
@@ -237,22 +234,23 @@ C Loop over all the energy range
                 if (diff .gt. 15.0D0) then
                   cycle
                 else
-                  gauss = exp(-diff) * wk(ik)
+                  gauss = ( EXP(-diff) )
                   if (Node.eq.BNode) then
 C Only add once to dtot - not everytime loop over processors is executed
-                    dtot(ihist,ispin) = dtot(ihist,ispin) + gauss
+                    dtot(ihist,ispin) = dtot(ihist,ispin) + gauss*WK(IK)
                   endif
                   do jo = 1, Bnuo
                     call LocalToGlobalOrb(jo,BNode,Nodes,juo)
                     do iuo = 1, nuotot
-!                     This is:  psi(iuo) * psi(juo)^*
+C Solo para los Juo que satisfagan el criterio del record...
                       pipj1 = psi(1,iuo,iband) * psi(1,juo,iband) +
      .                        psi(2,iuo,iband) * psi(2,juo,iband)
-                      pipj2 = - psi(1,iuo,iband) * psi(2,juo,iband) +
+                      pipj2 = psi(1,iuo,iband) * psi(2,juo,iband) -
      .                        psi(2,iuo,iband) * psi(1,juo,iband)
                       pipjS1= pipj1*Sloc(1,iuo,JO)-pipj2*Sloc(2,iuo,JO)
-                      dpr(ihist,juo,ispin)= dpr(ihist,juo,ispin) +
-     .                                       pipjS1*gauss
+                      pipjS2= pipj1*Sloc(2,iuo,JO)+pipj2*Sloc(1,iuo,JO)
+                      dpr(ihist,juo,ispin)= dpr(ihist,juo,ispin) + 
+     .                                       pipjS1*gauss*WK(IK)
                     enddo
                   enddo
                 endif
@@ -275,17 +273,19 @@ C Loop over all the energy range
               if (diff .gt. 15.0d0) then
                 cycle
               else
-                gauss = exp(-diff) * wk(ik)
-                dtot(ihist,ispin) = dtot(ihist,ispin) + gauss
+                gauss = ( EXP(-diff) )
+                dtot(ihist,ispin) = dtot(ihist,ispin) + gauss*WK(IK)
                 do iuo = 1, nuotot
+C Solo para los Juo que satisfagan el criterio del record...
                   do juo = 1, nuotot
                     pipj1 = psi(1,iuo,iband) * psi(1,juo,iband) +
      .                      psi(2,iuo,iband) * psi(2,juo,iband)
-                    pipj2 = - psi(1,iuo,iband) * psi(2,juo,iband) +
+                    pipj2 = psi(1,iuo,iband) * psi(2,juo,iband) -
      .                      psi(2,iuo,iband) * psi(1,juo,iband)
                     pipjS1= pipj1*Saux(1,iuo,juo)-pipj2*Saux(2,iuo,juo)
+                    pipjS2= pipj1*Saux(2,iuo,juo)+pipj2*Saux(1,iuo,juo)
                     dpr(ihist,juo,ispin)= dpr(ihist,juo,ispin) + 
-     .                                     pipjS1*gauss
+     .                                     pipjS1*gauss*WK(IK)
                   enddo
                 enddo
               endif
@@ -335,10 +335,6 @@ C Free workspace array for global reduction
           enddo
         enddo
       enddo
-
-#ifdef DEBUG
-      call write_debug( '    POS pdosk' )
-#endif
 
       return
       end

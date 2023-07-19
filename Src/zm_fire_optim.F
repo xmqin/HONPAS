@@ -1,9 +1,12 @@
 ! 
-! Copyright (C) 1996-2016	The SIESTA group
-!  This file is distributed under the terms of the
-!  GNU General Public License: see COPYING in the top directory
-!  or http://www.gnu.org/copyleft/gpl.txt.
-! See Docs/Contributors.txt for a list of contributors.
+! This file is part of the SIESTA package.
+!
+! Copyright (c) Fundacion General Universidad Autonoma de Madrid:
+! E.Artacho, J.Gale, A.Garcia, J.Junquera, P.Ordejon, D.Sanchez-Portal
+! and J.M.Soler, 1996- .
+! 
+! Use of this software constitutes agreement with the full conditions
+! given in the SIESTA license, as signed by all legitimate users.
 !
       module m_zm_fire_optim
       public :: zm_fire_optimizer
@@ -11,8 +14,9 @@
 
       CONTAINS
 !
-      subroutine zm_fire_optimizer( na, xa, fa, cell, stress, dxmax,
-     .                              tp, ftol, strtol, varcel, relaxd )
+      subroutine zm_fire_optimizer( na, xa, fa, cell,
+     .                 stress, dxmax, 
+     .                 tp, ftol, strtol, varcel, relaxd)
 
 c ******************************** INPUT ************************************
 c integer na            : Number of atoms in the simulation cell
@@ -40,7 +44,8 @@ C  Modules
 C
       use precision,   only : dp
       use parallel,    only : Node, IONode
-      use fdf,         only : fdf_get
+      use fdf,         only : fdf_physical
+      use m_fdf_global, only: fdf_global_get
       use units, only: Ang
 
       use m_fire
@@ -65,7 +70,8 @@ C Subroutine arguments:
       real(dp), intent(inout):: xa(3,na), stress(3,3), strtol, cell(3,3)
 
 C Internal variables and arrays
-      integer             :: ia, i, j, n, indi,indi1,vi,k
+      integer             :: iu, ia, i, j, n, indi,indi1,vi,k
+      logical             :: found
       real(dp)            :: volume, new_volume, trace
       real(dp)            :: celli(3,3)
       real(dp)            ::  stress_dif(3,3)
@@ -75,6 +81,7 @@ C Internal variables and arrays
 C Saved internal variables:
       integer,       save :: ndeg
       logical,       save :: frstme = .true.
+      logical,       save :: tarstr = .false.
       logical,       save :: constant_volume
       real(dp),      save :: initial_volume
 
@@ -87,6 +94,7 @@ C Saved internal variables:
       real(dp), dimension(:), allocatable    :: ftoln, dxmaxn
 
       type(fire_t), save  :: b
+      logical, save           :: initialization_done = .false.
 
       integer        :: ndegi, ndi
 
@@ -105,20 +113,22 @@ c ---------------------------------------------------------------------------
       volume = volcel(cell)
 
       if ( frstme ) then
-         
-        fire_mass = fdf_get("MD.FIRE.Mass", 1.0_dp)
-        fire_dt = fdf_get("MD.FIRE.TimeStep", dt)
-        fire_dt_inc = fdf_get("MD.FIRE.TimeInc", FIRE_DEF_dt_inc)
-        fire_dt_dec = fdf_get("MD.FIRE.TimeDec", FIRE_DEF_dt_dec)
-        fire_nmin = fdf_get("MD.FIRE.Nmin", FIRE_DEF_nmin)
-        fire_alphamax = fdf_get("MD.FIRE.AlphaMax",
-     $       FIRE_DEF_alphamax)
-        fire_alpha_factor = fdf_get("MD.FIRE.AlphaFactor",
-     &       FIRE_DEF_alpha_factor)
-        fire_dtmax = fdf_get("MD.FIRE.MaxTimeStep",
-     $       FIRE_DEF_dtmax)
-        fire_dt = fdf_get("MD.FIRE.TimeStep", dt)
-        fire_debug = fdf_get("MD.FIRE.Debug", .false.)
+  
+             call fdf_global_get(fire_mass,"MD.FIRE.Mass",1.0_dp)
+             call fdf_global_get(fire_dt,"MD.FIRE.TimeStep",dt)
+             call fdf_global_get(fire_dt_inc,"MD.FIRE.TimeInc",
+     $            FIRE_DEF_dt_inc)
+             call fdf_global_get(fire_dt_dec,"MD.FIRE.TimeDec",
+     $            FIRE_DEF_dt_dec)
+             call fdf_global_get(fire_nmin,"MD.FIRE.Nmin",FIRE_DEF_nmin)
+             call fdf_global_get(fire_alphamax,"MD.FIRE.AlphaMax",
+     $            FIRE_DEF_alphamax)
+             call fdf_global_get(fire_alpha_factor,
+     $            "MD.FIRE.AlphaFactor", FIRE_DEF_alpha_factor)
+             call fdf_global_get(fire_dtmax,"MD.FIRE.MaxTimeStep",
+     $            FIRE_DEF_dtmax)
+             call fdf_global_get(fire_dt,"MD.FIRE.TimeStep",dt)
+             call fdf_global_get(fire_debug,"MD.FIRE.Debug",.false.)
 
         ! Find number of variables
         ndeg = 0
@@ -147,7 +157,8 @@ c ---------------------------------------------------------------------------
 
         if ( varcel ) then
 
-          constant_volume = fdf_get("MD.ConstantVolume", .false.)
+          call fdf_global_get(constant_volume,
+     .                        "MD.ConstantVolume", .false.)
 
           call get_target_stress(tp,tstres)
 
@@ -170,7 +181,7 @@ C Scale factor for strain variables to share magnitude with coordinates
 C ---- (a length in Bohrs typical of bond lengths ..) 
 
           ! AG: This could better be volume^(1/3) by default
-          precon = fdf_get('MD.PreconditionVariableCell',
+          call fdf_global_get(precon,'MD.PreconditionVariableCell',
      .                           9.4486344d0,'Bohr')
 
 C Initialize absolute strain and save initial cell vectors

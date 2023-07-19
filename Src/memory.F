@@ -1,11 +1,14 @@
 ! 
-! Copyright (C) 1996-2016	The SIESTA group
-!  This file is distributed under the terms of the
-!  GNU General Public License: see COPYING in the top directory
-!  or http://www.gnu.org/copyleft/gpl.txt.
-! See Docs/Contributors.txt for a list of contributors.
+! This file is part of the SIESTA package.
 !
-      subroutine memory( Task, Type, NElements, CallingRoutine )
+! Copyright (c) Fundacion General Universidad Autonoma de Madrid:
+! E.Artacho, J.Gale, A.Garcia, J.Junquera, P.Ordejon, D.Sanchez-Portal
+! and J.M.Soler, 1996- .
+! 
+! Use of this software constitutes agreement with the full conditions
+! given in the SIESTA license, as signed by all legitimate users.
+!
+      subroutine memory( Task, Type, NElements, CallingRoutine)
 C 
 C This subroutine keeps track of information relating to the use 
 C of dynamic memory
@@ -22,7 +25,6 @@ C                   :                    'L' = logical
 C                   :                    'C' = single precision complex
 C                   :                    'Z' = double precision complex
 C                   :                    'S' = character data (we assume takes one word)
-C                   :                    'E' = double precision integer
 C integer NElements : number of array elements being 
 C                   : allocated/deallocated
 C character         :
@@ -32,7 +34,6 @@ C Created by J.D. Gale, October 1999
 C
       use memoryinfo
       use parallel, only: Node
-      use alloc,    only: alloc_count
 
       implicit none
 
@@ -41,10 +42,7 @@ C
       character(len=*), intent(in)        :: CallingRoutine
 
 C Local variables
-      integer   :: Sign
-      integer(i8b) :: prevMem
-      integer         :: allocSize
-      character(len=1):: allocType
+      integer    Sign
 CAG
 !      if (Node.eq.0) then
 !        write(66,'(a,a,a,a,i10)') "---memory: ", CallingRoutine // " ",
@@ -52,7 +50,7 @@ CAG
 !     $                          type // " ", nelements
 !        call flush(66)
 !      endif
-      prevMem = CurrentMemory
+
 C Assign sign of operation based on task
       if (Task .eq. 'A' .or. Task .eq. 'a') then
         Sign = +1
@@ -94,9 +92,6 @@ C Add number of elements to appropriate pointer
       elseif (Type .eq. 'S' .or. Type .eq. 's') then
         WordsString = WordsString + Sign*NElements
         CurrentMemory = CurrentMemory + Sign*NElements*ByteSize(7)
-      elseif (Type .eq. 'E' .or. Type .eq. 'e') then
-        WordsLongInt = WordsLongInt + Sign*NElements
-        CurrentMemory = CurrentMemory + Sign*NElements*ByteSize(8)
       endif
 
 C Check whether memory is greater than peak memory so far
@@ -104,32 +99,6 @@ C Check whether memory is greater than peak memory so far
         PeakMemory = CurrentMemory
         PeakRoutine = CallingRoutine
       endif
-
-C Call alloc_count routine
-      select case(Type)
-      case('S')
-        allocType = 'R'
-        allocSize = NElements
-      case('C')
-        allocType = 'R'
-        allocSize = NElements*2
-      case('Z')
-        allocType = 'D'
-        allocSize = NElements*2
-      case('X')
-#ifdef GRID_DP
-        allocType = 'D'
-#else
-        allocType = 'R'
-#endif
-        allocSize = NElements
-      case default
-        allocType = Type
-        allocSize = NElements
-      end select
-      if (Task=='D') allocSize = -allocSize
-      call alloc_count( allocSize, allocType, 
-     .                  name=trim(CallingRoutine)//' unknown' )
 
       end subroutine memory
 
@@ -152,56 +121,61 @@ C
 #ifdef MPI
       use mpi_siesta
 #endif
+
       implicit none
+
 C Passed arguments
-      integer            :: Unit, Level
+      integer
+     .  Unit, Level
+
 C Local arguments
-      integer            :: n
-      integer(i8b)          :: MaxMemory
-      integer(i8b), pointer :: maxmemlist(:)
+      integer
+     .  MaxMemory, n
+      integer, allocatable :: maxmemlist(:)
+
 #ifdef MPI
-      integer            :: MPIerror
+      integer
+     .  MPIerror
 #endif
 
 C Find peak memory use over all Nodes
 #ifdef MPI
-      call MPI_AllReduce( PeakMemory, MaxMemory, 1, MPI_INTEGER8,
-     &                    MPI_MAX, MPI_COMM_WORLD, MPIerror )
+      call MPI_AllReduce(PeakMemory,MaxMemory,1,MPI_integer,MPI_max,
+     .  MPI_Comm_World,MPIerror)
 #else
       MaxMemory = PeakMemory
 #endif
 
 C Output memory use information
       if (Node.eq.0) then
-        write(Unit,'(a)') ' '
+        write(Unit,'(a)') ''
       endif
       if (Level.eq.0) then
         if (Node.eq.0) then
           write(Unit,'(''* Maximum dynamic memory allocated = '',i5,
-     &      '' MB'')') (MaxMemory/1000000)+1
+     .      '' MB'')') (MaxMemory/1000000)+1
         endif
       else
-        nullify(maxmemlist)
         if (node==0) then
           allocate(maxmemlist(nodes))
         else
-          allocate(maxmemlist(1))
+          allocate(maxmemlist(0))
         endif
 #ifdef MPI
-        call mpi_gather( peakmemory, 1, MPI_INTEGER8,
-     &                   maxmemlist, 1, MPI_INTEGER8,
-     &                   0, MPI_COMM_WORLD, MPIerror )
+        call mpi_gather(peakmemory,1,mpi_integer,
+     .                  maxmemlist,1,mpi_integer,
+     .                  0,mpi_comm_world,mpierror)
 #else
         maxmemlist=peakmemory
 #endif
         if (node==0) then
           do n=0,Nodes-1
             write(Unit,'(''* Maximum dynamic memory allocated : Node ''
-     &          ,i4,'' = '',i5,'' MB'')') n,(maxmemlist(n+1)/1000000)+1
+     .          ,i4,'' = '',i5,'' MB'')') n,(maxmemlist(n+1)/1000000)+1
           enddo
-          write(Unit,'(a)') ' '
+          write(Unit,'(a)') ''
           write(Unit,'(''* Maximum memory occured during '',a30)')
-     &               PeakRoutine
+     .               PeakRoutine
         endif
         deallocate(maxmemlist)
       endif

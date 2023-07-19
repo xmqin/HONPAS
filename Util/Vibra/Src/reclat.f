@@ -1,19 +1,20 @@
 ! 
-! Copyright (C) 1996-2016	The SIESTA group
-!  This file is distributed under the terms of the
-!  GNU General Public License: see COPYING in the top directory
-!  or http://www.gnu.org/copyleft/gpl.txt.
-! See Docs/Contributors.txt for a list of contributors.
+! This file is part of the SIESTA package.
 !
-C $Id: reclat.f,v 1.3 2004/06/10 16:17:00 wdpgaara Exp $
-
+! Copyright (c) Fundacion General Universidad Autonoma de Madrid:
+! E.Artacho, J.Gale, A.Garcia, J.Junquera, P.Ordejon, D.Sanchez-Portal
+! and J.M.Soler, 1996- .
+! 
+! Use of this software constitutes agreement with the full conditions
+! given in the SIESTA license, as signed by all legitimate users.
+!
       SUBROUTINE RECLAT (A,B,IOPT)
 
 C  CALCULATES RECIPROCAL LATTICE VECTORS. THEIR PRODUCT WITH DIRECT
 C  LATTICE VECTORS IS 1 IF IOPT=0 OR 2*PI IF IOPT=1
 
-      integer :: iopt, i
-      DOUBLE PRECISION A(3,3),B(3,3), pi, c , ci
+      IMPLICIT DOUBLE PRECISION (A-H,O-Z)
+      DOUBLE PRECISION A(3,3),B(3,3)
       PI=ACOS(-1.D0)
       B(1,1)=A(2,2)*A(3,3)-A(3,2)*A(2,3)
       B(2,1)=A(3,2)*A(1,3)-A(1,2)*A(3,3)

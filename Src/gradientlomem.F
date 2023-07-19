@@ -1,9 +1,12 @@
 ! 
-! Copyright (C) 1996-2016	The SIESTA group
-!  This file is distributed under the terms of the
-!  GNU General Public License: see COPYING in the top directory
-!  or http://www.gnu.org/copyleft/gpl.txt.
-! See Docs/Contributors.txt for a list of contributors.
+! This file is part of the SIESTA package.
+!
+! Copyright (c) Fundacion General Universidad Autonoma de Madrid:
+! E.Artacho, J.Gale, A.Garcia, J.Junquera, P.Ordejon, D.Sanchez-Portal
+! and J.M.Soler, 1996- .
+! 
+! Use of this software constitutes agreement with the full conditions
+! given in the SIESTA license, as signed by all legitimate users.
 !
       subroutine gradientlomem(c,eta,qs,h,s,nbasis,nbasisloc,nbands,
      .                         ncmax,nctmax,nfmax,nftmax,nhmax,nhijmax,
@@ -74,7 +77,6 @@ C ************************************************************************
 
       use precision
       use on_main,   only : ncG2L, ncT2P, nbL2G, nbG2L, nbandsloc
-      use alloc,     only : re_alloc, de_alloc
       use globalise
 #ifdef MPI
       use mpi_siesta, only: mpi_comm_world, mpi_sum
@@ -110,11 +112,11 @@ C Internal variables ......................................................
      .  MPIerror
       real(dp) ::
      .  ftmp(2), ftmp2(2)
-      real(dp), pointer, save ::
+      real(dp), allocatable, save ::
      .  buxg(:), bux1save(:,:), bux2save(:,:), ftG(:,:), fstG(:,:)
 #endif
 
-      real(dp), pointer, save ::
+      real(dp), allocatable, save ::
      .  aux1(:), aux2(:), bux(:), bux1(:), ft(:,:), fst(:,:)
 
       real(dp) ::
@@ -125,20 +127,29 @@ C..................
       call timer('gradient',1)
       
 C Allocate local arrays
-      call re_alloc( aux1, 1, nbasis, 'aux1', 'gradient' )
-      call re_alloc( aux2, 1, nbasis, 'aux2', 'gradient' )
-      call re_alloc( bux, 1, nbands, 'bux', 'gradient' )
-      call re_alloc( bux1, 1, nbands, 'bux1', 'gradient' )
-      call re_alloc( ft, 1, nftmax, 1, nbasisCloc, 'ft', 'gradient' )
-      call re_alloc( fst, 1, nftmax, 1, nbasisCloc, 'fst', 'gradient' )
+      allocate(aux1(nbasis))
+      call memory('A','D',size(aux1),'gradient')
+      allocate(aux2(nbasis))
+      call memory('A','D',size(aux2),'gradient')
+      allocate(bux(nbands))
+      call memory('A','D',size(bux),'gradient')
+      allocate(bux1(nbands))
+      call memory('A','D',size(bux1),'gradient')
+      allocate(ft(nftmax,nbasisCloc))
+      call memory('A','D',size(ft),'gradient')
+      allocate(fst(nftmax,nbasisCloc))
+      call memory('A','D',size(fst),'gradient')
 #ifdef MPI
-      call re_alloc( ftG, 1, MaxFt2, 1, nbasisCloc, 'ftG', 'gradient' )
-      call re_alloc( fstG, 1, MaxFt2, 1, nbasisCloc, 'fstG', 'gradient')
-      call re_alloc( bux1save, 1, nhijmax, 1, nbandsloc, 'bux1save',
-     &               'gradient' )
-      call re_alloc( bux2save, 1, nhijmax, 1, nbandsloc, 'bux2save',
-     &               'gradient' )
-      call re_alloc( buxg, 1, nbands, 'buxg', 'gradient')
+      allocate(ftG(MaxFt2,nbasisCloc))
+      call memory('A','D',size(ftG),'gradient')
+      allocate(fstG(MaxFt2,nbasisCloc))
+      call memory('A','D',size(fstG),'gradient')
+      allocate(bux1save(nhijmax,nbandsloc))
+      call memory('A','D',size(bux1save),'gradient')
+      allocate(bux2save(nhijmax,nbandsloc))
+      call memory('A','D',size(bux2save),'gradient')
+      allocate(buxg(nbands))
+      call memory('A','D',size(buxg),'gradient')
 #endif
 
 C Initialize output and auxiliary varialbles ...............................
@@ -448,19 +459,29 @@ C End loop over spins
 
 C Deallocate local arrays
 #ifdef MPI
-      call de_alloc( buxg, 'buxg', 'gradient' )
-      call de_alloc( bux2save, 'bux2save', 'gradient' )
-      call de_alloc( bux1save, 'bux1save', 'gradient' )
-      call de_alloc( fstG, 'fstG', 'gradient' )
-      call de_alloc( ftG, 'ftG', 'gradient' )
+      call memory('D','D',size(buxg),'gradient')
+      deallocate(buxg)
+      call memory('D','D',size(bux2save),'gradient')
+      deallocate(bux2save)
+      call memory('D','D',size(bux1save),'gradient')
+      deallocate(bux1save)
+      call memory('D','D',size(fstG),'gradient')
+      deallocate(fstG)
+      call memory('D','D',size(ftG),'gradient')
+      deallocate(ftG)
 #endif
-
-      call de_alloc( fst, 'fst', 'gradient' )
-      call de_alloc( ft, 'ft', 'gradient' )
-      call de_alloc( bux1, 'bux1', 'gradient' )
-      call de_alloc( bux, 'bux', 'gradient' )
-      call de_alloc( aux2, 'aux2', 'gradient' )
-      call de_alloc( aux1, 'aux1', 'gradient' )
+      call memory('D','D',size(fst),'gradient')
+      deallocate(fst)
+      call memory('D','D',size(ft),'gradient')
+      deallocate(ft)
+      call memory('D','D',size(bux1),'gradient')
+      deallocate(bux1)
+      call memory('D','D',size(bux),'gradient')
+      deallocate(bux)
+      call memory('D','D',size(aux2),'gradient')
+      deallocate(aux2)
+      call memory('D','D',size(aux1),'gradient')
+      deallocate(aux1)
 
       call timer('gradient',2)
 

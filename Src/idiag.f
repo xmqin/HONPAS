@@ -1,9 +1,12 @@
 ! 
-! Copyright (C) 1996-2016	The SIESTA group
-!  This file is distributed under the terms of the
-!  GNU General Public License: see COPYING in the top directory
-!  or http://www.gnu.org/copyleft/gpl.txt.
-! See Docs/Contributors.txt for a list of contributors.
+! This file is part of the SIESTA package.
+!
+! Copyright (c) Fundacion General Universidad Autonoma de Madrid:
+! E.Artacho, J.Gale, A.Garcia, J.Junquera, P.Ordejon, D.Sanchez-Portal
+! and J.M.Soler, 1996- .
+! 
+! Use of this software constitutes agreement with the full conditions
+! given in the SIESTA license, as signed by all legitimate users.
 !
       SUBROUTINE IDIAG (NN,MOLD,MNEW,MLEFT,MRIGHT,MAUX)
 
@@ -77,7 +80,7 @@ C Written by J.Moreno and J.M.Soler
    50   CONTINUE
           if (IOnode)
      $       WRITE(6,*)'IDIAG: ERROR. ITERATION HAS NOT CONVERGED. N=',N
-          call die('error in idiag')
+          call die()
    60 CONTINUE
       END
 

@@ -1,13 +1,14 @@
 ! 
-! Copyright (C) 1996-2016	The SIESTA group
-!  This file is distributed under the terms of the
-!  GNU General Public License: see COPYING in the top directory
-!  or http://www.gnu.org/copyleft/gpl.txt.
-! See Docs/Contributors.txt for a list of contributors.
+! This file is part of the SIESTA package.
+!
+! Copyright (c) Fundacion General Universidad Autonoma de Madrid:
+! E.Artacho, J.Gale, A.Garcia, J.Junquera, P.Ordejon, D.Sanchez-Portal
+! and J.M.Soler, 1996- .
+! 
+! Use of this software constitutes agreement with the full conditions
+! given in the SIESTA license, as signed by all legitimate users.
 !
       module memoryinfo
-
-      use precision, only: i8b
 
 C
 C WordsInteger = number of words of memory for integer variables
@@ -23,9 +24,9 @@ C                each data type
 C
       implicit none
 
-      integer(i8b), save ::
+      integer, save ::
      .  WordsInteger, WordsSP, WordsDP, WordsLogical, WordsSC, WordsDC, 
-     .  WordsString, WordsLongInt,
+     .  WordsString,
      .  PeakMemory, CurrentMemory
 
       character(len=30), save ::
@@ -39,15 +40,14 @@ C
      .  WordsSC / 0 /,
      .  WordsDC / 0 /,
      .  WordsString / 0 /,
-     .  WordsLongInt / 0 /,
      .  PeakMemory / 0 /,
      .  CurrentMemory / 0 /
       
-      integer, parameter, dimension(8) :: ByteSize = 
+      integer, parameter, dimension(7) :: ByteSize = 
 #ifdef OLD_CRAY
-     .     (/8,8,8,8,8,16,8,8/)
+     .     (/8,8,8,8,8,16,8/)
 #else
-     .     (/4,4,8,4,8,16,4,8/)
+     .     (/4,4,8,4,8,16,4/)
 #endif
 
       end module memoryinfo

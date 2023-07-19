@@ -1,10 +1,3 @@
-! ---
-! Copyright (C) 1996-2016	The SIESTA group
-!  This file is distributed under the terms of the
-!  GNU General Public License: see COPYING in the top directory
-!  or http://www.gnu.org/copyleft/gpl.txt .
-! See Docs/Contributors.txt for a list of contributors.
-! ---
 !==================================================================
 program dm_creator
 
@@ -17,27 +10,39 @@ program dm_creator
 
   implicit none
 
-  logical :: gamma_wfsx, got_qcos, logical_dummy, non_coll
+  logical :: gamma_wfsx, got_qcos, logical_dummy
   integer :: ii1, ii2, ind, ind_red, no1, no2, n_int, nnz
-  integer :: nwfmx, nspin_blocks
+  integer :: nwfmx
   real(dp) :: factor, qsol
   real(dp), dimension(:,:), allocatable :: DMout
 
-  complex(DP), dimension(2)    :: spinor_1, spinor_2
-  complex(DP) :: d11, d12, d21, d22, kphs
-  
+  ! We use a smearing function of the form f(x) = exp(-(x/smear)**2) / (smear*sqrt(pi))
+  ! A weight tolerance of 1.0e-4 corresponds to going about 3*smear on either
+  ! side of the eigenvalue. We should set nsigma appropriately
+
+  real(dp), parameter  :: tol_weight = 1.0e-4_dp
+  integer, parameter   :: nsigma = 3
+
+  real(dp), parameter  :: tol_overlap = 1.0e-10_dp
+
   !
   !     Process options
   !
   n_opts = 0
   do
-     call getopts('dhm:M:',opt_name,opt_arg,n_opts,iostat)
+     call getopts('dhls:n:m:M:',opt_name,opt_arg,n_opts,iostat)
      if (iostat /= 0) exit
      select case(opt_name)
      case ('d')
         debug = .true.
      case ('+d')
         debug = .false.
+     case ('l')
+        energies_only = .true.
+     case ('s')
+        read(opt_arg,*) smear
+     case ('n')
+        read(opt_arg,*) npts_energy
      case ('m')
         read(opt_arg,*) minimum_spec_energy
      case ('M')
@@ -82,25 +87,14 @@ program dm_creator
   read(wfs_u)        !! Symbols, etc
   if (debug) print *, "WFSX read: nkp, nsp, nnao: ", nkp, nsp, nao
 
-  if ( nsp == 8 ) then
-    if (debug) print *, "WFSX from spin-orbit calculation"
-    nspin_blocks = 1
-    non_coll = .true.
-  else if ( nsp == 4 ) then
-    if (debug) print *, "WFSX from non-collinear calculation"
-    nspin_blocks = 1
-    non_coll = .true.
-  else
-     nspin_blocks = nsp
-  endif
-  print *, "NSPIN BLOCKS: ", nspin_blocks
+  allocate (ados(npts_energy,nsp), ww(npts_energy))
 
   nwfmx = 0
   min_energy = huge(1.0_dp)
   max_energy = -huge(1.0_dp)
 
   do ik=1,nkp
-     do is=1,nspin_blocks
+     do is=1,nsp
 
         read(wfs_u) idummy, pk(1:3,ik), wk(ik)
         if (idummy /= ik) stop "ik index mismatch in WFS file"
@@ -123,17 +117,101 @@ program dm_creator
        min_energy, max_energy
 
 
+  ! Here low_e and high_e represent a window for the plot, to
+  ! avoid cut tails
+
+  low_e = min_energy - nsigma*smear
+  high_e = max_energy + nsigma*smear
+
+  e_step = (high_e-low_e)/(npts_energy-1)
+  ados(:,1:nsp) = 0.0_dp
+
+  ! skip four records
+
+  rewind(wfs_u)
+
+  read(wfs_u) 
+  read(wfs_u) 
+  read(wfs_u) 
+  read(wfs_u) 
+
+  do ik=1,nkp
+     do is=1,nsp
+        read(wfs_u)
+        read(wfs_u)
+        read(wfs_u)  number_of_wfns
+        do iw=1,number_of_wfns
+           read(wfs_u) 
+           read(wfs_u) eigval
+           do i = 1, npts_energy
+              energy = low_e + e_step*(i-1)
+              weight = delta(energy-eigval)
+              if (weight < tol_weight) CYCLE           ! Will not contribute
+              ados(i,is) = ados(i,is) + wk(ik) * weight
+           enddo
+           read(wfs_u)       ! Skip wfn info
+        enddo
+     enddo
+  enddo
+
+  call io_assign(idos)
+  open(idos,file=trim(sflnm)//".alldos",form="formatted", &
+       status="unknown",action="write",position="rewind")
+  write(idos,*) "#  Energy   LARGE-SCALE DOS"
+
+  do i = 1, npts_energy
+     energy = low_e + e_step*(i-1)
+     write(idos,*) energy, (ados(i,is), is=1,nsp)
+  enddo
+
+  call io_close(idos)
+
+
   ! Read HSX file
   ! Will pick up atoms, zval, and thus N_electrons
 
   call read_hs_file(trim(sflnm)//".HSX")
+  if (gamma_wfsx .neqv. gamma) STOP "Gamma mismatch"
 
   ztot = 0.0_dp
   do ia = 1, na_u
      ztot = ztot + zval(isa(ia))
   enddo
 
+  !
+  !       Compute integrated total DOS
+  !       Here we double the DOS for the case of nspin=1,
+  !       to get the correct number of states.
+
+  allocate(intdos(npts_energy))
+  call io_assign(intdos_u)
+  open(intdos_u,file=trim(sflnm)//".intdos",form="formatted", &
+       status="unknown",action="write",position="rewind")
+  intdos(1) = 0.0_dp
+  write(intdos_u,*) low_e, intdos(1)
+  do i = 2, npts_energy
+     energy = low_e + e_step*(i-1)
+     intdos(i) = intdos(i-1) + sum(ados(i,:)) * e_step * 2.0_dp /nsp
+     write(intdos_u,*) energy, intdos(i)
+  enddo
+  call io_close(intdos_u)
+
+  ! Look for Fermi Energy
+  do i = 2, npts_energy
+     if (intdos(i) > ztot) then
+        ! Found fermi energy
+        energy = low_e + e_step*(i-1)
+        ! Correct overshoot, interpolating linearly
+        efermi = energy - (intdos(i)-ztot)*e_step/(intdos(i)-intdos(i-1))
+        exit
+     endif
+  enddo
+
+  write(6,"(a,f10.5,a,f10.5)") "Fermi energy: ", efermi, " for a smearing of: ", smear
+
+  if (energies_only) STOP
   !-------------------------------------------------------------------
+
 
   if (minimum_spec_energy > min_energy)   min_energy = minimum_spec_energy
   if (maximum_spec_energy < max_energy)  max_energy = maximum_spec_energy
@@ -190,6 +268,7 @@ program dm_creator
   enddo
 
   write(stt_u,"(/'SPIN: ',i2)") nsp
+  write(stt_u,"(/'FERMI ENERGY: ',f18.6)") efermi
 
   write(stt_u,"(/'AO LIST:')")
   taux=repeat(' ',len(taux))
@@ -234,25 +313,22 @@ program dm_creator
 
   close(stt_u)
 
+  !==================================
 
-  if (non_coll) then
-     allocate(wf_single(4,1:no_u))
-     allocate(wf(4,1:no_u))
-  else
-     if (gamma_wfsx) then
-        allocate(wf_single(1,1:no_u))
+  !================================================================
+
+  ! * Curves
+
+     if (gamma) then
         allocate(wf(1,1:no_u))
      else
-        allocate(wf_single(2,1:no_u))
         allocate(wf(2,1:no_u))
      endif
-  endif
-  
+
      nnz = sum(numh(1:nao))
      allocate(DMout(nnz,nspin))
      DMout(:,:) = 0.0_dp
 
-     !===============================================
      !Stream over file, without using too much memory
 
      rewind(wfs_u)
@@ -265,7 +341,7 @@ program dm_creator
         if (debug) print *, "Number of k-points, spins: ", nkp, nsp
         do ik=1,nkp
            if (debug) print *, "k-point: ", ik
-           do is=1,nspin_blocks
+           do is=1,nsp
               read(wfs_u)
               read(wfs_u)
               read(wfs_u)  number_of_wfns
@@ -274,66 +350,28 @@ program dm_creator
                  if (debug) print *, "     wfn: ", iw
                  read(wfs_u) 
                  read(wfs_u) eigval
-                 if (debug) print *, "   eigval: ", eigval
                  ! Early termination of iteration
+                 ! Note that we keep a few more states on the sides, due to
+                 ! the smearing
                  if (eigval < min_energy .or. eigval > max_energy) then
                     read(wfs_u)   ! Still need to read this
-                    if (debug) print *, "-------------- skipped"
                     CYCLE
                  endif
 
-                 read(wfs_u) (wf_single(:,io), io=1,nao)
-                 wf(:,:) = real(wf_single(:,:), kind=dp)
-                 
+                 read(wfs_u) (wf(:,io), io=1,nao)
+
                  do io1 = 1, nao
                     do ii1 = 1,numh(io1)
                        ind = listhptr(io1)+ii1
                        ii2 = listh(ind)
                        io2 = indxuo(ii2)
 
-                       ! k*R_12    (r_2-r_1)
-                       alfa=dot_product(pk(1:3,ik),xij(1:3,ind))
-                       kphs = exp(cmplx(0.0_dp,-1.0_dp, dp) * alfa )
-
-                       if (non_coll) then
-
-                          ! Use 'dp' to keep the wfs in double precision                        
-                          ! (Recall that wf() is now dp; converted right after reading)         
-
-                          spinor_1 = [ cmplx(wf(1,io1),wf(2,io1), dp), &
-                               cmplx(wf(3,io1),wf(4,io1), dp) ]
-                          spinor_2 = [ cmplx(wf(1,io2),wf(2,io2), dp), &
-                               cmplx(wf(3,io2),wf(4,io2), dp) ]
-
-                          d11 = spinor_1(1) * conjg(spinor_2(1)) * kphs * wk(ik)
-                          d12 = spinor_1(1) * conjg(spinor_2(2)) * kphs * wk(ik)
-                          d21 = spinor_1(2) * conjg(spinor_2(1)) * kphs * wk(ik)
-                          d22 = spinor_1(2) * conjg(spinor_2(2)) * kphs * wk(ik)
-
-                          if (nspin == 8) then
-                             ! taken from diag3k
-                             dmout(ind,1) = dmout(ind,1) + real(d11, dp)
-                             dmout(ind,2) = dmout(ind,2) + real(d22, dp)
-                             dmout(ind,3) = dmout(ind,3) + real(d12, dp)
-                             dmout(ind,4) = dmout(ind,4) - aimag(d12)
-                             dmout(ind,5) = dmout(ind,5) + aimag(d11)
-                             dmout(ind,6) = dmout(ind,6) + aimag(d22)
-                             dmout(ind,7) = dmout(ind,7) + real(d21, dp)
-                             dmout(ind,8) = dmout(ind,8) + aimag(d21)
-
-                          else ! nspin = 4
-                             ! taken from diag2k
-                             D12 = 0.5_dp * (D12 + dconjg(D21))
-                             dmout(ind,1) = dmout(ind,1) + real(d11, dp)
-                             dmout(ind,2) = dmout(ind,2) + real(d22, dp)
-                             dmout(ind,3) = dmout(ind,3) + real(d12, dp)
-                             dmout(ind,4) = dmout(ind,4) - aimag(d12)
-                          endif
-                          
-                       else
+                             
+                                ! (qcos, qsin) = C_1*conjg(C_2)
                                 !AG: Corrected:  (qcos, qsin) = conjg(C_1)*(C_2)
+                                ! We might want to avoid recomputing this
 
-                                if (gamma_wfsx) then
+                                if (gamma) then
                                    qcos = wf(1,io1)*wf(1,io2) 
                                    qsin = 0.0_dp
                                 else
@@ -343,13 +381,16 @@ program dm_creator
                                         wf(2,io1)*wf(1,io2))
                                 endif
 
-                             ! Real(conjg(C_1)*C_2)*exp(+i*alfa)) * S_12
+                             ! k*R_12    (r_2-r_1)
+                             alfa=dot_product(pk(1:3,ik),xij(1:3,ind))
+
+                             ! Crb = Real(C_1*conjg(C_2)*exp(-i*alfa)) * S_12
+                             !AG: This one better --  or Real(conjg(C_1)*C_2)*exp(+i*alfa)) * S_12
                              ! Common factor computed here
                              factor =  (qcos*cos(alfa)-qsin*sin(alfa)) * wk(ik)
+
                              DMout(ind,is) = DMout(ind,is) + factor
-                             
-                          endif  ! coll or non-coll
-                          
+
                         enddo   ! i2
                     enddo  ! i1
 
@@ -364,11 +405,10 @@ program dm_creator
 
 !
 ! Compute total number of electrons
-           !
-           ! ** UPDATE THIS FOR SPINORS
+!
 
            qsol = 0.0_dp
-           do is = 1,min(nspin,2)
+           do is = 1,nspin
               do io = 1,nnz
                  qsol = qsol + DMout(io,is) * Sover(io)
               enddo
@@ -385,6 +425,23 @@ program dm_creator
 #endif
            call iodm( "write", nnz, nao, nspin, numh, listhptr, listh, DMout, logical_dummy)
 
+!--------------------------------------------------------
+
+
+CONTAINS
+
+  function delta(x) result(res)
+    real(dp), intent(in) :: x
+    real(dp)             :: res
+
+    if ((abs(x) > 8*smear)) then
+       res = 0.0_dp
+       RETURN
+    endif
+
+    res = exp(-(x/smear)**2) / (smear*sqrt(pi))
+
+  end function delta
 end program dm_creator
 
 

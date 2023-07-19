@@ -1,10 +1,3 @@
-! ---
-! Copyright (C) 1996-2016       The SIESTA group
-!  This file is distributed under the terms of the
-!  GNU General Public License: see COPYING in the top directory
-!  or http://www.gnu.org/copyleft/gpl.txt .
-! See Docs/Contributors.txt for a list of contributors.
-! ---
 !==================================================================
 !
 program fatband
@@ -50,8 +43,7 @@ program fatband
   real(dp) :: minimum_spec_eigval = -huge(1.0_dp)
   real(dp) :: maximum_spec_eigval = huge(1.0_dp)
 
-  integer  :: ib, nbands, nspin_blocks
-  logical  :: non_coll
+  integer  :: fat_u, ib, nbands
 
   !
   !     Process options
@@ -120,7 +112,6 @@ program fatband
   allocate (wk(nkp), pk(3,nkp))
 
   read(wfs_u) nsp
-  non_coll = (nsp >= 4)
   read(wfs_u) nao
   read(wfs_u)        !! Symbols, etc
   if (debug) print *, "WFSX read: nkp, nsp, nnao: ", nkp, nsp, nao
@@ -132,14 +123,8 @@ program fatband
   min_eigval_in_band_set = huge(1.0_dp)
   max_eigval_in_band_set = -huge(1.0_dp)
 
-  if (non_coll) then
-     nspin_blocks = 1
-  else
-     nspin_blocks = nsp
-  endif
-  
   do ik=1,nkp
-     do is=1,nspin_blocks
+     do is=1,nsp
 
         read(wfs_u) idummy, pk(1:3,ik), wk(ik)
         if (idummy /= ik) stop "ik index mismatch in WFS file"
@@ -205,6 +190,7 @@ program fatband
   ! but the total charge is read as qtot.
 
   call read_hs_file(trim(sflnm)//".HSX")
+  if (gamma_wfsx .neqv. gamma) STOP "Gamma mismatch"
 
   if (energies_only) STOP
 
@@ -273,14 +259,8 @@ program fatband
      enddo
   enddo
 
-  if ( nsp == 8 ) then
-    write(stt_u,"(/'SPIN (spin-orbit): ',i2)") nspin_blocks
-  else if ( nsp == 4 ) then
-    write(stt_u,"(/'SPIN (non-coll): ',i2)") nspin_blocks
-  else
-    write(stt_u,"(/'SPIN: ',i2)") nspin_blocks
-  endif
-  
+  write(stt_u,"(/'SPIN: ',i2)") nsp
+
   write(stt_u,"(/'AO LIST:')")
   taux=repeat(' ',len(taux))
   do io=1,no_u
@@ -350,25 +330,15 @@ program fatband
  
   ! * Fatband weights
 
-  ! nspin has been read in iohs
      nbands = max_band - min_band + 1
-     allocate(eig(nbands,nspin_blocks), fat(nbands,nspin_blocks))
+     allocate(eig(nbands,nspin), fat(nbands,nspin))
 
-     ! The first dimension is the number of real numbers per orbital
-     ! 1 for real wfs, 2 for complex, and four for the two spinor components
-
-     if (non_coll) then
-        allocate(wf_single(4,1:no_u))
-        allocate(wf(4,1:no_u))
+     if (gamma) then
+        allocate(wf(1,1:no_u))
      else
-        if (gamma_wfsx) then
-           allocate(wf_single(1,1:no_u))
-           allocate(wf(1,1:no_u))
-        else
-           allocate(wf_single(2,1:no_u))
-           allocate(wf(2,1:no_u))
-        endif
+        allocate(wf(2,1:no_u))
      endif
+
      allocate (mask2(1:no_u))
 
      do ic=1,ncb
@@ -451,13 +421,13 @@ program fatband
      
         open(fat_u,file=trim(mflnm)// "." // trim(tit(ic)) // '.EIGFAT')
         write(fat_u,"(a,2i5)") "# " // trim(sflnm) // " min_band, max_band: ", min_band, max_band
-        write(fat_u,"(3i6)")   nbands, nspin_blocks, nkp
+        write(fat_u,"(3i6)")   nbands, min(nsp,2), nkp
 
         do ik=1,nkp
 
            write(fat_u,"(i4,3(1x,f10.5))")  ik, pk(1:3,ik)
 
-           do is=1,nspin_blocks
+           do is=1,nsp
 
               ib = 0
               fat(:,is) = 0.0_dp
@@ -477,10 +447,7 @@ program fatband
 
                  ib = ib + 1
                  eig(ib,is) = eigval    ! This will be done for every curve... harmless
-
-                 read(wfs_u) (wf_single(:,io), io=1,no_u)
-                 ! Use a double precision form in what follows
-                 wf(:,:) = real(wf_single(:,:), kind=dp)
+                 read(wfs_u) (wf(:,io), io=1,nao)
 
 
                  do i1 = 1, no1
@@ -494,27 +461,17 @@ program fatband
                                 ! (qcos, qsin) = C_1*conjg(C_2)
                                 !AG: Corrected:  (qcos, qsin) = conjg(C_1)*(C_2)
                                 ! We might want to avoid recomputing this
-                                if (non_coll) then
-                                   ! Take as weight the "complete spinor" product
-                                   qcos= wf(1,io1)*wf(1,io2) + &
-                                        wf(2,io1)*wf(2,io2) + &
-                                        wf(3,io1)*wf(3,io2) + &
-                                        wf(4,io1)*wf(4,io2)
-                                   qsin= wf(1,io1)*wf(2,io2) - &
-                                        wf(2,io1)*wf(1,io2) + &
-                                        wf(3,io1)*wf(4,io2) - &
-                                        wf(4,io1)*wf(3,io2) 
+
+                                if (gamma) then
+                                   qcos = wf(1,io1)*wf(1,io2) 
+                                   qsin = 0.0_dp
                                 else
-                                   if (gamma_wfsx) then
-                                      qcos = wf(1,io1)*wf(1,io2) 
-                                      qsin = 0.0_dp
-                                   else
-                                      qcos= (wf(1,io1)*wf(1,io2) + &
-                                           wf(2,io1)*wf(2,io2))
-                                      qsin= (wf(1,io1)*wf(2,io2) - &
-                                           wf(2,io1)*wf(1,io2))
-                                   endif
+                                   qcos= (wf(1,io1)*wf(1,io2) + &
+                                        wf(2,io1)*wf(2,io2))
+                                   qsin= (wf(1,io1)*wf(2,io2) - &
+                                        wf(2,io1)*wf(1,io2))
                                 endif
+
                              ! k*R_12    (r_2-r_1)
                              alfa=dot_product(pk(1:3,ik),xij(1:3,ind))
 
@@ -523,7 +480,7 @@ program fatband
                              ! Common factor computed here
                              factor =  (qcos*cos(alfa)-qsin*sin(alfa))
 
-                             fat(ib,is) = fat(ib,is) + Sover(ind)*factor
+                             fat(iw,is) = fat(iw,is) + Sover(ind)*factor
 
                         enddo   ! i2
                     enddo  ! i1

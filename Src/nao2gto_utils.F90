@@ -246,7 +246,100 @@ contains
 
    END FUNCTION exp_radius
 
-! **************************************************************************************************
+
+
+
+! TION 
+    FUNCTION exp_radius_CGTO(l, alpha, threshold, prefactor, epsabs, epsrel, rlow)  RESULT(radius)
+      INTEGER, INTENT(IN)                           :: l
+      REAL(dp), INTENT(IN)                          :: alpha, threshold, prefactor
+      REAL(dp), INTENT(IN), OPTIONAL                :: epsabs, epsrel, rlow
+      REAL(dp)                                      :: radius
+
+      INTEGER, PARAMETER                            :: itermax = 5000, prec_exp = sp
+      REAL(dp), PARAMETER                           :: contract(*) = (/0.38, 0.62/), &
+                                                       mineps = 1.0E-12,next = 2.0, &
+                                                       step = 1.0
+
+      INTEGER                                       :: i, j
+      REAL(dp)                                      :: a, d, dr, eps, r, rd, t
+      REAL(dp), DIMENSION(SIZE(contract))           :: g, s
+
+
+      IF (l .LT. 0) THEN
+         call die("The angular momentum quantum number is negative")
+      END IF
+
+      IF (alpha .EQ. 0.0_dp) THEN
+        call die("The Gaussian function exponent is zero")
+      ELSE
+         a = ABS(alpha)
+      END IF
+
+      IF (threshold .NE. 0.0_dp) THEN
+         t = ABS(threshold)
+      ELSE
+         call die("The requested threshold is zero")
+      END IF
+
+      radius = 0.0_dp
+      IF (PRESENT(rlow)) radius = rlow
+      IF (prefactor .EQ. 0.0_dp) RETURN
+
+      ! MAX: facilitate early exit
+      r = MAX(SQRT(0.5_dp*REAL(l, dp)/a), radius)
+!      write(6,*) "exp radius" l,  a, SQRT(0.5_dp*REAL(l, dp)/a), radius
+
+      d = ABS(prefactor); g(1) = d
+      IF (l .NE. 0) THEN
+         g(1) = g(1)*EXP(REAL(-a*r*r, KIND=prec_exp))*r**l
+      END IF
+      ! original approach may return radius=0
+      ! with g(r) != g(radius)
+      ! radius = r
+      IF (g(1) .LT. t) RETURN ! early exit
+
+      radius = r*next + step
+      DO i = 1, itermax
+         g(1) = d*EXP(REAL(-a*radius*radius, KIND=prec_exp))*radius**l
+         IF (g(1) .LT. t) EXIT
+         r = radius; radius = r*next + step
+      END DO
+
+      ! consider absolute and relative accuracy (interval width)
+      IF (PRESENT(epsabs)) THEN
+         eps = epsabs
+      ELSE IF (.NOT. PRESENT(epsrel)) THEN
+         eps = mineps
+      ELSE
+         eps = HUGE(eps)
+      END IF
+      IF (PRESENT(epsrel)) eps = MIN(eps, epsrel*r)
+
+      dr = 0.0_dp
+      DO i = i + 1, itermax
+         rd = radius - r
+         ! check if finished or no further progress
+         IF ((rd .LT. eps) .OR. (rd .EQ. dr)) RETURN
+         s = r + rd*contract ! interval contraction
+         g = d*EXP(REAL(-a*s*s, KIND=prec_exp))*s**l
+         DO j = 1, SIZE(contract)
+            IF (g(j) .LT. t) THEN
+               radius = s(j) ! interval [r, sj)
+               EXIT
+            ELSE
+               r = s(j) ! interval [sj, radius)
+            END IF
+         END DO
+         dr = rd
+      END DO
+      IF (i .GE. itermax) THEN
+         call die("Maximum number of iterations reached")
+      END IF
+   END FUNCTION exp_radius_CGTO
+
+
+
 !> \brief computes the radius of the Gaussian outside of which it is smaller
 !>      than eps
 !> \param la_min ...

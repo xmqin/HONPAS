@@ -1,50 +1,33 @@
 ! 
-! Copyright (C) 1996-2016	The SIESTA group
-!  This file is distributed under the terms of the
-!  GNU General Public License: see COPYING in the top directory
-!  or http://www.gnu.org/copyleft/gpl.txt.
-! See Docs/Contributors.txt for a list of contributors.
+! This file is part of the SIESTA package.
+!
+! Copyright (c) Fundacion General Universidad Autonoma de Madrid:
+! E.Artacho, J.Gale, A.Garcia, J.Junquera, P.Ordejon, D.Sanchez-Portal
+! and J.M.Soler, 1996- .
+! 
+! Use of this software constitutes agreement with the full conditions
+! given in the SIESTA license, as signed by all legitimate users.
 !
       module neighbour
-      use precision, only: dp
-      use sys,       only: die
-      use alloc,     only: re_alloc, de_alloc
-      implicit none
 
-      private
+        use precision, only: dp
+        use sys, only: die
+        use alloc, only : re_alloc, de_alloc
 
-      public :: mneighb, reset_neighbour_arrays
-      
-      character(len=*), parameter      :: myName = 'neighbour '
-      integer,           public :: maxnna = 200
-      integer,  pointer, public :: jan(:)
-      real(dp), pointer, public :: r2ij(:)
-      real(dp), pointer, public :: xij(:,:)
-      logical                   :: pointers_allocated = .false.
-      integer                   :: maxna   = -1
-      integer                   :: maxnm   = -1
-      integer                   :: maxnnm  = -1
-      integer                   :: maxnem  = -1
-      integer,        parameter :: nx = 3    ! Define space dimension
+        private
 
-      integer                   :: INX(NX), I1NX(NX), I2NX(NX),
-     &                             J1NX(NX), J2NX(NX), I1EMX(NX),
-     &                             I2EMX(NX), IMX(NX), I1MX(NX),
-     &                             I2MX(NX), NEMX(NX), NMX(NX), NNX(NX)
-      real(dp)                  :: DMX(NX), DX(NX), DX0M(NX),
-     &                             CELMSH(NX*NX), RCELL(NX*NX),
-     &                             RMCELL(NX*NX)
-      integer,          pointer :: IANEXT(:), IAPREV(:), IEMA(:),
-     &                             IA1M(:), IDNM(:), IMESH(:)
-      real(dp),         pointer :: DXAM(:,:), DXNM(:,:)
-      real(dp)                  :: celast(nx,nx) = 0.0_dp,
-     &                             rglast        = 0.0_dp
-      real(dp),         public  :: x0(nx)    
+        integer,  save, public           :: maxnna = 200
+        integer,  pointer, save, public  :: jan(:)
+        real(dp), pointer, save, public  :: r2ij(:)
+        real(dp), pointer, save, public  :: xij(:,:)
+        logical,  save       :: pointers_allocated = .false.
+
+        public :: mneighb, sizeup_neighbour_arrays
 
       contains
 
-      subroutine mneighb( cell, range, na, xa, ia, isc,
-     &                    nna )
+      subroutine mneighb( CELL, range, NA, XA, IA, ISC,
+     .                    NNA )
 
 C ********************************************************************
 C Finds the neighbours of an atom in a cell with periodic boundary 
@@ -123,23 +106,45 @@ C      ENDDO
 C      Move atomic positions XA       (Molecular dynamics step)
 C    ENDDO
 C ********************************************************************
+
+C Next line is non-standard but may be supressed
       implicit none
-C     Argument types and dimensions
-      integer, intent(in)  :: ia, isc, na
+
+C Define space dimension
+      integer, parameter :: nx = 3
+
+C Argument types and dimensions
+      integer, intent(in) :: ia, isc, na
       integer, intent(out) :: nna
-      real(dp)             :: cell(nx,nx), range, xa(nx,na)
+      real(dp) :: cell(nx,nx), range, xa(nx,na)
 
-C    Internal variables
-      integer,      save :: iamove(1)     = 0
-      logical,      save :: first_time = .true.
-      logical            :: samcel
-      integer            :: IX, JX
+C Internal variables
 
-      call sizeup_neighbour_arrays( maxnna )
+      integer, save  :: iamove(1)     = 0
+      real(dp), save :: celast(nx,nx) = 0.0_dp,
+     .                  rglast        = 0.0_dp,
+     .                  x0(nx)        = 0.0_dp
 
-C     Initialization section
+      logical :: samcel
+      integer :: IX, JX
+      logical,  save          :: first_time = .true.
+
+C Nullify pointers
+      if (.not. pointers_allocated) then
+        nullify(jan)
+        nullify(r2ij)
+        nullify(xij)
+      !  Dimension arrays to initial size MAXNNA
+        call re_alloc(jan,1,maxnna,name='jan')
+        call re_alloc(r2ij,1,maxnna,name='r2ij')
+        call re_alloc(xij,1,3,1,maxnna,name='xij')
+        pointers_allocated = .true.
+      endif
+
+C Initialization section
       IF (FIRST_TIME .OR. IA.LE.0 .OR. range.GT.RGLAST) THEN
-C       Find if cell or range have changed
+
+C Find if cell or range have changed
         samcel = .true.
         if (first_time) then
           samcel = .false.
@@ -152,46 +157,42 @@ C       Find if cell or range have changed
           if (range .NE. RGLAST) samcel = .false.
         endif
 
-C       Cell initializations
+C Cell initializations
         if (.not.samcel) then
-C         Store cell and range for comparison in subsequent calls
+
+C Store cell and range for comparison in subsequent calls
           do IX = 1,NX
             do JX = 1,NX
               CELAST(JX,IX) = CELL(JX,IX)
             enddo
           enddo
-          RGLAST     = range
+          RGLAST = range
           FIRST_TIME = .false.
 
-C         Notify to rangeR that CELL has changed
-          call mranger( 'CELL', CELL, range, NA, XA, NA, IAMOVE,
-     &                  IA, ISC, X0, NNA, MAXNNA )
+C Notify to rangeR that CELL has changed
+          call mranger( 'CELL', NX, CELL, range, NA, XA,
+     .                 NA, IAMOVE, IA, ISC, X0,
+     .                 NNA, MAXNNA )
         endif
 
-C       Notify to rangeR that atoms have moved
-        call mranger( 'MOVE', CELL, range, NA, XA, NA, IAMOVE,
-     &                IA, ISC, X0, NNA, MAXNNA )
+C Notify to rangeR that atoms have moved
+        call mranger( 'MOVE', NX, CELL, range, NA, XA,
+     .               NA, IAMOVE, IA, ISC, X0,
+     .               NNA, MAXNNA )
 
       endif
 
-C     Find neighbours of atom IA
+C Find neighbours of atom IA
       if (IA .GT. 0) 
-     &  call mranger( 'FIND', CELL, range, NA, XA, NA, IAMOVE,
-     &                IA, ISC, X0, NNA, MAXNNA )
-
-C     Find neighbours of point centered at x0
-C     (not used unless MODE='FIND')
-C     The point x0 is introduced as a variable of the module
-      if (IA .EQ. 0) then
-       call mranger( 'FIND', CELL, range, NA, XA, NA, IAMOVE,
-     &                IA, ISC, X0, NNA, MAXNNA )
-      endif 
+     .  call mranger( 'FIND', NX, CELL, range, NA, XA,
+     .               NA, IAMOVE, IA, ISC, X0,
+     .               NNA, MAXNNA )
 
       end subroutine mneighb
 
-      subroutine mranger( mode, cell, range, na, xa,
-     &                    namove, iamove, ia0, isc, x0,
-     &                    nna, maxnna )
+      SUBROUTINE MrangeR( MODE, NX, CELL, range, NA, XA,
+     .                    NAMOVE, IAMOVE, IA0, ISC, X0,
+     .                    NNA, MAXNNA )
 
 C ********************************************************************
 C Finds the neighbours of an atom in a cell with periodic boundary 
@@ -203,6 +204,7 @@ C *********** INPUT **************************************************
 C CHARACTER*4 MODE       : MODE='CELL' => Initialize or reshape cell
 C                          MODE='MOVE' => Move atom(s)
 C                          MODE='FIND' => Find neighbours
+C INTEGER NX             : Space dimension
 C REAL*8  CELL(NX,NX)    : Unit cell vectors CELL(IXYZ,IVECT)
 C REAL*8  range          : Maximum distance of neighbours required
 C INTEGER NA             : Number of atoms
@@ -397,10 +399,10 @@ C
 
 C Argument types and dimensions
       CHARACTER         MODE*4
-      INTEGER           NA, NAMOVE, NNA, MAXNNA
+      INTEGER           NA, NAMOVE, NNA, NX, MAXNNA
       INTEGER           IA0, IAMOVE(*), ISC
       real(dp) ::
-     &  CELL(*), range, X0(NX), XA(NX,NA)
+     .  CELL(*), range, X0(NX), XA(NX,NA)
 
 C NCR is the ratio between range radius and mesh-planes distance.
 C It fixes the size (and number) of mesh cells.
@@ -444,6 +446,7 @@ C REAL*8  DXMARG        Parameter defined above
 C REAL*8  DXNM(MX,MAXNM) Cartesian vector between neighbour mesh points
 C REAL*8  DXRANG        Parameter defined above
 C REAL*8  EPS           Parameter defined above
+C LOGICAL FRSTME        First call to subroutine? 
 C INTEGER IA            Atom index
 C INTEGER IAM           Atom-to-move index
 C INTEGER IA1M(NM)      Pointer to first atom in mesh cell
@@ -496,43 +499,141 @@ C REAL*8  XMAX          Maximum atom coordinate
 C REAL*8  XMIN          Minimum atom coordinate
 
       INTEGER
-     &  IA, IAM, IEM, IM, 
-     &  IN, IX, IXX, JA, JEM, JM, JX,
-     &  NAM, NM, NEM, NNM, NNMMAX
+     .  IA, IAM, IEM, IM, 
+     .  IN, IX, IXX, JA, JEM, JM, JX,
+     .  NAM, NM, NEM, NNM, NNMMAX
+      integer, save :: maxna = 0
 c
 c     Auxiliary variable to avoid compiler warnings
 c
       integer j_aux   
 
-      real(dp)
-     &  DISMIN, DDOT, DPLANE, 
-     &  R2, range2, RNGMAX, Rrange,
-     &  XDIFF, XMARG, XMAX, XMIN
+      integer, dimension(:), allocatable, save ::
+     .  INX, I1NX, I2NX, J1NX, J2NX
 
+      integer, dimension(:), allocatable, save ::
+     .  IANEXT, IAPREV, IEMA, I1EMX, I2EMX, IMX, I1MX, I2MX,
+     .  NEMX, NMX, NNX, IA1M, IMESH, IDNM
+
+      real(dp)
+     .  DISMIN, DDOT, DPLANE, 
+     .  R2, range2, RNGMAX, Rrange,
+     .  XDIFF, XMARG, XMAX, XMIN
+
+      real(dp), dimension(:), allocatable, save ::
+     .  DMX, DX, DX0M
+
+      real(dp), dimension(:), allocatable, save ::
+     .  CELMSH, RCELL, RMCELL
+
+      real(dp), dimension(:,:), allocatable, save ::
+     .  DXAM, DXNM
 
       logical
-     &  INSIDE, MOVALL, NULCEL
+     .  INSIDE, MOVALL, NULCEL
+
+      logical, save :: frstme = .true.
 
       external  DISMIN, DDOT
 
       save
-     &  IAM, IEM, IM, 
-     &  NEM, NM, NNM, range2, RNGMAX, Rrange
+     .  IAM, IEM, IM, 
+     .  NEM, NM, NNM, range2, RNGMAX, Rrange
 
-C     Allocate local memory - check for change in number of atoms
-C     and if there has been one then re-initialise
+C Allocate local memory - check for change in number of atoms
+C and if there has been one then re-initialise
       if (NA.gt.MAXNA) then
-        if (MAXNA.eq.-1) nullify(IANEXT,IAPREV,IEMA,DXAM)
-        call re_alloc( IANEXT, 1, NA, 'ianext', 'neighbour' )
-        call re_alloc( IAPREV, 1, NA, 'iaprev', 'neighbour' )
-        call re_alloc( IEMA, 1, NA, 'iema', 'neighbour' )
-        call re_alloc( DXAM, 1, NX, 1, NA, 'dxam', 'neighbour' )
+        if (allocated(IANEXT)) then
+          call memory('D','I',size(IANEXT),'ranger')
+          deallocate(IANEXT)
+        endif
+        if (allocated(IAPREV)) then
+          call memory('D','I',size(IAPREV),'ranger')
+          deallocate(IAPREV)
+        endif
+        if (allocated(IEMA)) then
+          call memory('D','I',size(IEMA),'ranger')
+          deallocate(IEMA)
+        endif
+        if (allocated(DXAM)) then
+          call memory('D','D',size(DXAM),'ranger')
+          deallocate(DXAM)
+        endif
+        allocate(IANEXT(NA))
+        call memory('A','I',NA,'ranger')
+        allocate(IAPREV(NA))
+        call memory('A','I',NA,'ranger')
+        allocate(IEMA(NA))
+        call memory('A','I',NA,'ranger')
+        allocate(DXAM(NX,NA))
+        call memory('A','D',NX*NA,'ranger')
         MAXNA = NA
+        frstme = .false.
       endif
+      if (.not.allocated(I1EMX)) then
+        allocate(I1EMX(NX))
+        call memory('A','I',NX,'ranger')
+      endif
+      if (.not.allocated(I2EMX)) then
+        allocate(I2EMX(NX))
+        call memory('A','I',NX,'ranger')
+      endif
+      if (.not.allocated(IMX)) then
+        allocate(IMX(NX))
+        call memory('A','I',NX,'ranger')
+      endif
+      if (.not.allocated(I1MX)) then
+        allocate(I1MX(NX))
+        call memory('A','I',NX,'ranger')
+      endif
+      if (.not.allocated(I2MX)) then
+        allocate(I2MX(NX))
+        call memory('A','I',NX,'ranger')
+      endif
+      if (.not.allocated(NEMX)) then
+        allocate(NEMX(NX))
+        call memory('A','I',NX,'ranger')
+      endif
+      if (.not.allocated(NMX)) then
+        allocate(NMX(NX))
+        call memory('A','I',NX,'ranger')
+      endif
+      if (.not.allocated(NNX)) then
+        allocate(NNX(NX))
+        call memory('A','I',NX,'ranger')
+      endif
+      if (.not.allocated(CELMSH)) then
+        allocate(CELMSH(NX*NX))
+        call memory('A','D',NX*NX,'ranger')
+      endif
+      if (.not.allocated(RCELL)) then
+        allocate(RCELL(NX*NX))
+        call memory('A','D',NX*NX,'ranger')
+      endif
+      if (.not.allocated(RMCELL)) then
+        allocate(RMCELL(NX*NX))
+        call memory('A','D',NX*NX,'ranger')
+      endif
+      allocate(INX(NX))
+      call memory('A','I',NX,'ranger')
+      allocate(I1NX(NX))
+      call memory('A','I',NX,'ranger')
+      allocate(I2NX(NX))
+      call memory('A','I',NX,'ranger')
+      allocate(J1NX(NX))
+      call memory('A','I',NX,'ranger')
+      allocate(J2NX(NX))
+      call memory('A','I',NX,'ranger')
+      allocate(DMX(NX))
+      call memory('A','D',NX,'ranger')
+      allocate(DX(NX))
+      call memory('A','D',NX,'ranger')
+      allocate(DX0M(NX))
+      call memory('A','D',NX,'ranger')
 
-C     Cell-mesh initialization section
+C Cell-mesh initialization section
       IF (MODE.EQ.'CELL' .OR. MODE.EQ.'cell' .OR.
-     &    range.GT.RNGMAX) THEN
+     .    frstme .OR. range.GT.RNGMAX) THEN
 
 C       Start time counter (this is for debugging)
 *       CALL TIMER( 'rangeR1', 1 )
@@ -611,26 +712,33 @@ C       Find index-range of neighbour mesh cells and of extended mesh
           NEM = NEM * NEMX(IX)
    80   CONTINUE
 
-C       Allocate arrays whose dimensions are now known
-        if (NM.gt.MAXNM) then
-          if (MAXNM.eq.-1) nullify(IA1M)
-          call re_alloc( IA1M, 1, NM, 'ia1m', 'neighbour' )
-          MAXNM = NM
+C  Allocate arrays whose dimensions are now known
+        if (allocated(IA1M)) then
+          call memory('D','I',size(IA1M),'ranger')
+          deallocate(IA1M)
         endif
-        if (NNM.gt.MAXNNM) then
-          if (MAXNNM.eq.-1) nullify(IDNM)
-          call re_alloc( IDNM, 1, NNM, 'idnm', 'neighbour' )
-          call re_alloc( DXNM, 1, NX, 1, NNM, 'dxnm', 'neighbour' )
-          MAXNNM = NNM
+        if (allocated(IDNM)) then
+          call memory('D','I',size(IDNM),'ranger')
+          deallocate(IDNM)
         endif
+        if (allocated(DXNM)) then
+          call memory('D','D',size(DXNM),'ranger')
+          deallocate(DXNM)
+        endif
+        if (allocated(IMESH)) then
+          call memory('D','I',size(IMESH),'ranger')
+          deallocate(IMESH)
+        endif
+        allocate(IA1M(NM))
+        call memory('A','I',NM,'ranger')
+        allocate(IDNM(NNM))
+        call memory('A','I',NNM,'ranger')
+        allocate(DXNM(NX,NNM))
+        call memory('A','D',NX*NNM,'ranger')
+        allocate(IMESH(NEM))
+        call memory('A','I',NEM,'ranger')
 
-        if (NEM.gt.MAXNEM) then
-          if (MAXNEM.eq.-1) nullify(IMESH)
-          call re_alloc( IMESH, 1, NEM, 'imesh', 'neighbour' )
-          MAXNEM = NEM
-        endif
-
-C       Find which mesh cells are actually within range
+C Find which mesh cells are actually within range
         NNMMAX = NNM
         NNM = 0
         DO 170 IN = 1,NNMMAX
@@ -659,8 +767,8 @@ C         very nonorthorrombic (like fcc, bcc or hex) and changes rarely
 * 130     CONTINUE
           IF (INSIDE) THEN
             NNM = NNM + 1
-C           IDNM is the extended-mesh-index distance between
-C           neighbour mesh cells
+C IDNM is the extended-mesh-index distance between
+C neighbour mesh cells
             IDNM(NNM) = INX(NX)
             DO 140 IX = NX-1,1,-1
               IDNM(NNM) = INX(IX) + NEMX(IX) * IDNM(NNM)
@@ -676,7 +784,7 @@ C DXNM is the vector distance between neighbour mesh cells
           ENDIF
   170   CONTINUE
 
-C       Find correspondence between extended and reduced (normal) meshes
+C Find correspondence between extended and reduced (normal) meshes
         do IEM = 1,NEM
           j_aux = iem
           CALL INDARR( -1, NX, I1EMX, I2EMX, IMX, 1, j_aux )
@@ -684,26 +792,26 @@ C       Find correspondence between extended and reduced (normal) meshes
           IMESH(IEM) = IM
         enddo
 
-C       Stop time counter
+C Stop time counter
 *       CALL TIMER( 'rangeR1', 2 )
 
-C       Set 'move all atoms' switch
+C Set 'move all atoms' switch
         MOVALL = .true.
       ELSE
         MOVALL = .false.
       ENDIF
-C     End of cell initialization section
+C End of cell initialization section
 
-C     Atom-positions (relative to mesh) initialization section
+C Atom-positions (relative to mesh) initialization section
       IF (MODE.EQ.'MOVE' .OR. MODE.EQ.'move' .OR. MOVALL) THEN
         IF (NAMOVE .EQ. NA) MOVALL = .true.
 
-C       Start time counter
+C Start time counter
 *       CALL TIMER( 'rangeR2', 1 )
 
         IF (MOVALL) THEN
           NAM = NA
-C         Initialize 'atoms in mesh-cell' lists
+C Initialize 'atoms in mesh-cell' lists
           do IA = 1,NA
             IANEXT(IA) = 0
             IAPREV(IA) = 0
@@ -715,15 +823,15 @@ C         Initialize 'atoms in mesh-cell' lists
           NAM = NAMOVE
         ENDIF
 
-C       Loop on moved atoms
+C Loop on moved atoms
         DO 240 IAM = 1,NAM
 
-C         Select atom to move
+C Select atom to move
           IF (MOVALL) THEN
             IA = IAM
           ELSE
             IA = IAMOVE(IAM)
-C           Supress atom from its previous mesh-cell
+C Supress atom from its previous mesh-cell
             JA = IAPREV(IA)
             IF (JA.NE.0) IANEXT(JA) = IANEXT(IA)
             JA = IANEXT(IA)
@@ -733,7 +841,7 @@ C           Supress atom from its previous mesh-cell
             IF (IA1M(IM) .EQ. IA) IA1M(IM) = JA
           ENDIF
           
-C         Find mesh-cell in which atom is
+C Find mesh-cell in which atom is
           DO 220 IX = 1,NX
             IXX = 1 + NX * (IX-1)
             DMX(IX) = DDOT(NX,RMCELL(IXX),1,XA(1,IA),1)
@@ -763,11 +871,11 @@ C         Find atomic position relative to mesh
   240   CONTINUE
 
 C       Stop time counter
-C       CALL TIMER( 'rangeR2', 2 )
+*       CALL TIMER( 'rangeR2', 2 )
       ENDIF
-C     End of atom-positions initialization section
+C End of atom-positions initialization section
 
-C     Search section
+C Search section
       IF (MODE.EQ.'FIND' .OR. MODE.EQ.'find') THEN
         Rrange = range * (1.D0 - EPS)
         range2 = range**2
@@ -822,7 +930,13 @@ C             Check if atom JA is within range
                 NNA = NNA + 1
 C               Check that array arguments are not overflooded
                 IF (NNA .GT. MAXNNA) THEN
-                  call sizeup_neighbour_arrays( MAXNNA+NA )
+                  MAXNNA = MAXNNA + NA
+                  call re_alloc(jan,1,maxnna,name='jan',
+     .              routine='mranger')
+                  call re_alloc(r2ij,1,maxnna,name='jan',
+     .              routine='mranger')
+                  call re_alloc(xij,1,nx,1,maxnna,name='jan',
+     .              routine='mranger')
                 ENDIF
                 JAN(NNA) = JA
                 do IX = 1,NX
@@ -838,6 +952,28 @@ C Take next atom in this mesh-cell and go to begining of loop
         enddo
       ENDIF
 C End of search section
+
+C Deallocate local memory
+      call memory('D','I',size(INX),'ranger')
+      deallocate(INX)
+      call memory('D','I',size(I1NX),'ranger')
+      deallocate(I1NX)
+      call memory('D','I',size(I2NX),'ranger')
+      deallocate(I2NX)
+      call memory('D','I',size(J1NX),'ranger')
+      deallocate(J1NX)
+      call memory('D','I',size(J2NX),'ranger')
+      deallocate(J2NX)
+      call memory('D','D',size(DMX),'ranger')
+      deallocate(DMX)
+      call memory('D','D',size(DX),'ranger')
+      deallocate(DX)
+      call memory('D','D',size(DX0M),'ranger')
+      deallocate(DX0M)
+
+C This is the unique return point
+      frstme = .false.
+
       return
       end subroutine mranger
 
@@ -965,75 +1101,32 @@ C Next line is non-standard but may be supressed
       end subroutine indarr
 !
       subroutine sizeup_neighbour_arrays(n)
-      implicit none
       integer, intent(in) :: n
 
       ! Makes sure that the neighbour arrays are at
       ! least of size n
+
       if (.not. pointers_allocated) then
         nullify(jan)
         nullify(r2ij)
         nullify(xij)
-!       Dimension arrays to initial size n
+        !  Dimension arrays to initial size n
         maxnna = n
-        call re_alloc( jan, 1, maxnna,'jan', 'neighbour' )
-        call re_alloc( r2ij, 1, maxnna, 'r2ij', 'neighbour' )
-        call re_alloc( xij, 1, 3, 1, maxnna, 'xij', 'neighbour' )
+        call re_alloc(jan,1,maxnna,name='jan')
+        call re_alloc(r2ij,1,maxnna,name='r2ij')
+        call re_alloc(xij,1,3,1,maxnna,name='xij')
         pointers_allocated = .true.
       else
-        if (n > maxnna) then
-          maxnna = n
-          call re_alloc( jan, 1, maxnna,'jan', 'neighbour' )
-          call re_alloc( r2ij, 1, maxnna, 'r2ij', 'neighbour' )
-          call re_alloc( xij, 1, 3, 1, maxnna, 'xij', 'neighbour' )
-        endif
+         if (n > maxnna) then
+            maxnna = n
+            call re_alloc(jan,1,maxnna,name='jan')
+            call re_alloc(r2ij,1,maxnna,name='r2ij')
+            call re_alloc(xij,1,3,1,maxnna,name='xij')
+         endif
       endif
+
       end subroutine sizeup_neighbour_arrays
 
-      subroutine reset_neighbour_arrays( )
-      implicit none
-!!#ifdef DEBUG
-      call write_debug( '      PRE reset_neighbour_arrays' )
-!!#endif
-
-      celast = 0.0_dp
-      rglast = 0.0_dp
-
-      if (pointers_allocated) then
-        call de_alloc( jan,  'jan',  'neighbour' )
-        call de_alloc( r2ij, 'r2ij', 'neighbour' )
-        call de_alloc( xij,  'xij',  'neighbour' )
-        pointers_allocated = .false.
-      endif
-
-      if (maxna.gt.0) then
-        call de_alloc( IANEXT, 'ianext', 'neighbour' )
-        call de_alloc( IAPREV, 'iaprev', 'neighbour' )
-        call de_alloc( IEMA,   'iema',   'neighbour' )
-        call de_alloc( DXAM,   'dxam',   'neighbour' )
-        maxna = -1
-      endif
-
-      if (maxnm.gt.0) then
-        call de_alloc( IA1M, 'ia1m', 'neighbour' )
-        maxnm = -1
-      endif
-
-      if (maxnnm.gt.0) then
-        call de_alloc( IDNM, 'idnm', 'neighbour' )
-        call de_alloc( DXNM, 'dxnm', 'neighbour' )
-        maxnnm = -1
-      endif
-
-      if (maxnem.gt.0) then
-        call de_alloc( IMESH, 'imesh', 'neighbour' )
-        maxnem = -1
-      endif
-
-!!#ifdef DEBUG
-      call write_debug( '      POS reset_neighbour_arrays' )
-!!#endif
-      end subroutine reset_neighbour_arrays
 
       end module neighbour
 

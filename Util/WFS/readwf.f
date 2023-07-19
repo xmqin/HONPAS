@@ -1,9 +1,12 @@
 ! 
-! Copyright (C) 1996-2016	The SIESTA group
-!  This file is distributed under the terms of the
-!  GNU General Public License: see COPYING in the top directory
-!  or http://www.gnu.org/copyleft/gpl.txt.
-! See Docs/Contributors.txt for a list of contributors.
+! This file is part of the SIESTA package.
+!
+! Copyright (c) Fundacion General Universidad Autonoma de Madrid:
+! E.Artacho, J.Gale, A.Garcia, J.Junquera, P.Ordejon, D.Sanchez-Portal
+! and J.M.Soler, 1996- .
+! 
+! Use of this software constitutes agreement with the full conditions
+! given in the SIESTA license, as signed by all legitimate users.
 !
 
 
@@ -53,8 +56,6 @@ c****************************************************************************
 
         implicit none
 
-        integer, parameter :: dp = selected_real_kind(10,100)
-
         integer nkmax
         parameter (nkmax=100000)
 
@@ -65,7 +66,7 @@ c****************************************************************************
         character(len=20) labelfis, symfio
         character fname*33, oname*33
 
-        real(dp) k(3), repsi,impsi,energy,thress
+        real*8 k(3), repsi,impsi,energy,thress
  
         read(5,*) fname
         read(5,*) oname

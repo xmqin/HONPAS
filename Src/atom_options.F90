@@ -1,10 +1,3 @@
-! ---
-! Copyright (C) 1996-2016	The SIESTA group
-!  This file is distributed under the terms of the
-!  GNU General Public License: see COPYING in the top directory
-!  or http://www.gnu.org/copyleft/gpl.txt .
-! See Docs/Contributors.txt for a list of contributors.
-! ---
 MODULE atom_options
 
 !
@@ -18,7 +11,6 @@ MODULE atom_options
   PUBLIC
 
   logical :: write_ion_plot_files    ! Write small auxiliary files?
-  logical :: new_kb_reference_orbitals    ! New scheme for KB reference orbitals
   logical :: debug_kb_generation     ! Write auxiliary files for KB projectors
 
 CONTAINS
@@ -37,7 +29,6 @@ CONTAINS
 
     write_ion_plot_files = fdf_boolean('WriteIonPlotFiles',.false.)
     debug_kb_generation  = fdf_boolean('Atom.Debug.KB.Generation',.false.)
-    new_kb_reference_orbitals  = fdf_boolean('KB.New.Reference.Orbitals',.false.)
   end subroutine get_atom_options
 
 END MODULE atom_options

@@ -1,9 +1,12 @@
 ! 
-! Copyright (C) 1996-2016	The SIESTA group
-!  This file is distributed under the terms of the
-!  GNU General Public License: see COPYING in the top directory
-!  or http://www.gnu.org/copyleft/gpl.txt.
-! See Docs/Contributors.txt for a list of contributors.
+! This file is part of the SIESTA package.
+!
+! Copyright (c) Fundacion General Universidad Autonoma de Madrid:
+! E.Artacho, J.Gale, A.Garcia, J.Junquera, P.Ordejon, D.Sanchez-Portal
+! and J.M.Soler, 1996- .
+! 
+! Use of this software constitutes agreement with the full conditions
+! given in the SIESTA license, as signed by all legitimate users.
 !
       module m_broyden_mixing
 
@@ -15,7 +18,7 @@
       use alloc,     only: re_alloc, de_alloc
 
       use parallel, only: ionode
-      use m_mpi_utils, only: globalize_sum, globalize_max
+      use m_mpi_utils, only: broadcast, globalize_sum, globalize_max
 
       public :: broyden_mixing
       private
@@ -34,8 +37,7 @@ C integer maxnd              : First dimension of D.M., and
 C                              maximum number of nonzero elements of D.M.
 C integer numd(:)            : Control vector of D.M.
 C                              (number of nonzero elements of each row)
-C integer nspin              : Spin polarization (1=unpolarized, 2=polarized,
-C                               4=Non-collinear)
+C integer nspin              : Spin polarization (1=unpolarized, 2=polarized)
 C real*8 alpha               : Mixing parameter (for linear mixing)
 C integer nkick              : A kick is given every nkick iterations
 C real*8 alpha_kick          : Mixing parameter for kicks
@@ -78,29 +80,33 @@ C                              input and output
 
       real(dp) :: global_dnorm, global_dmax,  dnorm, diff, weight
 
-      numel = nspin * sum(numd(1:nbasis))
-      call Globalize_sum(numel,global_numel)
+       numel = nspin * sum(numd(1:nbasis))
+       call Globalize_sum(numel,global_numel)
 
-      if (.not. initialization_done) then
+       if (.not. initialization_done) then
 
-        if (ionode) then
+         if (ionode) then
           print *, "Broyden: No of relevant DM elements: ", global_numel
-        endif
-        maxit = fdf_integer("DM.Number.Broyden",5)
-        cycle_on_maxit =
-     $          fdf_boolean("DM.Broyden.Cycle.On.Maxit",.true.)
-        variable_weight =
-     $          fdf_boolean("DM.Broyden.Variable.Weight",.true.)
-        broyden_debug = 
-     $          fdf_boolean("DM.Broyden.Debug",.false.)
+          maxit = fdf_integer("DM.Number.Broyden",5)
+          cycle_on_maxit =
+     $            fdf_boolean("DM.Broyden.Cycle.On.Maxit",.true.)
+          variable_weight =
+     $            fdf_boolean("DM.Broyden.Variable.Weight",.true.)
+          broyden_debug = 
+     $            fdf_boolean("DM.Broyden.Debug",.false.)
 
-        jinv0 = fdf_double("DM.Broyden.Initial.Mixing",alpha)
-        if (ionode) then
+          jinv0 = fdf_double("DM.Broyden.Initial.Mixing",alpha)
           print *, "maxit for broyden: ", maxit
           print *, "cycle on maxit: ", cycle_on_maxit
           print *, "variable weight: ", variable_weight
           print *, "initial alpha: ", jinv0
         endif
+
+        call Broadcast(maxit)
+        call Broadcast(cycle_on_maxit)
+        call Broadcast(variable_weight)
+        call Broadcast(broyden_debug)
+        call Broadcast(jinv0)
 
         call broyden_init(br,broyden_debug)
 

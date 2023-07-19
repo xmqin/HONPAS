@@ -1,0 +1,86 @@
+For historial interest, here are some notes written by Jose Luis
+Martins and Norman J. Troullier after their modifications of
+S. Froyen's version.
+
+c
+c  *************************************************************
+c  *     Program for atomic calculations                       *
+c  *     written by Sverre Froyen, February 1982               *
+c  *     while at UC Berkeley, California                      *
+c  *                                                           *
+c  *     Modified by Norman J. Troullier Jr., Sept 89          *
+c  *     while at U of Minn.  All major modifications          *
+c  *     are documented, program input/output is               *
+c  *     compatible with earlier Berkeley versions.            *
+c  *                                                           *
+c  *************************************************************
+c
+c    Some parameters are set inside the program,
+c    the most important ones are:
+c
+c  1)the tolerance for selfconsistency in the screening
+c    potential (set in the main-atm program-named tol),
+c
+c  2)the accuracy in the eigenvalue for a given potential
+c    (set in difnrl-named tol or difrel-named tol),
+c
+cag----------------------------------------------------------
+cag
+cag  Somebody should write a portable (and optimization-proof)
+cag  way of determining the machine constants.
+cag
+c
+c  3)the machine precision exp(-2*expzer), set in difnrl
+c    and difrel for the predictor-corrector methods
+c    (both named expzer),
+c
+c    For traditional applications the default values
+c  should be enough for 1-2.  For 3, expzer should be
+c  found for the system in use.
+c    NOTE: that for most VAX systems the value of expzer
+c  can be very very small !!
+c
+cag-----------------------------------------------------------
+c
+c    The subroutine orban is called once for each orbital
+c  after selfconsistency has been achieved.
+c  Any additional analysis of the orbitals should therefore
+c  be placed in orban.
+c
+c  Note that arrays ar and br have
+c  different meaning for non-relativistic (ar-wave,
+c  br-d(wave)/dj) and relativistic (ar-major, br-minor)
+c  calculations.
+c
+c    There are three ways to generate the pseudopotential :
+c
+c  hsc Hamann Schluter and Chiang
+c  ker Kerker
+c  tm2 Improved Troullier and Martins
+c
+c      The charge density startup is scaled with
+c      an empirical formula that reduces the
+c      number of iterations needed for the screening
+c      potential convergence.
+c
+c      The screening potential mixing parameter is
+c      an empirical function of the nuclear charge.
+c      Larger atoms require a slower convergence
+c      then smaller atoms.
+c
+c      The screening potential is initially mixed with a
+c      percentage of old and new for the first itsm
+c      iterations. This brings the potential to a stable
+c      region after which an Anderson's extrapolation scheme
+c      is used.
+c
+c      The difrel and difnrl allow for the calculation of
+c      a nonbound state(zero eigenvalue).  These states
+c      can only be used in the pseud2 (tm2) generation routine.
+c
+c      The hsc scheme will fail with
+c      a zero eigenvalue due to the generation method.
+c      The user should be very careful in using a nonbound
+c      state, and should always  compare the resulting pseudopotential
+c      to a bound state pseudopotential calculation.
+c------

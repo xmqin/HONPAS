@@ -17,8 +17,6 @@
 !       (C) 1996  Michael Hennecke, RZ Universitaet Karlsruhe
 !
 !
-        USE TIMER_MPI_M, only: timer_mpi
-
         IMPLICIT NONE
         PRIVATE
 
@@ -149,11 +147,9 @@
           INTEGER, INTENT(IN)  :: COMM
           INTEGER, INTENT(OUT) :: IERROR 
           EXTERNAL MPI_GATHER
-          call timer_mpi('MPI_GATHER',1)
           CALL     MPI_GATHER(                                          &
      &      SENDBUF, SENDCOUNT, SENDTYPE, RECVBUF, RECVCOUNT,           &
      &      RECVTYPE, ROOT, COMM, IERROR) 
-          call timer_mpi('MPI_GATHER',2)
         END SUBROUTINE MPI_GATHER_T
         
         SUBROUTINE MPI_GATHERV_T(                                       &
@@ -224,11 +220,9 @@
           INTEGER, INTENT(IN)  :: COMM
           INTEGER, INTENT(OUT) :: IERROR 
           EXTERNAL MPI_ALLGATHER
-          call timer_mpi('MPI_ALLGATHER',1)
           CALL     MPI_ALLGATHER(                                       &
      &      SENDBUF, SENDCOUNT, SENDTYPE, RECVBUF, RECVCOUNT,           &
      &      RECVTYPE, COMM, IERROR) 
-          call timer_mpi('MPI_ALLGATHER',2)
         END SUBROUTINE MPI_ALLGATHER_T
         
         SUBROUTINE MPI_ALLGATHERV_T(                                    &
@@ -296,10 +290,8 @@
           INTEGER, INTENT(IN)  :: COMM
           INTEGER, INTENT(OUT) :: IERROR 
           EXTERNAL MPI_REDUCE
-          call timer_mpi('MPI_REDUCE',1)
           CALL     MPI_REDUCE(                                          &
      &      SENDBUF, RECVBUF, COUNT, DATATYPE, OP, ROOT, COMM, IERROR) 
-          call timer_mpi('MPI_REDUCE',2)
         END SUBROUTINE MPI_REDUCE_T
         
         SUBROUTINE MPI_ALLREDUCE_T(                                     &
@@ -312,10 +304,8 @@
           INTEGER, INTENT(IN)  :: COMM
           INTEGER, INTENT(OUT) :: IERROR 
           EXTERNAL MPI_ALLREDUCE
-          call timer_mpi('MPI_ALLREDUCE',1)
           CALL     MPI_ALLREDUCE(                                       &
      &      SENDBUF, RECVBUF, COUNT, DATATYPE, OP, COMM, IERROR) 
-          call timer_mpi('MPI_ALLREDUCE',2)
         END SUBROUTINE MPI_ALLREDUCE_T
         
         SUBROUTINE MPI_REDUCE_SCATTER_T(                                &

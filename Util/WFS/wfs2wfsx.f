@@ -1,9 +1,12 @@
 ! 
-! Copyright (C) 1996-2016	The SIESTA group
-!  This file is distributed under the terms of the
-!  GNU General Public License: see COPYING in the top directory
-!  or http://www.gnu.org/copyleft/gpl.txt.
-! See Docs/Contributors.txt for a list of contributors.
+! This file is part of the SIESTA package.
+!
+! Copyright (c) Fundacion General Universidad Autonoma de Madrid:
+! E.Artacho, J.Gale, A.Garcia, J.Junquera, P.Ordejon, D.Sanchez-Portal
+! and J.M.Soler, 1996- .
+! 
+! Use of this software constitutes agreement with the full conditions
+! given in the SIESTA license, as signed by all legitimate users.
 !
 
 
@@ -50,8 +53,6 @@
         rewind (iu)
         read(iu) nk
         read(iu) nspin
-        ! WFS files predate the new conventions to support NC/SOC files
-        if (nspin > 2) STOP "This utility does not work for nspin>2"
         read(iu) nuotot
 
         allocate(wk(nk))
@@ -77,7 +78,7 @@
         orb_info_written = .false.
 
         do iik = 1,nk
-          do iispin = 1,min(4,nspin)
+          do iispin = 1,nspin
 
           read(iu) ik,k(1),k(2),k(3)
           if (ik .ne. iik) stop 'error in index of k-point'

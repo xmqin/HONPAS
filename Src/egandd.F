@@ -1,9 +1,12 @@
 ! 
-! Copyright (C) 1996-2016	The SIESTA group
-!  This file is distributed under the terms of the
-!  GNU General Public License: see COPYING in the top directory
-!  or http://www.gnu.org/copyleft/gpl.txt.
-! See Docs/Contributors.txt for a list of contributors.
+! This file is part of the SIESTA package.
+!
+! Copyright (c) Fundacion General Universidad Autonoma de Madrid:
+! E.Artacho, J.Gale, A.Garcia, J.Junquera, P.Ordejon, D.Sanchez-Portal
+! and J.M.Soler, 1996- .
+! 
+! Use of this software constitutes agreement with the full conditions
+! given in the SIESTA license, as signed by all legitimate users.
 !
       module m_eandg
       public :: eandg
@@ -73,6 +76,7 @@ C **************************************************************************
 
       use on_main,   only : nbL2G, nbG2L, nbandsloc, ncP2T
       use sys,       only : die
+      use m_mpi_utils, only: broadcast
       use m_gradient,  only: gradient
       use m_ener3,     only: ener3
       use m_denmat,    only: denmat
@@ -111,10 +115,10 @@ C Internal variables .....................................................
       integer       :: i
       integer       :: m, mt, n
 
-      logical, pointer, save :: lNeeded(:)
-      logical,          save :: frstme = .true.
-      logical,          save :: frstme2 = .true.
-      logical,          save :: LoMem = .false.
+      logical, allocatable, save :: lNeeded(:)
+      logical,              save :: frstme = .true.
+      logical,              save :: frstme2 = .true.
+      logical,              save :: LoMem = .false.
 
 C .....................
 
@@ -140,7 +144,11 @@ C Nullify pointers
         nullify(fs)
 
 C Set flag for memory algorithm choice
-        LoMem = fdf_boolean('ON.LowerMemory',.false.)
+        if (Node.eq.0) then
+          LoMem = fdf_boolean('ON.LowerMemory',.false.)
+        endif
+
+        call Broadcast(LoMem)
 
         frstme = .false.
 
@@ -148,9 +156,9 @@ C Set flag for memory algorithm choice
 
       if (iopt.eq.0) then
 C Find nbandsloc and pointers
-        call re_alloc( nbL2G, 1, nbands, 'nbL2G', 'eandg' )
-        call re_alloc( nbG2L, 1, nbands, 'nbG2L', 'eandg' )
-        call re_alloc( lNeeded, 1, nbands, 'lNeeded', 'eandg' )
+        call re_alloc(nbL2G,1,nbands,name='nbL2G')
+        call re_alloc(nbG2L,1,nbands,name='nbG2L')
+        allocate(lNeeded(nbands))
         do i = 1,nbands
           lNeeded(i) = .false.
         enddo
@@ -201,8 +209,6 @@ C Allocation of memory
         call re_alloc(fs,1,maxnf,1,nbandsloc,name='fs',copy=.true.,
      .                shrink=.false.)
 
-
-
 C Set up index lists for sparse matrices ..................................
 
 C GET Ct LISTS
@@ -213,7 +219,7 @@ C GET F LISTS
      .                  listhptr,indon,maxnf)
 
 C Allocate arrays that depend on variables set above
-        call re_alloc( listf, 1, maxnf, 1, nbandsloc, 'listf', 'eandg' )
+        call re_alloc(listf,1,maxnf,1,nbandsloc,name='listf')
 
 C GET Ft LISTS
         call ctrans2(no_cl,maxnf,maxnft,numf,listf)
@@ -223,8 +229,8 @@ C GET Hij LISTS
      .                  no_cl,ncmax,numc,listc,indon,maxnhij)
 
 C Allocate arrays that depend on variables set above
-        call re_alloc( f, 1, maxnf, 1, nbandsloc, 'f','eandg' )
-        call re_alloc( fs, 1, maxnf, 1, nbandsloc, 'fs','eandg' )
+        call re_alloc(f,1,maxnf,1,nbandsloc,name='f')
+        call re_alloc(fs,1,maxnf,1,nbandsloc,name='fs')
 
 #ifdef MPI
 C Set up communication information
@@ -294,14 +300,14 @@ C-JMS Modified denmat argument list
           call denmatlomem(c,eta,h,s,qs,no_u,no_l,nbands,ncmax,
      .                     maxnct,maxnf,maxnft,nhmax,maxnhij,numc,listc,
      .                     numct,listct,cttoc,numf,listf,numft,listft,
-     .                     numh,listh,listhptr,numhij,listhij,dm,edm,
-     .                     no_cl,nspin,Node)
+     .                     fttof,numh,listh,listhptr,numhij,listhij,
+     .                     dm,edm,no_cl,nspin,Node)
         else
           call denmat(c,eta,h,s,qs,no_u,no_l,nbands,ncmax,
      .                maxnct,maxnf,maxnft,nhmax,maxnhij,numc,listc,
      .                numct,listct,cttoc,numf,listf,numft,listft,
-     .                numh,listh,listhptr,numhij,listhij,dm,edm,
-     .                no_cl,nspin,Node)
+     .                fttof,numh,listh,listhptr,numhij,listhij,
+     .                dm,edm,no_cl,nspin,Node)
         endif
         goto 999
       endif

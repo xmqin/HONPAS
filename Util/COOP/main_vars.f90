@@ -1,10 +1,3 @@
-! ---
-! Copyright (C) 1996-2016	The SIESTA group
-!  This file is distributed under the terms of the
-!  GNU General Public License: see COPYING in the top directory
-!  or http://www.gnu.org/copyleft/gpl.txt .
-! See Docs/Contributors.txt for a list of contributors.
-! ---
 module main_vars
   use precision, only: dp, sp
   use subs, only: ival
@@ -15,7 +8,6 @@ module main_vars
 
   public 
 
-  integer :: h_spin_dim
   integer :: ierr, klb, it, is, k, nw
   integer :: nao, ia, iz, ko, nkp, nsp, nen, mxwf, io, ie
   integer :: nnao, ik, is0, iw, iw0, i1, i2, i3, i4
@@ -30,7 +22,6 @@ module main_vars
 
   real(dp) :: qtot, temp_in_file, dm, alfa, vvv
   real(dp) :: qcos, qsin, w0, want
-  real(dp) :: qcos_H, qsin_H
   real(dp) :: min_energy, max_energy, e_step, energy, weight, efermi
   real(dp) :: low_e, high_e, eigval
   integer  :: intdos_u, number_of_wfns
@@ -48,7 +39,7 @@ module main_vars
   character :: sflnm*50, taux*100, wrd(nlwmx)*20, cx*20
   integer :: mpr_u=50, wk_u=51
   integer :: out_u=70, wfs_u=72, hs_u=73
-  integer :: stt_u=60, tab_u=61, fat_u=66
+  integer :: stt_u=60, tab_u=61
   logical   :: wk_x, wfs_x, hs_x, tab_x
 
   ! OUT file
@@ -68,8 +59,8 @@ module main_vars
   real(dp),    allocatable :: hamilt(:,:), Sover(:), xij(:,:), dij(:)
 
   real(dp),    allocatable :: wk(:)
-  real(SP),    allocatable :: wf_single(:,:)       ! Note single precision
-  real(DP),    allocatable :: wf(:,:)              ! Note double precision
+  real(SP),  allocatable :: wf(:,:)       ! Note single precision
+
   ! MPR file
   character :: what*4, tit(ncbmx)*30
   logical   :: dos, coop
@@ -86,6 +77,7 @@ module main_vars
   logical,   allocatable :: ref_mask(:)
 
   !
+  logical :: gamma
   real(dp) :: r_dummy(3), dummy_weight, ztot
   integer  :: idummy
   !

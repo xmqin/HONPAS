@@ -1,136 +1,75 @@
-! *** Module: nao2gto_index ***
+      MODULE extended_index
 
-#if defined HAVE_CONFIG_H
-#include "config.h"
-#endif
+      private 
+      public :: extended_index_init, indexsc 
 
-! *****************************************************************************
-!> \brief Supercell indexing utilities for NAO2GTO
-!!
-!! \author Xinming Qin
-!! \author Yann Pouillon
-!!
-!! \par History
-!!      - 01.2010 Created [Xinming Qin]
-!!      - 01.2018 Refactored for SIESTA 4 [Yann Pouillon]
-! *****************************************************************************
-module nao2gto_index
+      integer, pointer, save :: INDSC1(:), INDSC2(:)
+      logical, save          :: nullified_pointers = .false.
 
-  private 
+      CONTAINS
 
-  public :: nao2gto_index_init, nao2gto_index_free, indexsc 
+      SUBROUTINE extended_index_init( NSC, NUO )
+      use alloc, only: re_alloc
 
-  integer, pointer, save :: indsc1(:) => null(), indsc2(:) => null()
+      IMPLICIT NONE
 
-contains
+      integer, intent(in)   :: nsc(3)
+      integer, intent(in)   :: nuo
 
-! *****************************************************************************
-!> \brief Constructor for the internal indices of the module
-!!
-!! \par History
-!!      - 01.2010 Created [Xinming Qin]
-!!      - 01.2018 Refactored for SIESTA 4 [Yann Pouillon]
-!!
-!! \param[in] nsc: ...
-!! \param[in] nuo: local number of orbitals within the unit cell in this node
-! *****************************************************************************
-  subroutine nao2gto_index_init(nsc, nuo)
+      INTEGER I1, I2, I3, IC, J1, J2, J3, JC, &
+              KUO, LASTIO, LASTJO, NCELLS, NO
+      EXTERNAL MEMORY
+      
+      NCELLS = NSC(1) * NSC(2) * NSC(3)
+      NO = NUO * NCELLS
 
-    use alloc, only: re_alloc
+      if (.not. nullified_pointers) then
+         nullify(indsc1, indsc2)
+         nullified_pointers = .true.
+      endif
 
-    implicit none
+      call re_alloc(INDSC1,1,8*NO,name="indsc1",routine="extended_index_init")
+      call re_alloc(INDSC2,1,NO,name="indsc2",routine="extended_index_init")
 
-    ! Arguments
-    integer, intent(in) :: nsc(3)
-    integer, intent(in) :: nuo
+      DO J3 = 0,2*NSC(3)-1
+      DO J2 = 0,2*NSC(2)-1
+      DO J1 = 0,2*NSC(1)-1
 
-    ! Local variables
-    integer :: i1, i2, i3, ic, j1, j2, j3, jc, kuo, lastio, lastjo, ncells, no
+        I1 = MOD(J1,NSC(1))
+        I2 = MOD(J2,NSC(2))
+        I3 = MOD(J3,NSC(3))
 
-    ! -------------------------------------------------------------------------
+        IC = I1 +   NSC(1)*I2 +   NSC(1)*NSC(2)*I3
+        JC = J1 + 2*NSC(1)*J2 + 4*NSC(1)*NSC(2)*J3
 
-    ncells = nsc(1) * nsc(2) * nsc(3)
-    no = nuo * ncells
+        LASTIO = IC * NUO
+        LASTJO = JC * NUO
 
-    call re_alloc(indsc1, 1, 8*no, &
-&     name="indsc1", routine="nao2gto_index_init")
-    call re_alloc(indsc2, 1, no, &
-&     name="indsc2", routine="nao2gto_index_init")
+        DO KUO = 1,NUO
+          INDSC1(LASTJO+KUO) = LASTIO + KUO
+        ENDDO
 
-    do j3 = 0,2*nsc(3)-1
-      do j2 = 0,2*nsc(2)-1
-        do j1 = 0,2*nsc(1)-1
+        IF (I1+NSC(1).EQ.J1 .AND. I2+NSC(2).EQ.J2 .AND. I3+NSC(3).EQ.J3) THEN
+          DO KUO = 1,NUO
+            INDSC2(LASTIO+KUO) = LASTJO + KUO
+          ENDDO
+        ENDIF
 
-          i1 = mod(j1,nsc(1))
-          i2 = mod(j2,nsc(2))
-          i3 = mod(j3,nsc(3))
+      ENDDO
+      ENDDO
+      ENDDO
 
-          ic = i1 +   nsc(1)*i2 +   nsc(1)*nsc(2)*i3
-          jc = j1 + 2*nsc(1)*j2 + 4*nsc(1)*nsc(2)*j3
+      END SUBROUTINE extended_index_init
 
-          lastio = ic * nuo
-          lastjo = jc * nuo
+      FUNCTION INDEXSC( IO, IUO, JO )
 
-          do kuo = 1,nuo
-            indsc1(lastjo+kuo) = lastio + kuo
-          enddo
+      IMPLICIT NONE
 
-          if (i1+nsc(1).eq.j1 .and. i2+nsc(2).eq.j2 .and. i3+nsc(3).eq.j3) then
-            do kuo = 1,nuo
-              indsc2(lastio+kuo) = lastjo + kuo
-            enddo
-          endif
+      integer INDEXSC
+      INTEGER, intent(in) ::  IO, IUO, JO
 
-        enddo
-      enddo
-    enddo
+      INDEXSC = INDSC1( INDSC2(JO) - INDSC2(IO) + INDSC2(IUO) )
 
-  end subroutine nao2gto_index_init
+      END FUNCTION INDEXSC
 
-! *****************************************************************************
-!> \brief Destructor for the internal indices of the module
-!!
-!! \par History
-!!      - 01.2018 Created for SIESTA 4 [Yann Pouillon]
-! *****************************************************************************
-  subroutine nao2gto_index_free()
-
-    use alloc, only: de_alloc
-
-    if ( associated(indsc1) ) then
-      call de_alloc(indsc1, name='indsc1', routine='nao2gto_index_free')
-      nullify(indsc1)
-    endif
-    if ( associated(indsc2) ) then
-      call de_alloc(indsc2, name='indsc2', routine='nao2gto_index_free')
-      nullify(indsc2)
-    endif
-
-  end subroutine nao2gto_index_free
-
-! *****************************************************************************
-!> \brief Returns the index of the specified orbital
-!!
-!! \par History
-!!      - 01.2010 Created [Xinming Qin]
-!!      - 01.2018 Refactored for SIESTA 4 [Yann Pouillon]
-!!
-!! \param[in] io: ...
-!! \param[in] iuo: local index of the orbital within the unit cell in this node
-!! \param[in] jo: ...
-! *****************************************************************************
-  function indexsc(io, iuo, jo)
-
-    implicit none
-
-    ! Arguments
-    integer, intent(in) :: io, iuo, jo
-
-    ! Local variables
-    integer :: indexsc
-
-    indexsc = indsc1(indsc2(jo) - indsc2(io) + indsc2(iuo))
-
-  end function indexsc
-
-end module nao2gto_index
+      END MODULE extended_index

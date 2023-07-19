@@ -1,88 +1,97 @@
-! ---
-! Copyright (C) 1996-2016	The SIESTA group
-!  This file is distributed under the terms of the
-!  GNU General Public License: see COPYING in the top directory
-!  or http://www.gnu.org/copyleft/gpl.txt .
-! See Docs/Contributors.txt for a list of contributors.
-! ---
 
       PROGRAM MAINSTM
 
-! Reads eigenfunctions and eigenvalues from SIESTA and computes the
-!     LDOS needed to simulate STM images or STS curves.
-!     Input:
-!     - WFSX file
-!     - .DIM and .PLD files      
-!     - .ion files
-!     - .VH file
-!
-!     Output for STM:
-!     - A 'gridfunc' file, which for STM simulations will have information
-!     about all the planes desired. (It marks the contents as "non-periodic"
-! along Z.
-!     Output for STS:
-!     - A 'gridfunc' file with a single plane perpendicular to Z, and using
-!     the 'spin' dimension to store values for different energies.
-!     - An auxiliary file with the values of the energy used in sampling.
-      
-! Coded by P. Ordejon, November 2004
-! Modified by N. Lorente, August 2005
-! Re-structured, adapted to NC/SOC, and extended to STS: Alberto Garcia, March 2019
-
-
-      USE PRECISION, only:dp
-      USE BASIS_IO, only: read_basis_ascii
+C **********************************************************************
+C Reads eigenfncts and eigenvalues from SIESTA and computes STM images
+C
+C Coded by P. Ordejon, November 2004
+C
+C Modified by N. Lorente, August 2005
+C
+C **********************************************************************
+C
+C  Modules
+C
+      USE PRECISION
+      USE PARALLEL
+      USE BASIS_IO
       USE LISTSC_MODULE, ONLY: LISTSC_INIT
       USE FDF
-      use broadening, only: width, gaussian_broadener
 
       IMPLICIT NONE
 
       INTEGER ns,
-     .   NO_U, NO_S, NA_S, NSPIN, MAXNA,
-     .   NSC(3), NK, no_u_in_wfs_file, idummy
+     .   NO_U, NO_S, NA_S, NSPIN, MAXND, MAXNA,
+     .   NSC(3), NK, NUMWF
 
       INTEGER
-     .  NPX, NPY, NPZ, IUNITCD, IX, IV
+     .  NPX, NPY, NPZ, IUNITCD, IX, IV, NSCX, NSCY
 
       INTEGER, DIMENSION(:), ALLOCATABLE ::
-     .  ISA, LASTO, IPHORB, INDXUO
+     .  ISA, LASTO, IPHORB, INDXUO, 
+     .  NUMD, LISTD, LISTDPTR, NWF
 
-      real(dp), DIMENSION(:), ALLOCATABLE  ::  WK
-      INTEGER, DIMENSION(:,:), ALLOCATABLE ::  INDW
+      INTEGER, DIMENSION(:,:), ALLOCATABLE ::
+     .   INDW
 
-      REAL(DP)
+      DOUBLE PRECISION
      .   CELL(3,3), VOLUME, VOLCEL, RMAXO, UCELL(3,3), V0, EMAX, EMIN
 
-      REAL(DP)  ZMIN, ZMAX, ZREF, ARMUNI
+      DOUBLE PRECISION
+     .  ZMIN, ZMAX, ZREF, ZREF2,
+     .  ARMUNI
 
-      REAL(DP), DIMENSION(:,:,:,:), ALLOCATABLE ::  RPSI,IPSI
-      REAL(DP), DIMENSION(:,:,:), ALLOCATABLE ::   E
-      REAL(DP), DIMENSION(:,:), ALLOCATABLE ::   XA, K
+      DOUBLE PRECISION, DIMENSION(:,:,:,:), ALLOCATABLE ::
+     .   RPSI,IPSI
 
-      CHARACTER  FILEIN*20, FILEOUT*20, SNAME*40
+      DOUBLE PRECISION, DIMENSION(:,:,:), ALLOCATABLE ::
+     .   E
 
-      INTEGER :: wf_unit
-      logical :: gamma, non_coll
-      integer :: nspin_blocks
+      DOUBLE PRECISION, DIMENSION(:,:), ALLOCATABLE ::
+     .   XA, DSCF, K
 
-      integer :: ne
-      logical :: want_sts
-      EXTERNAL :: REDATA, REINITSTM, VOLCEL
+      DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE ::
+     .   DATM, DSCFNA
+
+      CHARACTER
+     .  FILEIN*20, FILEOUT*20
+
+      LOGICAL 
+     .  FOUND
+
+      EXTERNAL
+     .  IODM, REDATA, REINITSTM, VOLCEL
+
 
 C ****** READ FROM SIESTA **********************************************
 ! integer ns                  : Total number of species
 C INTEGER NO_U                : Total number of orbitals in the unit cell
 C INTEGER NO_S                : Total number of orbitals in the supercell
 C INTEGER NA_S                : Total number of atoms in the supercell
-C INTEGER NSPIN               : Number of different spin polarizations (1, 2, 4 [NC/SOC])
-C INTEGER MAXNA               : Maximum number of neighbours of any atom   !** Ambiguous: range needed
+C INTEGER NSPIN               : Number of different spin polarizations
+C                               Nspin = 1 => Unpolarized, Nspin = 2 => Polarized
+C INTEGER MAXND               : Maximum number
+C                               of basis orbitals interacting, either directly
+C                               or through a KB projector, with any orbital
+C INTEGER MAXNA               : Maximum number of neighbours of any atom
 C INTEGER NSC(3)              : Num. of unit cells in each supercell direction
+C INTEGER NUMWF               : Max num of wavefncts to print for a given k-po.
+C INTEGER NWF(NK)             : Num of wavefncts to print for each k-point
 C INTEGER ISA(MAXA)           : Species index of each atom in the supercell
 C INTEGER LASTO(0:MAXA)       : Last orbital of each atom in array iphorb
 C INTEGER IPHORB(MAXO)        : Orbital index (within atom) of each orbital
 C INTEGER INDXUO(MAXO)        : Equivalent orbital in unit cell
+C INTEGER NUMD(NO_U)          : Number of nonzero elements of each row of the
+C                               Hamiltonian matrix between atomic orbitals
+C INTEGER LISTD(MAXND)        : Nonzero Hamiltonian-matrix element
+C                               column indexes for each matrix row
+C INTEGER LISTDPTR(NO_U)      : Pointer to where each row of listh starts - 1
+C                               The reason for pointing to the element before
+C                               the first one is so that when looping over the
+C                               elements of a row there is no need to shift by
+C                               minus one.
 C INTEGER NK                  : Number of k-points in wave functions file
+C INTEGER INDW(NK,NUMWF)      : Indices of wavefuncs to print for each k-point
 C REAL*8  CELL(3,3)           : Supercell vectors CELL(IXYZ,IVECT)
 C                               (units in bohrs)
 C REAL*8  UCELL(3,3)          : Unit cell vectors UCELL(IXYZ,IVECT)
@@ -91,43 +100,71 @@ C REAL*8  VOLUME              : Volumen of unit cell (in bohr**3)
 C REAL*8  RMAXO               : Maximum range of basis orbitals
 C REAL*8  XA(3,NA_S)          : Atomic coordinates in cartesian coordinates
 C                               (units in bohrs)
-
-C ****** INFORMATION FOR 3D GRID ***************************
+C REAL*8  DATM(NO_S)          : Occupations of basis orbitals in free atom
+C REAL*8  DSCF(MAXND,NSPIN)   : Density Matrix (DM)
+C REAL*8  RPSI(NO_U,NK,NUMWF,NSPIN): Wave function coefficients (real part)
+C REAL*8  IPSI(NO_U,NK,NUMWF,NSPIN): Wave function coefficients (imag part)
+C REAL*8  E(NK,NUMWF,NSPIN)        : Wave function energies
+C REAL*8  K(NK,3)             : K-points
+C ****** INFORMATION OF THE PLANE OR 3D GRID ***************************
 C INTEGER NPX, NPY, NPZ       : Number of points generated along x and y
-C                               (and z for 3D grids) 
+C                               (and z for 3D grids) directions in a system of 
+C                               reference in which the third component of the 
+C                               points of the plane is zero 
+C                               (Plane Reference Frame; PRF)
 C INTEGER IUNITCD             : Units of the charge density
 C REAL*8  ZREF                : Position of reference plane for wf. extrapol.
-C REAL*8  ZMIN, ZMAX          : Limits of the 3D grid for z-axis
+C REAL*8  ZREF2                : Position of reference plane for wf. extrapol.
+C REAL*8  ZMIN, ZMAX          : Limits of the or 3D grid in the PRF for z-axis
+C INTEGER NSCX, NSCY          : Number of cells to plot in cube file (in x
+C                               and y directions)
 C REAL*8  ARMUNI              : Conversion factors for the charge density
+C ****** INTERNAL VARIABLES ********************************************
+C REAL*8  DSCFNA(MAXND)       : Density Matrix for Neutral Atoms
+C LOGICAL FOUND               : Has DM been found in disk?
+C                               (Only when task = 'read')
+C **********************************************************************
 
 
+C Set up fdf -----------------------------------------------------------
       FILEIN  = 'stdin'
       FILEOUT = 'out.fdf'
       CALL FDF_INIT(FILEIN,FILEOUT)
 
       WRITE(6,*)
-      WRITE(6,*) 'STM/STS Simulation program' //
-     $           ' with optional wfs projection'
+      WRITE(6,*) 'STM Simulation program '
       WRITE(6,*) 'P. Ordejon and N. Lorente, Nov. 04'
-      WRITE(6,*) 'A. Garcia, March 2019'
       WRITE(6,*)
       WRITE(6,*) 'Reading information from SIESTA'
       WRITE(6,*)
 
 
 C Read some variables from SIESTA to define the limits of some arrays --
-      CALL REINITSTM( NO_S, NA_S, NO_U, IDUMMY, MAXNA, NSPIN)
+      CALL REINITSTM( NO_S, NA_S, NO_U, MAXND, MAXNA, NSPIN)
 
+C Allocate some variables ----------------------------------------------
       ALLOCATE(XA(3,NA_S))
+      CALL MEMORY('A','D',3*NA_S,'mainstm')
+
       ALLOCATE(LASTO(0:NA_S))
+      CALL MEMORY('A','D',NA_S+1,'mainstm')
+
       ALLOCATE(ISA(NA_S))
+      CALL MEMORY('A','D',NA_S,'mainstm')
+
       ALLOCATE(IPHORB(NO_S))
+      CALL MEMORY('A','D',NO_S,'mainstm')
+
       ALLOCATE(INDXUO(NO_S))
+      CALL MEMORY('A','D',NO_S,'mainstm')
+
+      ALLOCATE(DATM(NO_S))
+      CALL MEMORY('A','D',NO_S,'mainstm')
 
 C Read some variables from SIESTA --------------------------------------
-      CALL REDATA( NO_S, NA_S, NO_U, IDUMMY, NSPIN,
+      CALL REDATA( NO_S, NA_S, NO_U, MAXND, NSPIN,
      .             ISA, IPHORB, INDXUO, LASTO,
-     .             CELL, NSC, XA, RMAXO )
+     .             CELL, NSC, XA, RMAXO, DATM )
 
 C Read the information about the basis set -----------------------------
       CALL READ_BASIS_ASCII(ns)
@@ -145,74 +182,79 @@ C Calculate unit cell vectors
         ENDDO
       ENDDO
 
-      ! Read heading info from WFSX file
 
-      SNAME = FDF_STRING('SystemLabel','siesta')
+C Allocate variables
 
-      CALL IO_ASSIGN(wf_unit)
-      OPEN (wf_unit, FILE=trim(SNAME)//'.WFSX', FORM='unformatted',
-     $       STATUS='unknown',position='rewind')
 
-      read(wf_unit) nk, gamma
-      read(wf_unit) nspin
 
-      ! Non-collinear or SOC files have a single "spin" block as opposed to collinear-spin
-      ! files, which contain two spin blocks per k section.
-      non_coll = (nspin >= 4)
-      nspin_blocks = nspin
-      if (non_coll) nspin_blocks = 1
+C call readwaves just to find out number of wavefunctions to print
+C allocate temporary space for eigenvalues and eigenfunctions
+        NUMWF = 1
+        NK = 1
 
-      read(wf_unit) no_u_in_wfs_file
-      if (no_u /= no_u_in_wfs_file) then
-         call die("Mismatch in no_u in WFSX and DIM/PLD files")
-      endif
-      read(wf_unit)   ! orbital labels
+        ALLOCATE(NWF(NK))
+        CALL MEMORY('A','I',NK,'mainstm')
+        ALLOCATE(INDW(NK,NUMWF))
+        CALL MEMORY('A','I',NUMWF*NK,'mainstm')
+        ALLOCATE(K(NK,3))
+        CALL MEMORY('A','D',NK*3,'mainstm')
+        ALLOCATE(E(NK,NUMWF,NSPIN))
+        CALL MEMORY('A','D',NUMWF*NSPIN*NK,'mainstm')
+        ALLOCATE(RPSI(NO_U,NK,NUMWF,NSPIN))
+        CALL MEMORY('A','D',NO_U*NUMWF*NSPIN*NK,'mainstm')
+        ALLOCATE(IPSI(NO_U,NK,NUMWF,NSPIN))
+        CALL MEMORY('A','D',NO_U*NUMWF*NSPIN*NK,'mainstm')
 
-      ! The file is now positioned to start reading wfs in routines 'stm' or 'sts'
+        CALL READWAVES(NSPIN,NO_U,0,NWF,NUMWF,NK,RPSI,IPSI,E,K,INDW)
 
+C deallocate temporary space 
+        CALL MEMORY('D','I',SIZE(NWF),'mainstm')
+        DEALLOCATE(NWF)
+        CALL MEMORY('D','I',SIZE(INDW),'mainstm')
+        DEALLOCATE(INDW)
+        CALL MEMORY('D','D',SIZE(K),'mainstm')
+        DEALLOCATE(K)
+        CALL MEMORY('D','D',SIZE(E),'mainstm')
+        DEALLOCATE(E)
+        CALL MEMORY('D','D',SIZE(RPSI),'mainstm')
+        DEALLOCATE(RPSI)
+        CALL MEMORY('D','D',SIZE(IPSI),'mainstm')
+        DEALLOCATE(IPSI)
+
+C allocate space for eigenenergies and (complex) eigenfunctions 
+        ALLOCATE(NWF(NK))
+        CALL MEMORY('A','I',NK,'mainstm')
+        ALLOCATE(INDW(NK,NUMWF))
+        CALL MEMORY('A','I',NUMWF*NK,'mainstm')
+        ALLOCATE(K(NK,3))
+        CALL MEMORY('A','D',NK*3,'mainstm')
+        ALLOCATE(E(NK,NUMWF,NSPIN))
+        CALL MEMORY('A','D',NUMWF*NSPIN*NK,'mainstm')
+        ALLOCATE(RPSI(NO_U,NK,NUMWF,NSPIN))
+        CALL MEMORY('A','D',NO_U*NUMWF*NSPIN*NK,'mainstm')
+        ALLOCATE(IPSI(NO_U,NK,NUMWF,NSPIN))
+        CALL MEMORY('A','D',NO_U*NUMWF*NSPIN*NK,'mainstm')
+
+C call readwaves again to actually read wavefunctions
+        CALL READWAVES(NSPIN,NO_U,1,NWF,NUMWF,NK,RPSI,IPSI,E,K,INDW)
+
+C Read option for STM 
       CALL READSTM( VOLUME, 
-     .     IUNITCD, NPX, NPY, NPZ, ZREF, ZMIN, ZMAX, EMAX, EMIN,
-     .     ARMUNI )
+     .     IUNITCD, NPX, NPY, NPZ, ZREF, ZREF2, ZMIN, ZMAX, EMAX, EMIN,
+     .      NSCX, NSCY, ARMUNI )
 
-! Call routine to calculate the value of the potential at vacuum
+C Call routine to calculate the value of the potential at vacuum
 
       CALL VACPOT(V0)
 
-! STS calculations can be done on several planes perpendicular to z
-! at the same time. But note that the resulting data file might be large.
-! It can be argued that a single point, or line, might be enough. But      
-! we can easily reuse the code for 'stm' in the 'sts' routine. In 
-! postprocessing the extra information can be filtered.
-! Besides, for the "projection" technique we need a full XY-unit cell,
-! since we need to fourier-transform the wavefunctions.      
+C Call routine to compute STM image
 
-      ne = fdf_get('STS.NumberOfPoints',1)
-      want_sts = (ne > 1)
-      
-      if (want_sts) then
-
-           ! Later: use function pointers for broadener
-           width = fdf_get('STS.broadening',0.2_dp)  ! in eV
-          
-           CALL STS ( NA_S, NO_S, NO_U, MAXNA, nspin,
-     $               nspin_blocks, non_coll,
+        CALL STM   ( NA_S, NO_S, NO_U, MAXNA, NSPIN, 
      .               ISA, IPHORB, INDXUO, LASTO, XA, CELL, UCELL,
-     .               wf_unit, NK, gamma,
-     .               ZREF, ZMIN, ZMAX, NPX, NPY, NPZ,
-     .               V0, EMAX, EMIN, NE, gaussian_broadener,
-     .               ARMUNI, IUNITCD, RMAXO )
-        else
-
-           CALL STM ( NA_S, NO_S, NO_U, MAXNA, nspin,
-     $               nspin_blocks, non_coll,
-     .               ISA, IPHORB, INDXUO, LASTO, XA, CELL, UCELL,
-     .               wf_unit, NK, gamma,
-     .               ZREF, ZMIN, ZMAX, NPX, NPY, NPZ,
+     .               RPSI, IPSI, E, INDW, NWF, NUMWF, NK, K,
+     .               ZREF,ZREF2, ZMIN, ZMAX, NPX, NPY, NPZ, NSCX, NSCY,
      .               V0, EMAX, EMIN,
      .               ARMUNI, IUNITCD, RMAXO )
 
-        endif
-        
-        call io_close(wf_unit)
 
       END PROGRAM MAINSTM

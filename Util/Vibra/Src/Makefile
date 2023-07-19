@@ -1,9 +1,12 @@
 # 
-# Copyright (C) 1996-2016	The SIESTA group
-#  This file is distributed under the terms of the
-#  GNU General Public License: see COPYING in the top directory
-#  or http://www.gnu.org/copyleft/gpl.txt.
-# See Docs/Contributors.txt for a list of contributors.
+# This file is part of the SIESTA package.
+#
+# Copyright (c) Fundacion General Universidad Autonoma de Madrid:
+# E.Artacho, J.Gale, A.Garcia, J.Junquera, P.Ordejon, D.Sanchez-Portal
+# and J.M.Soler, 1996- .
+# 
+# Use of this software constitutes agreement with the full conditions
+# given in the SIESTA license, as signed by all legitimate users.
 #
 # Makefile for Vibra package
 #
@@ -24,7 +27,7 @@
 .SUFFIXES:
 .SUFFIXES: .f .o .a 
 #
-default: fcbuild vibra
+default: fcbuild vibrator
 #
 # You should have compiled Siesta in the main Src directory (or
 # in an architecture-specific object directory) before attempting 
@@ -36,26 +39,22 @@ include $(ARCH_MAKE)
 #
 .SUFFIXES: .f .F .o .a  .f90 .F90
 #
-# this path is as seen from the fdf subdir...
-TOPSRC:=../../../../Src
+TOPSRC:=$(shell pwd)/../../../Src
 #
 FC_DEFAULT:=$(FC)
 FC_SERIAL?=$(FC_DEFAULT)
 FC:=$(FC_SERIAL)         # Make it non-recursive
 #
-DEFS:=$(DEFS_PREFIX)-UMPI $(DEFS_PREFIX)-UCDF $(DEFS) $(DEFS_PREFIX)-UMPI $(DEFS_PREFIX)-UCDF
-FPPFLAGS:=$(DEFS_PREFIX)-UMPI $(DEFS_PREFIX)-UCDF $(FPPFLAGS) $(DEFS_PREFIX)-UMPI $(DEFS_PREFIX)-UCDF
+DEFS:=$(DEFS) $(DEFS_PREFIX)-UMPI $(DEFS_PREFIX)-UCDF
+FPPFLAGS:=$(FPPFLAGS) $(DEFS_PREFIX)-UMPI $(DEFS_PREFIX)-UCDF
 #
 FDF=libfdf.a
 FDF_MAKEFILE=$(TOPSRC)/fdf/makefile
 FDF_INCFLAGS:=-I $(TOPSRC)/fdf $(INCFLAGS)
 $(FDF): 
-	(mkdir -p fdf; cd fdf ; $(MAKE) -f $(FDF_MAKEFILE) "FC=$(FC_SERIAL)" \
+	(cd fdf ; $(MAKE) -f $(FDF_MAKEFILE) "FC=$(FC_SERIAL)" \
                           "VPATH=$(TOPSRC)/fdf" \
                           "ARCH_MAKE=../$(ARCH_MAKE)" \
-                          "DEFS=$(DEFS)" \
-                          "FPPFLAGS=$(FPPFLAGS)" \
-                          "MPI_INTERFACE= " \
                           "INCFLAGS=$(FDF_INCFLAGS)" "FFLAGS=$(FFLAGS)" module)
 #
 # Uncomment the following line for debugging support
@@ -65,26 +64,25 @@ $(FDF):
 BUILD-SRCS= fcbuild.f chkdim.f recoor.f io.f
 BUILD-OBJS=$(BUILD-SRCS:.f=.o)
 
-VIBRA-SRCS= vibra.f chkdim.f recoor.f hermdp.f klines.f outbands.f \
+VIBRA-SRCS= vibrator.f chkdim.f recoor.f hermdp.f paste.f klines.f outbands.f \
             reclat.f parse.f io.f
 VIBRA-OBJS=$(VIBRA-SRCS:.f=.o)
 
 #
-fcbuild.o vibra.o:  vibra.h
+fcbuild.o vibrator.o:  vibra.h
 #
 fcbuild: $(FDF) $(BUILD-OBJS)
 	$(FC) -o fcbuild \
 	       $(LDFLAGS) $(BUILD-OBJS) $(FDF)
 
-vibra : $(FDF) $(VIBRA-OBJS) 
-	$(FC) -o vibra \
+vibrator : $(FDF) $(VIBRA-OBJS) 
+	$(FC) -o vibrator \
 	       $(LDFLAGS) $(VIBRA-OBJS) $(FDF)
 #
 clean: 
 	@echo "==> Cleaning object and executable files"
-	rm -f fcbuild vibra *.o *.mod libfdf.a
-	rm -rf ./fdf
-
+	rm -f fcbuild vibrator *.o *.mod libfdf.a
+	(cd fdf ; $(MAKE) -f $(FDF_MAKEFILE) "ARCH_MAKE=../$(ARCH_MAKE)" clean)
 
 
 

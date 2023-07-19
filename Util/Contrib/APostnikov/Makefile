@@ -7,7 +7,6 @@ OBJDIR=Obj
 .SUFFIXES:
 .SUFFIXES: .f .F .o .a  .f90 .F90
 #
-default: all
 ARCH_MAKE=../../../$(OBJDIR)/arch.make
 include $(ARCH_MAKE)
 #

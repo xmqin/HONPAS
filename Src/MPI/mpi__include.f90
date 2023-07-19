@@ -27,16 +27,9 @@
         public :: mpi_double_precision
         public :: mpi_2double_precision
         public :: mpi_integer, mpi_character, mpi_logical
-        public :: mpi_integer8
-        public :: mpi_packed
         public :: mpi_maxloc, mpi_sum, mpi_max, mpi_lor
+        public :: mpi_status_size
         public :: mpi_comm_world
-        public :: mpi_comm_self
-
-        ! For threaded MPI
-        public :: mpi_thread_single
-        public :: mpi_thread_funneled
-
 
         ! Added by Toby White, <tow21@cam.ac.uk>; 24/03/2005
         ! All of these are in mpich-1.1 and should be visible.
@@ -73,11 +66,9 @@
         public :: MPI_UNDEFINED
         public :: MPI_BSEND_OVERHEAD
         public :: MPI_KEYVAL_INVALID
-        public :: MPI_IN_PLACE
 
         ! MPI_status
-        public :: MPI_STATUS_SIZE
-        public :: MPI_STATUSES_IGNORE
+        !public :: MPI_STATUS_SIZE
         public :: MPI_SOURCE
         public :: MPI_TAG
         public :: MPI_ERROR
@@ -92,7 +83,7 @@
 
         ! Reserved communicators
         !public :: MPI_COMM_WORLD
-        !public :: MPI_COMM_SELF
+        public :: MPI_COMM_SELF
 
         ! datatypes for reduction functions
         public :: MPI_2REAL

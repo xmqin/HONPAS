@@ -1,9 +1,12 @@
 ! 
-! Copyright (C) 1996-2016	The SIESTA group
-!  This file is distributed under the terms of the
-!  GNU General Public License: see COPYING in the top directory
-!  or http://www.gnu.org/copyleft/gpl.txt.
-! See Docs/Contributors.txt for a list of contributors.
+! This file is part of the SIESTA package.
+!
+! Copyright (c) Fundacion General Universidad Autonoma de Madrid:
+! E.Artacho, J.Gale, A.Garcia, J.Junquera, P.Ordejon, D.Sanchez-Portal
+! and J.M.Soler, 1996- .
+! 
+! Use of this software constitutes agreement with the full conditions
+! given in the SIESTA license, as signed by all legitimate users.
 !
       module m_iostruct
 
@@ -16,6 +19,7 @@ c     Alberto Garcia, Sep. 2005. Based on ioxv by J.M.Soler. July 1997.
 
       use precision,   only : dp
       use parallel,    only : IONode
+      use fdf,         only : fdf_string
       use units,       only : Ang
       use m_mpi_utils, only : broadcast
       use siesta_geom,    only : xa, isa, cisa
@@ -39,13 +43,20 @@ c     Alberto Garcia, Sep. 2005. Based on ioxv by J.M.Soler. July 1997.
 
       real(dp) :: xfrac(3)
       integer  :: dummy
-      character(len=label_length+10) :: fname
-      integer                        :: ia, iu, iv
-      integer                        :: ix, iostat
-      external          io_assign, io_close
+      character(len=label_length+10), save :: fname
+      integer                              :: ia, iu, iv
+      integer                              :: ix, iostat
+      logical,                        save :: frstme = .true.
+      character(len=label_length+10)       :: paste
+      external          io_assign, io_close, paste
 
 
-      fname = trim(slabel) // '.STRUCT_IN'
+      if (frstme) then
+         if (IOnode) then
+            fname = paste( slabel, '.STRUCT_IN' )
+         endif
+         frstme = .false.
+      endif
 
       if (IOnode) then
          call io_assign( iu )
@@ -79,8 +90,7 @@ c     Alberto Garcia, Sep. 2005. Based on ioxv by J.M.Soler. July 1997.
 
 ! Construct references
       nullify(cisa)
-      allocate(cisa(na))
-!      call re_alloc(cisa,1,na,name="cisa",routine="read_struct")
+      call re_alloc(cisa,1,na,name="cisa",routine="read_struct")
       do ia = 1, na
          write(cisa(ia), '("siesta:e",i3.3)') isa(ia)
       enddo
@@ -101,7 +111,8 @@ c                          one after application of forces/stress.
       real(dp), intent(in) ::          cell(3,3), xa(3,na)
       logical, intent(in), optional :: moved
 
-      external          io_assign, io_close, reclat
+      character(len=label_length+11)       :: paste
+      external          io_assign, io_close, paste, reclat
 
 c     Internal variables and arrays
       real(dp)                             :: celli(3,3)
@@ -121,10 +132,10 @@ C     Only do reading and writing for IOnode
       endif
 
       if (atoms_moved_after_forces) then
-         fname = trim(slabel) // '.STRUCT_NEXT_ITER'
+         fname = paste( slabel, '.STRUCT_NEXT_ITER' )
       else
-         fname = trim(slabel) // '.STRUCT_OUT'
-      end if
+         fname = paste( slabel, '.STRUCT_OUT' )
+      endif
 
       call io_assign( iu )
       open( iu, file=fname, form='formatted', status='unknown' )      

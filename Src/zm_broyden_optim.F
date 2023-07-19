@@ -1,9 +1,12 @@
 ! 
-! Copyright (C) 1996-2016	The SIESTA group
-!  This file is distributed under the terms of the
-!  GNU General Public License: see COPYING in the top directory
-!  or http://www.gnu.org/copyleft/gpl.txt.
-! See Docs/Contributors.txt for a list of contributors.
+! This file is part of the SIESTA package.
+!
+! Copyright (c) Fundacion General Universidad Autonoma de Madrid:
+! E.Artacho, J.Gale, A.Garcia, J.Junquera, P.Ordejon, D.Sanchez-Portal
+! and J.M.Soler, 1996- .
+! 
+! Use of this software constitutes agreement with the full conditions
+! given in the SIESTA license, as signed by all legitimate users.
 !
       module m_zm_broyden_optim
       public :: zm_broyden_optimizer
@@ -11,12 +14,17 @@
 
       CONTAINS
 !
-      subroutine zm_broyden_optimizer( na, xa, cell, stress, tp, strtol,
-     &                                 varcel, relaxd )
+      subroutine zm_broyden_optimizer( na, xa, fa, cell,
+     .                 stress, dxmax, 
+     .                 tp, ftol, strtol, varcel, relaxd)
+
 c ******************************** INPUT ************************************
 c integer na            : Number of atoms in the simulation cell
+c real*8 fa(3,na)       : Atomic forces
 c real*8 stress(3,3)    : Stress tensor components
+c real*8 dxmax          : Maximum atomic (or lattice vector) displacement
 c real*8 tp             : Target pressure
+c real*8 ftol           : Maximum force tolerance
 c real*8 strtol         : Maximum stress tolerance
 c logical varcel        : true if variable cell optimization
 c *************************** INPUT AND OUTPUT ******************************
@@ -36,8 +44,9 @@ C  Modules
 C
       use precision,   only : dp
       use parallel,    only : Node, IONode
-      use sys,         only : die
-      use fdf
+      use fdf,         only : fdf_block, fdf_physical
+      use m_fdf_global, only: fdf_global_get
+      use m_mpi_utils, only:  broadcast
       use units, only: kBar, Ang
       use m_broyddj_nocomm, only: broyden_t
       use m_broyddj_nocomm, only: broyden_reset, broyden_step,
@@ -59,16 +68,17 @@ C Subroutine arguments:
       integer,  intent(in)   :: na
       logical,  intent(in)   :: varcel
       logical,  intent(out)  :: relaxd
-      real(dp), intent(in)   :: tp
+      real(dp), intent(in)   :: fa(3,na), dxmax, tp, ftol
       real(dp), intent(inout):: xa(3,na), stress(3,3), strtol, cell(3,3)
 
 C Internal variables and arrays
-      integer             :: ia, i, j, n, indi,indi1,vi,k
+      integer             :: iu, ia, i, j, n, indi,indi1,vi,k
+      logical             :: found
       real(dp)            :: volume, new_volume, trace
       real(dp)            :: sxx, syy, szz, sxy, sxz, syz
       real(dp)            :: celli(3,3)
-      real(dp)            :: stress_dif(3,3)
-      real(dp), allocatable :: gxa(:), gfa(:)
+      real(dp)            ::  stress_dif(3,3)
+      real(dp), dimension(:), allocatable :: gxa, gfa
       real(dp)            :: force, force1
 
 C Saved internal variables:
@@ -84,13 +94,11 @@ C Saved internal variables:
       real(dp),      save :: precon 
       real(dp),      save :: strain(3,3)  ! Special treatment !!
 
-      real(dp), allocatable :: ftoln(:), dxmaxn(:), rnew(:)
+      real(dp), dimension(:), allocatable    :: ftoln, dxmaxn
+      real(dp), dimension(:), allocatable    :: rold, rnew, rdiff
 
       type(broyden_t), save  :: br
       logical, save           :: initialization_done = .false.
-
-      type(block_fdf)            :: bfdf
-      type(parsed_line), pointer :: pline
 
       real(dp), save :: jinv0
       integer, save  :: maxit
@@ -100,6 +108,7 @@ C Saved internal variables:
 
       integer        :: ndegi, ndi
 
+      external          memory
       real(dp), external :: volcel
 
 c ---------------------------------------------------------------------------
@@ -108,14 +117,17 @@ c ---------------------------------------------------------------------------
 
       if (.not. initialization_done) then
 
-        maxit           = fdf_get("MD.Broyden.History.Steps",5)
-        cycle_on_maxit  = fdf_get("MD.Broyden.Cycle.On.Maxit",.true.)
-        variable_weight = fdf_get("MD.Broyden.Variable.Weight",.false.)
-        broyden_debug   = fdf_get("MD.Broyden.Debug",.false.)
-        jinv0           = fdf_get("MD.Broyden.Initial.Inverse.Jacobian",
-     $                            1.0_dp)
+          call fdf_global_get(maxit,"MD.Broyden.History.Steps",5)
+          call fdf_global_get(cycle_on_maxit,
+     $              "MD.Broyden.Cycle.On.Maxit",.true.)
+          call fdf_global_get(variable_weight,
+     $         "MD.Broyden.Variable.Weight",.false.)
+          call fdf_global_get(broyden_debug,
+     $         "MD.Broyden.Debug",.false.)
+          call fdf_global_get(jinv0,
+     $         "MD.Broyden.Initial.Inverse.Jacobian",1.0_dp)
 
-        if (ionode) then
+         if (ionode) then
           write(6,*) 
           write(6,'(a,i3)')
      $         "Broyden_optim: max_history for broyden: ", maxit
@@ -128,8 +140,8 @@ c ---------------------------------------------------------------------------
           write(6,*) 
         endif
 
-        call broyden_init(br,debug=broyden_debug)
-        initialization_done = .true.
+         call broyden_init(br,debug=broyden_debug)
+         initialization_done = .true.
 
       endif
 
@@ -154,64 +166,54 @@ c ---------------------------------------------------------------------------
 
         if ( varcel ) then
 
-          constant_volume = fdf_get("MD.ConstantVolume", .false.)
+          call fdf_global_get(constant_volume,
+     .                        "MD.ConstantVolume", .false.)
 
-          tarstr = fdf_block('MD.TargetStress',bfdf)
+          if (Node.eq.0) then
+            tarstr = fdf_block('MD.TargetStress',iu)
 
-          ! Look for target stress and read it if found, 
-          ! otherwise generate it
-          if (tarstr) then
-            if (IOnode) then
+            ! Look for target stress and read it if found, 
+            ! otherwise generate it
+            if (tarstr) then
               write(6,'(/a,a)')
-     $          'zm_broyden_optimizer: Reading %block MD.TargetStress',
-     .          ' (units of MD.TargetPressure).'
-            endif
-            if (.not. fdf_bline(bfdf,pline))
-     $        call die('zm_broyden_optimizer: ERROR in ' //
-     .                 'MD.TargetStress block')
-            sxx = fdf_bvalues(pline,1)
-            syy = fdf_bvalues(pline,2)
-            szz = fdf_bvalues(pline,3)
-            sxy = fdf_bvalues(pline,4)
-            sxz = fdf_bvalues(pline,5)
-            syz = fdf_bvalues(pline,6)
-            call fdf_bclose(bfdf)
-            
-            tstres(1,1) = - sxx * tp
-            tstres(2,2) = - syy * tp
-            tstres(3,3) = - szz * tp
-            tstres(1,2) = - sxy * tp
-            tstres(2,1) = - sxy * tp
-            tstres(1,3) = - sxz * tp
-            tstres(3,1) = - sxz * tp
-            tstres(2,3) = - syz * tp
-            tstres(3,2) = - syz * tp
-          else
-            write(6,'(/a,a)')
-     $        'zm_broyden_optimizer: No target stress found, ',
-     .        'assuming hydrostatic MD.TargetPressure.'
-            do i = 1, 3
-              do j = 1, 3
-                tstres(i,j) = 0.0_dp
+     $              'cgvc_zmatrix: Reading %block MD.TargetStress',
+     .                       ' (units of MD.TargetPressure).'
+              read(iu,*, end=50) sxx, syy, szz, sxy, sxz, syz
+              tstres(1,1) = - sxx * tp
+              tstres(2,2) = - syy * tp
+              tstres(3,3) = - szz * tp
+              tstres(1,2) = - sxy * tp
+              tstres(2,1) = - sxy * tp
+              tstres(1,3) = - sxz * tp
+              tstres(3,1) = - sxz * tp
+              tstres(2,3) = - syz * tp
+              tstres(3,2) = - syz * tp
+   50         continue
+            else
+              write(6,'(/a,a)')
+     $              'cgvc_zmatrix: No target stress found, ',
+     .              'assuming hydrostatic MD.TargetPressure.'
+              do i = 1, 3
+                do j = 1, 3
+                  tstres(i,j) = 0.0_dp
+                enddo
+                tstres(i,i) = - tp
               enddo
-              tstres(i,i) = - tp
-            enddo
-          endif
-
-          if (constant_volume) then
-            tstres(:,:) = 0.0_dp
-            if (IOnode) then
-              write(6,"(a)") "***Target stress set to zero " //
-     $                       "for constant-volume calculation"
             endif
-          endif
-          if (IOnode) then
+
+            if (constant_volume) then
+               tstres(:,:) = 0.0_dp
+               write(6,"(a)") "***Target stress set to zero " //
+     $              "for constant-volume calculation"
+            endif
             write(6,"(/a)") 'cgvc_zmatrix: Target stress (kBar)'
             do i=1, 3
-              write(6,"(a,2x,3f12.3)") 
-     .          'cgvc_zmatrix:', (tstres(i,j)/kBar,j=1,3)
+               write(6,"(a,2x,3f12.3)") 
+     .              'cgvc_zmatrix:', (tstres(i,j)/kBar,j=1,3)
             enddo
           endif
+
+          call broadcast(tstres(1:3,1:3))
 
 C Moduli of original cell vectors for fractional coor scaling back to au ---
           do n = 1, 3
@@ -226,8 +228,8 @@ C Scale factor for strain variables to share magnitude with coordinates
 C ---- (a length in Bohrs typical of bond lengths ..) 
 
           ! AG: This could better be volume^(1/3) by default
-          precon = fdf_get('MD.PreconditionVariableCell',
-     .                     9.4486344d0,'Bohr')
+          call fdf_global_get(precon,'MD.PreconditionVariableCell',
+     .                           9.4486344d0,'Bohr')
 
 C Initialize absolute strain and save initial cell vectors
 C Initialization to 1 for numerical reasons, later substracted
@@ -238,12 +240,20 @@ C Initialization to 1 for numerical reasons, later substracted
 
         endif     ! varcel
 
+
         frstme = .false.
       endif                 ! First time
 
 C Allocate local memory
-      allocate(gfa(1:ndeg),gxa(1:ndeg))
-      allocate(ftoln(1:ndeg),dxmaxn(1:ndeg))
+
+      allocate(gfa(ndeg))
+      call memory('A','D',ndeg,'cgvc_zmatrix')
+      allocate(gxa(ndeg))
+      call memory('A','D',ndeg,'cgvc_zmatrix')
+      allocate(ftoln(ndeg))
+      call memory('A','D',ndeg,'cgvc_zmatrix')
+      allocate(dxmaxn(ndeg))
+      call memory('A','D',ndeg,'cgvc_zmatrix')
 
 !      print *, "zm_broyden: cell in : ", cell
 !      print *, "zm_broyden: strain in : ", strain
@@ -256,7 +266,7 @@ C Allocate local memory
 C Transform coordinates and forces to fractional ---------------------------- 
 C but scale them again to Bohr by using the (fix) moduli of the original ----
 C lattice vectors (allows using maximum displacement as before) -------------
-C convergence is checked here for input forces and compared with ftoln ------
+C convergence is checked here for input forces as compared with ftol --------
 
         relaxd = .true.
         ndegi = 0
@@ -378,26 +388,20 @@ C Set number of degrees of freedom & variables
 
       endif
 
-      if (relaxd) then
-         
-         call local_dealloc()
-         
-         return
-      end if
+      if (relaxd) RETURN   ! Will leave work arrays allocated
 
       if (.not. broyden_is_setup(br)) then
          call broyden_reset(br,ndeg,maxit,cycle_on_maxit,
      $        jinv0,0.01_dp,dxmaxn)
       endif
-
-      allocate(rnew(1:ndeg))
-
+      allocate (rnew(ndeg))
+      call memory('A','D',ndeg,'zm_broyden_optimizer')
       weight = 1.0_dp
       call broyden_step(br,gxa,gfa,w=weight,newx=rnew)
 
 
       ! Transform back
-      if ( varcel ) then
+      if ( varcel) then
 
         ! New cell
         indi = ndeg-6
@@ -469,21 +473,19 @@ C Return coordinates to correct arrays
 !      print *, "zm_broyden: cell out : ", cell
 !      print *, "zm_broyden: strain out : ", strain
 
-      call local_dealloc()
+C Deallocate local memory
 
-      contains
-
-      subroutine local_dealloc()
-
-C     Deallocate local memory
-      if ( allocated(dxmaxn) ) deallocate(dxmaxn)
-      if ( allocated(ftoln) ) deallocate(ftoln)
-      if ( allocated(gxa) ) deallocate(gxa)
-      if ( allocated(gfa) ) deallocate(gfa)
-      if ( allocated(rnew) ) deallocate(rnew)
-
-      end subroutine local_dealloc
+      call memory('D','D',size(dxmaxn),'cgvc_zmatrix')
+      deallocate(dxmaxn)
+      call memory('D','D',size(ftoln),'cgvc_zmatrix')
+      deallocate(ftoln)
+      call memory('D','D',size(gxa),'cgvc_zmatrix')
+      deallocate(gxa)
+      call memory('D','D',size(gfa),'cgvc_zmatrix')
+      deallocate(gfa)
+      call memory('D','D',size(rnew),'cgvc_zmatrix')
+      deallocate(rnew)
 
       end subroutine zm_broyden_optimizer
-      
+
       end module m_zm_broyden_optim

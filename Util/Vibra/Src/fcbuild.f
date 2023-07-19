@@ -1,9 +1,12 @@
 ! 
-! Copyright (C) 1996-2016	The SIESTA group
-!  This file is distributed under the terms of the
-!  GNU General Public License: see COPYING in the top directory
-!  or http://www.gnu.org/copyleft/gpl.txt.
-! See Docs/Contributors.txt for a list of contributors.
+! This file is part of the SIESTA package.
+!
+! Copyright (c) Fundacion General Universidad Autonoma de Madrid:
+! E.Artacho, J.Gale, A.Garcia, J.Junquera, P.Ordejon, D.Sanchez-Portal
+! and J.M.Soler, 1996- .
+! 
+! Use of this software constitutes agreement with the full conditions
+! given in the SIESTA license, as signed by all legitimate users.
 !
 
       program fcbuild
@@ -11,7 +14,7 @@
 c *********************************************************************
 c Build supercell coordinates for Force Constant Matrix calculation,
 c for clusters, linear chains, slabs and 3D xtals.
-c Compatible with vibra.f
+c Compatible with vibrator.f
 c
 c Uses the FDF (Flexible Data Format) package (version 0.66.1.5)
 c of J.M.Soler and A. Garcia, 
@@ -54,11 +57,6 @@ c Internal variables ...
 
       data pi / 3.1415926d0 /
       data overflow /.false./
-
-      logical :: has_constr
-
-      type(block_fdf)            :: bfdf
-      type(parsed_line), pointer :: pline
 
 c ...
      
@@ -113,32 +111,16 @@ c Lattice constant of unit cell...
       write(6,'(a,f10.5,a)') 'Lattice Constant    = ',alat,'  Bohr'
 c ...
 
-c Whether the constrainst block exists
-      has_constr = fdf_block('GeometryConstraints',bfdf)
-      has_constr = has_constr .or.
-     &     fdf_block('Geometry.Constraints',bfdf)
-c ...
-      
 c Lattice vectors of unit cell...
-      if ( fdf_block('LatticeParameters',bfdf) .and.
-     .     fdf_block('LatticeVectors',bfdf) ) then
+      if ( fdf_block('LatticeParameters',iunit) .and.
+     .     fdf_block('LatticeVectors',iunit) ) then
          write(6,'(2a)')'ERROR: Lattice vectors doubly ',
      .     'specified: by LatticeVectors and by LatticeParameters.' 
          stop 
       endif
 
-      if ( fdf_block('LatticeParameters',bfdf) ) then
-         if (.not. fdf_bline(bfdf, pline))
-     $        call die("No LatticeParameters")
-         if (.not. (fdf_bmatch(pline, 'vvvvvv') )) then
-            call die ('LatticeParameters: Error in syntax')
-         endif
-         alp = fdf_bvalues(pline,1)
-         blp = fdf_bvalues(pline,2)
-         clp = fdf_bvalues(pline,3)
-         alplp = fdf_bvalues(pline,4)
-         betlp = fdf_bvalues(pline,5)
-         gamlp = fdf_bvalues(pline,6)
+      if ( fdf_block('LatticeParameters',iunit) ) then
+         read(iunit,*) alp, blp, clp, alplp, betlp, gamlp
          write(6,'(a)')
      .    'Lattice Parameters (units of Lattice Constant) ='
          write(6,'(a,3f10.5,3f9.3)')
@@ -156,13 +138,9 @@ c Lattice vectors of unit cell...
          xxx = (cos(alplp) - cos(betlp)*cos(gamlp))/sin(gamlp)
          cell(2,3) = clp * xxx
          cell(3,3) = clp * sqrt(sin(betlp)*sin(betlp) - xxx*xxx)
-      elseif ( fdf_block('LatticeVectors',bfdf) ) then
+      elseif ( fdf_block('LatticeVectors',iunit) ) then
         do i = 1,3
-          if (.not. fdf_bline(bfdf, pline))
-     .      call die('redcel: ERROR in LatticeVectors block')
-          cell(1,i) = fdf_bvalues(pline,1)
-          cell(2,i) = fdf_bvalues(pline,2)
-          cell(3,i) = fdf_bvalues(pline,3)
+          read(iunit,*) (cell(j,i), j=1,3)
         enddo
       else
         do i = 1,3
@@ -269,17 +247,6 @@ c  Open file to write ...
       call io_assign(iunit)
       open(unit=iunit,file='FC.fdf',status='new',err=100)
 
-c  Write new constrained file if the GeometryConstraints
-c  block exists
-      if ( has_constr ) then
-         write(iunit,*)
-         write(iunit,'(a)') '# GeometryConstraints block found'
-         write(iunit,'(a)') '# defaulting to constrained FC'
-         write(iunit,'(a,a)') 'Vibra.FC ',trim(slabel)//'.FCC'
-         write(iunit,*)
-      end if
-c ...
-      
 c  Write Number of atoms in Supercell ...
       write(iunit,'(a,i5)') 'NumberOfAtoms       ',nnat
       write(iunit,*) 
@@ -339,17 +306,5 @@ c ...
      . '    ERROR: File FC.fdf already exists!',
      . '********************************************'
       stop
-
-      CONTAINS
-
-      subroutine die(str)
-      character(len=*), intent(in), optional:: str
-      if (present(str)) then
-         write(6,"(a)") str
-         write(0,"(a)") str
-      endif
-      STOP
-      end subroutine die
-
-      end program fcbuild
+      end
 

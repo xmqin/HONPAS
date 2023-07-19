@@ -1,13 +1,6 @@
-! ---
-! Copyright (C) 1996-2016	The SIESTA group
-!  This file is distributed under the terms of the
-!  GNU General Public License: see COPYING in the top directory
-!  or http://www.gnu.org/copyleft/gpl.txt .
-! See Docs/Contributors.txt for a list of contributors.
-! ---
       SUBROUTINE REDATA( MAXO, MAXA, MAXUO, MAXNH, NSPIN, 
      .                   ISA, IPHORB, INDXUO, LASTO,
-     .                   CELL, NSC, XA, RMAXO )
+     .                   CELL, NSC, XA, RMAXO, DATM )
 
 C **********************************************************************
 C Read the data files to plot charge density at the points of a plane 
@@ -33,7 +26,7 @@ C **********************************************************************
      .  LASTO(0:MAXA), ISA(MAXA), IPHORB(MAXO), INDXUO(MAXO), NSC(3)
 
       DOUBLE PRECISION, INTENT(OUT) ::
-     .  CELL(3,3), XA(3,MAXA), RMAXO
+     .  CELL(3,3), XA(3,MAXA), RMAXO, DATM(MAXO)
 
 
 C **** INPUT ***********************************************************
@@ -56,9 +49,12 @@ C INTEGER NSC(3)         : Num. of unit cells in each supercell direction
 C REAL*8  XA(3,MAXA)     : Atomic positions in cartesian coordinates
 C                          (in bohrs)
 C REAL*8  RMAXO          : Maximum range of basis orbitals
+C REAL*8  DATM(MAXO)     : Occupations of basis orbitals in free atom
 C **********************************************************************
 
 C Internal variables ---------------------------------------------------
+
+      CHARACTER*33 PASTE
 
       CHARACTER*30
      .  SNAME, FNAME
@@ -67,12 +63,12 @@ C Internal variables ---------------------------------------------------
      .  UNIT1, IL, IA, J
 
       EXTERNAL
-     .  IO_ASSIGN, IO_CLOSE
+     .  IO_ASSIGN, IO_CLOSE, PASTE
 
 
 C Assign the name of the output file -----------------------------------
       SNAME = FDF_STRING('SystemLabel','siesta')
-      FNAME = TRIM(sname)//'.PLD'
+      FNAME = PASTE(sname,'.PLD')
 
       CALL IO_ASSIGN(UNIT1)
 
@@ -83,7 +79,7 @@ C Dump the tables into a file ------------------------------------------
         READ(UNIT1)RMAXO
 
         DO IL = 1, MAXO
-          READ(UNIT1)IPHORB(IL), INDXUO(IL)
+          READ(UNIT1)IPHORB(IL), INDXUO(IL), DATM(IL)
         ENDDO
 
         DO IA = 1, MAXA

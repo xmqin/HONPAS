@@ -20,6 +20,8 @@
 ! *****************************************************************************
 module nao2gto_nonlin
 
+  use precision, only: dp
+  use hfx_types, only: hfx_input_parameter
   implicit none
 
   private
@@ -35,9 +37,6 @@ contains
   subroutine nao2gto_gaussfit( ngfs_max, rad_pts, orb_pts, hfx_opts, &
  &                             orb_g, ierr )
 
-    use precision, only: dp
-    use nao2gto_types,  only: hfx_options_type
-
     implicit none
 
 !   Arguments
@@ -51,7 +50,7 @@ contains
     real(dp), intent(in)  :: orb_pts(:)        ! Radial part of the NAO
                                                !   (divided by r^l) 
                                                !   in the linear mesh
-    type(hfx_options_type), intent(in) :: hfx_opts
+    type(hfx_input_parameter), intent(in) :: hfx_opts
                                                ! Options for the hfx calculation
     real(dp), intent(out) :: orb_g(2,ngfs_max) ! Exponents and coefficients
                                                ! Exponents and coefficients
@@ -250,8 +249,6 @@ contains
 
   function deviation_gauss_nao( t, ft, alpha, C, W, n, m )
 
-    use precision, only: dp
-
     implicit none
 
     integer, intent(in) :: n                     ! Number of Gaussians in the 
@@ -314,8 +311,6 @@ contains
 ! ***************************************************************************
   subroutine aproxima( t, ft, n, m, npts, threshold,    &
  &                     alpha, C, max_diff, tol_g )
-
-    use precision, only: dp
 
     implicit none
 
@@ -459,8 +454,6 @@ contains
 ! ***************************************************************************
   subroutine eval_lc_gauss( C, alpha, t, n, m, fval )
 
-    use precision, only: dp
-
     implicit none
 
     integer, intent(in) :: n                    ! Number of Gaussians in the 
@@ -531,8 +524,6 @@ contains
 !! process one more time.
 ! ***************************************************************************
   subroutine optimize_function_one_variable(pos,valor,a,b,alpha,C,W,t,ft,n,m,j)
-
-    use precision, only: dp
 
     implicit none
 
@@ -664,8 +655,6 @@ contains
   subroutine optimize_j_component( j, t, ft, npts, threshold,  &
  &                                 alpha, C, n, m, W )
 
-    use precision, only: dp
-
     implicit none
 
     integer, intent(in) :: j                     ! Index of the exponent to be
@@ -786,8 +775,6 @@ contains
   ! ***************************************************************************
   subroutine sort(n,v)
 
-    use precision, only: dp
-
     implicit none
 
     integer,intent(in)::n
@@ -814,8 +801,6 @@ contains
 !!        for a given set of exponents, alpha, in the sense of least squares.
 ! ***************************************************************************
   subroutine solvemincuad( t, ft, alpha, W, n, m, C ) 
-
-    use precision, only: dp
 
     implicit none
 

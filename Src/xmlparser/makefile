@@ -8,6 +8,11 @@ OBJFILES= m_debug.o m_buffer.o m_elstack.o m_dictionary.o m_io.o \
           m_reader.o m_converters.o m_charset.o  m_entities.o \
           m_xml_error.o  m_fsm.o  m_xml_parser.o flib_sax.o
 
+DOM_OBJ_FILES= flib_dom.o \
+          m_dom_attribute.o m_dom_element.o m_dom_node.o m_dom_types.o \
+          m_dom_debug.o m_dom_error.o m_dom_nodelist.o m_dom_utils.o \
+          m_dom_document.o m_dom_namednodemap.o m_dom_parse.o \
+          m_strings.o
 #
 libxmlparser.a: $(OBJFILES) 
 	$(AR) $(ARFLAGS_EXTRA) cru libxmlparser.a $(OBJFILES)

@@ -1,11 +1,14 @@
 ! 
-! Copyright (C) 1996-2016	The SIESTA group
-!  This file is distributed under the terms of the
-!  GNU General Public License: see COPYING in the top directory
-!  or http://www.gnu.org/copyleft/gpl.txt.
-! See Docs/Contributors.txt for a list of contributors.
+! This file is part of the SIESTA package.
 !
-      subroutine pdosg( nspin, nuo, no, maxspn, maxnh, 
+! Copyright (c) Fundacion General Universidad Autonoma de Madrid:
+! E.Artacho, J.Gale, A.Garcia, J.Junquera, P.Ordejon, D.Sanchez-Portal
+! and J.M.Soler, 1996- .
+! 
+! Use of this software constitutes agreement with the full conditions
+! given in the SIESTA license, as signed by all legitimate users.
+!
+      subroutine pdosg( nspin, nuo, no, maxspn, maxuo, maxnh, 
      .                  maxo, numh, listhptr, listh, H, S,
      .                  E1, E2, nhist, sigma, indxuo, eo, 
      .                  haux, saux, psi, dtot, dpr, nuotot )
@@ -22,6 +25,7 @@ C integer nuo               : Number of atomic orbitals in the unit cell
 C integer no                : Number of atomic orbitals in the supercell
 C integer maxspn            : Second dimension of eo and qo 
 C                             (maximum number of differents spin polarizations)
+C integer maxuo             : Maximum number of atomic orbitals in the unit cell
 C integer maxnh             : Maximum number of orbitals interacting
 C                             with any orbital
 C integer maxo              : First dimension of eo
@@ -51,7 +55,7 @@ C real*8  dpr(nhist,nuo,2): Proyected density of states
 C **********************************************************************
 
       use precision
-      use parallel,     only : Node, Nodes, BlockSize
+      use parallel,     only : Node, Nodes
       use parallelsubs, only : GetNodeOrbs, LocalToGlobalOrb
       use units,        only : pi
       use alloc,        only : re_alloc, de_alloc
@@ -63,7 +67,7 @@ C **********************************************************************
       implicit none
 
       integer
-     .  nspin, nuo, no, maxspn, maxnh, 
+     .  nspin, nuo, no, maxspn, maxuo, maxnh, 
      .  maxo, nhist, nuotot
 
       integer
@@ -119,7 +123,7 @@ C Build the full Hamiltonian and overlap matrix
 
 C Diagonalize at the Gamma point
         call rdiag( haux, saux, nuotot, nuo, nuotot, eo(1,ispin), 
-     .              psi, nuotot, 1, ierror, BlockSize)
+     .              psi, nuotot, 1, ierror )
 
 C Check error flag and take appropriate action
         if (ierror.gt.0) then
@@ -142,7 +146,7 @@ C Repeat diagonalisation with increased memory to handle clustering
             enddo
           enddo
           call rdiag( haux, saux, nuotot, nuo, nuotot, eo(1,ispin),
-     .                psi, nuotot, 1, ierror, BlockSize)
+     .                psi, nuotot, 1, ierror )
         endif
 
 C Rebuild the full overlap matrix
@@ -190,7 +194,7 @@ C Loop over all the energy range
               if (diff .gt. 15.0d0) then
                 cycle
               else
-                gauss = exp(-diff)
+                gauss = ( exp(-diff) )
                 if (Node.eq.BNode) then
 C Only add once to dtot - not everytime loop over processors is executed
                   dtot(ihist,ispin) = dtot(ihist,ispin) + gauss
@@ -224,9 +228,10 @@ C Loop over all the energy range
             if (diff .gt. 15.0d0) then
               cycle
             else
-              gauss = exp(-diff)
+              gauss = ( exp(-diff) )
               dtot(ihist,ispin) = dtot(ihist,ispin) + gauss
               do iuo = 1, nuotot
+C Solo para los Juo que satisfagan el criterio del record...
                 do juo = 1, nuotot
                   pipj1 = psi(iuo,iband) * psi(juo,iband)
                   dpr(ihist,juo,ispin) = dpr(ihist,juo,ispin) + 

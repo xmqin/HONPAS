@@ -1,9 +1,12 @@
 ! 
-! Copyright (C) 1996-2016	The SIESTA group
-!  This file is distributed under the terms of the
-!  GNU General Public License: see COPYING in the top directory
-!  or http://www.gnu.org/copyleft/gpl.txt.
-! See Docs/Contributors.txt for a list of contributors.
+! This file is part of the SIESTA package.
+!
+! Copyright (c) Fundacion General Universidad Autonoma de Madrid:
+! E.Artacho, J.Gale, A.Garcia, J.Junquera, P.Ordejon, D.Sanchez-Portal
+! and J.M.Soler, 1996- .
+! 
+! Use of this software constitutes agreement with the full conditions
+! given in the SIESTA license, as signed by all legitimate users.
 !
       subroutine coceri(iza, xa, cell, na, sname )
 c *******************************************************************
@@ -25,16 +28,16 @@ c ******************************************************************
       use precision,      only: dp
       use periodic_table, only: symbol
       use files,          only: slabel, label_length
-      use units, only: Pi, Ang
 
       implicit          none
 
       character(len=150)            :: sname
+      character(len=label_length+4) :: paste
       integer                       :: na
       integer                       :: iza(na)
       real(dp)                      :: cell(3,3)
       real(dp)                      :: xa(3,na)
-      external          io_assign, io_close
+      external          io_assign, io_close, paste
 
 c Internal variables and arrays
  
@@ -45,6 +48,8 @@ c Internal variables and arrays
       real(dp)                      :: cellm(3)
       real(dp)                      :: recell(3,3)
       real(dp)                      :: xac(3)
+      real(dp),                save :: pi = 3.1415926_dp
+      real(dp),                save :: Ang = 0.529177_dp
 
 !     automatic array
 
@@ -95,7 +100,7 @@ c Obtain fractional coordinates (reclat inverts matrix)
 
 c Find file name
 
-      fname = trim(slabel) // '.xtl'
+      fname = paste(slabel,'.xtl')
 
       write(6,'(/,2a)')'coceri: Writing CERIUS coordinates into file ',
      .                  fname
@@ -109,7 +114,7 @@ c Write file
       write(unit,'(a,a70)') 'TITLE ', sname
       write(unit,'(a)')  'DIMENSION 3'
       write(unit,'(a,6f11.5)') 
-     .          'CELL', (cellm(iv)/Ang,iv=1,3), (celang(i),i=1,3)
+     .          'CELL', (cellm(iv)*Ang,iv=1,3), (celang(i),i=1,3)
       write(unit,'(a)') 'SYMMETRY  NUMBER 1  LABEL P1'
       write(unit,'(3a)') 
      .       'SYM MAT  1.000000  0.000000  0.000000  0.000000',

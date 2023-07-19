@@ -1,12 +1,15 @@
 ! 
-! Copyright (C) 1996-2016	The SIESTA group
-!  This file is distributed under the terms of the
-!  GNU General Public License: see COPYING in the top directory
-!  or http://www.gnu.org/copyleft/gpl.txt.
-! See Docs/Contributors.txt for a list of contributors.
+! This file is part of the SIESTA package.
+!
+! Copyright (c) Fundacion General Universidad Autonoma de Madrid:
+! E.Artacho, J.Gale, A.Garcia, J.Junquera, P.Ordejon, D.Sanchez-Portal
+! and J.M.Soler, 1996- .
+! 
+! Use of this software constitutes agreement with the full conditions
+! given in the SIESTA license, as signed by all legitimate users.
 !
       subroutine poison( CELL, N1, N2, N3, Mesh, RHO, U, V, STRESS, 
-     &                   NSM )
+     .                   NSM )
 
 C *********************************************************************
 C SOLVES POISSON'S EQUATION.
@@ -34,92 +37,94 @@ C INTEGER NSM           : Number of sub-mesh points per mesh point
 C                       : along each axis
 C *********************************************************************
 
-C     Modules
+C
+C  Modules
+C
       use precision,   only : dp, grid_p
       use parallel,    only : Node, Nodes, ProcessorY
       use sys,         only : die
       use alloc,       only : re_alloc, de_alloc
-      use m_fft,       only : fft     ! 3-D fast Fourier transform
-      use cellsubs,    only : reclat  ! Finds reciprocal lattice vectors
-      use cellsubs,    only : volcel  ! Finds unit cell volume
-      use m_chkgmx,    only : chkgmx  ! Checks planewave cutoff of a mesh
 #ifdef MPI
       use mpi_siesta
 #endif
+
       implicit          none
-C     Input/output variables
-      integer               :: N1, N2, N3, Mesh(3), NSM
-      real(grid_p)          :: RHO(N1*N2*N3), V(N1*N2*N3)
-      real(dp)              :: CELL(3,3), STRESS(3,3), U
-C     Local variables
-      integer               :: I, I1, I2, I3, IX, J, J1, J2, J3, JX,
-     &                         NP, NG, NG2, NG3, 
-     &                         ProcessorZ, Py, Pz, J2min, J2max,
-     &                         J3min, J3max, J2L, J3L, NRemY, NRemZ,
-     &                         BlockSizeY, BlockSizeZ
-      real(dp)              :: C, B(3,3), DU, G(3), G2, G2MAX, 
-     &                         PI, VG, VOLUME, PI8
-      real(grid_p), pointer :: CG(:,:)
-      real(dp),   parameter :: K0(3)= (/ 0.0, 0.0, 0.0 /), TINY= 1.0e-15
+
 #ifdef MPI
-      integer               :: MPIerror
+      integer           MPIerror
 #endif
 
-#ifdef DEBUG
-      call write_debug( '    PRE POISON' )
-#endif
-#ifdef _TRACE_
-      call MPI_Barrier( MPI_Comm_World, MPIerror )
-      call MPItrace_event( 1000, 2 )
+      integer           N1, N2, N3, Mesh(3), NSM
+      real(grid_p)      RHO(N1*N2*N3), V(N1*N2*N3)
+      real(dp)          CELL(3,3), STRESS(3,3), U
+
+      real(grid_p), dimension(:,:), pointer  :: CG
+
+      integer           I, I1, I2, I3, IX, J, J1, J2, J3, JX,
+     .                  NP, NG, NG2, NG3, 
+     .                  ProcessorZ, Py, Pz, J2min, J2max,
+     .                  J3min, J3max, J2L, J3L, NRemY, NRemZ,
+     .                  BlockSizeY, BlockSizeZ
+      real(dp)          C, B(3,3), DU, G(3), G2, G2MAX, 
+     .                  K0(3), PI, TINY, VG, VOLUME, VOLCEL
+      externaL          CHKGMX, FFT, RECLAT, VOLCEL
+      save              K0, TINY
+
+      data K0   /3*0.0_dp/
+      data TINY /1.0e-15_dp/
+
+#ifdef MPI
+C Place MPI barrier here so that any waiting time for all
+C nodes to reach this point isn't included in the time for
+C the FFT which is otherwise misleading.
+      call MPI_Barrier(MPI_Comm_World, MPIerror)
 #endif
 
-C     Start time counter
-      call timer( 'POISON', 1 )
+C Start timer
+      call timer('POISON',1)
 
-C     Allocate local memory
+C Allocate local memory
       nullify( CG )
-      call re_alloc( CG, 1, 2, 1, n1*n2*n3, 'CG', 'poison' )
+      call re_alloc( CG, 1, 2, 1, n1*n2*n3, name='CG', 
+     &                 routine='poison' )
 
-C     Find unit cell volume
+C Find unit cell volume
       VOLUME = VOLCEL( CELL )
 
-C     Find reciprocal lattice vectors
+C Find reciprocal lattice vectors
       call reclat(CELL, B, 1 )
 
-C     Find maximun planewave cutoff
+C Find maximun planewave cutoff
       NP = N1 * N2 * N3
       G2MAX = 1.0e30_dp
-      call CHKGMX( K0, B, Mesh, G2MAX )
+      call chkgmx( K0, B, Mesh, G2MAX )
 
-C     Copy density to complex array
-!$OMP parallel do default(shared), private(I)
+C Copy density to complex array
       do I = 1, NP
         CG(1,I) = RHO(I)
         CG(2,I) = 0.0_grid_p
       enddo
-!$OMP end parallel do
 
-C     Find fourier transform of density
-      call fft( CG, Mesh, -1 )
-
-C     Initialize stress contribution
+C Find fourier transform of density
+      call fft( CG, Mesh, -1, NSM )
+ 
+C Initialize stress contribution
       do IX = 1,3
         do JX = 1,3
           STRESS(JX,IX) = 0.0_dp
         enddo
       enddo
 
-C     Work out processor grid dimensions
+C Work out processor grid dimensions
       ProcessorZ = Nodes/ProcessorY
       if (ProcessorY*ProcessorZ.ne.Nodes) 
-     &     call die('ERROR: ProcessorY must be a factor of the' //
-     &     ' number of processors!')
+     $     call die('ERROR: ProcessorY must be a factor of the' //
+     $     ' number of processors!')
       Py = (Node/ProcessorZ) + 1
       Pz = Node - (Py - 1)*ProcessorZ + 1
 
-C     Multiply by 8*PI/G2 to get the potential
-      PI  = 4.0_dp * atan(1.0_dp)
-      PI8 = PI * 8._dp
+C Multiply by 8*PI/G2 to get the potential
+      PI = 4.0_dp * atan(1.0_dp)
       U = 0.0_dp
       NG2 = Mesh(2)
       NG3 = Mesh(3)
@@ -136,18 +141,13 @@ C     Multiply by 8*PI/G2 to get the potential
       if (Pz-1.lt.NRemZ) J3max = J3max + NSM
       J3max = min(J3max,NG3-1)
 
-!$OMP parallel do default(shared), 
-!$OMP&private(J3,J3L,I3,J2,J2L,I2,J1,I1,G,G2), 
-!$OMP&private(J,VG,DU,C), reduction(+:U,STRESS)
       do J3 = J3min,J3max
-        J3L = J3 - J3min 
         if (J3.gt.NG3/2) then
           I3 = J3 - NG3
         else
           I3 = J3
         endif
         do J2 = J2min,J2max
-          J2L = J2 - J2min 
           if (J2.gt.NG2/2) then
             I2 = J2 - NG2
           else
@@ -163,9 +163,11 @@ C     Multiply by 8*PI/G2 to get the potential
             G(2)= B(2,1) * I1 + B(2,2) * I2 + B(2,3) * I3
             G(3)= B(3,1) * I1 + B(3,2) * I2 + B(3,3) * I3
             G2 = G(1)**2 + G(2)**2 + G(3)**2
+            J2L = J2 - J2min 
+            J3L = J3 - J3min 
             J = 1 + J1 + N1 * J2L + N1 * N2 * J3L
             if (G2.LT.G2MAX .AND. G2.GT.TINY) then
-              VG = PI8 / G2
+              VG = 8.0_dp * PI / G2
               DU = VG * ( CG(1,J)**2 + CG(2,J)**2 )
               U = U + DU
               C = 2.0_dp * DU / G2
@@ -183,7 +185,6 @@ C     Multiply by 8*PI/G2 to get the potential
           enddo
         enddo
       enddo
-!$OMP end parallel do
 
       NG = Mesh(1)*Mesh(2)*Mesh(3)
       U = 0.5_dp * U * VOLUME / DBLE(NG)**2
@@ -195,28 +196,50 @@ C     Multiply by 8*PI/G2 to get the potential
         STRESS(IX,IX) = STRESS(IX,IX) + U / VOLUME
       enddo
  
-C     Go back to real space
-      call fft( CG, Mesh, +1 )
+C Go back to real space
+      call fft( CG, Mesh, +1, NSM )
 
-C     Copy potential to array V
-!$OMP parallel do default(shared), private(I)
+C Copy potential to array V
       do I = 1, NP
         V(I) = CG(1,I)
       enddo
-!$OMP end parallel do
  
-C     Free local memory
-      call de_alloc( CG, 'CG', 'poison' )
+C Stop time counter
+  999 continue
+      call timer('POISON',2)
 
-#ifdef _TRACE_
-      call MPI_Barrier( MPI_Comm_World, MPIerror )
-      call MPItrace_event( 1000, 0 )
-#endif
+C Free local memory
+      call de_alloc( CG, name='CG' )
 
-C     Stop time counter
-      call timer( 'POISON', 2 )
+      return
+      end
 
-#ifdef DEBUG
-      call write_debug( '    POS POISON' )
-#endif
-      end subroutine poison
+      subroutine nfft( N )
+
+      use sys, only: die
+      use parallel, only: ionode
+
+C CHANGES N INTO THE NEXT INTEGER ALLOWED BY THE FFT ROUTINE
+C WRITTEN BY J.M.SOLER. MAY/95.
+
+      integer :: np, nmax, nmin, n, nrem, ip
+      parameter (NP = 3, NMAX = 1000000)
+      integer :: IPRIME(NP)
+      data IPRIME / 2, 3, 5 /
+
+      NMIN = N
+      DO N = NMIN, NMAX
+        NREM = N
+        DO IP = 1,NP
+   10     CONTINUE 
+          IF ( MODULO( NREM, IPRIME(IP) ) .EQ. 0 ) THEN
+            NREM = NREM / IPRIME(IP)
+            GOTO 10
+          ENDIF
+        ENDDO
+        IF (NREM .EQ. 1) RETURN
+      ENDDO
+      if (Ionode)
+     $    write(6,*) 'NFFT: NO SUITABLE INTEGER FOUND FOR N =', NMIN
+      call die()
+      END

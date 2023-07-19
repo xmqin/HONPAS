@@ -1,11 +1,12 @@
-! ---
-! Copyright (C) 1996-2016	The SIESTA group
-!  This file is distributed under the terms of the
-!  GNU General Public License: see COPYING in the top directory
-!  or http://www.gnu.org/copyleft/gpl.txt .
-! See Docs/Contributors.txt for a list of contributors.
-! ---
-!!@LICENSE
+! 
+! This file is part of the SIESTA package.
+!
+! Copyright (c) Fundacion General Universidad Autonoma de Madrid:
+! E.Artacho, J.Gale, A.Garcia, J.Junquera, P.Ordejon, D.Sanchez-Portal
+! and J.M.Soler, 1996- .
+! 
+! Use of this software constitutes agreement with the full conditions
+! given in the SIESTA license, as signed by all legitimate users.
 !
 module m_walltime
 !
@@ -13,15 +14,12 @@ module m_walltime
 ! the cpu time. It tries to deal with possible wraparounds of the system
 ! clock's counter.
 !
-implicit none
-
 public :: wall_time
 
 integer, parameter, private :: dp = selected_real_kind(14,200)
-integer, parameter, private :: i8 = selected_int_kind(12)
 
-integer(i8), private, save     :: last_count
-integer(i8), private, save     :: max_count
+integer, private, save     :: last_count
+integer, private, save     :: max_count
 real(dp), private, save    :: last_time
 real(dp), private, save    :: count_rate
 logical, private, save     :: first = .true.
@@ -36,8 +34,8 @@ real(dp), intent(out)  :: t
 
 real(dp)  :: elapsed_time
 
-integer(i8)       :: count_rate_int
-integer(i8)       :: count
+integer       :: count_rate_int
+integer       :: count
 
       if (first) then
          CALL system_clock (count_rate=count_rate_int)

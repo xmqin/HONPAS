@@ -1,9 +1,12 @@
 ! 
-! Copyright (C) 1996-2016	The SIESTA group
-!  This file is distributed under the terms of the
-!  GNU General Public License: see COPYING in the top directory
-!  or http://www.gnu.org/copyleft/gpl.txt.
-! See Docs/Contributors.txt for a list of contributors.
+! This file is part of the SIESTA package.
+!
+! Copyright (c) Fundacion General Universidad Autonoma de Madrid:
+! E.Artacho, J.Gale, A.Garcia, J.Junquera, P.Ordejon, D.Sanchez-Portal
+! and J.M.Soler, 1996- .
+! 
+! Use of this software constitutes agreement with the full conditions
+! given in the SIESTA license, as signed by all legitimate users.
 !
       subroutine recoor(overflow, cell, alat, xa, isa, xmass, na) 
 
@@ -36,11 +39,11 @@ c *******************************************************************
 c Internal variables and arrays
 
       character         acf*22, acf_defect*22
+      logical           leqi
       integer           iscale, ia, i, ix, iunit
       double precision  origin(3), xac(3)
 
-      type(block_fdf)            :: bfdf
-      type(parsed_line), pointer :: pline
+
 
 c enable FDF input/output
 
@@ -110,22 +113,10 @@ c read atomic coordinates and species
 
       if (.not. overflow) then
 
-        if ( fdf_block('AtomicCoordinatesAndAtomicSpecies',bfdf) )
+        if ( fdf_block('AtomicCoordinatesAndAtomicSpecies',iunit) )
      .    then
           do ia = 1,na
-            if (.not. fdf_bline(bfdf,pline)) then
-               call die('vibra: Not enough lines in ' //
-     .              'AtomicCoordinatesAndAtomicSpecies block')
-            endif
-            if (.not. fdf_bmatch(pline,'vvviv')) then
-               call die("vibra: not enough values in Coords line")
-            endif
-
-            xa(1,ia) = fdf_bvalues(pline,1)
-            xa(2,ia) = fdf_bvalues(pline,2)
-            xa(3,ia) = fdf_bvalues(pline,3)
-            isa(ia)  = fdf_bintegers(pline,1)
-            xmass(ia)  = fdf_bvalues(pline,5)
+            read(iunit,*) (xa(i,ia), i=1,3), isa(ia), xmass(ia)
           enddo
         else
           write(6,"(/,'recoor: ',72(1h*))")
@@ -136,19 +127,13 @@ c read atomic coordinates and species
           stop 'recoor: ERROR: Atomic coordinates missing'
         endif
 
-C Find origin with which to translate all coordinates
-      
-        if (fdf_block('AtomicCoordinatesOrigin',bfdf)) then
-           if (.not. fdf_bline(bfdf,pline))
-     .          call die('coor: ERROR in AtomicCoordinatesOrigin block')
-           origin(1) = fdf_bvalues(pline,1)
-           origin(2) = fdf_bvalues(pline,2)
-           origin(3) = fdf_bvalues(pline,3)
-           do ia = 1,na
-              do i = 1,3
-                 xa(i,ia) = xa(i,ia) + origin(i)
-              enddo
-           enddo
+        if ( fdf_block('AtomicCoordinatesOrigin',iunit) ) then
+          read(iunit,*) (origin(i),i=1,3)
+          do ia = 1,na
+            do i = 1,3
+              xa(i,ia) = xa(i,ia) + origin(i)
+            enddo
+          enddo
         endif
 
 
@@ -191,16 +176,5 @@ c   Coord. option = 3 => Multiply by lattice vectors
 
       endif
 
-
-      CONTAINS
-
-      subroutine die(str)
-      character(len=*), intent(in), optional:: str
-      if (present(str)) then
-         write(6,"(a)") str
-         write(0,"(a)") str
-      endif
-      STOP
-      end subroutine die
-
+      return
       end

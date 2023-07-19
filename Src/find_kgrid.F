@@ -1,9 +1,12 @@
 ! 
-! Copyright (C) 1996-2016	The SIESTA group
-!  This file is distributed under the terms of the
-!  GNU General Public License: see COPYING in the top directory
-!  or http://www.gnu.org/copyleft/gpl.txt.
-! See Docs/Contributors.txt for a list of contributors.
+! This file is part of the SIESTA package.
+!
+! Copyright (c) Fundacion General Universidad Autonoma de Madrid:
+! E.Artacho, J.Gale, A.Garcia, J.Junquera, P.Ordejon, D.Sanchez-Portal
+! and J.M.Soler, 1996- .
+! 
+! Use of this software constitutes agreement with the full conditions
+! given in the SIESTA license, as signed by all legitimate users.
 !
       module m_find_kgrid
 
@@ -15,7 +18,7 @@
       character(len=24), save, public          :: accum
       private
       public :: find_kgrid
-      public :: trim_kpoint_list
+
 
       CONTAINS
       subroutine find_kgrid ( cell, kscell, displ, firm_displ,
@@ -60,12 +63,12 @@ C Passed variables
       external                 ::  idiag, reclat
 
 C Internal variables
-      integer           i, ir, ix, j, i1, i2, i3,
+      integer           i, ir, iu, ix, j, i1, i2, i3,
      .                  kdsc(3,3), maux(3,3,2), ml(3,3), mr(3,3),
      .                  ng(3), ni, nkr(3), nktot,
      $                  proj(3,3), igmin(3), igmax(3)
 
-      real(dp)          d(3), dkg(3), dkx(3), dscell(3,3),
+      real(dp)          cutoff, d(3), dkg(3), dkx(3), dscell(3,3),
      .                  gridk(3,3), gscell(3,3), 
      .                  scell(3,3), scmin(3,3), tiny, vmod, w1, wtot
       real(dp)          ctransf(3,3)
@@ -199,10 +202,10 @@ C Select reflection plane
         nk = nkr(ir)
       endif
 
-      call re_alloc(points,1,3,1,nk,name='k-points',
-     &     routine='find_kgrid', copy=.false.)
-      call re_alloc(weight,1,nk,name='k-weight',
-     &     routine='find_kgrid', copy=.false.)
+      call re_alloc(points,1,3,1,nk,name='points',
+     $              routine='find_kgrid',copy=.false.)
+      call re_alloc(weight,1,nk,name='weight',
+     $              routine='find_kgrid',copy=.false.)
 
 C Find k points and weights
       w1 = 1.0d0 / nktot
@@ -313,10 +316,10 @@ C Check that weight is normalised
          call io_close( iu )
       endif
 
-      call re_alloc(kpin,1,3,1,nkout,name='k-points',
-     &     routine='find_kgrid', copy=.false.)
-      call re_alloc(win,1,nkout,name='k-weight',
-     &     routine='find_kgrid', copy=.false.)
+      call re_alloc(kpin,1,3,1,nkout,name='points',
+     $              routine='trim_kpoint_list',copy=.false.)
+      call re_alloc(win,1,nkout,name='weight',
+     $              routine='trim_kpoint_list',copy=.false.)
 
       kpin(:,1:nkout) = kpout(:,1:nkout)
       win(1:nkout) = wout(1:nkout)

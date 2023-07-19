@@ -1,32 +1,24 @@
-! ---
-! Copyright (C) 1996-2016	The SIESTA group
-!  This file is distributed under the terms of the
-!  GNU General Public License: see COPYING in the top directory
-!  or http://www.gnu.org/copyleft/gpl.txt .
-! See Docs/Contributors.txt for a list of contributors.
-! ---
-!!@LICENSE
+!     
+! This file is part of the SIESTA package.
 !
-C *********************************************************************
-C MODULE m_radfft
-C
-C   Public procedures provided:
-C subroutine radfft              ! Radial fast Fourier transform
-C 
-C   Public parameters, variables, and arrays:
-C none
-C
-C   Used module procedures:
-C use m_bessph,  only: bessph    ! Spherical Bessel functions
-C use m_fft_gpfa,only: fft_gpfa_ez ! Fourier transform
-C use alloc,     only: de_alloc  ! Deallocation routines
-C use alloc,     only: re_alloc  ! (Re)allocation routines
-C
-C   Used module parameters:
-C use precision, only: dp        ! Double precision real kind
-C
-C *********************************************************************
-C SUBROUTINE RADFFT( L, NR, RMAX, F, G )
+! Copyright (c) Fundacion General Universidad Autonoma de Madrid:
+! E.Artacho, J.Gale, A.Garcia, J.Junquera, P.Ordejon, D.Sanchez-Portal
+! and J.M.Soler, 1996- .
+! 
+! Use of this software constitutes agreement with the full conditions
+! given in the SIESTA license, as signed by all legitimate users.
+!
+      module m_radfft
+
+      private
+      public :: radfft
+!
+!     Wrap the subroutine in a module to offer an explicit interface
+!     which simplifies the issue of the shape of F and G. Callers
+!     will need to pass a full array or an array section.
+!
+      CONTAINS
+      SUBROUTINE RADFFT( L, NR, RMAX, F, G )
 C *********************************************************************
 C Makes a fast Fourier transform of a radial function.
 C If function f is of the form
@@ -83,45 +75,19 @@ C    G(NR) should be replaced by zero for any other use. NOTICE: this
 C    is commented out in this version!
 C *********************************************************************
 C Written by J.M.Soler. August 1996.
-! Work arrays handling by Rogeli Grima, ca 2009
 C *********************************************************************
 
-      MODULE m_radfft
+      use precision, only : dp
+      use m_recipes, only : four1
+      use alloc,     only : re_alloc, de_alloc
 
-      USE precision, only: dp        ! Double precision real kind
-      USE m_bessph,  only: bessph    ! Spherical Bessel functions
-      use m_fft_gpfa,only: fft_gpfa_ez     ! 1D fast Fourier transform
-      USE alloc,     only: re_alloc, de_alloc
-!      USE m_timer,   only: timer_start  ! Start counting CPU time
-!      USE m_timer,   only: timer_stop   ! Stop counting CPU time
-
-      implicit none
-
-      PUBLIC :: radfft               ! Radial fast Fourier transform
-      PUBLIC :: reset_radfft         ! Deallocates work arrays
-
-      PRIVATE
-
-      ! Work arrays held in module to minimize reallocations
-      ! Note that we avoid "automatic" arrays, which may cause stack problems
-      real(dp), pointer :: GG(:)
-      real(dp), pointer :: FN(:,:)
-      real(dp), pointer :: P(:,:,:)
-      integer           :: MAXL = -1
-      integer           :: MAXNR = -1
-
-      CONTAINS
-
-      SUBROUTINE RADFFT( L, NR, RMAX, F, G )
-
+C Next line is non-standard and may be suppressed -------------------
       IMPLICIT NONE
+C -------------------------------------------------------------------
 
 C Declare argument types and dimensions -----------------------------
-      INTEGER, intent(in) :: L       ! Angular momentum of function
-      INTEGER, intent(in) :: NR      ! Number of radial points
-      real(dp),intent(in) :: RMAX    ! Radius of last point
-      real(dp),intent(in) :: F(0:NR) ! Function to Fourier-transform
-      real(dp),intent(out):: G(0:NR) ! Fourier transform of F(r)
+      INTEGER           L, NR
+      real(dp)          F(0:), G(0:), RMAX
 C -------------------------------------------------------------------
 
 C ERRFFT is the typical truncation error in the FFT routine ---------
@@ -129,26 +95,28 @@ C ERRFFT is the typical truncation error in the FFT routine ---------
 C -------------------------------------------------------------------
 
 C Internal variable types and dimensions ----------------------------
+
       INTEGER  ::  I, IQ, IR, JR, M, MQ, N, NQ
-      real(dp) ::  C, DQ, DR, FR, PI, R, RN, Q, QMAX
-!!      real(dp) ::  GG(0:2*NR), FN(2,0:2*NR), P(2,0:L,0:L)
+      real(dp) ::  BESSPH, C, DQ, DR, FR, PI, R, RN, Q, QMAX
+
+      real(dp), pointer      ::  GG(:), FN(:,:), P(:,:,:)
+
+      external bessph
+*     external timer
 C -------------------------------------------------------------------
 
 C Start time counter ------------------------------------------------
-*     CALL TIMER_START( 'RADFFT' )
-C
-C     Allocate local memory 
-      if (MAXL.eq.-1) nullify(P)
-      if (L.GT.MAXL) then
-        call re_alloc( P, 1, 2, 0, L, 0, L, 'P', 'RADFFT' )
-        MAXL=L
-      endif
-      if (MAXNR.eq.-1) nullify(FN,GG)
-      if (NR.GT.MAXNR) then
-        call re_alloc( FN, 1, 2, 0, 2*NR, 'FN', 'RADFFT' )
-        call re_alloc( GG, 0, 2*NR, 'GG', 'RADFFT' )
-        MAXNR=NR
-      endif
+*     CALL TIMER( 'RADFFT', 1 )
+C -------------------------------------------------------------------
+
+C Allocate local memory ---------------------------------------------
+
+      nullify( P )
+      call re_alloc( P, 1,2, 0,L, 0,L, name='P', routine='RADFFT' )
+      nullify( FN )
+      call re_alloc( FN, 1, 2, 0, 2*NR, name='FN', routine='RADFFT' )
+      nullify( GG )
+      call re_alloc( GG, 0, 2*NR, name='GG', routine='RADFFT' )
 
 C Find some constants -----------------------------------------------
       PI = 4.D0 * ATAN( 1.D0 )
@@ -158,6 +126,7 @@ C Find some constants -----------------------------------------------
       QMAX = NQ * DQ
       C = DR / SQRT( 2.D0*PI )
 C -------------------------------------------------------------------
+
 
 C Set up a complex polynomial such that the spherical Bessel function:
 C   j_l(x) = Real( Sum_n( P(n,l) * x**n ) * exp(i*x) ) / x**(l+1)
@@ -220,10 +189,10 @@ C         Find  r**2 * r**n / r**(l+1)
 C       Perform one-dimensional complex FFT
 !
 !       Only the elements from 0 to 2*NR-1 of FN are used.
-!       (a total of 2*NR). The fft routine will receive a one-dimensional
+!       (a total of 2*NR). Four1 will receive a one-dimensional
 !       array of size 2*NR.
 !
-        CALL fft_gpfa_ez( FN, 2*NR, +1 )
+        CALL FOUR1( FN, 2*NR, +1 )
 
 C       Accumulate contribution
         DO IQ = 1,NQ
@@ -281,20 +250,14 @@ C Copy from local to output array -----------------------------------
       ENDDO
 C -------------------------------------------------------------------
 
+C Deallocate local memory -------------------------------------------
+      call de_alloc( P,  name  = 'P' )
+      call de_alloc( GG,  name = 'GG')
+      call de_alloc( FN,  name = 'FN')
+
 C Stop time counter ------------------------------------------------
-*     CALL TIMER_STOP( 'RADFFT' )
+*     CALL TIMER( 'RADFFT', 2 )
 C -------------------------------------------------------------------
 
-      END SUBROUTINE radfft
-
-      SUBROUTINE RESET_RADFFT( )
-      implicit none
-      call de_alloc( P, 'P', 'RADFFT' )
-      call de_alloc( FN, 'FN', 'RADFFT' )
-      call de_alloc( GG, 'GG', 'RADFFT' )
-      MAXL  = -1
-      MAXNR = -1
-      END SUBROUTINE RESET_RADFFT
-
-      END MODULE m_radfft
-
+      end subroutine radfft
+      end module m_radfft

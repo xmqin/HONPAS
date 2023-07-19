@@ -1,9 +1,12 @@
 ! 
-! Copyright (C) 1996-2016	The SIESTA group
-!  This file is distributed under the terms of the
-!  GNU General Public License: see COPYING in the top directory
-!  or http://www.gnu.org/copyleft/gpl.txt.
-! See Docs/Contributors.txt for a list of contributors.
+! This file is part of the SIESTA package.
+!
+! Copyright (c) Fundacion General Universidad Autonoma de Madrid:
+! E.Artacho, J.Gale, A.Garcia, J.Junquera, P.Ordejon, D.Sanchez-Portal
+! and J.M.Soler, 1996- .
+! 
+! Use of this software constitutes agreement with the full conditions
+! given in the SIESTA license, as signed by all legitimate users.
 !
 module iopipes
 ! Handles communications between siesta-as-a-subroutine and a driver 
@@ -115,15 +118,15 @@ subroutine coordsFromPipe( na, xa, cell )
           'coordsFromPipe: cell (',trim(xunit),') =', cell
            print '(  3a,/,(3f12.6))', &
           'coordsFromPipe: xa (',trim(xunit),') =', xa
-          ! Convert coordinate units
-          cell = cell * fdf_convfac( xunit, siesta_xunit )
-          xa   = xa   * fdf_convfac( xunit, siesta_xunit )
+        ! Convert coordinate units
+           cell = cell * fdf_convfac( xunit, siesta_xunit )
+           xa   = xa   * fdf_convfac( xunit, siesta_xunit )
         endif
 #ifdef MPI
-        call MPI_Bcast( cell(1,1), 9   , MPI_Double_Precision, 0, &
-             MPI_Comm_World, MPIerror)
-        call MPI_Bcast( xa(1,1)  , 3*na, MPI_Double_Precision, 0, &
-             MPI_Comm_World, MPIerror)
+        call MPI_Bcast( cell(1,1), 9, MPI_double_precision, 0, &
+                        MPI_Comm_World, MPIerror)
+        call MPI_Bcast( xa(1,1), 3*na, MPI_double_precision, 0, &
+                        MPI_Comm_World, MPIerror)
 #endif
       else
         call die('coordsFromPipe: ERROR: coords not complete')
@@ -169,16 +172,16 @@ subroutine forcesToPipe( na, energy, forces, stress )
   if (IOnode) then
 
 ! Convert physical units
-    funit = trim(eunit)//'/'//trim(xunit)
-    sunit = trim(eunit)//'/'//trim(xunit)//'**3'
-    e = energy * fdf_convfac( siesta_eunit, eunit )
-    s = stress * fdf_convfac( siesta_sunit, sunit )
-    f = forces * fdf_convfac( siesta_funit, funit )
+  funit = trim(eunit)//'/'//trim(xunit)
+  sunit = trim(eunit)//'/'//trim(xunit)//'**3'
+   e = energy * fdf_convfac( siesta_eunit, eunit )
+   s = stress * fdf_convfac( siesta_sunit, sunit )
+   f = forces * fdf_convfac( siesta_funit, funit )
 
 ! Print forces in output file
-    print '(/,3a,f12.6)',    'forcesToPipe: energy (',trim(eunit),') =', e
-    print '(3a,/,(3f12.6))', 'forcesToPipe: stress (',trim(sunit),') =', s
-    print '(3a,/,(3f12.6))', 'forcesToPipe: forces (',trim(funit),') =', f
+   print '(/,3a,f12.6)',    'forcesToPipe: energy (',trim(eunit),') =', e
+   print '(3a,/,(3f12.6))', 'forcesToPipe: stress (',trim(sunit),') =', s
+   print '(3a,/,(3f12.6))', 'forcesToPipe: forces (',trim(funit),') =', f
   endif
 
 ! Write forces to pipe

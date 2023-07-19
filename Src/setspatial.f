@@ -1,9 +1,12 @@
 ! 
-! Copyright (C) 1996-2016	The SIESTA group
-!  This file is distributed under the terms of the
-!  GNU General Public License: see COPYING in the top directory
-!  or http://www.gnu.org/copyleft/gpl.txt.
-! See Docs/Contributors.txt for a list of contributors.
+! This file is part of the SIESTA package.
+!
+! Copyright (c) Fundacion General Universidad Autonoma de Madrid:
+! E.Artacho, J.Gale, A.Garcia, J.Junquera, P.Ordejon, D.Sanchez-Portal
+! and J.M.Soler, 1996- .
+! 
+! Use of this software constitutes agreement with the full conditions
+! given in the SIESTA license, as signed by all legitimate users.
 !
       subroutine setspatial(na,xa,vecs,rcut,lspatialok)
 C
@@ -132,7 +135,8 @@ C
 C  Allocate local workspace
 C
       nullify(xyzfrac)
-      call re_alloc(xyzfrac,1,3,1,na,name="xyzfrac")
+      call re_alloc(xyzfrac,1,3,1,na,name="xyzfrac",
+     $              routine="setspatial")
 C
       small = 0.000001d0
       degtorad = 4.0d0*atan(1.0d0)/180.0d0
@@ -140,10 +144,10 @@ C
 C  Find cell parameters
 C
       call uncell(vecs,a,b,c,alpha,beta,gamma,degtorad)
+      lspatialok = .true.
 C
 C  Check that cut-off is greater than zero
 C
-      lspatialok = .true.
       if (rcut.lt.1.0d-10) lspatialok = .false.
 C
 C  If cell is not compatible return
@@ -290,10 +294,10 @@ C
 C
 C  Deallocate local workspace
 C
-      call de_alloc(xyzfrac,name='xyzfrac')
-      call de_alloc(xinbox,name='xinbox')
-      call de_alloc(yinbox,name='yinbox')
-      call de_alloc(zinbox,name='zinbox')
+      call de_alloc(xyzfrac,routine="setspatial")
+      call de_alloc(xinbox,routine="setspatial")
+      call de_alloc(yinbox,routine="setspatial")
+      call de_alloc(zinbox,routine="setspatial")
 C
       return
       end

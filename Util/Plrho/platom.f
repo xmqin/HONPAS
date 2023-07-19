@@ -1,9 +1,12 @@
 ! 
-! Copyright (C) 1996-2016	The SIESTA group
-!  This file is distributed under the terms of the
-!  GNU General Public License: see COPYING in the top directory
-!  or http://www.gnu.org/copyleft/gpl.txt.
-! See Docs/Contributors.txt for a list of contributors.
+! This file is part of the SIESTA package.
+!
+! Copyright (c) Fundacion General Universidad Autonoma de Madrid:
+! E.Artacho, J.Gale, A.Garcia, J.Junquera, P.Ordejon, D.Sanchez-Portal
+! and J.M.Soler, 1996- .
+! 
+! Use of this software constitutes agreement with the full conditions
+! given in the SIESTA license, as signed by all legitimate users.
 !
       subroutine platom( sname, alpha, beta, gamma )
 
@@ -32,7 +35,7 @@ c   rijmax : Maximun bond length
       parameter ( rijmax = 10.d0 )
 
       logical           found
-      character         fname*30
+      character         fname*30, paste*30
       integer           i1, i2, i3, ia, isa(maxa), iv, ix, iza(maxa),
      .                  j, j1, j2, j3, ja, jn, jna(maxna), na, nna
       real              scell(3,3), xi(3), xj(3)
@@ -41,7 +44,7 @@ c   rijmax : Maximun bond length
       external          ratom
 
 c Look for coordinates file
-      fname = trim(sname)//'.XV'
+      fname = paste( sname, '.XV' )
       inquire( file=fname, exist=found )
       if (.not.found) return
 

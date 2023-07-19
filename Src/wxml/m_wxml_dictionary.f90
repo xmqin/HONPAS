@@ -125,7 +125,7 @@ if (i>0 .and. i<=dict%number_of_items) then
       key_len = size(dict%items(i)%key)
       status = 0
 else
-      key = ' '
+      key = ""
       key_len = 0
       status = -1
 endif
@@ -147,7 +147,7 @@ if (i>0 .and. i<=dict%number_of_items) then
       value_len = size(dict%items(i)%value)
       status = 0
 else
-      value = ' '
+      value = ""
       value_len = 0
       status = -1
 endif

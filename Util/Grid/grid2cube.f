@@ -1,9 +1,12 @@
 ! 
-! Copyright (C) 1996-2016	The SIESTA group
-!  This file is distributed under the terms of the
-!  GNU General Public License: see COPYING in the top directory
-!  or http://www.gnu.org/copyleft/gpl.txt.
-! See Docs/Contributors.txt for a list of contributors.
+! This file is part of the SIESTA package.
+!
+! Copyright (c) Fundacion General Universidad Autonoma de Madrid:
+! E.Artacho, J.Gale, A.Garcia, J.Junquera, P.Ordejon, D.Sanchez-Portal
+! and J.M.Soler, 1996- .
+! 
+! Use of this software constitutes agreement with the full conditions
+! given in the SIESTA license, as signed by all legitimate users.
 !
 
       program grid2cube
@@ -103,17 +106,18 @@ c****************************************************************************
 
       integer           ipt, isp, ix, iy, iz, i, ip, natoms, np, 
      .                  mesh(3), nspin, Ind, id(3), iix, iiy,
-     .                  iiz, ii
+     .                  iiz, ii, length, lb
       integer           is(natmax), izat(natmax)
 
       character         sysname*70, fnamein*75, fnameout(2)*75, 
-     .                  fnamexv*75, task*5, fform*12
+     .                  fnamexv*75, paste*74, task*5, fform*12
 
       real              rho(maxp,2), rhot(maxp,2)
 
       double precision  cell(3,3), xat(natmax,3), cm(3), rt(3),
      .                  delta(3), dr(3), residual
 
+      external  paste, lb
 
 c ---------------------------------------------------------------------------
 
@@ -124,19 +128,19 @@ c ---------------------------------------------------------------------------
       read(5,*) nskip
       read(5,*) fform
 
-      fnamexv = trim(sysname)//'.XV'
+      fnamexv = paste(sysname,'.XV')
       if (task .eq. 'rho') then
-        fnamein = trim(sysname)//'.RHO'
+        fnamein = paste(sysname,'.RHO')
       else if (task .eq. 'drho') then 
-        fnamein = trim(sysname)//'.DRHO'
+        fnamein = paste(sysname,'.DRHO')
       else if (task .eq. 'ldos') then 
-        fnamein = trim(sysname)//'.LDOS'
+        fnamein = paste(sysname,'.LDOS')
       else if (task .eq. 'vt') then 
-        fnamein = trim(sysname)//'.VT'
+        fnamein = paste(sysname,'.VT')
       else if (task .eq. 'vh') then 
-        fnamein = trim(sysname)//'.VH'
+        fnamein = paste(sysname,'.VH')
       else if (task .eq. 'bader') then 
-        fnamein = trim(sysname)//'.BADER'
+        fnamein = paste(sysname,'.BADER')
       else
         write(6,*) 'Wrong task'
         write(6,*) 'Accepted values:  rho, drho, ldos, vh, vt, bader'
@@ -145,8 +149,9 @@ c ---------------------------------------------------------------------------
       endif
 
 
+      length = lb(fnamein)
       write(6,*) 
-      write(6,*) 'Reading grid data from file ',trim(fnamein)
+      write(6,*) 'Reading grid data from file ',fnamein(1:length)
 
 c read function from the 3D grid --------------------------------------------
 
@@ -281,23 +286,25 @@ C translate cell
 
 
       if (nspin .eq. 1) then
-        fnameout(1) = trim(fnamein)//'.cube'
+        fnameout(1) = paste(fnamein,'.cube')
       else if (nspin .eq. 2) then
-        fnameout(1) = trim(fnamein)//'.UP.cube'
-        fnameout(2) = trim(fnamein)//'.DN.cube'
+        fnameout(1) = paste(fnamein,'.UP.cube')
+        fnameout(2) = paste(fnamein,'.DN.cube')
       else 
         stop 'nspin must be either 1 or 2'
       endif
 
       do isp=1,nspin
 
-      write(6,*) 'Writing CUBE file ',trim(fnameout(isp))
+      length = lb(fnameout(isp))
+      write(6,*) 'Writing CUBE file ',fnameout(isp)(1:length)
 
 C      open( unit=2, file=fnameout(isp), status='new', form='formatted')
       open( unit=2, file=fnameout(isp), form='formatted')
 
-      write(2,*) trim(fnameout(isp))
-      write(2,*) trim(fnameout(isp))
+      length = lb(fnameout(isp))
+      write(2,*) fnameout(isp)(1:length)
+      write(2,*) fnameout(isp)(1:length)
       write(2,'(i5,4f12.6)') natoms, 0.0,0.0,0.0
 
       do ix=1,3
@@ -330,3 +337,29 @@ C      open( unit=2, file=fnameout(isp), status='new', form='formatted')
       write(6,*) 
 
       end
+
+
+      CHARACTER*(*) FUNCTION PASTE( STR1, STR2 )
+
+C CONCATENATES THE STRINGS STR1 AND STR2 REMOVING BLANKS IN BETWEEN
+C Writen by Jose M. Soler
+
+      CHARACTER*(*) STR1, STR2
+      DO 10 L = LEN( STR1 ), 1, -1
+         IF (STR1(L:L) .NE. ' ') GOTO 20
+   10 CONTINUE
+   20 PASTE = STR1(1:L)//STR2
+      END
+
+
+      INTEGER FUNCTION LB ( STR1 )
+
+C RETURNS THE SIZE IF STRING STR1 WITH BLANKS REMOVED
+C Writen by P. Ordejon from Soler's paste.f
+
+      CHARACTER*(*) STR1
+      DO 10 L = LEN( STR1 ), 1, -1
+         IF (STR1(L:L) .NE. ' ') GOTO 20
+   10 CONTINUE
+   20 LB = L
+      END

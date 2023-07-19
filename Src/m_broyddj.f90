@@ -1,9 +1,12 @@
 ! 
-! Copyright (C) 1996-2016	The SIESTA group
-!  This file is distributed under the terms of the
-!  GNU General Public License: see COPYING in the top directory
-!  or http://www.gnu.org/copyleft/gpl.txt.
-! See Docs/Contributors.txt for a list of contributors.
+! This file is part of the SIESTA package.
+!
+! Copyright (c) Fundacion General Universidad Autonoma de Madrid:
+! E.Artacho, J.Gale, A.Garcia, J.Junquera, P.Ordejon, D.Sanchez-Portal
+! and J.M.Soler, 1996- .
+! 
+! Use of this software constitutes agreement with the full conditions
+! given in the SIESTA license, as signed by all legitimate users.
 !
 module m_broyddj
 
@@ -122,7 +125,7 @@ n = br%n
 !  positions), restart
 !
 if (br%it == -1 .or. br%it > br%maxit) then
-    if (br%debug .and. ionode) print *,"(Re)starting the Broyden process."
+    if (br%debug) call message("(Re)starting the Broyden process.")
     br%it = 0
     br%dF(1:n,0) = F(1:n)
     newx(1:n) = x(1:n) + br%jinv0*F(1:n)
@@ -272,7 +275,7 @@ br%it = br%it + 1
 if (br%it > br%maxit) then
    
    if (br%cycle_on_maxit) then
-         !call message("Cycling the Broyden process...")
+         call message("Cycling the Broyden process...")
          br%dFdF(0:maxit-1,0:maxit-1) = br%dFdF(1:maxit,1:maxit)
          br%w(0:maxit-1) = br%w(1:maxit)
          br%u(1:n,0:maxit-1) = br%u(1:n,1:maxit)

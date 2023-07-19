@@ -1,18 +1,17 @@
 ! 
-! Copyright (C) 1996-2016	The SIESTA group
-!  This file is distributed under the terms of the
-!  GNU General Public License: see COPYING in the top directory
-!  or http://www.gnu.org/copyleft/gpl.txt.
-! See Docs/Contributors.txt for a list of contributors.
+! This file is part of the SIESTA package.
 !
-      module m_kinefsm
-      public :: kinefsm
-      CONTAINS
-      subroutine kinefsm(nua, na, no, scell, xa, indxua, rmaxo,
+! Copyright (c) Fundacion General Universidad Autonoma de Madrid:
+! E.Artacho, J.Gale, A.Garcia, J.Junquera, P.Ordejon, D.Sanchez-Portal
+! and J.M.Soler, 1996- .
+! 
+! Use of this software constitutes agreement with the full conditions
+! given in the SIESTA license, as signed by all legitimate users.
+!
+      subroutine kinefsm(nua, na, no, scell, xa, indxua, rmaxo, maxo,
      .                  maxnh, maxnd, lasto, iphorb, isa, 
      .                  numd, listdptr, listd, numh, listhptr, listh, 
-     .                  nspin, Dscf, Ekin, fa, stress, H,
-     .                  matrix_elements_only )
+     .                  nspin, Dscf, Ekin, fa, stress, H )
 C *********************************************************************
 C Kinetic contribution to energy, forces, stress and matrix elements.
 C Energies in Ry. Lengths in Bohr.
@@ -25,6 +24,7 @@ C real*8  scell(3,3)       : Supercell vectors SCELL(IXYZ,IVECT)
 C real*8  xa(3,na)         : Atomic positions in cartesian coordinates
 c integer indxua(na)       : Index of equivalent atom in unit cell
 C real*8  rmaxo            : Maximum cutoff for atomic orbitals
+C integer maxo             : Second dimension of Dscf and H
 C integer maxnh            : First dimension of H and listh
 C integer maxnd            : First dimension of Dscf and listd
 C integer lasto(0:na)      : Last orbital index of each atom
@@ -43,11 +43,7 @@ C                            the hamiltonian matrix
 C integer listh(maxnh)     : Column indexes of the nonzero elements  
 C                            of each row of the hamiltonian matrix
 C integer nspin            : Number of spin components of Dscf and H
-C                            If computing only matrix elements, it
-C                            can be set to 1.
-C logical matrix_elements_only:
-C integer Dscf(maxnd,nspin): Density matrix. Not touched if computing
-C                            only matrix elements.
+C integer Dscf(maxnd,nspin): Density matrix
 C **************************** OUTPUT *********************************
 C real*8 Ekin              : Kinetic energy in unit cell
 C ********************** INPUT and OUTPUT *****************************
@@ -61,15 +57,13 @@ C
       use precision,     only : dp
       use parallel,      only : Node, Nodes
       use parallelsubs,  only : GlobalToLocalOrb
-      use atmfuncs,      only : rcut, orb_gindex
-      use neighbour,     only : jna=>jan, r2ij, xij, mneighb,
-     &                          reset_neighbour_arrays 
-      use m_new_matel,   only : new_matel
+      use atmfuncs,      only : rcut
+      use neighbour,     only : jna=>jan, r2ij, xij, mneighb
       use alloc,         only : re_alloc, de_alloc
 
       implicit none
 
-      integer ::  maxnd, maxnh, na, no, nspin, nua
+      integer ::  maxnd, maxnh, maxo, na, no, nspin, nua
 
       integer
      .  indxua(na), iphorb(no), isa(na), lasto(0:na), 
@@ -80,12 +74,11 @@ C
      .  scell(3,3), Dscf(maxnd,nspin), Ekin, 
      .  fa(3,nua), H(maxnh,nspin), rmaxo, 
      .  stress(3,3), xa(3,na)
-      logical, intent(in)  :: matrix_elements_only
 
 C Internal variables ..................................................
   
       integer
-     .  ia, ind, io, iio, ioa, is, ispin, ix, ig, jg,
+     .  ia, ind, io, iio, ioa, is, ispin, ix, 
      .  j, ja, jn, jo, joa, js, jua, jx, nnia
 
       real(dp)
@@ -100,41 +93,37 @@ C Start timer
       call timer( 'kinefsm', 1 )
 
 C Allocate local memory
-      if (.not. matrix_elements_only) then
-         nullify( Di )
-         call re_alloc( Di, 1, no, 'Di', 'kinefsm' )
-         Di(1:no) = 0.0_dp
-      endif
+      nullify( Di )
+      call re_alloc( Di, 1, no, name='Di', routine='kinefsm' )
       nullify( Ti )
-      call re_alloc( Ti, 1, no, 'Ti', 'kinefsm' )
-      Ti(1:no) = 0.0_dp
+      call re_alloc( Ti, 1, no, name='Ti', routine='kinefsm' )
 
       volume = nua * volcel(scell) / na
 
       call mneighb( scell, 2.0d0*rmaxo, na, xa, 0, 0, nnia )
 
       Ekin = 0.0_dp
+      Di(1:no) = 0.0_dp
+      Ti(1:no) = 0.0_dp
 
       do ia = 1,nua
-        is = isa(ia)
         call mneighb( scell, 2.0d0*rmaxo, na, xa, ia, 0, nnia )
         do io = lasto(ia-1)+1,lasto(ia)
 
 C Is this orbital on this Node?
           call GlobalToLocalOrb(io,Node,Nodes,iio)
-          if (iio.gt.0) then  ! Local orbital
+          if (iio.gt.0) then
             ioa = iphorb(io)
-            ig = orb_gindex(is,ioa)
+            is = isa(ia)
 
-            if (.not. matrix_elements_only) then
-               do j = 1,numd(iio)
-                  ind = listdptr(iio) + j
-                  jo = listd(ind)
-                  do ispin = 1,nspin
-                     Di(jo) = Di(jo) + Dscf(ind,ispin)
-                  enddo
-               enddo
-            endif
+C Valid orbital 
+            do j = 1,numd(iio)
+              ind = listdptr(iio) + j
+              jo = listd(ind)
+              do ispin = 1,nspin
+                Di(jo) = Di(jo) + Dscf(ind,ispin)
+              enddo
+            enddo
             do jn = 1,nnia
               ja = jna(jn)
               jua = indxua(ja)
@@ -142,34 +131,27 @@ C Is this orbital on this Node?
               do jo = lasto(ja-1)+1,lasto(ja)
                 joa = iphorb(jo)
                 js = isa(ja)
-                jg = orb_gindex(js,joa)
                 if (rcut(is,ioa)+rcut(js,joa) .gt. rij) then
-                  call new_MATEL( 'T', ig, jg, xij(1:3,jn),
+                  call matel( 'T', is, js, ioa, joa, xij(1,jn),
      .                      Tij, grTij )
                   Ti(jo) = Ti(jo) + Tij
-
-                  if (.not. matrix_elements_only) then
-                     Ekin = Ekin + Di(jo) * Tij
-                    do ix = 1,3
-                      fij(ix) = Di(jo) * grTij(ix)
-                      fa(ix,ia)  = fa(ix,ia)  + fij(ix)
-                      fa(ix,jua) = fa(ix,jua) - fij(ix)
-                      do jx = 1,3
-                        stress(jx,ix) = stress(jx,ix) +
-     .                                  xij(jx,jn) * fij(ix) / volume
-                      enddo
+                  Ekin = Ekin + Di(jo) * Tij
+                  do ix = 1,3
+                    fij(ix) = Di(jo) * grTij(ix)
+                    fa(ix,ia)  = fa(ix,ia)  + fij(ix)
+                    fa(ix,jua) = fa(ix,jua) - fij(ix)
+                    do jx = 1,3
+                      stress(jx,ix) = stress(jx,ix) +
+     .                              xij(jx,jn) * fij(ix) / volume
                     enddo
-                  endif 
+                  enddo
                 endif
-
               enddo
             enddo
-            if (.not. matrix_elements_only) then
-               do j = 1,numd(iio)
-                  jo = listd(listdptr(iio)+j)
-                  Di(jo) = 0.0_dp
-               enddo
-            endif
+            do j = 1,numd(iio)
+              jo = listd(listdptr(iio)+j)
+              Di(jo) = 0.0_dp
+            enddo
             do j = 1,numh(iio)
               ind = listhptr(iio)+j
               jo = listh(ind)
@@ -183,15 +165,10 @@ C Is this orbital on this Node?
       enddo
 
 C Deallocate local memory
-!      call new_MATEL( 'T', 0, 0, 0, 0, xij, Tij, grTij )
-      call reset_neighbour_arrays( )
-      call de_alloc( Ti, 'Ti', 'kinefsm' )
-      if (.not. matrix_elements_only) then
-         call de_alloc( Di, 'Di', 'kinefsm' )
-      endif
+      call de_alloc( Ti, name='Ti' )
+      call de_alloc( Di, name='Di' )
 
 C Finish timer
       call timer( 'kinefsm', 2 )
 
-      end subroutine kinefsm
-      end module m_kinefsm
+      end

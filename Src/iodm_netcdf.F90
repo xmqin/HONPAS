@@ -1,9 +1,12 @@
 ! 
-! Copyright (C) 1996-2016	The SIESTA group
-!  This file is distributed under the terms of the
-!  GNU General Public License: see COPYING in the top directory
-!  or http://www.gnu.org/copyleft/gpl.txt.
-! See Docs/Contributors.txt for a list of contributors.
+! This file is part of the SIESTA package.
+!
+! Copyright (c) Fundacion General Universidad Autonoma de Madrid:
+! E.Artacho, J.Gale, A.Garcia, J.Junquera, P.Ordejon, D.Sanchez-Portal
+! and J.M.Soler, 1996- .
+! 
+! Use of this software constitutes agreement with the full conditions
+! given in the SIESTA license, as signed by all legitimate users.
 !
 module iodm_netcdf
 
@@ -69,15 +72,9 @@ subroutine setup_dm_netcdf_file( maxnd, nbasis, nspin,    &
       integer  :: MPIerror, stat(MPI_STATUS_SIZE), count, BNode
       integer  :: max_norbs, max_nnzs, ipt, io, iog
 
-      if (Node == 0) then
-         nullify ( norbs_node, nnzs_node)
-         call re_alloc( norbs_node, 0, Nodes-1, name='norbs_node', routine='iodm_netcdf' )
-         call re_alloc( nnzs_node, 0, Nodes-1,  name='nnzs_node', routine='iodm_netcdf' )
-      else    ! Still need to associate norbs_node and nnzs_node
-         nullify ( norbs_node, nnzs_node)
-         call re_alloc( norbs_node, 0, 0, name='norbs_node', routine='iodm_netcdf' )
-         call re_alloc( nnzs_node, 0, 0,  name='nnzs_node', routine='iodm_netcdf' )
-      endif
+      nullify ( norbs_node, nnzs_node)
+      call re_alloc( norbs_node, 0, Nodes-1, name='norbs_node', routine='iodm_netcdf' )
+      call re_alloc( nnzs_node, 0, Nodes-1,  name='nnzs_node', routine='iodm_netcdf' )
       call mpi_gather(nbasis,1,MPI_Integer, norbs_node(:),1,MPI_integer,0,MPI_Comm_World, mpierror)
       if (Node == 0) then
          norbs = sum(norbs_node(0:Nodes-1))
@@ -253,14 +250,13 @@ use precision, only : dp
 
 integer, intent(in)   ::    nbasis ! Number of basis orbitals (in this node)
 integer, intent(in)   ::    maxnd  ! First dimension of listd and dm
-integer, intent(in)   ::    nspin  ! Number of spins (1, 2 or 4)
+integer, intent(in)   ::    nspin  ! Number of spins (1 or 2)
 logical, intent(in), optional  :: overwrite    ! Overwrite info along scf_step dimension
 
 real(dp), intent(in)  :: dm(maxnd, nspin)
 
 integer               :: norbs, nnzs
 integer               :: step_no, step_location
-
 
 #ifdef MPI
       integer, dimension(:), pointer  :: norbs_node => null()
@@ -274,15 +270,10 @@ integer               :: step_no, step_location
       integer  :: MPIerror, stat(MPI_STATUS_SIZE), count, BNode
       integer  :: max_norbs, max_nnzs, ipt, io, iog, ispin
 
-      if (Node == 0) then
-         nullify ( norbs_node, nnzs_node)
-         call re_alloc( norbs_node, 0, Nodes-1, name='norbs_node', routine='iodm_netcdf' )
-         call re_alloc( nnzs_node, 0, Nodes-1,  name='nnzs_node', routine='iodm_netcdf' )
-      else
-         nullify ( norbs_node, nnzs_node)
-         call re_alloc( norbs_node, 0, 0, name='norbs_node', routine='iodm_netcdf' )
-         call re_alloc( nnzs_node, 0, 0,  name='nnzs_node', routine='iodm_netcdf' )
-      endif
+      nullify ( norbs_node, nnzs_node)
+      call re_alloc( norbs_node, 0, Nodes-1, name='norbs_node', routine='iodm_netcdf' )
+      call re_alloc( nnzs_node, 0, Nodes-1,  name='nnzs_node', routine='iodm_netcdf' )
+
       call mpi_gather(nbasis,1,MPI_Integer, norbs_node(:),1,MPI_integer,0,MPI_Comm_World, mpierror)
       call mpi_gather(maxnd,1,MPI_Integer, nnzs_node(:) ,1,MPI_integer,0,MPI_Comm_World, mpierror)
       if (Node == 0) then

@@ -1,9 +1,12 @@
 ! 
-! Copyright (C) 1996-2016	The SIESTA group
-!  This file is distributed under the terms of the
-!  GNU General Public License: see COPYING in the top directory
-!  or http://www.gnu.org/copyleft/gpl.txt.
-! See Docs/Contributors.txt for a list of contributors.
+! This file is part of the SIESTA package.
+!
+! Copyright (c) Fundacion General Universidad Autonoma de Madrid:
+! E.Artacho, J.Gale, A.Garcia, J.Junquera, P.Ordejon, D.Sanchez-Portal
+! and J.M.Soler, 1996- .
+! 
+! Use of this software constitutes agreement with the full conditions
+! given in the SIESTA license, as signed by all legitimate users.
 !
       module m_ksv
       public :: KSV_pol
@@ -11,7 +14,7 @@
       subroutine KSV_pol( nua, na, xa, rmaxo, scell, ucell, nuotot,
      .                    nuo, no, nspin, qspin, maxnh, 
      .                    maxkpol, numh, listhptr, listh, H, S, 
-     .                    xijo, indxuo, isa, iphorb, iaorb, 
+     .                    AuxSr, xijo, indxuo, isa, iphorb, iaorb, 
      .                    lasto, shape, nkpol,kpol,
      .                    wgthpol, polR, polxyz )
 C *********************************************************************
@@ -41,6 +44,7 @@ C integer listh(maxnh)        : Nonzero hamiltonian-matrix element
 C                               column indexes for each matrix row
 C real*8  H(maxnh,spin)       : Hamiltonian in sparse form
 C real*8  S(maxnh)            : Overlap in sparse form
+C real*8  AuxSr(maxnh)        : Auxiliar matrix (outside H0)
 C real*8  xijo(3,maxnh)       : Vectors between orbital centers (sparse)
 C integer indxuo(no)          : Index of equivalent orbital in unit cell
 C                               Unit cell orbitals must be the first in
@@ -74,9 +78,10 @@ C
       use precision,     only : dp
       use parallel,      only : IOnode
       use sys,           only : die
+      use fdf
+      use parsing
       use atmfuncs,      only : zvalfis
-      use densematrix,   only : allocDenseMatrix, resetDenseMatrix
-      use densematrix,   only : Haux, Saux, psi
+      use densematrix
       use alloc,         only : re_alloc, de_alloc
       USE m_ksvinit,     only : repol
 
@@ -85,14 +90,15 @@ C
       integer           maxkpol, maxnh, nuo, nuotot, no, nspin, na
       integer           indxuo(no), listh(maxnh), numh(nuo), nkpol
       integer           listhptr(nuo), isa(na), iphorb(no), iaorb(no) 
-      integer           nua, lasto(0:na)
+      integer           nua, maxna, lasto(0:na)
       real(dp)          ddot, 
      .                  H(maxnh,nspin), kpol(3,maxkpol), 
      .                  S(maxnh), xijo(3,maxnh),
      .                  polR(3,nspin), polxyz(3,nspin), ucell(3,3),
-     .                  wgthpol(maxkpol), 
+     .                  wgthpol(maxkpol), AuxSr(maxnh), 
      .                  scell(3,3), rmaxo,  xa(3,na)
 C *********************************************************************
+
 C Internal variables 
       real(dp)  ntote_real   !!** Needed to deal with synthetics
       integer
@@ -102,6 +108,8 @@ C Internal variables
      .  nk, nmeshk(3,3), Nptot, 
      .  notcal(3), nhs, npsi
 
+      integer, dimension(:), pointer ::  muo
+         
       real(dp)
      .  difA, pi, rcell(3,3), uR(3,3),  
      .  displ(3), dsp(3), cutoff, dk(3), detr, deti, 
@@ -110,27 +118,21 @@ C Internal variables
      .  tiny, phase, ph(3,2), Debye,
      .  vaux(3,2), area, J, qspin(2), dq, phaseold(2)
 
-      real(dp), dimension(:), pointer ::  ek => null()
+      real(dp), dimension(:), pointer ::  ek
 
       parameter (Debye  = 0.393430d0)  
 
-      character         shape*10
+      character         paste*30, shape*10
 
-      external          ddot, volcel, reclat, memory
+      external          ddot, io_assign, io_close,
+     .                  paste, volcel, reclat, memory
 
-      integer, dimension(:), pointer ::  muo => null()
-      real(dp), dimension(:), pointer :: psi1 => null()
-      real(dp), dimension(:), pointer :: psiprev => null()
-      real(dp), dimension(:), pointer :: aux => null()
-      
+      real(dp), dimension(:), pointer :: psi1, psiprev
+
       parameter (  tiny= 1.0d-8  )
 
 C Start time counter 
       call timer( 'KSV_pol', 1 )
-
-!! jjunquer
-!      write(6,*)' Node, Nodes = ', Node, Nodes
-!! end jjunquer
 
 C Reading unit cell and calculate the reciprocal cell
       call reclat( ucell, rcell, 1 )
@@ -204,14 +206,19 @@ C Check parameter maxkpol
 C Allocate local memory
       nhs = 2*nuotot*nuo
       npsi = 2*nuotot*nuo
-      call allocDenseMatrix(nhs, nhs, npsi)
+      call re_alloc(Haux,1,nhs,name='Haux',routine='KSV_pol')
+      call re_alloc(Saux,1,nhs,name='Saux',routine='KSV_pol')
+      call re_alloc(psi,1,npsi,name='psi',routine='KSV_pol')
 
-      nullify( muo, ek, psi1, psiprev, aux )
-      call re_alloc( muo,     1, nuotot, 'muo',     'KSV_pol' )
-      call re_alloc( ek,      1, nuotot, 'ek',      'KSV_pol' )
-      call re_alloc( psi1,    1, npsi,   'psi1',    'KSV_pol' )
-      call re_alloc( psiprev, 1, npsi,   'psiprev', 'KSV_pol' )
-      call re_alloc( aux, 1 , maxnh, 'aux', 'KSV_pol' )
+      nullify( muo )
+      call re_alloc( muo, 1, nuotot, name='muo', routine='KSV_pol' )
+      nullify( ek )
+      call re_alloc( ek, 1, nuotot, name='ek', routine='KSV_pol' )
+      nullify( psi1 )
+      call re_alloc( psi1, 1, npsi, name='psi1', routine='KSV_pol' )
+      nullify( psiprev )
+      call re_alloc( psiprev, 1, npsi, name='psiprev',
+     &               routine='KSV_pol' )
 
 C Initialise psi
       do io = 1,npsi
@@ -335,7 +342,7 @@ C Calculation of the Jacobian
 C Construction of the matrix elements of the scalar product dk*r 
           call phirphi(nua, na, nuo, no, scell, xa, rmaxo,
      .              maxnh, lasto, iphorb, isa,
-     .              numh, listhptr, listh, dk, aux) 
+     .              numh, listhptr, listh, dk, AuxSr) 
 
 C Begin the bidimensional integration over the path integrals
           do ik = 1, nk
@@ -381,23 +388,23 @@ C In the first point we just store the wavefunctions
                   deti = 0.0d0 
 
 C Store wavefunction for the next point
-                  call savepsi(psiprev,psi,nuo,nuotot,nocc(ispin))
+                  call savepsi(psiprev,psi,npsi,nuo,nuotot,nocc(ispin))
 
                 elseif (il.ne.npl) then 
 C Calculate the determinant of the overlap matrix between the 
 C periodic Bloch functions in this k point and in the previous one.   
-                  call detover(psiprev, psi, S, aux,
+                  call detover(psiprev, psi, S, AuxSr,
      .              numh, listhptr, listh, indxuo, no, nuo, xijo, 
      .              maxnh, nuotot, nocc(ispin), kint, dk, 
      .              detr, deti )
  
 C Store wavefunction for the next point
-                  call savepsi(psiprev,psi,nuo,nuotot,nocc(ispin))
+                  call savepsi(psiprev,psi,npsi,nuo,nuotot,nocc(ispin))
 
                 else 
 C Calculate the determinant of the overlap matrix between the
 C periodic Bloch functions in the last k point and the first one
-                  call detover(psiprev, psi1, S, aux,
+                  call detover(psiprev, psi1, S, AuxSr,
      .              numh, listhptr, listh, indxuo, no, nuo, xijo, 
      .              maxnh, nuotot, nocc(ispin), kint, dk, 
      .              detr, deti )
@@ -570,13 +577,11 @@ C This is the only exit point
   999 continue
 
 C Deallocate local memory
-      call de_alloc( muo,     'muo',     'KSV_pol' )
-      call de_alloc( ek,      'ek',      'KSV_pol' )
-      call de_alloc( psi1,    'psi1',    'KSV_pol' )
-      call de_alloc( psiprev, 'psiprev', 'KSV_pol' )
-      call de_alloc( aux,     'aux',     'KSV_pol' )
-      call resetDenseMatrix()
-      
+      call de_alloc( muo, name='muo' )
+      call de_alloc( ek, name='ek' )
+      call de_alloc( psi1, name='psi1' )
+      call de_alloc( psiprev, name='psiprev' )
+
       if (nkpol.gt.0.and.IOnode) then
         do ispin = 1,nspin
           if (nspin.gt.1) then

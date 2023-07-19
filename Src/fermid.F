@@ -1,17 +1,23 @@
 ! 
-! Copyright (C) 1996-2016	The SIESTA group
-!  This file is distributed under the terms of the
-!  GNU General Public License: see COPYING in the top directory
-!  or http://www.gnu.org/copyleft/gpl.txt.
-! See Docs/Contributors.txt for a list of contributors.
+! This file is part of the SIESTA package.
+!
+! Copyright (c) Fundacion General Universidad Autonoma de Madrid:
+! E.Artacho, J.Gale, A.Garcia, J.Junquera, P.Ordejon, D.Sanchez-Portal
+! and J.M.Soler, 1996- .
+! 
+! Use of this software constitutes agreement with the full conditions
+! given in the SIESTA license, as signed by all legitimate users.
 !
       module m_fermid
 
       use precision,  only : dp
       use parallel,   only : IOnode
-      use fdf,        only : fdf_boolean, fdf_integer, fdf_string, leqi
-      use m_errorf,   only:  derfc
+      use fdf,        only : fdf_boolean, fdf_integer, fdf_string
+      use m_recipes,  only:  derfc
       use sys,        only:  die
+#ifdef MPI
+      use mpi_siesta
+#endif
 
       implicit none
 
@@ -22,8 +28,8 @@
 
       CONTAINS
 
-      subroutine fermid(nspinor, maxspn, NK, WK, maxe, NE, E,
-     .                  temp, qtot, WKE, EF, entropy )
+      subroutine fermid( nspin, maxspn, NK, WK, maxe, NE, E, 
+     .                   temp, qtot, WKE, EF, entropy )
 
 C *********************************************************************
 C Finds the Fermi energy and the occupation weights of states.
@@ -31,27 +37,13 @@ C Written by J.M.Soler. August'96.
 C Simple single excitation introduced by E. Artacho August 2002.
 C Alternative occupation functions introduced by P. Ordejon, May'03.
 C ********** INPUT ****************************************************
-C INTEGER nspinor  : Number of spinors (1 or 2)
-!                    nspinor = 1 for spin-less calculations
-!                    nspinor = 2 for collinear or non-collinear spin
-C INTEGER maxspn   : Number of separate spin blocks (1 or 2)
-!                    in the  E and WKE matrices (that is, the length of
-!                    the second dimension of E and WKE).
-!                    For NC and SOC this should be 1, since the states
-!                    are not classified by spin.
-!                    For collinear spin, maxspn=2
-!                    For the spinless case, maxspn=1
-!
-!     Note that in the NC/SOC case, the actual arguments E and WKE are of
-!     the form  E(2*neigwanted,nk)  or E(2*no_u,nk)
-!     and in this routine they are unpacked to the E(*,1,nk) form      
-!
+C INTEGER nspin    : Number of different spin polarizations (1 or 2)
+C INTEGER maxspn   : Maximum number of different spin polarizations (1 or 2)
+C                    for E and WKE matrices dimensions
 C INTEGER NK       : Number of K-points
 C REAL*8  WK(NK)   : Sampling weights of k-points (must sum 1)
 C INTEGER maxe     : First dimension of E and WKE
-C                    For NC/SOC this should be large enough to hold twice the number of
-C                    wanted eigenstates (2*neigwanted). 
-C INTEGER NE       : Number of bands (per spin in the collinear case)
+C INTEGER NE       : Number of bands
 C REAL*8  E(maxe,maxspn,NK) : State eigenvalues
 C REAL*8  temp     : Temperature (in the same units of E)
 C REAL*8  qtot     : Total valence charge (number of electrons)
@@ -63,18 +55,23 @@ C REAL*8  entropy            : Entropy contribution to the electronic
 C                              Free Energy
 C *********************************************************************
 
-C Passed variables
-      integer, intent(in) :: nspinor, maxspn
-      integer        :: maxe
-      integer        :: ne
-      integer, intent(in) :: nk
+C
+C  Modules
+C
 
-      real(dp), intent(in) :: E(maxe,maxspn,nk)
+C Passed variables
+      integer        :: maxe
+      integer        :: maxspn
+      integer        :: ne
+      integer, intent(in)        :: nk
+      integer        :: nspin
+
+      real(dp)       :: e(maxe,maxspn,nk)
       real(dp)       :: entropy
       real(dp)       :: qtot
       real(dp)       :: temp
       real(dp)       :: wke(maxe,maxspn,nk)
-      real(dp), intent(in) :: wk(nk)
+      real(dp), intent(in)   :: wk(nk)
       real(dp)       :: ef
 
 C Local variables
@@ -83,58 +80,48 @@ C Local variables
       integer        :: ik
       integer        :: ispin
       integer        :: iter
-      integer, save :: nitmax = 150
-      logical, save :: blread = .false.
-      logical, save :: excitd = .false.
+      integer,  save :: nitmax = 150
+      logical,  save :: blread = .false.
+      logical,  save :: excitd = .false.
       real(dp), save :: tol = 1.0d-10
-      real(dp)       :: sumq, emin, emax
-      real(dp)       :: t, tinv, drange, wkebuf, W, eik
+      real(dp)       :: sumq, emin, emax, t, drange, wkebuf, w, eik
 
-#ifdef DEBUG
-      call write_debug( '    PRE fermid' )
+#ifdef MPI
+      integer MPIerror
 #endif
-
+      
 C Reading whether to do an excited state
       if ( .not. blread) then
-        excitd = fdf_boolean('SingleExcitation', .false.)
         if ( ionode ) then
+          excitd = fdf_boolean('SingleExcitation', .false.)
           if ( excitd ) write(6,'(/a)') 
      .        'fermid: Calculating for lowest-exciton excited state'
         endif
+#ifdef MPI
+        call MPI_Bcast(excitd,1,MPI_logical,0,
+     .                 MPI_Comm_World,MPIerror)
+#endif
         blread = .true.
-      end if
+      endif   
 
 C Zero occupancies, including those not explicitly
 C calculated here if ne < maxe
-      wke(1:maxe,1:maxspn,1:nk) = 0.0d0
+      wke(1:maxe,1:nspin,1:nk) = 0.0d0
 
 C Determine Fermi level
       sumq = 0.0d0
       emin = e(1,1,1)
       emax = e(1,1,1)
-      if ( nspinor == 1 ) then ! also maxspn == 1, but this is implicit
-        ! Each spinless state can have two electrons, so we double the occupancies
-        ! This will be reflected further down as well
-        do ik = 1,nk
-          sumq = sumq + wk(ik) * ne * 2._dp
+      do ik = 1,nk
+        do ispin = 1,nspin
           do ie = 1,ne
-            wke(ie,1,ik) = wk(ik) * 2._dp
-            emin = min(emin,e(ie,1,ik))
-            emax = max(emax,e(ie,1,ik))
-          end do
-        end do
-      else
-        do ik = 1,nk
-          sumq = sumq + wk(ik) * maxspn * ne
-          do ispin = 1, maxspn
-            do ie = 1, ne
-              wke(ie,ispin,ik) = wk(ik)
-              emin = min(emin,e(ie,ispin,ik))
-              emax = max(emax,e(ie,ispin,ik))
-            end do
-          end do
-        end do
-      end if
+            wke(ie,ispin,ik) = wk(ik)*2.0d0/dble(nspin)
+            sumq = sumq + wke(ie,ispin,ik)
+            emin = min(emin,e(ie,ispin,ik))
+            emax = max(emax,e(ie,ispin,ik))
+          enddo
+        enddo
+      enddo
 
       ef = emax
 
@@ -145,10 +132,7 @@ C Determine Fermi level
      .            'Fermid: Bands full, no excitation possible'
           endif
           call die()
-          else
-#ifdef DEBUG
-          call write_debug( '    POS fermid' )
-#endif
+        else
           return
         endif
       endif
@@ -160,33 +144,21 @@ C Determine Fermi level
         call die()
       endif
       T = max(temp,1.d-6)
-      Tinv = 1._dp / T
       drange = T*sqrt(-log(tol*0.01d0))
       emin = emin - drange
       emax = emax + drange
       do iter = 1,nitmax
         ef = 0.5d0*(emin + emax)
-
         sumq = 0.0d0
-        if ( nspinor == 1 ) then ! also maxspn == 1, but this is implicit
-          do ik = 1,nk
+        do ik = 1,nk
+          do ispin = 1,nspin
             do ie = 1,ne
-              wke(ie,1,ik) = wk(ik)* 2._dp *
-     .            stepf((e(ie,1,ik)-ef)*Tinv)
-              sumq = sumq + wke(ie,1,ik)
-            end do
-          end do
-        else
-          do ik = 1,nk
-            do ispin = 1, maxspn
-              do ie = 1,ne
-                wke(ie,ispin,ik) = wk(ik) *
-     .              stepf((e(ie,ispin,ik)-ef)*Tinv)
-                sumq = sumq + wke(ie,ispin,ik)
-              end do
-            end do
-          end do
-        end if
+              wke(ie,ispin,ik) = wk(ik)*
+     .            stepf((e(ie,ispin,ik)-ef)/T)*2.0d0/nspin
+              sumq = sumq + wke(ie,ispin,ik)
+            enddo
+          enddo
+        enddo
 
 C If the Fermi level was found..................... 
         if (abs(sumq-qtot).lt.tol) then
@@ -194,50 +166,39 @@ C If the Fermi level was found.....................
 C If excited state is to be calculated, find the level above Ef for
 C k=1 and spin=1
           if (excitd) then
-            loop: do ie = 1, ne
+            do ie = 1, ne
               if ( e(ie,1,1) .gt. ef ) then
-                ief = ie    ! LUMO index
-                exit loop
+                ief = ie
+                go to 314
               endif
-            enddo loop
-
+            enddo
+  314       continue
 C and swap populations (meaningful only for T close to 0):
-C if nspinor=1 populations of homo and lumo are just swapped for is=1
-C if nspinor=2 populations of homo and lumo become equal.
-            if ( nspinor == 1 ) then 
-              wkebuf = ( wke(ief-1,1,1) - wke(ief,1,1) ) * 0.5_dp
-            else
-              wkebuf = wke(ief-1,1,1) - wke(ief,1,1)
-            end if
+C if nspin =1 populations of homo and lumo are just swapped for is=1
+C if nspin =2 populations of homo and lumo become equal.
+            wkebuf = ( wke(ief-1,1,1) - wke(ief,1,1) )/(3-nspin)
             wke(ief,1,1) = wke(ief,1,1) + wkebuf
             wke(ief-1,1,1) = wke(ief-1,1,1) - wkebuf
           endif
 
 C Obtain the electronic entropy
-          entropy = 0.0_dp
-          if ( nspinor == 1 ) then ! also maxspn == 1, but this is implicit
-            do ik = 1 , nk
-              do ie = 1 , ne
-                W = 0.5_dp * wke(ie,1,ik) / wk(ik)
-                eik = (e(ie,1,ik)-ef) * Tinv
-                entropy = entropy + 2.0d0 * wk(ik) * enpy(eik,W)
-              end do
-            end do
-          else
-            do ik = 1 , nk
-              do ispin = 1 , maxspn
-                do ie = 1 , ne
-                  W = wke(ie,ispin,ik) / wk(ik)
-                  eik = (e(ie,ispin,ik)-ef) * Tinv
-                  entropy = entropy + wk(ik) * enpy(eik,W)
-                end do
-              end do
-            end do
-          end if
 
-#ifdef DEBUG
-          call write_debug( '    POS fermid' )
-#endif
+100       entropy = 0.0d0
+
+          do ik = 1,nk
+            do ie = 1,ne
+              do ispin = 1,nspin
+
+                W = (nspin / 2.0d0) * wke(ie,ispin,ik) / wk(ik)
+                eik = (e(ie,ispin,ik)-ef) / T
+
+                entropy = entropy + ( 2.0d0 * wk(ik) / nspin ) *
+     .                    enpy(eik,w)
+
+              enddo
+            enddo
+          enddo
+
           return
 
         endif
@@ -251,6 +212,7 @@ C Obtain the electronic entropy
         write(6,*) 'Fermid: qtot,sumq=',qtot,sumq
       endif
       call die('Fermid: Iteration has not converged.')
+
 
       end subroutine fermid
 
@@ -414,7 +376,11 @@ C Local variables
       character(len=22), save :: ocf = 'FD'
       integer,           save :: nh = 1
       integer,           save :: ocupfnct
+      logical                 :: leqi
       logical,           save :: ocfread = .false.
+#ifdef MPI
+      integer MPIerror
+#endif
       
       parameter (PI = 3.14159265358979D0)
 
@@ -422,25 +388,31 @@ C Reading which electronic occupation function to use -------
 
       if ( .not. ocfread) then
 
-        ocf = fdf_string('OccupationFunction','FD')
+        if ( ionode ) then
+          ocf = fdf_string('OccupationFunction','FD')
 
-        if (leqi(ocf,'FD')) then
-          ocupfnct = 1
-          if ( ionode ) then
-            write(6,'(/a)') 'stepf: Fermi-Dirac step function'
-          endif
-        else if (leqi(ocf,'MP')) then
-          ocupfnct = 2
-          nh = fdf_integer('OccupationMPOrder',1)
-          if ( ionode ) then
-            write(6,'(/a)') 'stepf: Methfessel-Paxton step function'
+          if (leqi(ocf,'FD')) then
+            ocupfnct=1
+            write(6,'(/a)') 
+     .     'stepf: Fermi-Dirac step function'
+          else if (leqi(ocf,'MP')) then
+            ocupfnct=2
+            nh = fdf_integer('OccupationMPOrder',1)
+            write(6,'(/a)') 
+     .     'stepf: Methfessel-Paxton step function'
             write(6,'(a,i2)') 
-     .        '       Using Hermite-Gauss polynomials of order ',nh
+     .     '       Using Hermite-Gauss polynomials of order ',nh
+          else
+            call die('fermid: Error: Allowed values '
+     $               // 'for OccupationFunction are FD and MP')
           endif
-        else
-          call die('fermid: Error: Allowed values '
-     $             // 'for OccupationFunction are FD and MP')
         endif
+#ifdef MPI
+        call MPI_Bcast(ocupfnct,1,MPI_integer,0,
+     .                 MPI_Comm_World,MPIerror)
+        call MPI_Bcast(nh,1,MPI_integer,0,
+     .                 MPI_Comm_World,MPIerror)
+#endif
         ocfread = .true.
       endif   
 c--------------------------------------
@@ -501,26 +473,43 @@ C Local variables
       character(len=22), save :: ocf = 'FD'
       integer,           save :: nh = 1
       integer,           save :: ocupfnct
+      logical                 :: leqi
       logical,           save :: ocfread = .false.
       real(dp)                :: tiny, wo, we
 
+#ifdef MPI
+      integer MPIerror
+#endif
+      
       data tiny /1.d-15/
 
 c Reading which electronic occupation function to use -------
 
       if ( .not. ocfread) then
 
-        ocf = fdf_string('OccupationFunction', 'FD')
+        if ( ionode ) then
+          ocf = fdf_string('OccupationFunction', 'FD')
 
-        if (leqi(ocf,'FD')) then
-          ocupfnct = 1
-        else if (leqi(ocf,'MP')) then
-          ocupfnct = 2
-          nh = fdf_integer('OccupationMPOrder',1)
-        else
-          call die('fermid: Error: Allowed values '
-     $             // 'for OccupationFunction are FD and MP')
+          if (leqi(ocf,'FD')) then
+            ocupfnct = 1
+          else if (leqi(ocf,'MP')) then
+            ocupfnct = 2
+            nh = fdf_integer('OccupationMPOrder',1)
+            write(6,'(/a,i2)')
+     .     'Stepf: Methfessel-Paxton step function'
+            write(6,'(a,i2)')
+     .     '       Using Hermite-Gauss polynomials of order ',nh
+          else
+            call die('fermid: Error: Allowed values '
+     $               // 'for OccupationFunction are FD and MP')
+          endif
         endif
+#ifdef MPI
+        call MPI_Bcast(ocupfnct,1,MPI_integer,0,
+     .                  MPI_Comm_World,MPIerror)
+        call MPI_Bcast(nh,1,MPI_integer,0,
+     .                  MPI_Comm_World,MPIerror)
+#endif
         ocfread = .true.
       endif   
 c--------------------------------------

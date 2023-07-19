@@ -1,21 +1,23 @@
 ! 
-! Copyright (C) 1996-2016	The SIESTA group
-!  This file is distributed under the terms of the
-!  GNU General Public License: see COPYING in the top directory
-!  or http://www.gnu.org/copyleft/gpl.txt.
-! See Docs/Contributors.txt for a list of contributors.
+! This file is part of the SIESTA package.
+!
+! Copyright (c) Fundacion General Universidad Autonoma de Madrid:
+! E.Artacho, J.Gale, A.Garcia, J.Junquera, P.Ordejon, D.Sanchez-Portal
+! and J.M.Soler, 1996- .
+! 
+! Use of this software constitutes agreement with the full conditions
+! given in the SIESTA license, as signed by all legitimate users.
 !
       module m_dynamics
 
       use precision
-      use parallel,    only : Node, IONode
-      use m_ioxv,      only : xv_file_read
-      use sys,         only : die
-      use atomlist,    only : iza
-      use units,       only : Ang, eV
+      use parallel,   only : Node, IONode
+      use m_ioxv,     only : xv_file_read
+      use sys,        only : die
+      use atomlist,   only : iza
+      use units,      only : Ang, eV
       use m_mpi_utils, only : broadcast
-      use files,       only : slabel
-      use alloc,       only : re_alloc, de_alloc
+      use files,      only : slabel
 
       implicit none
 
@@ -26,7 +28,6 @@
       real(dp), parameter  :: tol = 1.0e-12_dp
       logical, parameter   :: debug = .false.
       character(len=60)    :: restart_file
-      logical              :: first_time = .true.
 
       CONTAINS
 
@@ -113,20 +114,22 @@ C Internal variables ...........................................................
 
       logical  ::  found
 
-      integer  ::  ct, i, ia, info, j, k
+      integer ::  ct,i,ia,info,j,k
 
-      real(dp) :: aux1(3,3), aux2(3,3), diff, dt2, dtby2, gi(3,3),
-     &            f(3,3), fi(3,3), fovermp, g(3,3), gdot(3,3),
-     &            hi(3,3), hnew(3,3), hlast(3,3), hs(3), pgas,
-     &            press(3,3), tdiff, tekin, twodt, vol, xdot, xlast,
-     &            xnew
-      real(dp) :: xdum(3), xaold(3), suncdot(3), raux(3)
+      real(dp)
+     .  aux1(3,3),aux2(3,3),diff,dt2,dtby2,
+     .  f(3,3),fi(3,3),fovermp,
+     .  g(3,3),gdot(3,3),gi(3,3),
+     .  hi(3,3),hnew(3,3),hlast(3,3),hs(3),
+     .  pgas,press(3,3),
+     .  tdiff,tekin,twodt,
+     .  vol, xdot,xlast,xnew
+      real(dp) :: xdum(3), xaold(3), suncdot(3)
 
-      real(dp), pointer :: s(:,:)=>null(), sdot(:,:)=>null(),
-     $                     snew(:,:)=>null(), sunc(:,:)=>null()
-      real(dp)          :: rr
+      real(dp), dimension(:,:), allocatable ::
+     .  s,sdot,snew,sunc
 
-      real(dp), pointer, save :: sold(:,:)=>null()
+      real(dp), dimension(:,:), allocatable, save :: sold
       real(dp), save ::  hold(3,3), x, xold
 
       integer :: old_natoms, dummy_iza, iacc
@@ -136,22 +139,20 @@ C Internal variables ...........................................................
 
 C ......................................................................
 
-      restart_file = trim(slabel) // '.NPR_RESTART'
+      restart_file = trim(slabel) // ".NPR_RESTART"
       if (iunit .ne. 1 .and. iunit .ne. 2)
      $   call die('pr: Wrong iunit option;  must be 1 or 2')
 
 C Allocate local memory
-      if (first_time) then
-        nullify(sold)
-        call re_alloc( sold, 1, 3, 1, natoms, 'sold', 'npr' )
-        first_time =.false.
+      allocate(s(3,natoms))
+      allocate(sdot(3,natoms))
+      allocate(snew(3,natoms))
+      allocate(sunc(3,natoms))
+      call memory('A','D',12*natoms,'npr')
+      if (.not.allocated(sold)) then
+        allocate(sold(3,natoms))
+        call memory('A','D',3*natoms,'npr')
       endif
-
-      nullify( s, sdot, snew, sunc )
-      call re_alloc( s, 1, 3, 1, natoms, 's', 'npr' )
-      call re_alloc( sdot, 1, 3, 1, natoms, 'sdot', 'npr' )
-      call re_alloc( snew, 1, 3, 1, natoms, 'snew', 'npr' )
-      call re_alloc( sunc, 1, 3, 1, natoms, 'sunc', 'npr' )
 
       ct = 3 + ntcon            ! center of mass constraints
       if (natoms .eq. 1) ct = 0
@@ -182,16 +183,7 @@ C ........................
 C Compute Parrinello-Rahman variables (H and scaled coordinates) ............
 C Compute G=HtH at current time 
 
-!      g = matmul(transpose(h),h)
-      do i= 1, 3
-        do j= 1, 3
-          rr = 0.0
-          do k= 1, 3
-            rr = rr + h(k,i)*h(k,j)
-          enddo
-          g(i,j) = rr
-        enddo
-      enddo
+      g = matmul(transpose(h),h)
 
 C Compute Inverse of H and G at current time 
       call inver(h,hi,3,3,info)
@@ -201,14 +193,7 @@ C Compute Inverse of H and G at current time
 
 C Calculate scaled coordinates (referred to matrix H) at current time
       do ia = 1,natoms
-!         s(1:3,ia) = matmul(hi,xa(1:3,ia))
-        s(1:3,ia) = 0.0
-        do k= 1, 3
-          rr = xa(k,ia)
-          do i= 1, 3
-            s(i,ia) = s(i,ia) + hi(i,k)*rr
-          enddo
-        enddo
+         s(1:3,ia) = matmul(hi,xa(1:3,ia))
       enddo
 
 C Initialize variables if current time step is the first of the simulation
@@ -216,6 +201,7 @@ C Initialize variables if current time step is the first of the simulation
 !     Will need to read hold and xaold, and x and xold
 !     from file if the simulation
 !     is continuing by reading an XV file.
+
       if (istep .eq. 1) then
 
          if (xv_file_read) then
@@ -230,17 +216,10 @@ C Initialize variables if current time step is the first of the simulation
             x = 0.0_dp
             xold = 0.0_dp
             hold = h - dt*hdot
-            sold = 0.0
             do ia = 1,natoms
-               xaold = xa(1:3,ia) - dt*va(1:3,ia)
+               xaold(1:3) = xa(1:3,ia) - dt*va(1:3,ia)
      $              + (dt2/2.0_dp) * fovermp * fa(1:3,ia) / ma(ia)
-!               sold(:,ia) = matmul(hi,xaold)
-               do k= 1, 3
-                 rr = xaold(k)
-                 do i= 1, 3
-                   sold(i,ia) = sold(i,ia) + hi(i,k)*rr
-                 enddo
-               enddo
+               sold(1:3,ia) = matmul(hi,xaold(1:3))
                if (debug .and. IOnode) print *, sold(:,ia)
             enddo
 
@@ -251,34 +230,26 @@ C Initialize variables if current time step is the first of the simulation
 
             if (IOnode) then
                call io_assign(iacc)
-               open(unit=iacc,file=restart_file, form='formatted',
-     $              status='old', action='read', position='rewind')
+               open(unit=iacc,file=restart_file, form="formatted",
+     $              status="old", action="read", position="rewind")
                read(iacc,*) x, xold
                do i = 1,3
                   read(iacc,*) (hold(j,i),j=1,3)
                enddo
                read(iacc,*) old_natoms
                if (old_natoms .ne. natoms)
-     $              call die('Wrong number of atoms in NPR_RESTART')
-               sold = 0.0
+     $              call die("Wrong number of atoms in NPR_RESTART")
                do ia = 1, natoms
                   read(iacc,*) dummy_iza, (xaold(i),i=1,3)
                   if (dummy_iza .ne. iza(ia))
-     $                 call die('Wrong species number in NPR_RESTART')
-!                  sold(:,ia) = matmul(hi,xaold)
-                  do k= 1, 3
-                    rr = xaold(k)
-                    do i= 1, 3
-                      sold(i,ia) = sold(i,ia) + hi(i,k)*rr
-                    enddo
-                  enddo
-
+     $                 call die("Wrong species number in NPR_RESTART")
+                  sold(1:3,ia) = matmul(hi,xaold(1:3))
                   if (debug .and. IOnode) print *, sold(:,ia)
                enddo
                call io_close(iacc)
                write(6,*)
-     $            'MD restart: Read old positions, cell',
-     $            ' and Nose variables from NPR_RESTART'
+     $            "MD restart: Read old positions, cell",
+     $            " and Nose variables from NPR_RESTART"
 
             endif               ! IONODE
 
@@ -293,19 +264,11 @@ C ..................
 
 C Compute uncorrected next positions .....................................
       if (debug .and. IOnode)
-     $          print *, 'Uncorrected new reduced coordinates'
+     $          print *, "Uncorrected new reduced coordinates"
       do ia = 1,natoms
-!       xdum       =  (dt2*fovermp/ma(ia)) * matmul(hi,fa(1:3,ia))     
-        xdum = 0.0
-        do k= 1, 3
-          rr = fa(k,ia)
-          do i= 1, 3
-            xdum(i) = xdum(i) + hi(i,k)*rr
-          enddo
-        enddo
-        xdum       =  (dt2*fovermp/ma(ia)) * xdum
-        sunc(:,ia) = -sold(:,ia) + 2.0_dp*s(:,ia) + xdum
-        if (debug .and. IOnode) print *, sunc(:,ia)
+         xdum(1:3) =  (dt2*fovermp/ma(ia)) * matmul(hi,fa(1:3,ia))     
+         sunc(1:3,ia) = -sold(1:3,ia) + 2.0_dp*s(1:3,ia) + xdum(:)
+         if (debug .and. IOnode) print *, sunc(:,ia)
       enddo
 C ...................
 
@@ -313,8 +276,8 @@ C Compute initial guess for Nose and Parrinello-Rahman
 C   variables at next time step ...........................................
       xnew = 2.0_dp * x - xold
       hnew = 2.0_dp * h - hold
-      if (debug .and. IOnode) print *, 'xnew:\n', xnew
-      if (debug .and. IOnode) print *, 'hnew:\n', hnew
+      if (debug .and. IOnode) print *, "xnew:\n", xnew
+      if (debug .and. IOnode) print *, "hnew:\n", hnew
 
 C ...................
 
@@ -327,68 +290,55 @@ C Start selfconsistency loop to calculate Nose and P-R variables ..........
 C xdot and hdot (time derivatives at current time), and related stuff
       xdot = (xnew - xold) / twodt
       hdot = (hnew - hold)/twodt
-      if (debug .and. IOnode) print *, 'xdot:\n', xdot
-      if (debug .and. IOnode) print *, 'hdot:\n', hdot
+      if (debug .and. IOnode) print *, "xdot:\n", xdot
+      if (debug .and. IOnode) print *, "hdot:\n", hdot
 
       gdot = matmul(transpose(h),hdot) +
      $       matmul(transpose(hdot),h)
-      if (debug .and. IOnode) print *, 'gdot:\n', gdot
+      if (debug .and. IOnode) print *, "gdot:\n", gdot
 
-      f =  matmul(gi,gdot)
+      f(:,:) =  matmul(gi,gdot)
       do i = 1,3
         f(i,i) = f(i,i) + xdot
       enddo
       f = dtby2 * f
-      if (debug .and. IOnode) print *, 'f:\n', f
+      if (debug .and. IOnode) print *, "f:\n", f
 
-      aux1 = f
+      aux1(1:3,1:3) = f(1:3,1:3)
       do i = 1,3
         aux1(i,i) = aux1(i,i) + 1.0_dp
       enddo
 
-      call inver( aux1,fi,3,3,info )
+      call inver(aux1,fi,3,3,info)
       if (info .ne. 0) call die('npr: INVER failed')
       fi = fi/twodt
-      if (debug .and. IOnode) print *, 'fi:\n', fi
+      if (debug .and. IOnode) print *, "fi:\n", fi
 
 C Calculate corrected velocities at current time
-      if (debug .and. IOnode) print *, 'Corrected velocities:'
-
+      if (debug .and. IOnode) print *, "Corrected velocities:"
       do ia = 1,natoms
-        sdot(:,ia) = 0.0
-        raux = sunc(:,ia)-sold(:,ia)
-        do i= 1, 3
-          do k= 1, 3
-            sdot(k,ia) = sdot(k,ia) + fi(k,i)*raux(i)
-          enddo
-        enddo
-        if (debug .and. IOnode) print *, sdot(:,ia)
+         sdot(1:3,ia) = matmul(fi,(sunc(1:3,ia)-sold(1:3,ia)))
+         if (debug .and. IOnode) print *, sdot(:,ia)
       enddo
 
 C Calculate pressure tensor at current time and ideal gas pressure
-      press = 0.0_dp
+      press(1:3,1:3) = 0.0_dp
       do ia = 1,natoms
-        hs = 0.0
-        do i= 1, 3
-          do k= 1, 3
-            hs(k) = hs(k) + h(k,i)*sdot(i,ia)
-          enddo
-        enddo
-
+        hs(1:3) = matmul(h,sdot(1:3,ia))
         do j = 1,3
           do i = 1,3
             press(i,j) = press(i,j) + ma(ia) * hs(i) * hs(j) / fovermp
           enddo
         enddo
       enddo
-      if (debug .and. IOnode) print *, 'press:\n', press
+      if (debug .and. IOnode) print *, "press:\n", press
 
       pgas = 0.0d0
       do i = 1,3
         pgas = pgas + press(i,i) / vol
       enddo
       pgas = pgas / 3.0d0
-      press = press/vol - stress
+      press(:,:) = press(:,:)/vol - stress(:,:)
 
 C Compute internal pressure  (pressin = 1/3 Tr (press))   at current time
       pressin = 0.0
@@ -406,15 +356,15 @@ C  Compute Nose and Parrinello-Rahman variables for next time step
       do i = 1,3
         aux1(i,i) = -tp
       enddo
+      aux1(1:3,1:3) = aux1(1:3,1:3) + press(1:3,1:3)
 
-      aux1 = aux1 + press
-      aux2 = matmul(aux1,transpose(hi))
-      if (debug .and. IOnode) print *, 'aux2:\n', aux2
+      aux2(1:3,1:3) = matmul(aux1,transpose(hi))
+      if (debug .and. IOnode) print *, "aux2:\n", aux2
 
       hnew = ( 2.0_dp * h + (dt2 * exp(2 * x) * vol / mpr) * aux2
      .                - (1.0d0 + dtby2 * xdot) * hold )
      .                / (1.0d0 - dtby2 * xdot)
-      if (debug .and. IOnode) print *, 'hnew:\n', hnew
+      if (debug .and. IOnode) print *, "hnew:\n", hnew
 
 C Check if selfconsistency has been reached
       diff = abs(xnew - xlast)
@@ -424,8 +374,8 @@ C Check if selfconsistency has been reached
         if (diff/abs(xlast) .gt. tol)  goto 10
       endif
 
-      diff = sum(abs(hnew-hlast))
-      tdiff = sum(abs(hlast))
+      diff = sum(abs(hnew(1:3,1:3)-hlast(1:3,1:3)))
+      tdiff = sum(abs(hlast(1:3,1:3)))
       if (tdiff .eq. 0.0_dp) then
         if (diff .gt. tol) goto 10
       else
@@ -435,33 +385,12 @@ C ...................   This is the bottom of the effective loop
 
 C Calculate corrected atomic coordinates at next time step ................
       if (debug .and. IOnode)
-     $     print *, 'Corrected new reduced coordinates'
+     $     print *, "Corrected new reduced coordinates"
       do ia = 1,natoms
-!        suncdot = matmul(f,sold(:,ia))
-        suncdot = 0.0
-        do i= 1, 3
-          do k= 1, 3
-            suncdot(k) = suncdot(k) + f(k,i)*sold(i,ia)
-          enddo
-        enddo
-
-!        snew(:,ia) = twodt * matmul(fi,sunc(:,ia) + suncdot(:))
-        raux = sunc(:,ia) + suncdot(:)
-        snew(:,ia) = 0.0
-        do i= 1, 3
-          do k= 1, 3
-            snew(k,ia) = snew(k,ia) + fi(k,i)*raux(i)
-          enddo
-        enddo
+        suncdot(:) = matmul(f,sold(:,ia))
+        snew(:,ia) = twodt * matmul(fi,sunc(:,ia) + suncdot(:))
+        if (debug .and. IOnode) print *, snew(:,ia)
       enddo
-      snew = twodt*snew
-
-      if (debug .and. IOnode) then
-        do ia = 1,natoms
-          print *, snew(:,ia)
-        enddo
-      endif
-
 !     This is the place to store the current magnitudes
 !
 !      do ia = 1,natoms
@@ -471,57 +400,38 @@ C Calculate corrected atomic coordinates at next time step ................
 !      call add_to_md_file(xa,va,cell=h,vcell=hdot,nose=x,nosedot=xdot)
 C Save current atomic positions as old ones, 
 C   and next positions as current ones
+
       sold = s
-      s    = snew
+      s = snew
       hold = h
-      h    = hnew
+      h = hnew
+
       xold = x
-      x    = xnew
+      x = xnew
 
 C Transform back to absolute coordinates 
-      xa= 0.0
       do ia = 1,natoms
-!       xa(:,ia) = matmul(h,s(:,ia))
-        do i= 1, 3
-          do k= 1, 3
-            xa(k,ia) = xa(k,ia) + h(k,i)*s(i,ia)
-          enddo
-        enddo
-      enddo
-
-      va = 0.0
-      do ia = 1,natoms
-!       va(:,ia) = matmul(h,sdot(:,ia))
-        do i= 1, 3
-          do k= 1, 3
-            va(k,ia) = va(k,ia) + h(k,i)*sdot(i,ia)
-          enddo
-        enddo
+         xa(:,ia) = matmul(h,s(:,ia))
+         va(:,ia) = matmul(h,sdot(:,ia))
       enddo
 
 !       Save (now old) positions and cell, and
 !       Nose variables,  to NPR_RESTART
 !
       if (Node .eq. 0) then
-        call io_assign(iacc)
-        open(unit=iacc,file=restart_file, form='formatted',
-     $       status='unknown', action= 'write', position='rewind')
-        write(iacc,*) x, xold 
-        do i = 1,3
-           write(iacc,*) (hold(j,i),j=1,3)
-        enddo
-        write(iacc,*) natoms
-        do ia = 1, natoms
-!         xaold(:) = matmul(h,sold(:,ia))
-          xaold = 0.0
-          do i= 1, 3
-            do k= 1, 3
-              xaold(k) = xaold(k) + h(k,i)*sold(i,ia)
-            enddo
-          enddo
-          write(iacc,*) iza(ia), (xaold(i),i=1,3)
-        enddo
-        call io_close(iacc)
+         call io_assign(iacc)
+         open(unit=iacc,file=restart_file, form="formatted",
+     $        status="unknown", action= "write", position="rewind")
+         write(iacc,*) x, xold 
+         do i = 1,3
+            write(iacc,*) (hold(j,i),j=1,3)
+         enddo
+         write(iacc,*) natoms
+         do ia = 1, natoms
+            xaold(:) = matmul(h,sold(:,ia))
+            write(iacc,*) iza(ia), (xaold(i),i=1,3)
+         enddo
+         call io_close(iacc)
       endif
 
 C Calculate Kinetic and potential energies ................................
@@ -550,10 +460,14 @@ C Instantaneous temperature (Kelvin)
 C .....................
 
 C Deallocate local memory
-      call de_alloc( sunc, 'sunc', 'npr' )
-      call de_alloc( snew, 'snew', 'npr' )
-      call de_alloc( sdot, 'sdot', 'npr' )
-      call de_alloc( s, 's', 'npr' )
+      call memory('D','D',size(s),'npr')
+      deallocate(s)
+      call memory('D','D',size(sdot),'npr')
+      deallocate(sdot)
+      call memory('D','D',size(snew),'npr')
+      deallocate(snew)
+      call memory('D','D',size(sunc),'npr')
+      deallocate(sunc)
 
       end subroutine npr
     
@@ -638,17 +552,21 @@ C Internal variables
 
       logical :: found
 
-      integer  :: ct, i, info, ia, j, k
+      integer :: ct,i,info,ia,j,k
 
-      real(dp) :: a1, a2, aux1(3,3), aux2(3,3), diff, dot, dt2, dtby2,
-     &            f(3,3), fi(3,3), fovermp, g(3,3), gdot(3,3), gi(3,3),
-     &            hi(3,3), hnew(3,3), hlast(3,3), hs(3), pgas,
-     &            press(3,3), tdiff, twodt, vol
-      real(dp) :: xdum(3), xaold(3), suncdot(3), raux(3)
+      real(dp)
+     .  a1,a2,aux1(3,3),aux2(3,3),diff,dot,dt2,dtby2,
+     .  f(3,3),fi(3,3),fovermp,
+     .  g(3,3),gdot(3,3),gi(3,3),
+     .  hi(3,3),hnew(3,3),hlast(3,3),hs(3),
+     .  pgas,press(3,3),
+     .  tdiff, twodt, vol
+      real(dp) :: xdum(3), xaold(3), suncdot(3)
 
-      real(dp), pointer :: s(:,:)=>null(), sdot(:,:)=>null(),
-     $                     snew(:,:)=>null(), sunc(:,:)=>null()
-      real(dp), pointer, save :: sold(:,:)=>null()
+      real(dp), dimension(:,:), allocatable ::
+     .  s,sdot,snew,sunc
+
+      real(dp), dimension(:,:), allocatable, save :: sold
       real(dp), save ::  hold(3,3)
 
       integer :: old_natoms, dummy_iza, iacc
@@ -657,7 +575,7 @@ C Internal variables
       external :: volcel, memory
 C ...............................................................................
       
-      restart_file = trim(slabel) // '.PR_RESTART'
+      restart_file = trim(slabel) // ".PR_RESTART"
 
       if (iunit .ne. 1 .and. iunit .ne. 2)
      $   call die('pr: Wrong iunit option;  must be 1 or 2')
@@ -665,12 +583,16 @@ C ..............................................................................
       if (natoms .eq. 1) ct = 0 
 
 C Allocate local memory
-      call re_alloc( sold, 1, 3, 1, natoms, 'sold', 'pr' )
-      call re_alloc( s, 1, 3, 1, natoms, 's', 'pr' )
-      call re_alloc( sdot, 1, 3, 1, natoms, 'sdot', 'pr' )
-      call re_alloc( snew, 1, 3, 1, natoms, 'snew', 'pr' )
-      call re_alloc( sunc, 1, 3, 1, natoms, 'sunc', 'pr' )
-
+      allocate(s(3,natoms))
+      allocate(sdot(3,natoms))
+      allocate(snew(3,natoms))
+      allocate(sunc(3,natoms))
+      call memory('A','D',12*natoms,'pr')
+      if (.not. allocated(sold)) then
+         allocate(sold(3,natoms))
+         call memory('A','D',3*natoms,'pr')
+      endif
+         
 C Define constants and conversion factors .......................................
       dt2   = dt**2
       dtby2 = dt/2.0d0
@@ -699,14 +621,8 @@ C Compute Inverse of H and G at current time
       if (info .ne. 0) call die( 'pr: INVER failed')
 
 C Calculate scaled coordinates (referred to matrix H) at current time
-      s = 0.0
       do ia = 1,natoms
-!       s(1:3,ia) = matmul(hi,xa(1:3,ia))
-        do i= 1, 3
-          do k= 1, 3
-            s(k,ia) = s(k,ia) + hi(k,i)*xa(i,ia)
-          enddo
-        enddo
+         s(1:3,ia) = matmul(hi,xa(1:3,ia))
       enddo
 
 C Initialize variables if current time step is the first of the simulation
@@ -726,19 +642,12 @@ C Initialize variables if current time step is the first of the simulation
          if (.not. found) then
 
             hold = h - dt * hdot
-            if (debug .and. IOnode) print *, 'Old reduced coordinates'
-            sold = 0.0
+            if (debug .and. IOnode) print *, "Old reduced coordinates"
             do ia = 1,natoms
-              xaold(1:3) = xa(1:3,ia) - dt*va(1:3,ia)
-     $             + (dt2/2.0d0) * fovermp * fa(1:3,ia) / ma(ia)
-!             sold(1:3,ia) = matmul(hi,xaold(1:3))
-              do i= 1, 3
-                do k= 1, 3
-                  sold(k,ia) = sold(k,ia) + hi(k,i)*xaold(i)
-                enddo
-              enddo
-
-              if (debug .and. IOnode) print *, sold(:,ia)
+               xaold(1:3) = xa(1:3,ia) - dt*va(1:3,ia)
+     $              + (dt2/2.0d0) * fovermp * fa(1:3,ia) / ma(ia)
+               sold(1:3,ia) = matmul(hi,xaold(1:3))
+               if (debug .and. IOnode) print *, sold(:,ia)
             enddo
 
          else
@@ -747,32 +656,25 @@ C Initialize variables if current time step is the first of the simulation
 
             if (IOnode) then
                call io_assign(iacc)
-               open(unit=iacc,file=restart_file, form='formatted',
-     $              status='old', action='read', position='rewind')
+               open(unit=iacc,file=restart_file, form="formatted",
+     $              status="old", action="read", position="rewind")
                do i = 1,3
                   read(iacc,*) (hold(j,i),j=1,3)
                enddo
                read(iacc,*) old_natoms
                if (old_natoms .ne. natoms)
-     $           call die('Wrong number of atoms in PR_RESTART')
-               sold = 0.0
+     $              call die("Wrong number of atoms in PR_RESTART")
                do ia = 1, natoms
-                 read(iacc,*) dummy_iza, (xaold(i),i=1,3)
-                 if (dummy_iza .ne. iza(ia))
-     $                call die('Wrong species number in PR_RESTART')
-!                sold(1:3,ia) = matmul(hi,xaold(1:3))
-                 do i= 1, 3
-                   do k= 1, 3
-                     sold(k,ia) = sold(k,ia) + hi(k,i)*xaold(i)
-                   enddo
-                 enddo
-
-                 if (debug .and. IOnode) print *, sold(:,ia)
+                  read(iacc,*) dummy_iza, (xaold(i),i=1,3)
+                  if (dummy_iza .ne. iza(ia))
+     $                 call die("Wrong species number in PR_RESTART")
+                  sold(1:3,ia) = matmul(hi,xaold(1:3))
+                  if (debug .and. IOnode) print *, sold(:,ia)
                enddo
                call io_close(iacc)
                write(6,*)
-     $                 'MD restart: Read old positions and cell',
-     $                 ' from PR_RESTART'
+     $                 "MD restart: Read old positions and cell",
+     $                 " from PR_RESTART"
 
             endif               ! IONODE
 
@@ -786,19 +688,11 @@ C Compute uncorrected next positions .....................................
 !
 !     Note that re-scaled forces are used.
       if (debug .and. IOnode)
-     $          print *, 'Uncorrected new reduced coordinates'
+     $          print *, "Uncorrected new reduced coordinates"
       do ia = 1,natoms
-!       raux = matmul(hi,fa(1:3,ia)) 
-        raux = 0.0
-        do i= 1, 3
-          do k= 1, 3
-            raux(k) = raux(k) + hi(k,i)*fa(i,ia)
-          enddo
-        enddo
-
-        xdum =  (dt2*fovermp/ma(ia)) *raux    
-        sunc(1:3,ia) = -sold(1:3,ia) + 2.0_dp*s(1:3,ia) + xdum
-        if (debug .and. IOnode) print *, sunc(:,ia)
+         xdum(1:3) =  (dt2*fovermp/ma(ia)) * matmul(hi,fa(1:3,ia))     
+         sunc(1:3,ia) = -sold(1:3,ia) + 2.0_dp*s(1:3,ia) + xdum(:)
+         if (debug .and. IOnode) print *, sunc(:,ia)
       enddo
 C ...................
 
@@ -806,7 +700,7 @@ C Compute initial guess for Parrinello-Rahman
 C   variables at next time step ...........................................
 
       hnew = 2.0_dp * h - hold
-      if (debug .and. IOnode) print *, 'hnew:\n', hnew
+      if (debug .and. IOnode) print *, "hnew:\n", hnew
 
 C Start selfconsistency loop to calculate P-R variables ..........
 10    continue
@@ -816,14 +710,14 @@ C Start selfconsistency loop to calculate P-R variables ..........
 C hdot (time derivatives at current time), and related stuff
 
       hdot = (hnew - hold)/twodt
-      if (debug .and. IOnode) print *, 'hdot:\n', hdot
+      if (debug .and. IOnode) print *, "hdot:\n", hdot
 
       gdot = matmul(transpose(h),hdot) +
      $       matmul(transpose(hdot),h)
-      if (debug .and. IOnode) print *, 'gdot:\n', gdot
+      if (debug .and. IOnode) print *, "gdot:\n", gdot
 
       f(:,:) = dtby2 * matmul(gi,gdot)
-      if (debug .and. IOnode) print *, 'f:\n', f
+      if (debug .and. IOnode) print *, "f:\n", f
 
       aux1(1:3,1:3) = f(1:3,1:3)
       do i = 1,3
@@ -834,41 +728,28 @@ C hdot (time derivatives at current time), and related stuff
       if (info .ne. 0) call die( 'pr: INVER failed')
 
       fi = fi/twodt
-      if (debug .and. IOnode) print *, 'fi:\n', fi
+      if (debug .and. IOnode) print *, "fi:\n", fi
 
 C Calculate corrected velocities at current time
 
-      if (debug .and. IOnode) print *, 'Corrected velocities:'
+      if (debug .and. IOnode) print *, "Corrected velocities:"
       do ia = 1,natoms
-        raux = sunc(1:3,ia)-sold(1:3,ia)
-!       sdot(1:3,ia) = matmul(fi,raux)
-        sdot(1:3,ia) = 0.0
-        do i= 1, 3
-          do k= 1, 3
-            sdot(k,ia) = sdot(k,ia) + fi(k,i)*raux(i)
-          enddo
-        enddo
-        if (debug .and. IOnode) print *, sdot(:,ia)
+         sdot(1:3,ia) = matmul(fi,(sunc(1:3,ia)-sold(1:3,ia)))
+         if (debug .and. IOnode) print *, sdot(:,ia)
       enddo
 
 C Calculate pressure tensor at current time and ideal gas pressure
 
       press(1:3,1:3) = 0.0_dp
       do ia = 1,natoms
-!        hs(1:3) = matmul(h,sdot(1:3,ia))
-        hs = 0.0
-        do i= 1, 3
-          do k= 1, 3
-            hs(k) = hs(k) + h(k,i)*sdot(i,ia)
-          enddo
-        enddo
+        hs(1:3) = matmul(h,sdot(1:3,ia))
         do j = 1,3
           do i = 1,3
             press(i,j) = press(i,j) + ma(ia) * hs(i) * hs(j) / fovermp
           enddo
         enddo
       enddo
-      if (debug .and. IOnode) print *, 'press:\n', press
+      if (debug .and. IOnode) print *, "press:\n", press
 
       pgas = 0.0d0
       do i = 1,3
@@ -893,10 +774,10 @@ C  Compute Parrinello-Rahman variables for next time step
       aux1(1:3,1:3) = aux1(1:3,1:3) + press(1:3,1:3)
 
       aux2(1:3,1:3) = matmul(aux1,transpose(hi))
-      if (debug .and. IOnode) print *, 'aux2:\n', aux2
+      if (debug .and. IOnode) print *, "aux2:\n", aux2
 
       hnew = 2.0_dp * h + (dt2 * vol / mpr) * aux2 - hold
-      if (debug .and. IOnode) print *, 'hnew:\n', hnew
+      if (debug .and. IOnode) print *, "hnew:\n", hnew
 
 
 C Check if selfconsistency has been reached
@@ -911,27 +792,10 @@ C ...................   This is the bottom of the effective loop
 
 C Calculate corrected atomic coordinates at next time step ................
       if (debug .and. IOnode)
-     $     print *, 'Corrected new reduced coordinates'
-
-      snew = 0.0
+     $     print *, "Corrected new reduced coordinates"
       do ia = 1,natoms
-!       suncdot(:) = matmul(f,sold(:,ia))
-        suncdot = 0.0
-        do i= 1, 3
-          do k= 1, 3
-            suncdot(k) = suncdot(k) + f(k,i)*sold(i,ia)
-          enddo
-        enddo
-
-        raux = sunc(:,ia) + suncdot
-!       snew(:,ia) = twodt * matmul(fi,raux)
-        do i= 1, 3
-          do k= 1, 3
-            snew(k,ia) = snew(k,ia) + fi(k,i)*raux(i)
-          enddo
-        enddo
-        snew(:,ia) = twodt*snew(:,ia)
-
+        suncdot(:) = matmul(f,sold(:,ia))
+        snew(:,ia) = twodt * matmul(fi,sunc(:,ia) + suncdot(:))
         if (debug .and. IOnode) print *, snew(:,ia)
       enddo
 
@@ -968,19 +832,13 @@ C Quench velocity components going uphill
 C Compute gas pressure again, in case quench has happened
         press = 0.0_dp
         do ia = 1,natoms
-!         hs(:) = matmul(h,sdot(:,ia))
-          hs = 0.0
-          do i= 1, 3
-            do k= 1, 3
-              hs(k) = hs(k) + h(k,i)*sdot(i,ia)
-            enddo
-          enddo
-          do j = 1,3
-             do i = 1,3
-                press(i,j) = press(i,j) +
-     $                        ma(ia) * hs(i) * hs(j) / fovermp
-             enddo
-          enddo
+           hs(:) = matmul(h,sdot(:,ia))
+           do j = 1,3
+              do i = 1,3
+                 press(i,j) = press(i,j) +
+     $                         ma(ia) * hs(i) * hs(j) / fovermp
+              enddo
+           enddo
         enddo
         pgas = 0.0d0
         do i = 1,3
@@ -1002,52 +860,31 @@ C Save current atomic positions as old ones,
 C   and next positions as current ones
 
       sold = s
-      s    = snew
+      s = snew
       hold = h
-      h    = hnew
+      h = hnew
 
 C Transform back to absolute coordinates 
-      xa= 0.0
       do ia = 1,natoms
-!       xa(:,ia) = matmul(h,s(:,ia))
-        do i= 1, 3
-          do k= 1, 3
-            xa(k,ia) = xa(k,ia) + h(k,i)*s(i,ia)
-          enddo
-        enddo
-      enddo
-
-      va = 0.0
-      do ia = 1,natoms
-!       va(:,ia) = matmul(h,sdot(:,ia))
-        do i= 1, 3
-          do k= 1, 3
-            va(k,ia) = va(k,ia) + h(k,i)*sdot(i,ia)
-          enddo
-        enddo
+         xa(:,ia) = matmul(h,s(:,ia))
+         va(:,ia) = matmul(h,sdot(:,ia))
       enddo
 
 !       Save (now old) positions and cell to PR_RESTART
 !
       if (Node .eq. 0) then
-        call io_assign(iacc)
-        open(unit=iacc,file=restart_file, form='formatted',
-     $       status='unknown', action= 'write', position='rewind')
-        do i = 1,3
-           write(iacc,*) (hold(j,i),j=1,3)
-        enddo
-        write(iacc,*) natoms
-        do ia = 1, natoms
-!          xaold(:) = matmul(h,sold(:,ia))
-          xaold = 0.0
-          do i= 1, 3
-            do k= 1, 3
-              xaold(k) = xaold(k) + h(k,i)*sold(i,ia)
-            enddo
-          enddo
-          write(iacc,*) iza(ia), (xaold(i),i=1,3)
-        enddo
-        call io_close(iacc)
+         call io_assign(iacc)
+         open(unit=iacc,file=restart_file, form="formatted",
+     $        status="unknown", action= "write", position="rewind")
+         do i = 1,3
+            write(iacc,*) (hold(j,i),j=1,3)
+         enddo
+         write(iacc,*) natoms
+         do ia = 1, natoms
+            xaold(:) = matmul(h,sold(:,ia))
+            write(iacc,*) iza(ia), (xaold(i),i=1,3)
+         enddo
+         call io_close(iacc)
       endif
 
 
@@ -1060,7 +897,7 @@ C Kinetic energy of Parrinello-Rahman variables
 
 C Potential energy of Parrinello-Rahman variables
       vpr = tp * vol
-      if (debug .and. IOnode) print *, 'kpr, vpr: ', kpr, vpr
+      if (debug .and. IOnode) print *, "kpr, vpr: ", kpr, vpr
 
 C Instantaneous temperature (Kelvin)
       if (iunit .eq. 1) then
@@ -1071,15 +908,20 @@ C Instantaneous temperature (Kelvin)
 C .....................
 
 C Deallocate local memory
-      call de_alloc( sunc, 'sunc', 'pr' )
-      call de_alloc( snew, 'snew', 'pr' )
-      call de_alloc( sdot, 'sdot', 'pr' )
-      call de_alloc( s, 's', 'pr' )
+      call memory('D','D',size(s),'pr')
+      deallocate(s)
+      call memory('D','D',size(sdot),'pr')
+      deallocate(sdot)
+      call memory('D','D',size(snew),'pr')
+      deallocate(snew)
+      call memory('D','D',size(sunc),'pr')
+      deallocate(sunc)
 
       end subroutine pr
     
-      subroutine nose( istep, iunit, natoms, fa, tt, dt, ma, mn, ntcon,
-     .                 va, xa, kin, kn, vn, temp )
+      subroutine nose(istep,iunit,natoms,fa,tt,dt,
+     .                ma,mn,ntcon,va,xa,kin,kn,vn,
+     .                temp)
 C *************************************************************************
 C Subroutine for MD simulations with CONTROLLED TEMPERATURE.
 C The temperature is controlled with a NOSE thermostat.
@@ -1156,10 +998,11 @@ C Internal variables .........................................................
      .  tekin,temp,twodt,
      .  x,xdot,xlast,xnew,xold
 
-      real(dp), pointer, save :: xanew(:,:)=>null(), xaold(:,:)=>null()
+      real(dp), dimension(:,:), allocatable, save ::
+     .  xanew,xaold
 C .............................................................................
 
-      restart_file = trim(slabel) // '.NOSE_RESTART'
+      restart_file = trim(slabel) // ".NOSE_RESTART"
 
       if (iunit .ne. 1 .and. iunit .ne. 2)
      $    call die('nose: Wrong iunit option;  must be 1 or 2')
@@ -1167,11 +1010,13 @@ C .............................................................................
       if (natoms .eq. 1) ct = 0
 
 C Allocate local memory and initialise
-      nullify(xanew)
-      call re_alloc( xanew, 1, 3, 1, natoms, 'xanew', 'nose' )
-      if (.not.associated(xaold)) then
-        nullify(xaold)
-        call re_alloc( xaold, 1, 3, 1, natoms, 'xaold', 'nose' )
+      if (.not.allocated(xanew)) then
+        allocate(xanew(3,natoms))
+        call memory('A','D',3*natoms,'nose')
+      endif
+      if (.not.allocated(xaold)) then
+        allocate(xaold(3,natoms))
+        call memory('A','D',3*natoms,'nose')
         do ia = 1,natoms
           do i = 1,3
             xaold(i,ia)=0.0d0
@@ -1234,25 +1079,25 @@ C     if the time step is the first of the simulation
 !
            if (Node .eq. 0) then
             call io_assign(iacc)
-            open(unit=iacc,file=restart_file, form='formatted',
-     $           status='old', action='read', position='rewind')
+            open(unit=iacc,file=restart_file, form="formatted",
+     $           status="old", action="read", position="rewind")
             read(iacc,*) old_natoms, old_dt
             read(iacc,*) x, xold
             if (old_natoms .ne. natoms)
-     $           call die('Wrong number of atoms in NOSE_RESTART')
+     $           call die("Wrong number of atoms in NOSE_RESTART")
             do ia = 1, natoms
-               read(iacc,*) dummy_iza, (xaold(i,ia),i=1,3)
+               read(iacc,*) dummy_iza, (xaold(i,ia),i=1,3) ! old positions
                if (dummy_iza .ne. iza(ia))
-     $              call die('Wrong species number in NOSE_RESTART')
+     $              call die("Wrong species number in NOSE_RESTART")
             enddo
             call io_close(iacc)
             write(6,*)
-     $         'MD restart: Read old positions and Nose variables',
-     $              ' from NOSE_RESTART'
+     $         "MD restart: Read old positions and Nose variables",
+     $              " from NOSE_RESTART"
             if (abs(old_dt - dt) .gt. 1.0d-8) then
-               write(6,*) '**WARNING: Timestep has changed. Old: ',
-     $              old_dt, ' New: ', dt
-               write(6,*) '**WARNING: Approximating old positions.'
+               write(6,*) "**WARNING: Timestep has changed. Old: ",
+     $              old_dt, " New: ", dt
+               write(6,*) "**WARNING: Approximating old positions."
                   ! First order, using the positions and velocities 
                   ! at t-old_dt (positions from NOSE_RESTART, velocities
                   !              from XV file)
@@ -1357,8 +1202,8 @@ C Instantaneous temperature (Kelvin)
 !       Save (now old) positions and nose variables to NOSE_RESTART
 !
          call io_assign(iacc)
-         open(unit=iacc,file=restart_file, form='formatted',
-     $        status='unknown', action= 'write', position='rewind')
+         open(unit=iacc,file=restart_file, form="formatted",
+     $        status="unknown", action= "write", position="rewind")
          write(iacc,*) natoms, dt
          write(iacc,*) x, xold
          do ia = 1, natoms
@@ -1368,6 +1213,7 @@ C Instantaneous temperature (Kelvin)
       endif
 
 C .....................
+
       end subroutine nose
 
       subroutine anneal(istep,iunit,ianneal,taurelax,bulkm,
@@ -1435,11 +1281,9 @@ C real*8 temp           : Instantaneous system temperature
 C real*8 pressin        : Instantaneous system pressure 
 C *****************************************************************************
 
-      logical
-     .   found
 
       integer 
-     .   natoms,ntcon,istep,ianneal,iunit,iacc
+     .   natoms,ntcon,istep,ianneal,iunit
 
       real(dp)
      .  bulkm,dt,fa(3,natoms),h(3,3),kin,
@@ -1448,18 +1292,21 @@ C *****************************************************************************
 
 C Internal variables .............................................................
 
-      integer  :: ct, i, ia, info, j, k
-      real(dp) :: dt2, fovermp, hi(3,3), hs(3), pgas, press(3,3),
-     &            pressin, rfac, rfac2, tekin, temp, twodt, vol, volcel
+      integer
+     .  ct,i,ia,info,j,k
 
-      real(dp), pointer :: s(:,:)=>null(), sdot(:,:)=>null(),
-     $                     snew(:,:)=>null(), sunc(:,:)=>null()
-      real(dp), pointer, save :: sold(:,:)=>null()
+      real(dp)
+     .  dt2,fovermp,hi(3,3),hs(3),
+     .  pgas,press(3,3),pressin,rfac,rfac2,
+     .  tekin,temp,twodt,vol,volcel
+
+      real(dp), dimension(:,:), allocatable, save ::
+     .  s,sdot,snew,sold,sunc
 
       real(dp), dimension(3) :: xdum, xaold
       logical :: have_t_target, have_p_target
        external
-     &  volcel, memory
+     .  volcel, memory
 C ....................................................................
 
       if (iunit .ne. 1 .and. iunit .ne. 2)
@@ -1471,11 +1318,18 @@ C ....................................................................
       if (natoms .eq. 1) ct = 0
 
 C Allocate local memory
-      call re_alloc( sold, 1, 3, 1, natoms, 'sold', 'anneal' )
-      call re_alloc( s, 1, 3, 1, natoms, 's', 'anneal' )
-      call re_alloc( sdot, 1, 3, 1, natoms, 'sdot', 'anneal' )
-      call re_alloc( snew, 1, 3, 1, natoms, 'snew', 'anneal' )
-      call re_alloc( sunc, 1, 3, 1, natoms, 'sunc', 'anneal' )
+      allocate(s(3,natoms))
+      call memory('A','D',3*natoms,'anneal')
+      allocate(sdot(3,natoms))
+      call memory('A','D',3*natoms,'anneal')
+      allocate(snew(3,natoms))
+      call memory('A','D',3*natoms,'anneal')
+      allocate(sunc(3,natoms))
+      call memory('A','D',3*natoms,'anneal')
+      if (.not.allocated(sold)) then
+        allocate(sold(3,natoms))
+        call memory('A','D',3*natoms,'anneal')
+      endif
 
 C Define constants and conversion factors .......................................
       dt2   = dt**2
@@ -1508,58 +1362,24 @@ C Compute Inverse of H at current time
       if (info .ne. 0) call die('anneal: INVER failed')
 
 C Calculate scaled coordinates (referred to matrix H) at current time
-      s = 0.0
       do ia = 1,natoms
-!       s(1:3,ia) = matmul(hi,xa(1:3,ia))
-        do i= 1, 3
-          do k= 1, 3
-            s(k,ia) = s(k,ia) + hi(k,i)*xa(i,ia)
-          enddo
-        enddo
+         s(1:3,ia) = matmul(hi,xa(1:3,ia))
       enddo
 
 C Initialize variables if current time step is the first of the simulation
       if (istep .eq. 1) then
-        if (IOnode) then
-          restart_file = trim(slabel) // '.ANNEAL_RESTART'
-          inquire(file=restart_file, exist=found)
-        end if
-        call broadcast(found)
-        if (found) then
-          if (IOnode) then
-            call io_assign(iacc)
-            open(unit=iacc, file=restart_file, form='formatted',
-     $           status='old', action='read', position='rewind')
-            read(iacc,*) sold
-            call io_close(iacc)
-          endif
-          call broadcast(sold)
-        else
-          do ia = 1,natoms
-            xaold(1:3) = xa(1:3,ia) - dt*va(1:3,ia)
-     $           + (dt2/2.0_dp) * fovermp * fa(1:3,ia) / ma(ia)
-!           sold(1:3,ia) = matmul(hi,xaold(1:3))
-            do i= 1, 3
-              do k= 1, 3
-                sold(k,ia) = sold(k,ia) + hi(k,i)*xaold(i)
-              enddo
-            enddo
-          enddo
-        endif
+        do ia = 1,natoms
+           xaold(1:3) = xa(1:3,ia) - dt*va(1:3,ia)
+     $          + (dt2/2.0_dp) * fovermp * fa(1:3,ia) / ma(ia)
+           sold(1:3,ia) = matmul(hi,xaold(1:3))
+        enddo
       endif
 C ..................
 
 C Compute uncorrected next positions .....................................
       do ia = 1,natoms
-!         xdum(1:3) =  (dt2*fovermp/ma(ia)) * matmul(hi,fa(1:3,ia))
-        xdum = 0.0
-        do i= 1, 3
-          do k= 1, 3
-            xdum(k) = xdum(k) + hi(k,i)*fa(i,ia)
-          enddo
-        enddo
-        xdum = (dt2*fovermp/ma(ia))*xdum
-        sunc(:,ia) = -sold(:,ia) + 2.0_dp*s(:,ia) + xdum
+         xdum(1:3) =  (dt2*fovermp/ma(ia)) * matmul(hi,fa(1:3,ia))     
+         sunc(1:3,ia) = -sold(1:3,ia) + 2.0_dp*s(1:3,ia) + xdum(:)
       enddo
 C ...................
 
@@ -1569,13 +1389,7 @@ C Calculate uncorrected velocities at current time
 C Calculate pressure tensor at current time and ideal gas pressure
       press = 0.0_dp
       do ia = 1,natoms
-!       hs(1:3) = matmul(h,sdot(1:3,ia))
-        hs = 0.0
-        do i= 1, 3
-          do k= 1, 3
-            hs(k) = hs(k) + h(k,i)*sdot(i,ia)
-          enddo
-        enddo
+        hs(1:3) = matmul(h,sdot(1:3,ia))
         do j = 1,3
           do i = 1,3
             press(i,j) = press(i,j) + ma(ia) * hs(i) * hs(j) / fovermp
@@ -1600,7 +1414,7 @@ C Compute internal pressure  (pressin = 1/3 Tr (press))   at current time
 C Compute kinetic energy
       kin = (3.0d0 / 2.0d0) * pgas * vol
 
-      if (IOnode) write(*,*) 'Anneal: Kinetic Energy= ', kin
+      if (IOnode) write(*,*) "Anneal: Kinetic Energy= ", kin
 
       if (have_t_target) then
 C Correct velocities to reach target termperature
@@ -1611,7 +1425,7 @@ C Correct velocities to reach target termperature
       endif
       if (rfac2 .le. 0.0) call die('Wrong anneal parameter')
       rfac = sqrt(rfac2)
-      if (IOnode) write(*,*) 'Anneal: Velocity scale factor = ', rfac
+      if (IOnode) write(*,*) "Anneal: Velocity scale factor = ", rfac
 
       sdot(1:3,1:natoms) = rfac * sdot(1:3,1:natoms)
 
@@ -1620,14 +1434,7 @@ C Compute again pressure, with corrected velocities
       press(1:3,1:3) = 0.0_dp
 
       do ia = 1,natoms
-!        hs(1:3) = matmul(h,sdot(1:3,ia))
-        hs = 0.0
-        do i= 1, 3
-          do k= 1, 3
-            hs(k) = hs(k) + h(k,i)*sdot(i,ia)
-          enddo
-        enddo
-
+        hs(1:3) = matmul(h,sdot(1:3,ia))
         do j = 1,3
           do i = 1,3
             press(i,j) = press(i,j) + ma(ia) * hs(i) * hs(j) / fovermp
@@ -1671,7 +1478,7 @@ C Correct cell shape to reach target pressure
           h(i,j) = rfac * h(i,j)
         enddo
       enddo
-      if (IOnode)  write(*,*) 'Anneal: Cell scale factor = ', rfac
+      if (IOnode)  write(*,*) "Anneal: Cell scale factor = ", rfac
       endif
 
 
@@ -1691,26 +1498,10 @@ C   and next positions as current ones
       s = snew
 
 C Transform back to absolute coordinates 
-      xa= 0.0
       do ia = 1,natoms
-!       xa(:,ia) = matmul(h,s(:,ia))
-        do i= 1, 3
-          do k= 1, 3
-            xa(k,ia) = xa(k,ia) + h(k,i)*s(i,ia)
-          enddo
-        enddo
+         xa(:,ia) = matmul(h,s(:,ia))
+         va(:,ia) = matmul(h,sdot(:,ia))
       enddo
-
-      va = 0.0
-      do ia = 1,natoms
-!       va(:,ia) = matmul(h,sdot(:,ia))
-        do i= 1, 3
-          do k= 1, 3
-            va(k,ia) = va(k,ia) + h(k,i)*sdot(i,ia)
-          enddo
-        enddo
-      enddo
-
 C ....................
 
 C Calculate Kinetic and potential energies ................................
@@ -1727,22 +1518,16 @@ C Instantaneous temperature (Kelvin)
 C .....................
 
 C Deallocate local memory
-      call de_alloc( sunc, 'sunc', 'anneal' )
-      call de_alloc( snew, 'snew', 'anneal' )
-      call de_alloc( sdot, 'sdot', 'anneal' )
-      call de_alloc( s, 's', 'anneal' )
+      call memory('D','D',size(s),'anneal')
+      deallocate(s)
+      call memory('D','D',size(sdot),'anneal')
+      deallocate(sdot)
+      call memory('D','D',size(snew),'anneal')
+      deallocate(snew)
+      call memory('D','D',size(sunc),'anneal')
+      deallocate(sunc)
 
 !!!      taurelax = taurelax - dt
-
-      if (IOnode) then
-        restart_file = trim(slabel) // '.ANNEAL_RESTART'
-        call io_assign(iacc)
-        open(unit=iacc, file=restart_file, form='formatted',
-     $       status='unknown', action='write', position='rewind')
-        write(iacc,*) sold
-        call io_close(iacc)
-      endif
-
       end subroutine anneal
 
 
@@ -1806,8 +1591,10 @@ C Internal variables ..........................................................
       real(dp)
      .  dot,dt2,fovermp,temp,twodt
 
-      real(dp), pointer, save :: xanew(:,:)=>null(),
-     $                           xaold(:,:)=>null()
+      real(dp), dimension(:,:), allocatable, save ::
+     .  xanew
+      real(dp), dimension(:,:), allocatable, save ::
+     .  xaold
 
 C ........................
 
@@ -1818,9 +1605,11 @@ C ........................
       if (natoms .eq. 1) ct = 0
 
 C Allocate local memory
-      call re_alloc( xanew, 1, 3, 1, natoms, 'xanew', 'verlet1' )
-      if (.not.associated(xaold)) then
-        call re_alloc( xaold, 1, 3, 1, natoms, 'xaold', 'verlet1' )
+      allocate(xanew(3,natoms))
+      call memory('A','D',3*natoms,'verlet1')
+      if (.not.allocated(xaold)) then
+        allocate(xaold(3,natoms))
+        call memory('A','D',3*natoms,'verlet1')
       endif
 
 C Define constants and conversion factors .....................................
@@ -1911,7 +1700,8 @@ C Instantaneous temperature (Kelvin)
 C .....................
 
 C Deallocate local memory
-      call de_alloc( xanew, 'xanew', 'verlet1' )
+      call memory('D','D',size(xanew),'verlet1')
+      deallocate(xanew)
 
       end subroutine verlet1
     
@@ -1942,7 +1732,7 @@ C integer iquench       : Option for quenching:
 C                              0 = no quenching (standard dynamics)
 C                              1 = power quenching (set to zero velocity
 C                                 components opposite to force)
-C                              2 = 'fire' quenching, as in
+C                              2 = "fire" quenching, as in
 C                                  Bitzek et al, PRL 97, 170201 (2006)
 C integer natoms        : Number of atoms in the simulation cell
 C real*8 fa(3,natoms)   : Atomic forces 
@@ -1983,7 +1773,8 @@ C Internal variables ..........................................................
       real(dp)
      .  dot,dt2,dtby2,fovermp,temp
 
-      real(dp), pointer, save :: accold(:,:)=>null(), vold(:,:)=>null()
+      real(dp), dimension(:,:), allocatable, save ::
+     .  accold,vold
 
 C Related to FIRE quenching
       integer, parameter  :: firenmin = 5
@@ -1995,7 +1786,7 @@ C Related to FIRE quenching
       real(dp)            :: magv, magf
 C ........................
 
-      restart_file = trim(slabel) // '.VERLET_RESTART'
+      restart_file = trim(slabel) // ".VERLET_RESTART"
       if (iunit .ne. 1 .and. iunit .ne. 2)
      $     call die('verlet2: Wrong iunit option;  must be 1 or 2')
 
@@ -2004,11 +1795,13 @@ C ........................
 
 C Allocate local memory - only done once as data must be saved. As a
 C result the memory is not deallocated at the end of the routine.
-      if (.not.associated(accold)) then
-        call re_alloc( accold, 1, 3, 1, natoms, 'accold', 'verlet2' )
+      if (.not.allocated(accold)) then
+        allocate(accold(3,natoms))
+        call memory('A','D',3*natoms,'verlet2')
       endif
-      if (.not.associated(vold)) then
-        call re_alloc( vold, 1, 3, 1, natoms, 'vold', 'verlet2' )
+      if (.not.allocated(vold)) then
+        allocate(vold(3,natoms))
+        call memory('A','D',3*natoms,'verlet2')
       endif
 
 C Define constants and conversion factors .....................................
@@ -2063,27 +1856,27 @@ C     if the time step is the first of the simulation ..........................
 !         forces, in order to match the velocities
 !         correctly (the velocities in the XV file are
 !         one time step behind, so they are already the
-!         'old' velocities).
+!         "old" velocities).
 !
           if (Node .eq. 0) then
            call io_assign(iacc)
-           open(unit=iacc,file=restart_file, form='formatted',
-     $          status='old', action='read', position='rewind')
+           open(unit=iacc,file=restart_file, form="formatted",
+     $          status="old", action="read", position="rewind")
            read(iacc,*) old_natoms, old_dt
            if (old_natoms .ne. natoms)
-     $          call die('Wrong number of atoms in VERLET_RESTART')
+     $          call die("Wrong number of atoms in VERLET_RESTART")
            do ia = 1, natoms
               read(iacc,*) dummy_iza, (accold(i,ia),i=1,3) ! forces
               if (dummy_iza .ne. iza(ia)) 
-     $             call die('Wrong species number in VERLET_RESTART')
+     $             call die("Wrong species number in VERLET_RESTART")
               accold(:,ia) = fovermp * accold(:,ia) / ma(ia)
               vold(:,ia)  = va(:,ia)
            enddo
            call io_close(iacc)
-           write(6,*) 'MD restart: Read old forces from VERLET_RESTART'
+           write(6,*) "MD restart: Read old forces from VERLET_RESTART"
            if (abs(old_dt - dt) .gt. 1.0d-8) then
-              write(6,*) 'Timestep has changed. Old: ', old_dt,
-     $             ' New: ', dt
+              write(6,*) "Timestep has changed. Old: ", old_dt,
+     $             " New: ", dt
            endif
 
           endif             ! IONode
@@ -2240,8 +2033,8 @@ C Instantaneous temperature (Kelvin)
 !
       if (Node .eq. 0) then
          call io_assign(iacc)
-         open(unit=iacc,file=restart_file, form='formatted',
-     $        status='unknown', action= 'write', position='rewind')
+         open(unit=iacc,file=restart_file, form="formatted",
+     $        status="unknown", action= "write", position="rewind")
          write(iacc,*) natoms, dt
          do ia = 1, natoms
             write(iacc,*) iza(ia), (fa(i,ia),i=1,3) ! forces

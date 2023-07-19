@@ -1,9 +1,12 @@
 ! 
-! Copyright (C) 1996-2016	The SIESTA group
-!  This file is distributed under the terms of the
-!  GNU General Public License: see COPYING in the top directory
-!  or http://www.gnu.org/copyleft/gpl.txt.
-! See Docs/Contributors.txt for a list of contributors.
+! This file is part of the SIESTA package.
+!
+! Copyright (c) Fundacion General Universidad Autonoma de Madrid:
+! E.Artacho, J.Gale, A.Garcia, J.Junquera, P.Ordejon, D.Sanchez-Portal
+! and J.M.Soler, 1996- .
+! 
+! Use of this software constitutes agreement with the full conditions
+! given in the SIESTA license, as signed by all legitimate users.
 !
       subroutine plcharge( MAXO, MAXA, MAXUO, MAXNH, MAXNA, NSPIN, 
      .                     ISA, IPHORB, INDXUO, LASTO, 
@@ -22,6 +25,7 @@ C **********************************************************************
 
       use precision
       use old_atmfuncs
+      use fdf
       use files,         only : slabel, label_length
       use parallel,      only : Node, Nodes
 #ifdef MPI
@@ -66,6 +70,7 @@ C Internal variables ---------------------------------------------------
 
       character(len=label_length+4) :: fname1
       character(len=label_length+4) :: fname2
+      character(len=label_length+4) :: paste
 
       integer
      .  UNIT1, UNIT2, IL, IA, J
@@ -75,7 +80,7 @@ C Internal variables ---------------------------------------------------
 #endif
 
       external
-     .  IO_ASSIGN, IO_CLOSE
+     .  IO_ASSIGN, IO_CLOSE, PASTE
 
 #ifdef MPI
       call MPI_AllReduce(MAXNH,MAXNHG,1,MPI_integer,MPI_sum,
@@ -85,8 +90,8 @@ C Internal variables ---------------------------------------------------
 C Write only if we are in the node 0 -----------------------------------
       if (Node .eq. 0) then
 C Assign the name of the output file -----------------------------------
-        FNAME1 = trim(slabel)//'.DIM'
-        FNAME2 = trim(slabel)//'.PLD'
+        FNAME1 = paste(slabel,'.DIM')
+        FNAME2 = paste(slabel,'.PLD')
 
         call IO_ASSIGN(UNIT1)
         open( UNIT = UNIT1, FILE = FNAME1, FORM = 'UNFORMATTED',

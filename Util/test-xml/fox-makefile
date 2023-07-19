@@ -1,0 +1,142 @@
+# 
+# This file is part of the SIESTA package.
+#
+# Copyright (c) Fundacion General Universidad Autonoma de Madrid:
+# E.Artacho, J.Gale, A.Garcia, J.Junquera, P.Ordejon, D.Sanchez-Portal
+# and J.M.Soler, 1996- .
+# 
+# Use of this software constitutes agreement with the full conditions
+# given in the SIESTA license, as signed by all legitimate users.
+#
+# Makefile for PDOS XML processing
+#
+# The VPATH directive below helps to re-use f2kcli.F90 from the top Src.
+# Other points to note, until we switch to a better building system:
+#
+#  The arch.make file is supposed to be in $(OBJDIR). This is normally
+#  the top Obj, but if you are using architecture-dependent build directories
+#  you might want to change this. (If you do not understand this, you do not
+#  need to change anything. Power users can do "make OBJDIR=Whatever".)
+#
+#  If your main Siesta build used an mpi compiler, you might need to
+#  define an FC_SERIAL symbol in your top arch.make, to avoid linking
+#  in the mpi libraries even if we explicitly undefine MPI below.
+#  
+#
+.SUFFIXES: 
+.SUFFIXES: .f .F .o .a  .f90 .F90
+#
+default: test-xml
+OBJDIR=Obj
+VPATH=../../Src
+#
+include ../../$(OBJDIR)/arch.make
+#
+FC_DEFAULT:=$(FC)
+FC_SERIAL?=$(FC_DEFAULT)
+FC:=$(FC_SERIAL)         # Make it non-recursive
+#
+# FoX whatnot
+#
+# FoX build targets:
+FoX_configured=../../$(OBJDIR)/FoX/.config
+FoX_built=../../$(OBJDIR)/FoX/.FoX
+#
+# This is how we pick up modules and libraries for FoX:
+FoX_FCFLAGS=`../../$(OBJDIR)/FoX/FoX-config --fcflags`
+FoX_LIBS=`../../$(OBJDIR)/FoX/FoX-config --libs --wxml`
+#
+# And add them to global compiler flags:
+INCFLAGS:=$(FoX_FCFLAGS) $(INCFLAGS)
+#
+# First, it needs to be configured. This may have been done
+# by the main SIESTA configure, but in case not:
+#
+FC_DEFAULT:=$(FC)
+FC_SERIAL?=$(FC_DEFAULT)
+#
+# Note that we hardwire the need to use the configure script in the main Src directory.
+#
+TOP_LEVEL=$(shell pwd)/../../Src
+$(FoX_configured):
+	(cd ../../$(OBJDIR)/FoX; CONFIGURE="$(TOP_LEVEL)/FoX/configure"; $$CONFIGURE VPATH="$(TOP_LEVEL)/FoX" FC="$(FC_SERIAL)" FCFLAGS="$(FFLAGS)" --enable-wcml $(DUMMY_FOX) || false )
+#
+# Note we have to make sure to use the same compiler as SIESTA,
+# and pick up all the same FFLAGS, and also remember to maybe ask for a dummy library.
+# Note also that the "false" clause will stop the 'make' process if the configuration fails.
+#
+# Then we want to make FoX itself. Like so:
+$(FoX_built): $(FoX_configured)
+	(cd ../../$(OBJDIR)/FoX; $(MAKE))
+#
+INCFLAGS:=$(INCFLAGS) -I../../$(OBJDIR)   # To pick up xmlparser mod files
+#
+LIBS= ../../$(OBJDIR)/libxmlparser.a $(FoX_LIBS)
+#
+DOM_OBJ_FILES= flib_dom.o \
+          m_dom_attribute.o m_dom_element.o m_dom_node.o m_dom_types.o \
+          m_dom_debug.o m_dom_error.o m_dom_nodelist.o m_dom_utils.FoX.o \
+          m_dom_document.o m_dom_namednodemap.o m_dom_parse.o \
+          m_strings.o
+#
+test.o: f2kcli.o m_getopts.o m_compare.o
+m_compare.o: m_compare_tol.o corresponding_node.o string_utilities.o
+corresponding_node.o: string_utilities.o
+string_utilities.o: m_compare_tol.o	
+m_getopts.o: f2kcli.o
+m_compare_tol.o: $(DOM_OBJ_FILES)
+corresponding_node.o: $(DOM_OBJ_FILES)
+#
+OTHER_OBJS=pxf.o
+#
+OBJS=test.o f2kcli.o m_getopts.o $(DOM_OBJ_FILES) \
+     corresponding_node.o string_utilities.o $(OTHER_OBJS)
+#
+fail_now:
+	@echo "*** FoX integration pending. Use the wxml form for now"
+	@false
+test-xml: fail_now $(OBJS)
+	@echo
+	@echo  "-- Building test-xml program. "
+	@echo  "-- Some compilers might have trouble with the DOM subsystem. "
+	@echo  "-- Make sure also that 'INCFLAGS' is part of the default compilation rules in arch.make"
+	@echo
+	$(FC) $(FFLAGS) -o test-xml $(OBJS) $(LIBS)
+
+LIST_OBJS= list_nodes.o $(DOM_OBJ_FILES) $(OTHER_OBJS)
+list:   
+	$(FC) $(FFLAGS)  -o list $(LIST_OBJS) $(LIBS)
+
+clean:
+	rm -f *.o *.*d  test-xml list
+#
+# DO NOT DELETE THIS LINE - used by make depend
+m_reader.o: m_io.o m_debug.o
+m_elstack.o: m_buffer.o
+m_dictionary.o: m_buffer.o
+m_entities.o: m_buffer.o m_xml_error.o
+m_converters.o: m_debug.o
+m_fsm.o: m_buffer.o m_dictionary.o m_charset.o m_entities.o m_elstack.o
+m_xml_error.o: m_elstack.o
+m_xml_parser.o: m_buffer.o m_elstack.o m_reader.o m_fsm.o m_dictionary.o \
+                m_debug.o m_xml_error.o
+m_dom_document.o:  m_dom_types.o
+m_dom_nodelist.o: m_dom_types.o
+m_dom_namednodemap.o:  m_dom_types.o
+m_dom_node.o:  m_dom_types.o m_dom_nodelist.o m_dom_namednodemap.o \
+              m_dom_debug.o m_dom_error.o
+m_dom_attribute.o: m_dom_types.o  m_dom_node.o
+m_dom_element.o: m_dom_types.o m_dom_nodelist.o m_dom_namednodemap.o \
+                 m_dom_attribute.o m_dom_document.o m_dom_debug.o m_dom_node.o
+m_dom_parse.o: m_dom_types.o m_dom_element.o m_dom_document.o m_dom_node.o \
+               m_dom_debug.o
+m_dom_utils.FoX.o: m_dom_types.o m_dom_element.o m_dom_document.o m_dom_node.o \
+                m_dom_namednodemap.o m_dom_debug.o wxml
+m_dom_types.o:m_strings.o
+flib_dom.o:  m_dom_types.o m_dom_nodelist.o m_dom_namednodemap.o \
+             m_dom_attribute.o m_dom_document.o m_dom_node.o \
+             m_dom_node.o m_dom_element.o m_dom_parse.o m_dom_utils.FoX.o
+flib_sax.o:  m_dictionary.o m_xml_parser.o m_converters.o m_xml_error.o
+compare_m.o: m_compare_tol.o
+test.o: compare_m.o
+

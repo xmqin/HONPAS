@@ -1,0 +1,1024 @@
+% Manual for the ATOM program
+%
+% To generate the printed version:
+%
+% latex manual
+% makeindex manual    (Optional if you have a current manual.ind)
+% latex manual
+% [ dvips manual ]
+%
+%
+\documentclass[11pt]{article}
+%\usepackage{makeidx}
+%\usepackage{graphicx}
+
+\tolerance 10000
+\textheight 24cm
+\textwidth 16cm
+\oddsidemargin 1mm
+\topmargin -20mm
+
+%\makeindex
+
+\parindent=0cm
+\baselineskip=12pt
+\parskip 5pt
+
+\newcommand{\gpfig}[2][1.0]{
+\includegraphics[angle=-90,width=#1\textwidth] {#2}
+}
+
+\newcommand{\singlefig}[2][1.0]{
+\begin{figure}
+\centering
+\gpfig[#1]{#2}
+\end{figure}
+}
+
+\begin{document}
+
+% TITLE PAGE
+% --------------------------------------------------------------
+
+\begin{titlepage}
+
+\begin{center}
+~
+\vfill
+\vspace{1cm}
+{\Huge {\bf ATOM User Manual}}
+\par\vspace{3cm}
+\hrulefill
+\par\vspace{3cm}
+{\Large {\bf Version 3.2.8, 29 April 2008}}
+\par\vspace{2cm}
+\hrulefill
+
+{\Large Alberto Garc\'{\i}a \\
+ICMAB-CSIC, Barcelona
+
+albertog@icmab.es}
+\vfill
+\end{center}
+
+\end{titlepage}
+% END TITLE PAGE
+% --------------------------------------------------------------
+
+\tableofcontents
+\newpage
+
+\section{PREFACE}
+
+{\sc ATOM} is the name of a program originally written (circa 1982) by
+Sverre Froyen at the University of California at Berkeley, modified
+starting in 1990 by Norman Troullier and Jose Luis Martins at the
+University of Minnesota, and currently maintained by Alberto Garcia
+(wdpgaara@lg.ehu.es), who added some features and made substantial
+structural changes to the April 1990 (5.0) Minnesota version while at
+Berkeley and elsewhere.
+
+Jose Luis Martins is maintaining his own version of the code:
+\begin{verbatim}{\tt http://bohr.inesc-mn.pt/~jlm/pseudo.html\end{verbatim}
+
+
+The program's basic capabilities are:
+
+\begin{itemize}
+\item All-electron DFT atomic calculations for arbitrary electronic
+configurations.
+
+\item Generation of ab-initio pseudopotentials (several flavors).
+
+\item Atomic calculations in which the effect of the core is represented
+by a previously generated pseudopotential. These are useful to make
+sure that the pseudopotential correctly reproduces the all-electron
+results for the valence complex.
+
+\end{itemize}
+
+
+
+\section{A PRIMER ON AB-INITIO PSEUDOPOTENTIALS}
+
+Time constraints prevent the inclusion of this section in this first
+release of the {\sc ATOM} manual. But, in this case more than ever,
+there is a lot to be gained from reading the original literature...
+Here are some basic references:
+
+\begin{itemize}
+\item Original idea of the ab-initio pseudopotential:
+
+Kerker, J. Phys. C 13, L189-94 (1980)\\
+Hamann, Schluter, Chiang, Phys. Rev. Lett. 43, 1494 (1979)
+
+\item More on HSC scheme:
+
+Bachelet, Schluter, Phys. Rev. B 25, 2103 (1982)\\
+Bachelet, Hamann, Schluter, Phys. Rev. B 26, 4199 (1982)
+
+\item Troullier-Martins elaboration of Kerker method:
+
+Troullier, Martins, Phys. Rev. B 43, 1993 (1991)\\
+Troullier, Martins, Phys. Rev. B 43, 8861 (1991)
+
+\item Core corrections:
+
+Louie, Froyen, Cohen, Phys. Rev. B 26, 1738 (1982)
+
+\item The full picture of plane-wave pseudopotential ab-initio calculations:
+
+W. E. Pickett, ``Pseudopotential Methods in Condensed Matter
+Applications'', Computer Physics Reports 9, 115 (1989)
+
+M. C. Payne, M. P. Teter, D. C. Allan, T. A. Arias and
+J. D. Joannopoulos, ``Iterative minimization techniques for ab initio
+total-energy calculations: molecular dynamics and conjugate
+gradients'', Rev. Mod. Phys. 64, 1045, (1992)
+
+Also, the book by Richard Martin
+``Electronic Structure: Basic Theory and Practical Methods''
+(Cambridge University Press) has a chapter on pseudopotentials.
+
+\item Use in {\sc SIESTA}:
+
+J.M. Soler, E. Artacho, J.D. Gale, A. Garcia, J. Junquera, P. Ordejon,
+D. Sanchez-Portal, ``The SIESTA method for ab initio O(N)
+materials simulation'', Jour. Phys.: Condens. Matter, 14, 2745-2779
+(2002). 
+
+\end{itemize}
+
+\section{COMPILING THE PROGRAM}
+
+Edit {\tt makefile} in the main source directory, and modify, if
+needed, the defaults for Fortran compiler and auxiliary file
+containing date and time routines (not standard in {\tt Fortran77}).
+
+Type {\tt make}. After a short while you will have the executable (called
+{\tt atm}) in that same directory. The program should work for any atom
+without recompilation. 
+
+Directory {\tt Tutorial} in the source distribution contains a set of
+scripts to automate the process of running {\sc ATOM} and to analyze
+the results. The file-manipulation details involved in each of the
+basic functions of all-electron calculations, generation of
+pseudopotentials, and testing of the pseudopotentias, are taken care
+of by {\tt ae.sh}, {\tt pg.sh}, and {\tt pt.sh}, respectively, all in
+the {\tt Tutorial/Utils} directory.  These
+scripts need to know where the {\sc ATOM} executable {\tt atm}
+is. If you have moved the {\tt Tutorial} directory around, or you do
+not have the source, the default location might not be right for you.
+The easiest way to fix it is to define an environmental
+variable {\tt ATOM\_PROGRAM}. Assuming {\tt atm} is in {\tt
+/somedir/somewhere}, you would do:
+%
+\begin{verbatim}
+ATOM_PROGRAM=/somedir/somewhere/atm ; export ATOM_PROGRAM  # sh-derived shells
+setenv ATOM_PROGRAM /somedir/somewhere/atm                 # csh-derived shells
+\end{verbatim}
+%
+
+Due to the shortcommings of the basic (GNUplot) plotting package used in the
+Tutorial section, it is also necessary to copy some scripts from a
+central repository. Again, if the default does not work for you,
+define the {\tt ATOM\_UTILS\_DIR} variable:
+
+\begin{verbatim}
+ATOM_UTILS_DIR=/somewhere ; export ATOM_UTILS_DIR  # sh-derived shells
+setenv ATOM_UTILS_DIR /somewhere                   # csh-derived shells
+\end{verbatim}
+%
+
+\section{USING THE ATOM PROGRAM}
+
+
+\subsection{All-electron calculations}
+
+Assume we want to find the orbital eigenvalues, total energy, and/or
+charge density of Si in its ground state. (You should now go to the
+{\tt Tutorial/All\_electron} directory and try the following.)  Our
+input file is named {\tt si.ae.inp} and contains the lines (see 
+Sect.~\ref{sec:inputfile} for more details):
+
+\begin{verbatim}
+   ae Si ground state all-electron
+   Si   ca
+       0.0
+    3    2
+    3    0      2.00      0.00
+    3    1      2.00      0.00
+
+#2345678901234567890123456789012345678901234567890      Ruler
+\end{verbatim}
+
+We can run the calculation by using the {\tt ae.sh} script. Following
+the layout of the {\tt Tutorial} directory, we will assume that the
+script is in the {\tt Tutorial/Utils} directory. We run the
+script and go into the directory created for the calculation (named
+as the input file without the extension {\tt .inp}):
+
+\begin{verbatim}
+$ sh ../Utils/ae.sh si.ae.inp
+==> Output data in directory si.ae
+$ cd si.ae
+$ ls
+AECHARGE  CHARGE  RHO       charge.gplot   vcharge.gps
+AEWFNR0   INP     ae.gplot  charge.gps     vspin.gplot
+AEWFNR1   OUT     ae.gps    vcharge.gplot  vspin.gps
+$
+\end{verbatim}
+
+We see some data files (those in all caps) and a few GNUPLOT plotting
+scripts\footnote{GNUPLOT is not a publication-quality package, and
+suffers from serious shortcomings, but it is free, and installed
+almost everywhere. Hence we have chosen it as the lowest-common
+denominator for basic plotting} . 
+
+The files are:
+
+\begin{itemize}
+\item {\tt INP:} A copy of the input file for the calculation.
+\item {\tt OUT:} Contains detailed information about the run. 
+
+
+
+\item  {\tt AECHARGE:} Contains in four
+columns values of $r$, the ``up'' and ``down'' parts of the {\sl
+total} charge density, and the total core charge density (the charges
+multiplied by $4\pi r^2$). {\tt CHARGE} is exactly identical and is
+generated for backwards compatibility.
+
+\item {\tt RHO:} Like {\tt CHARGE}, but without the $4\pi r^2$ factor.
+\item {\tt AEWFNR0...AEWFNR3:} All-electron valence wavefunctions as function
+of radius, for $s$, $p$, $d$, and $f$ valence orbitals (0, 1, 2, 3,
+respectively --- some channels might not be available). They include 
+a factor of $r$, the $s$ orbitals also going to zero at the origin.
+
+\end{itemize}
+
+It is interesting to peruse the {\tt OUT} file.
+In particular, it lists the orbital eigenvalues (in Rydbergs, as
+every other energy in the program):
+
+\begin{verbatim}
+ nl    s      occ         eigenvalue    kinetic energy      pot energy
+
+ 1s   0.0    2.0000    -130.36911241     183.01377616    -378.73491463
+ 2s   0.0    2.0000     -10.14892694      25.89954259     -71.62102169
+ 2p   0.0    6.0000      -7.02876268      24.42537874     -68.74331203
+ 3s   0.0    2.0000      -0.79662742       3.23745215     -17.68692611
+ 3p   0.0    2.0000      -0.30705179       2.06135782     -13.62572515
+\end{verbatim}
+
+(For a relativistic or spin-polarized calculation, there would be
+``up'' and ``down'' flags in the {\tt s} column above.)
+
+
+The {\bf plotting} scripts come in two flavors: {\tt .gplot} for
+terminal use (default X11, use {\tt gnuplot -persist}), and {\tt .gps}
+for postscript output.  
+
+For all-electron calculations, the relevant scripts (without {\tt
+.gplot} or {\tt .gps} extensions) are:
+
+\begin{itemize}
+\item {\tt charge:} Charge density (separated core and valence
+contributions, multiplied by $4\pi r^2$). 
+\item {\tt vcharge:} Valence charge density (same normalization).
+\item {\tt ae:} Orbital valence wavefunctions (radial part multiplied by $r$)
+\end{itemize}
+
+\subsection{Pseudopotential generation}
+
+(You should now go to the {\tt Tutorial/Si} directory and try the
+following.)  We are going to generate a pseudopotential for Si, using
+the Troullier-Martins scheme. The calculation is relativistic and we
+use the LDA (Ceperley-Alder flavor). The input file is named {\tt
+Si.tm2.inp} and contains the lines (see Sect.~\ref{sec:inputfile} for more
+details):
+
+\begin{verbatim}
+#
+#  Pseudopotential generation for Silicon
+#  pg: simple generation
+#
+   pg      Silicon
+        tm2      3.0             # PS flavor, logder R
+ n=Si c=car                      # Symbol, XC flavor,{ |r|s}
+       0.0       0.0       0.0       0.0       0.0       0.0
+    3    4                       # norbs_core, norbs_valence
+    3    0      2.00      0.00   # 3s2
+    3    1      2.00      0.00   # 3p2
+    3    2      0.00      0.00   # 3d0
+    4    3      0.00      0.00   # 4f0
+      1.90      1.90      1.90      1.90      0.00      0.00
+#
+# Last line (above): 
+#    rc(s)     rc(p)     rc(d)     rc(f)   rcore_flag  rcore
+#
+#23456789012345678901234567890123456789012345678901234567890
+\end{verbatim}
+
+Note the two extra lines with respect to an all-electron calculation.
+The pseudopotential core radii for all channels are 1.90 bohrs. Even
+though they are nominally empty in the ground state, we include the
+$3d$ and $4f$ states in order to generate the corresponding
+pseudopotentials. 
+
+We can run the calculation by using the {\tt pg.sh} script. Following
+the layout of the {\tt Tutorial} directory, we will assume that the
+script is in the {\tt Tutorial/Utils} directory. We run the
+script and go into the directory created for the calculation (named
+as the input file without the extension {\tt .inp}):
+
+\begin{verbatim}
+$ sh ../../Utils/pg.sh Si.tm2.inp
+==> Output data in directory Si.tm2
+==> Pseudopotential in Si.tm2.vps and Si.tm2.psf
+$ cd Si.tm2
+$ ls [A-Z]*    # show only the data filesAE
+CHARGE  AEWFNR3   PSLOGD3  PSPOTR3  PSWFNR3     
+AELOGD0   CHARGE    PSPOTQ0  PSWFNQ0  RHO         
+AELOGD1   INP       PSPOTQ1  PSWFNQ1  SCRPSPOTR0  
+AELOGD2   OUT       PSPOTQ2  PSWFNQ2  SCRPSPOTR1  
+AELOGD3   PSCHARGE  PSPOTQ3  PSWFNQ3  SCRPSPOTR2  
+AEWFNR0   PSLOGD0   PSPOTR0  PSWFNR0  SCRPSPOTR3  
+AEWFNR1   PSLOGD1   PSPOTR1  PSWFNR1  VPSFMT      
+AEWFNR2   PSLOGD2   PSPOTR2  PSWFNR2  VPSOUT      
+\end{verbatim}
+
+There are quite a few data files now. The new ones are:
+\begin{itemize}
+
+\item  {\tt PSCHARGE:} Contains in four
+columns values of $r$, the ``up'' and ``down'' parts of the {\sl
+pseudo valence} charge density, and the pseudo core charge density
+(see Sect.~\ref{sec:cc}) (the charges
+multiplied by $4\pi r^2$).
+
+\item {\tt PSWFNR0...PSWFNR3:} Valence pseudowavefunctions as function
+of radius, for $s$, $p$, $d$, and $f$ valence orbitals (0, 1, 2, 3,
+respectively --- some channels might not be available). They include 
+a factor of $r$, the $s$ orbitals also going to zero at the origin.
+
+\item {\tt PSPOTR0...PSPOTR3:} Ionic pseudopotentials (i.e. unscreened)
+as a function of $r$, for $s$, $p$, $d$, and $f$ channels (0, 1, 2, 3,
+respectively --- some channels might not be available). The last
+column is $-2Z_{ps}/r$, that is, the Coulomb potential of the pseudo
+atom. All the ionic pseudopotentials tend to this Coulomb tail for $r$
+beyond the range of the core electrons.
+
+\item {\tt SCRPSPOTR0...SCRPSPOTR3:} Screened pseudopotentials
+as a function of $r$, for $s$, $p$, $d$, and $f$ channels (0, 1, 2, 3,
+respectively --- some channels might not be available). 
+They tend to $-2Z_{ion}/r$ for large $r$, where $Z_{ion}$ is the
+global charge of the reference configuration used in pseudopotential generation.
+
+\item {\tt PSPOTQ0...PSPOTQ3:} Fourier transform $V(q)$ (times
+$q^2/Z_{ps}$) of the ionic pseudopotentials as a function of $q$ (in
+bohr$^{-1}$), for $s$, $p$, $d$, and $f$ channels (0, 1, 2, 3,
+respectively --- some channels might not be available).
+
+\item {\tt PSWFNQ0...PSWFNQ3:} Fourier transform $\Psi(q)$ of the 
+valence pseudowavefunctions as a function of $q$ (in
+bohr$^{-1}$), for $s$, $p$, $d$, and $f$ channels (0, 1, 2, 3,
+respectively --- some channels might not be available).
+
+\item {\tt VPSOUT, VPSFMT:} Files (formatted and unformatted)
+containing pseudopotential information. They are used for {\it
+ab-initio} codes such as {\sc SIESTA} and {\sc PW}. Copies of these
+files are deposited in the top directory after the run.
+
+\end{itemize}
+
+The {\tt OUT} file has two sections, one for the all-electron (AE) run, and
+another for the pseudopotential (PS) generation itself. It is instructive to
+compare the AE and PS eigenvalues. Simply do
+
+\begin{verbatim}
+$ grep '&v' OUT
+ ATM3      12-JUL-02        Silicon
+ 3s   0.5    2.0000      -0.79937161       0.00000000     -17.74263363
+ 3p  -0.5    0.6667      -0.30807129       0.00000000     -13.66178958
+ 3p   0.5    1.3333      -0.30567134       0.00000000     -13.60785822
+ 3d  -0.5    0.0000       0.00000000       0.00000000      -0.27407047
+ 3d   0.5    0.0000       0.00000000       0.00000000      -0.27407047
+ 4f  -0.5    0.0000       0.00000000       0.00000000      -0.26482365
+ 4f   0.5    0.0000       0.00000000       0.00000000      -0.26482365
+---------------------------- &v
+ 3s   0.5    2.0000      -0.79936061       0.50555315      -3.74113059
+ 3p  -0.5    0.6667      -0.30804995       0.77243805      -3.26356669
+ 3p   0.5    1.3333      -0.30565760       0.76702460      -3.25197500
+ 3d  -0.5    0.0000       0.00000000       0.00140505      -0.07847269
+ 3d   0.5    0.0000       0.00000000       0.00140505      -0.07847269
+ 4f  -0.5    0.0000       0.00000000       0.00243411      -0.07586534
+ 4f   0.5    0.0000       0.00000000       0.00243411      -0.07586534
+---------------------------- &v
+\end{verbatim}
+
+(The AE and PS eigenvalues are not {\sl exactly} identical because the
+pseudopotentials are changed slightly to make them approach their
+limit tails faster).
+
+The relevant plotting scripts (without {\tt .gplot} or {\tt .gps}
+extensions) are:
+
+\begin{itemize}
+\item {\tt charge:} It compares the AE and PS charge densities.
+\item {\tt pseudo:} A multi-page plot showing, on one page/window per
+channel:
+\begin{itemize}
+\item The AE and PS wavefunctions
+\item The AE and PS logarithmic derivatives.
+\item The real-space pseudopotential
+\item The Fourier-transformed pseudopotential (times $q^2/Z_{ps}$)
+\end{itemize}
+\item {\tt pots:} All the real-space pseudopotentials.
+\item {\tt scrpots:} Comparison of the screened and unscreened
+pseudopotentials.
+\end{itemize}
+
+\subsubsection{Core Corrections}
+\label{sec:cc}
+The program can generate pseudopotentials with the non-linear
+exchange-correlation correction proposed in S. G. Louie, S. Froyen,
+and M. L. Cohen, Phys. Rev. B 26, 1738 (1982).
+
+In the traditional approach (which is the default for LDA
+calculations), the pseudocore charge density equals the charge density
+outside a given radius $r_{pc}$, and has the smooth form
+$$
+\rho_{pc}(r) = A r   \sin(b r)
+$$
+inside that radius. A smooth matching is provided with suitable $A$ 
+and $b$ parameters calculated by the program.
+
+A new scheme has been implemented to fix some problems in the generation
+of GGA pseudopotentials. The smooth function is now
+$$
+\rho_{pc}(r) =  r^2  \exp{(a + b r^2 +c r^4)}
+$$
+and derivatives up to the second are continuous  at $r_{pc}$.
+
+To use core corrections in the pseudopotential generation
+the jobcode in the first line should be {\tt pe} instead of {\tt pg}.
+
+The radius $r_{pc}$ should be  given in the sixth slot in the last
+input line (see above). If it is negative or zero (or blank), the
+radius is then computed using the fifth number in that line ({\tt
+rcore\_flag}, see the example input file above)
+and the following criterion: at $r_{pc}$ the core charge density 
+equals {\tt rcore\_flag}*(valence charge density).
+It is {\it highly recommended} to set an explicit value for the pseudocore
+radius $r_{pc}$, rather than letting the program provide a default.
+
+If {\tt rcore\_flag} is input as negative, the full core charge is used.
+If {\tt rcore\_flag} is input as zero, it is set equal to one, which will be
+thus the default if {\tt pe} is given but no numbers are given for these
+two variables.
+
+The output file contains the radius used and the $A$ ($a$) and $b$ (and $c$)
+parameters used for the matching. The {\tt VPSOUT} and {\tt VPSFMT}
+files will  contain the pseudocore charge in addition to the pseudopotential.
+
+It is possible to override the default (new scheme for GGA
+calculations, old scheme for LDA calculations) by using the directives
+\begin{verbatim}
+%define NEW_CC
+%define OLD_CC
+\end{verbatim}
+The program will issue the appropriate warnings. (See Sect.~\ref{sec:inputfile})
+
+Relevant files:
+
+\begin{itemize}
+\item  {\tt PSCHARGE:} Contains the pseudocore charge in column four.
+(multiplied by $4\pi r^2$).
+
+\item {\tt COREQ:} Fourier transform of the pseudocore charge density
+$\rho_{pc}(q)$ in units of electrons, with $q$ in  bohr$^{-1}$.
+\end{itemize}
+
+Useful plotting scripts (without {\tt .gplot} or {\tt .gps}
+extensions) are:
+
+\begin{itemize}
+\item {\tt charge:} Shows also the pseudocore charge.
+\item {\tt coreq:}  Shows the Fourier transform of the pseudocore charge.
+\end{itemize}
+
+\subsection{Pseudopotential test}
+
+While it is helpful to ``have a look'' at the plots of the
+pseudopotential generation to get a feeling for its quality, there is
+no substitute for a proper {\bf transferability testing}. A
+pseudopotential with good transferability will reproduce the
+all-electron energy levels and wavefunctions in arbitrary
+environments, (i.e., in the presence of charge transfer, which always
+takes place when forming solids and molecules).  We know that norm
+conservation guarantees a certain degree of transferability (usually
+seen clearly in the plot of the logarithmic derivative), but we can
+get a better assessment by performing all-electron and ``pseudo''
+calculations on the same series of atomic configurations, and comparing
+the eigenvalues and excitation energies.
+
+In the same {\tt Tutorial/Si} directory we can find file {\tt
+Si.test.inp}, containing the concatenation of ten jobs. The first
+five are all-electron ({\tt ae}) calculations, and the last five,
+pseudopotential test ({\tt pt}) runs for the same configurations:
+%
+\begin{verbatim}
+#
+# All-electron calculations for a series of Si configurations
+#
+   ae Si Test -- GS 3s2 3p2
+   Si   ca
+       0.0
+    3    2
+    3    0      2.00
+    3    1      2.00
+   ae Si Test -- 3s2 3p1 3d1
+   Si   ca
+       0.0
+    3    3
+    3    0      2.00
+    3    1      1.00
+    3    2      1.00
+   ae Si Test -- 3s1 3p3
+   Si   ca
+       0.0
+    3    2
+    3    0      1.00
+    3    1      3.00
+   ae Si Test -- 3s1 3p2 3d1
+   Si   ca
+       0.0
+    3    3
+    3    0      1.00
+    3    1      2.00
+    3    2      1.00
+   ae Si Test -- 3s0 3p3 3d1
+   Si   ca
+       0.0
+    3    3
+    3    0      0.00
+    3    1      3.00
+    3    2      1.00
+#
+# Pseudopotential test calculations
+#
+   pt Si Test -- GS 3s2 3p2
+   Si   ca
+       0.0
+    3    2
+    3    0      2.00
+    3    1      2.00
+   pt Si Test -- 3s2 3p1 3d1
+   Si   ca
+       0.0
+    3    3
+    3    0      2.00
+    3    1      1.00
+    3    2      1.00
+   pt Si Test -- 3s1 3p3
+   Si   ca
+       0.0
+    3    2
+    3    0      1.00
+    3    1      3.00
+   pt Si Test -- 3s1 3p2 3d1
+   Si   ca
+       0.0
+    3    3
+    3    0      1.00
+    3    1      2.00
+    3    2      1.00
+   pt Si Test -- 3s0 3p3 3d1
+   Si   ca
+       0.0
+    3    3
+    3    0      0.00
+    3    1      3.00
+    3    2      1.00
+\end{verbatim}
+
+The configurations differ in the promotion of electrons from one level
+to another (it is also possible to transfer {\sl fractions} of an
+electron). 
+
+We can run the file by using the {\tt pt.sh} script. Following
+the layout of the {\tt Tutorial} directory, we will assume that the
+script is in the directory directly above the current one. We need to
+give it {\bf two} arguments: the calculation input file, and the
+file containing the pseudopotential we want to test. Let's make the
+latter {\tt Si.tm2.vps}:
+
+\begin{verbatim}
+$ sh ../../Utils/pt.sh Si.test.inp Si.tm2.vps
+==> Output data in directory Si.test-Si.tm2
+$ cd Si.test-Si.tm2/
+$ ls [A-Z]*
+AECHARGE  AEWFNR1  CHARGE  OUT       PTWFNR0  PTWFNR2  VPSIN
+AEWFNR0   AEWFNR2  INP     PTCHARGE  PTWFNR1  RHO
+\end{verbatim}
+
+The working directory is named after {\sl both} the test and
+pseudopotential files. It contains several new files:
+
+\begin{itemize}
+\item {\tt VPSIN:} A copy of the pseudopotential file to be tested.
+\item  {\tt PTCHARGE:} Contains in four
+columns values of $r$, the ``up'' and ``down'' parts of the {\sl
+pseudo valence} charge density, and the pseudo core charge density
+(see Sect.~\ref{sec:cc}) (the charges
+multiplied by $4\pi r^2$).
+
+\item {\tt PTWFNR0...PTWFNR3:} Valence pseudowavefunctions as function
+of radius, for $s$, $p$, $d$, and $f$ valence orbitals (0, 1, 2, 3,
+respectively --- some channels might not be available). They include 
+a factor of $r$, the $s$ orbitals also going to zero at the origin.
+
+\end{itemize}
+
+The {\tt OUT} file has two sections, one for the all-electron (AE) runs, and
+another for the pseudopotential tests (PT). At the end of each series
+of runs there is a table showing the excitation energies. A handy way
+to compare the AE and PT energies is:
+\begin{verbatim}
+$ grep '&d' OUT
+[...elided...]
+ &d total energy differences in series
+ &d          1        2        3        4        5
+ &d  1    0.0000
+ &d  2    0.4308   0.0000
+ &d  3    0.4961   0.0653   0.0000
+ &d  4    0.9613   0.5305   0.4652   0.0000
+ &d  5    1.4997   1.0689   1.0036   0.5384   0.0000
+*----- End of series ----* spdfg &d&v
+ ATM3      12-JUL-02   Si Test -- GS 3s2 3p2
+ ATM3      12-JUL-02   Si Test -- 3s2 3p1 3d1
+ ATM3      12-JUL-02   Si Test -- 3s1 3p3
+ ATM3      12-JUL-02   Si Test -- 3s1 3p2 3d1
+ ATM3      12-JUL-02   Si Test -- 3s0 3p3 3d1
+ &d total energy differences in series
+ &d          1        2        3        4        5
+ &d  1    0.0000
+ &d  2    0.4299   0.0000
+ &d  3    0.4993   0.0694   0.0000
+ &d  4    0.9635   0.5336   0.4642   0.0000
+ &d  5    1.5044   1.0745   1.0051   0.5409   0.0000
+*----- End of series ----* spdfg &d&v
+\end{verbatim}
+
+The tables (top AE, bottom PT) give the cross-excitations among all
+configurations. Typically, one should be all right if the AE-PT
+differences are not much larger than 1~mRy.
+
+You can also compare the AE and PT eigenvalues. Simply do
+
+\begin{verbatim}
+$ grep '&v' OUT | grep s
+ ATM3      12-JUL-02   Si Test -- GS 3s2 3p2
+ 3s   0.0    2.0000      -0.79662742       3.23745215     -17.68692611
+ ATM3      12-JUL-02   Si Test -- 3s2 3p1 3d1
+ 3s   0.0    2.0000      -1.08185979       3.53885995     -18.40569836
+ ATM3      12-JUL-02   Si Test -- 3s1 3p3
+ 3s   0.0    1.0000      -0.85138783       3.35438895     -17.96219240
+ ATM3      12-JUL-02   Si Test -- 3s1 3p2 3d1
+ 3s   0.0    1.0000      -1.11431855       3.62997498     -18.60814708
+ ATM3      12-JUL-02   Si Test -- 3s0 3p3 3d1
+ 3s   0.0    0.0000      -1.14358268       3.71462770     -18.79448684
+*----- End of series ----* spdfg &d&v
+ ATM3      12-JUL-02   Si Test -- GS 3s2 3p2
+ 1s   0.0    2.0000      -0.79938037       0.50556261      -3.74114712
+ ATM3      12-JUL-02   Si Test -- 3s2 3p1 3d1
+ 1s   0.0    2.0000      -1.08384468       0.55070398      -3.81988817
+ ATM3      12-JUL-02   Si Test -- 3s1 3p3
+ 1s   0.0    1.0000      -0.85392666       0.52020429      -3.76852577
+ ATM3      12-JUL-02   Si Test -- 3s1 3p2 3d1
+ 1s   0.0    1.0000      -1.11546463       0.56048425      -3.83646615
+ ATM3      12-JUL-02   Si Test -- 3s0 3p3 3d1
+ 1s   0.0    0.0000      -1.14353959       0.56945741      -3.85106049
+*----- End of series ----* spdfg &d&v
+\end{verbatim}
+
+(and similarly for $p$, $d$, and $f$, if desired). Again, the typical
+difference should be of around 1~mRyd for a ``good'' pseudopotential.
+(The {\sl real\/} proof of good transferability, remember, can only come
+from a molecular or solid-state calculation). Note that the PT levels
+are labeled starting from principal quantum number 1. 
+
+The relevant plotting scripts (without {\tt .gplot} or {\tt .gps}
+extensions) are:
+
+\begin{itemize}
+\item {\tt charge:} It compares the AE and PT charge densities.
+\item {\tt pt:} Compares the valence all-electron and pseudo-wavefunctions.
+\end{itemize}
+
+
+
+\section{APPENDIX: THE INPUT FILE}
+\label{sec:inputfile}
+
+For historical reasons, the input file is in a rigid column
+format. Fortunately, most of the column fields line up, so the
+possibility of errors is reduced.  We will begin by describing in
+detail a very simple input file for an {\bf all-electron calculation} for
+the ground state of Si. More examples can be found in the {\tt
+Tutorial} directory.
+
+The file itself is:
+\begin{verbatim}
+#
+#  Comments allowed here
+#
+   ae Si ground state all-electron
+   Si   car  
+       0.0
+    3    2
+    3    0      2.00      0.00
+    3    1      2.00      0.00
+#
+# Comments allowed here
+#
+#2345678901234567890123456789012345678901234567890      Ruler
+\end{verbatim}
+
+\begin{itemize}
+\item The first line specifies:
+	\begin{itemize}
+	\item The calculation code ({\tt ae} here stands for ``all-electron'').
+	\item A title for the job (here {\tt Si ground state all-electron}).
+	\end{itemize} 
+	(format 3x,a2,a50)
+
+\item Second line:
+	\begin{itemize}
+
+	\item Chemical symbol of the nucleus (here {\tt Si}, obviously)
+	\item Exchange-correlation type. Here, {\tt ca} stands for
+          Ceperley-Alder. Other options are {\tt wi}
+          (Wigner), {\tt hl} (Hedin-Lundqvist), {\tt gl}
+          (Gunnarson-Lundqvist), and {\tt bh} (von Barth-Hedin). The
+          ``best'' LDA choice should be {\tt ca}.  It is also possible
+          to use a gradient-corrected functional: {\tt pb} indicates use
+          of the PBE scheme by Perdew, Burke, and Ernzerhof (PRL 77,
+          3865 (1996)),{\tt rp} indicates the RPBE
+          scheme by Hammer, Hansen, and Norskov, (PRB 59, 7413 (1999)),
+          {\tt rv} indicates the revPBE
+          scheme by Zhang and Yang, (PRL 80,890(1998)), 
+          {\tt wc} indicates the WC
+          scheme by Z. Wu and R.E. Cohen (PRB 73, 235116 (2006)),
+          {\tt bl} selects the BLYP (Becke-Lee-Yang-Parr) scheme,
+          and {\tt ps} selects the PBEsol scheme by Perdew et al (PRL 100, 136406 (2008))
+          (see source file {\tt xc.f} for more details).
+	  By default, the exchange-correlation energy and potential
+	  are computed using the Soler-Balb\'as package, except for
+	  the {\tt wi}, {\tt hl}, {\tt gl}, and {\tt bh} flavors. 
+   
+	\item The character {\tt r} next to {\tt ca} is a flag to perform the
+          calculation relativistically, that is, solving the Dirac equation
+          instead of the Schrodinger equation. 
+	  The full range of options is:
+	    \begin{itemize}
+		\item {\tt s} : Spin-polarized calculation, non-relativistic.
+		\item {\tt r}: Relativistic calculation, obviously polarized.
+		\item (blank) : Non-polarized (spin ignored), non-relativistic
+           		calculation.
+	    \end{itemize}
+	\end{itemize}
+	
+	(format 3x,a2,3x,a2,a1,2x)
+
+\item Third line. Its use is somewhat esoteric and for most
+  calculations it should contain just a 0.0 in the position shown, but
+  that first field might be useful to generate pseudopotentials for
+  ``atoms'' with a fractional atomic number (see the example for ON in
+  the {\tt Tutorial/PS\_Generation} directory).
+\end{itemize}
+
+The rest of the file is devoted to the specification of the electronic
+configuration:
+
+\begin{itemize} 
+
+\item Fourth line:\\
+	 Number of core and valence orbitals. For example, for Si, we
+	have $1s$, $2s$, and $2p$ in the core (a total of 3 orbitals), and
+	$3s$ and $3p$ in the valence complex (2 orbitals).
+
+	(format 2i5)
+
+\item Fifth, sixth... lines: (there is one line for each valence
+orbital)
+	\begin{itemize}
+	\item {\tt n} (principal quantum number)
+	\item {\tt l} (angular momentum quantum number)
+	\item Occupation of the orbital in electrons. 
+	\end{itemize}
+
+	(format 2i5,2f10.3)
+
+	(There are two f input descriptors to allow the input of ``up''
+	and ``down'' occupations in spin-polarized calculations (see
+	example below))
+
+\end{itemize}
+
+Comments or blank lines may appear in the file at the beginning and at the end.
+It is possible to perform two or more calculations in
+succession by simply concatenating blocks as the one described above.
+For example, the following file is used to study the ground state of N
+and an excited state with one electron promoted from the $2s$ to the $2p$
+orbital taking into account the spin polarization:
+
+\begin{verbatim}
+#
+   ae N ground state all-electron
+   N    cas
+       0.0
+    1    2
+    2    0      2.00      0.00
+    2    1      3.00      0.00
+#
+#  Second calculation starts here
+#
+   ae N 1s2 2s1 2p4  all-electron
+   N    cas
+       0.0
+    1    2
+    2    0      1.00      0.00
+    2    1      3.00      1.00
+
+#2345678901234567890123456789012345678901234567890      Ruler
+\end{verbatim}
+
+	
+The different treatment of core and valence orbitals in the input for an
+all-electron calculation is purely cosmetic. The program ``knows'' how
+to fill the internal orbitals in the right order, so it is only
+necessary to give their number. That is handy for heavy atoms...
+Overzealous users might want to check the output to make sure that the
+core orbitals are indeed correctly treated.
+
+
+
+For a {\bf pseudopotential test calculation}, the format is exactly
+the same, except that the job code is {\tt pt} instead of {\tt ae}. 
+
+
+For a {\bf pseudopotential generation run}, in addition to the
+electronic configuration chosen for the generation of the
+pseudopotentials (which is input in the same manner as above), one has
+to specify the ``flavor'' (generation scheme) and the set of core
+radii $r_c$ for the construction of the pseudowavefunction. Here is an
+example for Si using the Hamann-Schluter-Chiang scheme:
+
+\begin{verbatim}
+# 
+   pg Si Pseudopotencial
+        hsc     2.00
+   Si   ca
+         0
+    3    3
+    3    0      2.00
+    3    1      0.50
+    3    2      0.50
+      1.12      1.35      1.17       0.0       0.0       0.0
+#
+#23456789012345678901234567890123456789012345678901234567890   Ruler
+---------------------------------------
+\end{verbatim}
+
+Apart from the {\tt pg} (pseudopotential generation) job code in the
+first line, there are two extra lines:
+
+\begin{itemize}
+\item Second line: 
+
+Flavor and radius at which to compute logarithmic
+derivatives for test purposes. 
+
+The flavor can be one of :
+\begin{tabular}{ll}
+	hsc	&Hamann-Schluter-Chiang\\
+	ker	&Kerker\\
+	tm2	&Improved Troullier-Martins\\
+\end{tabular}
+
+The {\tt ker} and {\tt tm2} schemes can get away with larger $r_c$,
+due to their wavefunction matching conditions.
+
+(format 8x, a3, f9.3)
+
+\item The last line (before the blank line) specifies:
+
+\begin{itemize}
+\item The values of the $r_c$ in atomic units (bohrs) for the $s$,
+$p$, $d$, and $f$ orbitals (it is a good practice to input the valence
+orbitals in the order of increasing angular momentum, so that there is
+no possible confusion).
+
+(format 4f10.5)  
+
+\item Two extra fields (2f10.5) which are relevant only if non-local
+core corrections are used (see Sect~\ref{sec:cc}).
+\end{itemize}
+\end{itemize}
+
+In the {\tt hsc} example above, only $s$ ,$p$, and $d$ $r_c$'s are
+given. Here is an example for Silicon in which we are only interested
+in the $s$ and $p$ channels for our pseudopotential, and use the Kerker
+scheme:
+
+\begin{verbatim}
+# 
+   pg Si Kerker generation
+        ker     2.00
+   Si   ca
+         0
+    3    2
+    3    0      2.00
+    3    1      2.00
+      1.80      1.80      0.00       0.0       0.0       0.0
+
+#23456789012345678901234567890123456789012345678901234567890   Ruler
+\end{verbatim}
+
+
+This completes the discussion of the more common features of the input
+file. See the Appendix~\ref{sec:directives} for more advanced options.
+
+\section{APPENDIX: INPUT FILE DIRECTIVES}
+\label{sec:directives}
+
+The fixed format can be a source of desperation for the beginner, and
+its rigidity means that it is not easy to add new items to the
+input. For this purpose, the program takes another route: several
+variables can be entered in a specially flexible format by means of
+{\sl directives} at the top of the file. For example
+
+\begin{verbatim}
+%define NEW_CC
+.... rest of the input file
+\end{verbatim}
+
+would signal that we want to use a new core-correction scheme.
+
+There are two kinds of directives, with syntax:
+\begin{verbatim}
+%VARIABLE=value
+%define NAME
+\end{verbatim}
+
+In the first case we assign the value {\tt value} to the variable {\tt
+ VARIABLE}. The program can look at the value via a special
+ subroutine call.
+
+The second form is a bit more abstract, but can be understood as
+assigning a special ``existence'' value of {\tt 1} to the variable
+{\tt NAME}.  Again, the program can check for the existence of the
+variable via a special subroutine call.
+
+Currently, the program understands the following {\tt NAME}s:
+
+\begin{itemize}
+\item {\tt COMPAT\_UCB:}  Revert to the standard circa 1990 UCB values. Note   
+                   that these correspond to the first released version 
+                   of Jose Luis Martins code, not to the old Froyen        
+                   version.
+     (The defaults are: use a denser grid up to larger radii.
+              Use a larger value for the pseudopotential
+cutoff point.  Use the Soler-Balbas XC package.)  
+                                                                          
+\item  {\tt NEW\_CC:} New core-correction scheme
+\item {\tt OLD\_CC:}  Old core-correction scheme  (see Sect.~\ref{sec:cc})
+ 
+\item {\tt USE\_OLD\_EXCORR:} Use the old exchange-correlation package.
+
+\item {\tt NO\_PS\_CUTOFFS:} Avoid cutting off the tails of the
+pseudopotentials. Currently, a simple exponential tapering function is
+used, which introduces a discontinuity in the first derivative of the
+ionic pseudopotential.
+
+\item {\tt FREE\_FORMAT\_RC\_INPUT:} Use free-format for the input of
+the cutoff radii and the specification of the core-correction
+parameters. This is useful for externally-driven runs of ATOM. In this
+case the user should make sure that all six values (four rc's plus
+the two cc parameters) are present in the input line.
+
+\end{itemize}
+
+
+%\addcontentsline{toc}{section}{Index}
+%\printindex
+
+\end{document}
+
+
+
+
+
+

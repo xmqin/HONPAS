@@ -1,10 +1,3 @@
-# ---
-# Copyright (C) 1996-2016	The SIESTA group
-#  This file is distributed under the terms of the
-#  GNU General Public License: see COPYING in the top directory
-#  or http://www.gnu.org/copyleft/gpl.txt .
-# See Docs/Contributors.txt for a list of contributors.
-# ---
 # Makefile for macroave
 #
 .SUFFIXES: .f .F .o .a  .f90 .F90
@@ -21,9 +14,8 @@ FC:=$(FC_SERIAL)         # Make it non-recursive
 #
 # Note that machine-specific files are now in top Src directory.
 #
-OBJS = io.o iorho.o macroave.o thetaft.o \
-	surpla.o volcel.o hdr_io.o\
-        local_die.o interpolation.o dpnint1.o m_fft_gpfa.o
+OBJS = io.o iorho.o paste.o macroave.o thetaft.o \
+	surpla.o volcel.o recipes.o hdr_io.o
 #
 #
 # This is crude but will have to do for now.
@@ -47,7 +39,6 @@ clean:
 	rm -f macroave permute *.o  *.a *.pcl *.pc *.mod
 	rm -f *.mod
 #
-macroave.o: interpolation.o m_fft_gpfa.o
 
 
 

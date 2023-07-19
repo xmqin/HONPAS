@@ -1,10 +1,3 @@
-! ---
-! Copyright (C) 1996-2016	The SIESTA group
-!  This file is distributed under the terms of the
-!  GNU General Public License: see COPYING in the top directory
-!  or http://www.gnu.org/copyleft/gpl.txt .
-! See Docs/Contributors.txt for a list of contributors.
-! ---
 
       SUBROUTINE STM   ( NA, NO, NUO, MAXNA, NSPIN, 
      .                   ISA, IPHORB, INDXUO, LASTO, XA, CELL, UCELL,
@@ -114,21 +107,21 @@ C **********************************************************************
       LOGICAL FIRST
 
       CHARACTER
-     .   SNAME*40, FNAME*60
+     .   SNAME*40, FNAME*60, PASTE*60
 
       EXTERNAL
-     .  NEIGHB, IO_ASSIGN, IO_CLOSE
+     .  NEIGHB, IO_ASSIGN, IO_CLOSE, PASTE
 
 C      CHARACTER
 C     .  SNAME*40, FNAMEWFRE*60, FNAMEWFIM*60, 
 C     .  FNAMEWFURE*60, FNAMEWFUIM*60, FNAMEWFDRE*60, FNAMEWFDIM*60, 
 C     .  FNAMEWFMO*60, FNAMEWFPH*60,
 C     .  FNAMEWFUMO*60, FNAMEWFUPH*60, FNAMEWFDMO*60, FNAMEWFDPH*60,
-C     .  CHAR1*10, CHAR2*10, ITOCHAR*10, 
+C     .  PASTE*60, CHAR1*10, CHAR2*10, ITOCHAR*10, 
 C     .  EXT*20, EXT2*25
 C
 C      EXTERNAL
-C     .  IO_ASSIGN, IO_CLOSE, PLANE,
+C     .  IO_ASSIGN, IO_CLOSE, PASTE, PLANE,
 C     .  NEIGHB, WROUT, ITOCHAR
 
 C **********************************************************************
@@ -332,7 +325,7 @@ C Check if lattice vectors in xy plane are orthogonal
 
       call io_assign(unitre1)
       SNAME = FDF_STRING('SystemLabel','siesta')
-      FNAME = TRIM(SNAME)//'.STM.cube'
+      FNAME = PASTE(SNAME,'.STM.cube')
       IF (DABS(DOT) .GT. 1.0D-2) THEN
         WRITE(6,*)
         WRITE(6,*) 'stm: WARNING: The cell is not orthorombic, so the'
@@ -385,7 +378,7 @@ C
 
       call io_assign(unitre1)
       SNAME = FDF_STRING('SystemLabel','siesta')
-      FNAME = TRIM(SNAME)//'.STM.siesta'
+      FNAME = PASTE(SNAME,'.STM.siesta')
       WRITE(6,*)
       WRITE(6,*) 'stm: writing SIESTA format file', FNAME
       WRITE(6,*)

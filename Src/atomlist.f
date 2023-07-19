@@ -1,9 +1,12 @@
 ! 
-! Copyright (C) 1996-2016	The SIESTA group
-!  This file is distributed under the terms of the
-!  GNU General Public License: see COPYING in the top directory
-!  or http://www.gnu.org/copyleft/gpl.txt.
-! See Docs/Contributors.txt for a list of contributors.
+! This file is part of the SIESTA package.
+!
+! Copyright (c) Fundacion General Universidad Autonoma de Madrid:
+! E.Artacho, J.Gale, A.Garcia, J.Junquera, P.Ordejon, D.Sanchez-Portal
+! and J.M.Soler, 1996- .
+! 
+! Use of this software constitutes agreement with the full conditions
+! given in the SIESTA license, as signed by all legitimate users.
 !
       module atomlist
 
@@ -17,16 +20,14 @@
       implicit none
 
       private
-      public :: initatomlists, superc
-      public :: superx          ! for backwards compatibility
-      public :: reset_atomlists
+      public :: initatomlists, superc, superx
 
 !
 !     Instead of "generic" na, no, and nokb, we use:
 !
 ! For "supercell" (intended for k-point calcs)
-      integer, save, public          :: no_s    ! Number of orbitals
-      integer, save, public          :: nokb_s  ! Number of KB projs
+      integer, save, public          :: no_s         ! Number of orbitals
+      integer, save, public          :: nokb_s       ! Number of KB projs
 
 ! Same for "unit", or "real" cell:
       integer, save, public          :: no_u, nokb_u
@@ -42,55 +43,44 @@ C integer iza(na)           : Atomic number of each atom
 C real*8 amass(na)          : Atomic mass of each atom
 C real*8 qa(na)             : Neutral atom charge of each atom
 
-      character(len=2), pointer, save, public :: elem(:) => null()
+      character(len=2), pointer, save, public :: elem(:)
 ! elem will contain element names, so is 2 chars in length
-
-      integer, pointer, save, public  :: iza(:) => null()
-      integer, pointer, save, public  :: lasto(:) => null()
-      integer, pointer, save, public  :: lastkb(:) => null()
-      real(dp), pointer, save, public :: amass(:) => null()
-      real(dp), pointer, save, public :: qa(:) => null()
-      integer, pointer, save, public  :: indxua(:) => null()
-
-      ! This array depends on the actual geometry, so
-      ! it does not properly belong here. It is used only
-      ! for communication between nlefsm and hsparse.
-      ! For safety, it is initialized in each invokation
-      ! of hsparse.
-      logical, pointer, save, public  :: in_kb_orb_u_range(:) => null()
-
-!     Index of equivalent atom in "u" cell
-      real(dp), save, public          :: rmaxv    ! Max cutoff for Vna
-      real(dp), save, public          :: rmaxo    ! Max cuoff for at. orb.
-      real(dp), save, public          :: rmaxkb   ! Max cuoff for KB proj.
-      real(dp), save, public          :: rmaxdftu ! Max cuoff for DFTU proj.
-
-      real(dp), save, public          :: qtot ! Total number of elect.
-      real(dp), save, public          :: qtots(2) ! Total number of electrons per spin
-
-      real(dp), save, public          :: zvaltot
-                                         ! Total number of pseudoprotons
-                                         ! (excluding those of ghost atoms)
+      integer, pointer, save, public  :: iza(:) ! 
+      integer, pointer, save, public  :: lasto(:) ! 
+      integer, pointer, save, public  :: lastkb(:)
+      real(dp), pointer, save, public  :: amass(:), qa(:)
 
 
-      integer, pointer, save, public  :: iaorb(:) => null()
+      integer, pointer, save, public           :: indxua(:)
+!        Index of equivalent atom in "u" cell
+
+      real(dp), save, public     :: rmaxv  ! Max cutoff for local pot Vna
+      real(dp), save, public     :: rmaxo  ! Max cuoff for atomic orbitals
+      real(dp), save, public     :: rmaxkb ! Max cuoff for KB projectors
+
+      real(dp), save, public     :: qtot ! Total number of electrons
+      real(dp), save, public     :: zvaltot ! Total number of pseudoprotons
+                                            ! (excluding those of ghost atoms)
+
+
+      integer, pointer, save, public  :: iaorb(:)
                                 ! Atomic index of each orbital
-      integer, pointer, save, public  :: iphorb(:)  => null()
+      integer, pointer, save, public  :: iphorb(:) 
                          ! Orbital index of each  orbital in its atom
-      real(dp), pointer, save, public :: Datm(:) => null()
+      real(dp), pointer, save, public :: Datm(:) 
                          !  Neutral atom charge 
                          !  of each orbital
-      real(dp), pointer, save, public :: rco(:) => null()
+      real(dp), pointer, save, public :: rco(:) 
                          ! Cutoff radius of each orbital
 
-      integer, pointer, save, public :: indxuo(:) => null()
+      integer, pointer, save, public           :: indxuo(:)
                    !        Index of equivalent orbital in "u" cell
 
-      integer, pointer, save, public :: iakb(:) => null()
+      integer, pointer, save, public     :: iakb(:)
 !         Atomic index of each KB projector
-      integer, pointer, save, public :: iphKB(:) => null()
+      integer, pointer, save, public     :: iphKB(:)
 !         Index of each KB projector in its atom (negative)
-      real(dp), pointer, save, public :: rckb(:) => null()
+      real(dp), pointer, save, public   :: rckb(:)
 !         Cutoff radius of each KB projector
 !
 
@@ -99,23 +89,18 @@ C real*8 qa(na)             : Neutral atom charge of each atom
 !=======================================================
       subroutine initatomlists()
 
-      use atm_types, only: species_info
-      use radial, only: rad_func
-      use dftu_specs, only: switch_dftu
-      
 C Routine to initialize the atomic lists.
 C
       integer  ia, io, is, nkba, noa, nol, nokbl, ioa, ikb
-      type(species_info), pointer :: spp
-      type(rad_func), pointer :: pp
 
-      call re_alloc( indxua, 1, na_u, 'indxua', 'atomlist' )
-      call re_alloc( lastkb, 0, na_u, 'lastkb', 'atomlist' )
-      call re_alloc( lasto, 0, na_u, 'lasto', 'atomlist' )
-      call re_alloc( qa, 1, na_u, 'qa', 'atomlist' )
-      call re_alloc(xa_last,1,3,1,na_u,'xa_last','atomlist')
-      call re_alloc( amass, 1, na_u, 'amass', 'atomlist' )
-      call re_alloc( in_kb_orb_u_range, 1, na_u, 'in_kb', 'atomlist' )
+      nullify(indxua,lastkb,lasto,qa,amass,xa_last)
+      call re_alloc(indxua,1,na_u,name='indxua',routine='siesta')
+      call re_alloc(lastkb,0,na_u,name='lastkb',routine='siesta')
+      call re_alloc(lasto,0,na_u,name='lasto',routine='siesta')
+      call re_alloc(qa,1,na_u,name='qa',routine='siesta')
+      call re_alloc(xa_last,1,3,1,na_u,name='xa_last',routine='siesta')
+      call re_alloc(amass,1,na_u,name='amass',routine='siesta')
+
 !
 !     Find number of orbitals and KB projectors in cell
 !
@@ -133,14 +118,18 @@ C
       no_s = no_u
       nokb_s = nokb_u
 
-      call re_alloc( iaorb, 1, no_u, 'iaorb', 'atomlist' )
-      call re_alloc( indxuo, 1, no_u, 'indxuo', 'atomlist' )
-      call re_alloc( iphorb, 1, no_u, 'iphorb', 'atomlist' )
-      call re_alloc( Datm, 1, no_u, 'Datm', 'atomlist' )
-      call re_alloc( rco, 1, no_u, 'rco', 'atomlist' )
-      call re_alloc( iaKB, 1, nokb_u, 'iaKB', 'atomlist' )
-      call re_alloc( iphKB, 1, nokb_u, 'iphKB', 'atomlist' )
-      call re_alloc( rckb, 1, nokb_u, 'rckb', 'atomlist' )
+      nullify(iaorb, indxuo, iphorb, Datm, rco)
+      call re_alloc(iaorb, 1, no_u, routine='initatomlists')
+      call re_alloc(indxuo, 1, no_u, routine='initatomlists')
+      call re_alloc(iphorb, 1, no_u, routine='initatomlists')
+      call re_alloc(Datm, 1, no_u, routine='initatomlists')
+      call re_alloc(rco, 1, no_u, routine='initatomlists')
+!
+!
+      nullify(iaKB, iphKB, rckb)
+      call re_alloc(iaKB, 1, nokb_u, routine='initatomlists')
+      call re_alloc(iphKB, 1, nokb_u, routine='initatomlists')
+      call re_alloc(rckb, 1, nokb_u, routine='initatomlists')
 
 c Initialize atomic lists
       nol = 0
@@ -149,7 +138,6 @@ c Initialize atomic lists
       rmaxv  = 0._dp
       rmaxo  = 0._dp
       rmaxkb = 0._dp
-      rmaxdftu = 0._dp
       lasto(0) = 0
       lastkb(0) = 0
       zvaltot = 0.0_dp
@@ -181,13 +169,6 @@ c Initialize atomic lists
           iaKB(nokbl) = ia
           iphKB(nokbl) = -io
         enddo
-        if( switch_dftu ) then
-           spp => species(is)
-           do io = 1, spp%n_pjdftunl
-              pp => spp%pjdftu(io)
-              rmaxdftu = max( rmaxdftu, pp%cutoff )
-           enddo
-        endif
       enddo
 
 ! Find rco and rckb .............................
@@ -211,30 +192,6 @@ c Initialize atomic lists
 
       end subroutine initatomlists
 
-      subroutine reset_atomlists()
-
-      use alloc, only: de_alloc
-
-      call de_alloc( indxua, 'indxua', 'atomlist' )
-      call de_alloc( isa, 'isa', 'atomlist')
-      call de_alloc( iza, 'iza', 'atomlist')
-      call de_alloc( lastkb, 'lastkb', 'atomlist' )
-      call de_alloc( lasto, 'lasto', 'atomlist' )
-      call de_alloc( qa, 'qa', 'atomlist' )
-      call de_alloc(xa_last,'xa_last','atomlist')
-      call de_alloc( amass, 'amass', 'atomlist' )
-      call de_alloc( in_kb_orb_u_range, 'in_kb', 'atomlist' )
-
-      call de_alloc( iaorb, 'iaorb', 'superc' )
-      call de_alloc( indxuo, 'indxuo', 'superc' )
-      call de_alloc( iphorb, 'iphorb', 'superc' )
-      call de_alloc( Datm, 'Datm', 'superc' )
-      call de_alloc( rco, 'rco', 'superc' )
-      call de_alloc( iaKB, 'iaKB', 'superc' )
-      call de_alloc( iphKB, 'iphKB', 'superc' )
-      call de_alloc( rckb, 'rckb', 'superc' )
-
-      end subroutine reset_atomlists
 
       subroutine superc( ucell, scell, nsc)
 
@@ -263,17 +220,14 @@ C Internal variables
 !     Reallocate arrays if needed
 !
       if (na.gt.na_s) then
-        call re_alloc( indxua, 1, na, 'indxua', 'atomlist', .true. )
-        call re_alloc( isa, 1, na, 'isa', 'atomlist', .true. )
-        call re_alloc( iza, 1, na, 'iza', 'atomlist', .true. )
-        call re_alloc( lastkb, 0, na, 'lastkb', 'atomlist', .true. )
-        call re_alloc( lasto, 0, na, 'lasto', 'atomlist', .true. )
-        call re_alloc( in_kb_orb_u_range, 1, na,
-     $                 'in_kb', 'atomlist', .true. )
-        call re_alloc( qa, 1, na, 'qa', 'atomlist', .true. )
-        call re_alloc( xa, 1, 3, 1, na, 'xa', 'atomlist', .true. )
-        call re_alloc(xa_last, 1,3, 1,na, 'xa_last', 'superc',
-     &                copy=.true. )
+        call re_alloc(indxua, 1, na, routine='superc',copy=.true.)
+        call re_alloc(isa, 1, na, routine='superc',copy=.true.)
+        call re_alloc(iza, 1, na, routine='superc',copy=.true.)
+        call re_alloc(lastkb, 0, na, routine='superc',copy=.true.)
+        call re_alloc(lasto, 0, na, routine='superc',copy=.true.)
+        call re_alloc(qa, 1, na, routine='superc',copy=.true.)
+        call re_alloc(xa, 1,3, 1,na, routine='superc',copy=.true.)
+        call re_alloc(xa_last, 1,3, 1,na, routine='superc',copy=.true.)
       endif
 
       na_s  = na

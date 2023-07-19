@@ -37,10 +37,10 @@ CONTAINS
 ! Some compilers have trouble with the above
         character(len=int(log10(real(max(abs(i),1)))+2))  :: s
 #endif
-        character(len=8) :: form
-
-        write(form,'(a,i1)') '(i',len(s)
-        write(s, trim(form)//')') i
+        character(len=4) :: form
+        
+        write(form,'(a,i1,a)') '(i',len(s),')'
+        write(s, form) i
 
       end function str_integer
 
@@ -70,17 +70,8 @@ CONTAINS
       character(len=*), intent(in), optional  :: format
       character(len=100)    :: s
 
-      character(len=50) :: fmt_local
-      
       if (present(format)) then
-         ! Catch FoX's optional "rX" descriptor
-         ! which encodes a number of digits after the decimal point
-         if ((format(1:1)=="r") .or. (format(1:1)=="R")) then
-            write(fmt_local,"(a)") "(f99." // trim(format(2:)) // ")"
-         else
-            fmt_local = format
-         endif
-         write(s,fmt_local) x
+         write(s,format) x
       else
          write(s,"(g22.12)") x
       endif

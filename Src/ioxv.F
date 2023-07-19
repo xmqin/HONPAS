@@ -1,13 +1,13 @@
 ! 
-! Copyright (C) 1996-2016	The SIESTA group
-!  This file is distributed under the terms of the
-!  GNU General Public License: see COPYING in the top directory
-!  or http://www.gnu.org/copyleft/gpl.txt.
-! See Docs/Contributors.txt for a list of contributors.
+! This file is part of the SIESTA package.
 !
-
-!!**    There should be two separate routines for reading and writing
-
+! Copyright (c) Fundacion General Universidad Autonoma de Madrid:
+! E.Artacho, J.Gale, A.Garcia, J.Junquera, P.Ordejon, D.Sanchez-Portal
+! and J.M.Soler, 1996- .
+! 
+! Use of this software constitutes agreement with the full conditions
+! given in the SIESTA license, as signed by all legitimate users.
+!
       module m_ioxv
 
       logical, public, save   :: xv_file_read = .false.
@@ -46,7 +46,8 @@ C
       use parallel,   only : Node
       use precision,  only : dp
 #ifdef MPI
-      use mpi_siesta
+      use mpi_siesta, only : MPI_Bcast, MPI_Comm_World, 
+     . MPI_Integer, MPI_Double_Precision, MPI_Logical 
 #endif
 
       implicit          none
@@ -56,21 +57,26 @@ C
       real(dp)          cell(3,3), va(3,na), vcell(3,3), xa(3,na)
       character(len=*) ::         task
 
-      external          io_assign, io_close
+      character(len=label_length+3) :: paste
+      external          io_assign, io_close, paste
 
 c Internal variables and arrays
-      character(len=label_length+3) ::   fname
+      character(len=label_length+3), save ::   fname
+      logical, save :: frstme = .true.
 
       integer    ia, iu, iv, ix
 #ifdef MPI
       integer    MPIerror
 #endif
 
-C     Find name of file
-      fname = trim(slabel) // '.XV'
-      
 C Only do reading and writing for IOnode
       if (Node.eq.0) then
+
+C Find name of file
+        if (frstme) then
+          fname = paste( slabel, '.XV')
+          frstme = .false.
+        endif
 
 C Choose between read or write
         if (task.eq.'read' .or. task.eq.'READ') then
@@ -107,7 +113,7 @@ C If input file not found, go to exit point
 
 C Open file
           call io_assign( iu )
-          open( iu, file=fname, form='formatted', status='unknown' )
+          open( iu, file=fname, form='formatted', status='unknown' )      
 
 C Write data on file
           write(iu,'(2(3x,3f18.9))')
@@ -125,28 +131,25 @@ C Write data on file
 
   999 continue
 
-      if (task.eq.'read' .or. task.eq.'READ') then
-         
 C If data has been read in then broadcast the values to all Nodes
 #ifdef MPI
-         call MPI_Bcast(found,1,MPI_logical,0,MPI_Comm_World,MPIerror)
+      call MPI_Bcast(found,1,MPI_logical,0,MPI_Comm_World,MPIerror)
 #endif
-         if (found) then
-            xv_file_read = .true.
+      if (found.and.(task.eq.'read' .or. task.eq.'READ')) then
+         xv_file_read = .true.
 #ifdef MPI
-            call MPI_Bcast(na,1,MPI_integer,0,MPI_Comm_World,MPIerror)
-            call MPI_Bcast(cell(1,1),9,MPI_double_precision,0,
-     .           MPI_Comm_World,MPIerror)
-            call MPI_Bcast(vcell(1,1),9,MPI_double_precision,0,
-     .           MPI_Comm_World,MPIerror)
-            call MPI_Bcast(isa,na,MPI_integer,0,MPI_Comm_World,MPIerror)
-            call MPI_Bcast(iza,na,MPI_integer,0,MPI_Comm_World,MPIerror)
-            call MPI_Bcast(xa(1,1),3*na,MPI_double_precision,0,
-     .           MPI_Comm_World,MPIerror)
-            call MPI_Bcast(va(1,1),3*na,MPI_double_precision,0,
-     .           MPI_Comm_World,MPIerror)
+        call MPI_Bcast(na,1,MPI_integer,0,MPI_Comm_World,MPIerror)
+        call MPI_Bcast(cell(1,1),9,MPI_double_precision,0,
+     .    MPI_Comm_World,MPIerror)
+        call MPI_Bcast(vcell(1,1),9,MPI_double_precision,0,
+     .    MPI_Comm_World,MPIerror)
+        call MPI_Bcast(isa,na,MPI_integer,0,MPI_Comm_World,MPIerror)
+        call MPI_Bcast(iza,na,MPI_integer,0,MPI_Comm_World,MPIerror)
+        call MPI_Bcast(xa(1,1),3*na,MPI_double_precision,0,
+     .    MPI_Comm_World,MPIerror)
+        call MPI_Bcast(va(1,1),3*na,MPI_double_precision,0,
+     .    MPI_Comm_World,MPIerror)
 #endif
-         endif
       endif
 
       end subroutine ioxv

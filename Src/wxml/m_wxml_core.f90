@@ -285,7 +285,7 @@ subroutine xml_EndElement(xf,name)
 type(xmlf_t), intent(inout)   :: xf
 character(len=*), intent(in)  :: name
 
-character(len=2000)  :: current
+character(len=100)  :: current
 
 if (is_empty(xf%stack)) then
    call wxml_fatal(xf, "Out of elements to close")
@@ -312,7 +312,7 @@ end subroutine xml_EndElement
 subroutine xml_Close(xf)
 type(xmlf_t), intent(inout)   :: xf
 
-character(len=2000) :: name
+character(len=200) :: name
 
 do
    if (is_empty(xf%stack)) exit
@@ -407,7 +407,7 @@ subroutine write_attributes(xf)
 type(xmlf_t), intent(inout)   :: xf
 
 integer  :: i, status, size, key_len, value_len
-character(len=2000)  :: key, value
+character(len=200)  :: key, value
 
 do i = 1, len(xf%dict)
    call get_key(xf%dict,i,key,key_len,status)
@@ -465,7 +465,7 @@ end subroutine write_attributes
       if (present(format)) then
          write(xf%lun,format) a
       else
-         write(xf%lun,"(4(es20.7))") a
+         write(xf%lun,"(4(es20.12))") a
       endif
     end subroutine xml_AddArray_real_sp
 
@@ -511,7 +511,7 @@ end subroutine write_attributes
 
     end subroutine wxml_fatal_xf
 
-    function xmlf_name(xf) result(fn)
+    pure function xmlf_name(xf) result(fn)
       Type (xmlf_t), intent(in) :: xf
       character(len=size(xf%filename)) :: fn
       call assign_array_to_str(fn,xf%filename)

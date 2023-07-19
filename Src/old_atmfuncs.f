@@ -1,9 +1,12 @@
 ! 
-! Copyright (C) 1996-2016	The SIESTA group
-!  This file is distributed under the terms of the
-!  GNU General Public License: see COPYING in the top directory
-!  or http://www.gnu.org/copyleft/gpl.txt.
-! See Docs/Contributors.txt for a list of contributors.
+! This file is part of the SIESTA package.
+!
+! Copyright (c) Fundacion General Universidad Autonoma de Madrid:
+! E.Artacho, J.Gale, A.Garcia, J.Junquera, P.Ordejon, D.Sanchez-Portal
+! and J.M.Soler, 1996- .
+! 
+! Use of this software constitutes agreement with the full conditions
+! given in the SIESTA license, as signed by all legitimate users.
 !
       module old_atmfuncs
 
@@ -42,19 +45,18 @@ C     chemical species present in the calculation.
       real(dp), public, pointer  :: chargesave(:)
       real(dp), public, pointer  :: slfe(:)
       real(dp), public, pointer  :: lambdatb(:,:,:,:)
-      real(dp), public, pointer  :: filtercuttb(:,:,:)
 
       real(dp), public, pointer  :: qtb(:,:)
 
-      real(dp), public, pointer  :: table(:,:,:)
-      real(dp), public, pointer  :: tabpol(:,:,:)
-      real(dp), public, pointer  :: tab2(:,:,:)
-      real(dp), public, pointer  :: tab2pol(:,:,:)
+      real(dp), public, pointer      :: table(:,:,:)
+      real(dp), public, pointer      :: tabpol(:,:,:)
+      real(dp), public, pointer      :: tab2(:,:,:)
+      real(dp), public, pointer      :: tab2pol(:,:,:)
 
 
-      real(dp), public, pointer  ::  coretab(:,:,:)
-      real(dp), public, pointer  ::  chloctab(:,:,:)
-      real(dp), public, pointer  ::  vlocaltab(:,:,:)
+      real(dp), public, pointer      ::  coretab(:,:,:)
+      real(dp), public, pointer      ::  chloctab(:,:,:)
+      real(dp), public, pointer      ::  vlocaltab(:,:,:)
       real(dp), public, pointer  ::  rctb(:,:,:)
       real(dp), public, pointer  ::  rcotb(:,:,:,:)
       real(dp), public, pointer  ::  rcpoltb(:,:,:,:)
@@ -77,179 +79,224 @@ C     chemical species present in the calculation.
 !
       subroutine allocate_old_arrays()
 
-      !allocate(rcotb(nzetmx,0:lmaxd,nsemx,nsmax))
-      nullify( rcotb )
-      call re_alloc( rcotb, 1, nzetmx, 0, lmaxd, 1, nsemx, 1, nsmax,
-     &               'rcotb', 'old_atmfuncs' )
+        !allocate(rcotb(nzetmx,0:lmaxd,nsemx,nsmax))
+        nullify( rcotb )
+        call re_alloc( rcotb, 1, nzetmx, 0, lmaxd, 1, nsemx, 1, nsmax,
+     &                 name    = 'rcotb', 
+     &                 routine = 'allocate_old_arrays' )
 
-      !allocate(rcpoltb(nzetmx,0:lmaxd,nsemx,nsmax))
-      nullify( rcpoltb )
-      call re_alloc( rcpoltb, 1, nzetmx, 0, lmaxd, 1, nsemx, 1, nsmax,
-     &               'rcpoltb', 'old_atmfuncs' )
-      !allocate(lambdatb(nzetmx,0:lmaxd,nsemx,nsmax))
-      nullify( lambdatb )
-      call re_alloc( lambdatb, 1, nzetmx, 0, lmaxd, 1, nsemx,
-     &               1, nsmax, 'lambdatb', 'old_atmfuncs' )
-      !allocate(filtercuttb(0:lmaxd,nsemx,nsmax))
-      nullify( filtercuttb )
-      call re_alloc( filtercuttb, 0, lmaxd, 1, nsemx,
-     &               1, nsmax, 'filtercuttb', 'old_atmfuncs' )
-      !allocate(qtb(maxos,nsmax))
-      nullify( qtb )
-      call re_alloc( qtb, 1, maxos, 1, nsmax,
-     &               'qtb', 'old_atmfuncs' )
-      !allocate(slfe(nsmax))
-      nullify( slfe )
-      call re_alloc( slfe, 1, nsmax, 'slfe', 'old_atmfuncs' )
-      !allocate(rctb(nkbmx,0:lmaxd,nsmax))
-      nullify( rctb )
-      call re_alloc( rctb, 1, nkbmx, 0, lmaxd, 1, nsmax,
-     &               'rctb', 'old_atmfuncs' )
-
-      !allocate(smasstb(nsmax))
-      nullify( smasstb )
-      call re_alloc( smasstb, 1, nsmax, 'smasstb', 'old_atmfuncs' )
-      !allocate(chargesave(nsmax))
-      nullify( chargesave )
-      call re_alloc( chargesave, 1, nsmax,
-     &               'chargesave', 'old_atmfuncs' )
+        !allocate(rcpoltb(nzetmx,0:lmaxd,nsemx,nsmax))
+        nullify( rcpoltb )
+        call re_alloc( rcpoltb, 1, nzetmx, 0, lmaxd, 1, nsemx, 1, nsmax,
+     &                 name    = 'rcpoltb', 
+     &                 routine = 'allocate_old_arrays' )
+        !allocate(lambdatb(nzetmx,0:lmaxd,nsemx,nsmax))
+        nullify( lambdatb )
+        call re_alloc( lambdatb, 1, nzetmx, 0, lmaxd, 1, nsemx,
+     &                 1, nsmax,
+     &                 name    = 'lambdatb', 
+     &                 routine = 'allocate_old_arrays' )
+        !allocate(qtb(maxos,nsmax))
+        nullify( qtb )
+        call re_alloc( qtb, 1, maxos, 1, nsmax,
+     &                 name    = 'qtb', 
+     &                 routine = 'allocate_old_arrays' )
+        !allocate(slfe(nsmax))
+        nullify( slfe )
+        call re_alloc( slfe, 1, nsmax,
+     &                 name    = 'slfe', 
+     &                 routine = 'allocate_old_arrays' )
+        !allocate(rctb(nkbmx,0:lmaxd,nsmax))
+        nullify( rctb )
+        call re_alloc( rctb, 1, nzetmx, 0, lmaxd, 1, nsmax,
+     &                 name    = 'rctb', 
+     &                 routine = 'allocate_old_arrays' )
+        !allocate(smasstb(nsmax))
+        nullify( smasstb )
+        call re_alloc( smasstb, 1, nsmax,
+     &                 name    = 'smasstb', 
+     &                 routine = 'allocate_old_arrays' )
+        !allocate(chargesave(nsmax))
+        nullify( chargesave )
+        call re_alloc( chargesave, 1, nsmax,
+     &                 name    = 'chargesave', 
+     &                 routine = 'allocate_old_arrays' )
 !
-!     Table: This is a hybrid
-!          negative values of the second index correspond to KB projectors
-!          positive values of the second index correspond to orbitals
-!          A second index of zero (0) corresponds to the local potential
+!       Table: This is a hybrid
+!            negative values of the second index correspond to KB projectors
+!            positive values of the second index correspond to orbitals
+!            A second index of zero (0) corresponds to the local potential
 ! 
-!          The first index has ntbmax "real points" and two extra
-!          entries for bookeeping
-!          The total number of angular momentum entries is lmaxd+1 (since
-!          s=0, p=1, etc)
+!            The first index has ntbmax "real points" and two extra
+!            entries for bookeeping
+!            The total number of angular momentum entries is lmaxd+1 (since
+!            s=0, p=1, etc)
 !
 !
-!      allocate(table((ntbmax+2),-nkbmx*(lmaxd+1):nzetmx*nsemx*
-!               (lmaxd+1),nsmax))
-      nullify( table )
-      call re_alloc( table, 1, ntbmax+2,
-     &               -nkbmx*(lmaxd+1), nzetmx*nsemx*(lmaxd+1),
-     &               1, nsmax, 'table', 'old_atmfuncs' )
-!      allocate(tab2(ntbmax,-nkbmx*(lmaxd+1):nzetmx*nsemx*
-!        (lmaxd+1),nsmax))
-      nullify( tab2 )
-      call re_alloc( tab2, 1, ntbmax,
-     &               -nkbmx*(lmaxd+1), nzetmx*nsemx*(lmaxd+1),
-     &               1, nsmax, 'tab2', 'old_atmfuncs' )
-!      allocate(tabpol((ntbmax+2),nzetmx*nsemx*(lmaxd+1),nsmax))
-      nullify( tabpol )
-      call re_alloc( tabpol, 1, ntbmax+2,
-     &               1, nzetmx*nsemx*(lmaxd+1),
-     &               1, nsmax, 'tabpol', 'old_atmfuncs' )
-!      allocate(tab2pol(ntbmax,nzetmx*nsemx*(lmaxd+1),nsmax))
-      nullify( tab2pol )
-      call re_alloc( tab2pol, 1, ntbmax,
-     &               1, nzetmx*nsemx*(lmaxd+1),
-     &               1, nsmax, 'tab2pol', 'old_atmfuncs' )
+!        allocate(table((ntbmax+2),-nkbmx*(lmaxd+1):nzetmx*nsemx*
+!     .           (lmaxd+1),nsmax))
+        nullify( table )
+        call re_alloc( table, 1, ntbmax+2,
+     &                 -nkbmx*(lmaxd+1), nzetmx*nsemx*(lmaxd+1),
+     &                 1, nsmax,
+     &                 name    = 'table', 
+     &                 routine = 'allocate_old_arrays' )
+!        allocate(tab2(ntbmax,-nkbmx*(lmaxd+1):nzetmx*nsemx*
+!     .    (lmaxd+1),nsmax))
+        nullify( tab2 )
+        call re_alloc( tab2, 1, ntbmax,
+     &                 -nkbmx*(lmaxd+1), nzetmx*nsemx*(lmaxd+1),
+     &                 1, nsmax,
+     &                 name    = 'tab2', 
+     &                 routine = 'allocate_old_arrays' )
+!        allocate(tabpol((ntbmax+2),nzetmx*nsemx*(lmaxd+1),nsmax))
+        nullify( tabpol )
+        call re_alloc( tabpol, 1, ntbmax+2,
+     &                 1, nzetmx*nsemx*(lmaxd+1),
+     &                 1, nsmax,
+     &                 name    = 'tabpol', 
+     &                 routine = 'allocate_old_arrays' )
+!        allocate(tab2pol(ntbmax,nzetmx*nsemx*(lmaxd+1),nsmax))
+        nullify( tab2pol )
+        call re_alloc( tab2pol, 1, ntbmax,
+     &                 1, nzetmx*nsemx*(lmaxd+1),
+     &                 1, nsmax,
+     &                 name    = 'tab2pol', 
+     &                 routine = 'allocate_old_arrays' )
 
-!      allocate(coretab(ntbmax+1,2,nsmax))
-      nullify( coretab )
-      call re_alloc( coretab, 1, ntbmax+1, 1, 2, 1, nsmax,
-     &               'coretab', 'old_atmfuncs' )
+!        allocate(coretab(ntbmax+1,2,nsmax))
+        nullify( coretab )
+        call re_alloc( coretab, 1, ntbmax+1,
+     &                 1, 2,
+     &                 1, nsmax,
+     &                 name    = 'coretab', 
+     &                 routine = 'allocate_old_arrays' )
 
-!      allocate(chloctab((ntbmax+1),2,nsmax))
-      nullify( chloctab )
-      call re_alloc( chloctab, 1, ntbmax+1, 1, 2, 1, nsmax,
-     &               'chloctab', 'old_atmfuncs' )
-!      allocate(vlocaltab((ntbmax+1),2,nsmax))
-      nullify( vlocaltab )
-      call re_alloc( vlocaltab, 1, ntbmax+1, 1, 2, 1, nsmax,
-     &               'vlocaltab', 'old_atmfuncs' )
+!        allocate(chloctab((ntbmax+1),2,nsmax))
+        nullify( chloctab )
+        call re_alloc( chloctab, 1, ntbmax+1,
+     &                 1, 2,
+     &                 1, nsmax,
+     &                 name    = 'chloctab', 
+     &                 routine = 'allocate_old_arrays' )
+!        allocate(vlocaltab((ntbmax+1),2,nsmax))
+        nullify( vlocaltab )
+        call re_alloc( vlocaltab, 1, ntbmax+1,
+     &                 1, 2,
+     &                 1, nsmax,
+     &                 name    = 'vlocaltab', 
+     &                 routine = 'allocate_old_arrays' )
 
-      !allocate(izsave(nsmax))
-      nullify( izsave )
-      call re_alloc( izsave, 1, nsmax, 'izsave', 'old_atmfuncs' )
-      !allocate(lmxkbsave(nsmax))
-      nullify( lmxkbsave )
-      call re_alloc( lmxkbsave, 1, nsmax,
-     &               'lmxkbsave', 'old_atmfuncs' )
-      !allocate(lmxosave(nsmax))
-      nullify( lmxosave )
-      call re_alloc( lmxosave, 1, nsmax, 'lmxosave', 'old_atmfuncs' )
-      !allocate(npolorbsave(0:lmaxd,nsemx,nsmax))
-      nullify( npolorbsave )
-      call re_alloc( npolorbsave, 0, lmaxd, 1, nsemx, 1, nsmax,
-     &               'npolorbsave', 'old_atmfuncs' )
-      !allocate(nsemicsave(0:lmaxd,nsmax))
-      nullify( nsemicsave )
-      call re_alloc( nsemicsave, 0, lmaxd, 1, nsmax,
-     &               'nsemicsave', 'old_atmfuncs' )
-      !allocate(nzetasave(0:lmaxd,nsemx,nsmax))
-      nullify( nzetasave )
-      call re_alloc( nzetasave, 0, lmaxd, 1, nsemx, 1, nsmax,
-     &               'nzetasave', 'old_atmfuncs' )
-      !allocate(nomax(nsmax))
-      nullify( nomax )
-      call re_alloc( nomax, 1, nsmax, 'nomax', 'old_atmfuncs' )
-      !allocate(nkbmax(nsmax))
-      nullify( nkbmax )
-      call re_alloc( nkbmax, 1, nsmax, 'nkbmax', 'old_atmfuncs' )
-      !allocate(zvaltb(nsmax))
-      nullify( zvaltb )
-      call re_alloc( zvaltb, 1, nsmax, 'zvaltb', 'old_atmfuncs' )
-      !allocate(cnfigtb(0:lmaxd,nsemx,nsmax))
-      nullify( cnfigtb )
-      call re_alloc( cnfigtb, 0, lmaxd, 1, nsemx, 1, nsmax,
-     &               'cnfigtb', 'old_atmfuncs' )
-      !allocate(nkblsave(0:lmaxd,nsmax))
-      nullify( nkblsave )
-      call re_alloc( nkblsave, 0, lmaxd, 1, nsmax,
-     &               'nkblsave', 'old_atmfuncs' )
+        !allocate(izsave(nsmax))
+        nullify( izsave )
+        call re_alloc( izsave, 1, nsmax,
+     &                 name    = 'izsave', 
+     &                 routine = 'allocate_old_arrays' )
+        !allocate(lmxkbsave(nsmax))
+        nullify( lmxkbsave )
+        call re_alloc( lmxkbsave, 1, nsmax,
+     &                 name    = 'lmxkbsave', 
+     &                 routine = 'allocate_old_arrays' )
+        !allocate(lmxosave(nsmax))
+        nullify( lmxosave )
+        call re_alloc( lmxosave, 1, nsmax,
+     &                 name    = 'lmxosave', 
+     &                 routine = 'allocate_old_arrays' )
+        !allocate(npolorbsave(0:lmaxd,nsemx,nsmax))
+        nullify( npolorbsave )
+        call re_alloc( npolorbsave, 0, lmaxd,
+     &                 1, nsemx,
+     &                 1, nsmax,
+     &                 name    = 'npolorbsave', 
+     &                 routine = 'allocate_old_arrays' )
+        !allocate(nsemicsave(0:lmaxd,nsmax))
+        nullify( nsemicsave )
+        call re_alloc( nsemicsave, 0, lmaxd,
+     &                 1, nsmax,
+     &                 name    = 'nsemicsave', 
+     &                 routine = 'allocate_old_arrays' )
+        !allocate(nzetasave(0:lmaxd,nsemx,nsmax))
+        nullify( nzetasave )
+        call re_alloc( nzetasave, 0, lmaxd,
+     &                 1, nsemx,
+     &                 1, nsmax,
+     &                 name    = 'nzetasave', 
+     &                 routine = 'allocate_old_arrays' )
+        !allocate(nomax(nsmax))
+        nullify( nomax )
+        call re_alloc( nomax, 1, nsmax,
+     &                 name    = 'nomax', 
+     &                 routine = 'allocate_old_arrays' )
+        !allocate(nkbmax(nsmax))
+        nullify( nkbmax )
+        call re_alloc( nkbmax, 1, nsmax,
+     &                 name    = 'nkbmax', 
+     &                 routine = 'allocate_old_arrays' )
+        !allocate(zvaltb(nsmax))
+        nullify( zvaltb )
+        call re_alloc( zvaltb, 1, nsmax,
+     &                 name    = 'zvaltb', 
+     &                 routine = 'allocate_old_arrays' )
+        !allocate(cnfigtb(0:lmaxd,nsemx,nsmax))
+        nullify( cnfigtb )
+        call re_alloc( cnfigtb, 0, lmaxd,
+     &                 1, nsemx,
+     &                 1, nsmax,
+     &                 name    = 'cnfigtb', 
+     &                 routine = 'allocate_old_arrays' )
+        !allocate(nkblsave(0:lmaxd,nsmax))
+        nullify( nkblsave )
+        call re_alloc( nkblsave, 0, lmaxd,
+     &                 1, nsmax,
+     &                 name    = 'nkblsave', 
+     &                 routine = 'allocate_old_arrays' )
 !
-      nullify (label_save)
-      allocate(label_save(nsmax))
-!      call re_alloc(label_save,1,nsmax,"label_save",
-!     $                routine= "allocate_old_arrays")
-      nullify (basistype_save)
-      allocate(basistype_save(nsmax))
-!      call re_alloc(basistype_save,1,nsmax,"basistype_save",
-!     $                routine= "allocate_old_arrays")
-      nullify (semicsave)
-      call re_alloc( semicsave, 1, nsmax,
-     &               'semicsave', 'old_atmfuncs' )
+        nullify (label_save)
+        call re_alloc(label_save,1,nsmax,name="label_save",
+     $                routine= "allocate_old_arrays")
+        nullify (basistype_save)
+        call re_alloc(basistype_save,1,nsmax,name="basistype_save",
+     $                routine= "allocate_old_arrays")
+        nullify (semicsave)
+        call re_alloc(semicsave,1,nsmax,name="semicsave",
+     $                routine= "allocate_old_arrays")
 
-      end subroutine allocate_old_arrays
+        end subroutine allocate_old_arrays
 
       subroutine deallocate_old_arrays()
 
-      call de_alloc( rcotb,       'rcotb',       'old_atmfuncs' )
-      call de_alloc( rcpoltb,     'rcpoltb',     'old_atmfuncs' )
-      call de_alloc( lambdatb,    'lambdatb',    'old_atmfuncs' )
-      call de_alloc( filtercuttb, 'filtercuttb', 'old_atmfuncs' )
-      call de_alloc( qtb,         'qtb',         'old_atmfuncs' )
-      call de_alloc( slfe,        'slfe',        'old_atmfuncs' )
-      call de_alloc( rctb,        'rctb',        'old_atmfuncs' )
-      call de_alloc( smasstb,     'smasstb',     'old_atmfuncs' )
-      call de_alloc( chargesave,  'chargesave',  'old_atmfuncs' )
-      call de_alloc( table,       'table',       'old_atmfuncs' )
-      call de_alloc( tab2,        'tab2',        'old_atmfuncs' )
-      call de_alloc( tabpol,      'tabpol',      'old_atmfuncs' )
-      call de_alloc( tab2pol,     'tab2pol',     'old_atmfuncs' )
-      call de_alloc( coretab,     'coretab',     'old_atmfuncs' )
-      call de_alloc( chloctab,    'chloctab',    'old_atmfuncs' )
-      call de_alloc( vlocaltab,   'vlocaltab',   'old_atmfuncs' )
-      call de_alloc( izsave,      'izsave',      'old_atmfuncs' )
-      call de_alloc( lmxkbsave,   'lmxkbsave',   'old_atmfuncs' )
-      call de_alloc( lmxosave,    'lmxosave',    'old_atmfuncs' )
-      call de_alloc( npolorbsave, 'npolorbsave', 'old_atmfuncs' )
-      call de_alloc( nsemicsave,  'nsemicsave',  'old_atmfuncs' )
-      call de_alloc( nzetasave,   'nzetasave',   'old_atmfuncs' )
-      call de_alloc( nomax,       'nomax',       'old_atmfuncs' )
-      call de_alloc( nkbmax,      'nkbmax',      'old_atmfuncs' )
-      call de_alloc( zvaltb,      'zvaltb',      'old_atmfuncs' )
-      call de_alloc( cnfigtb,     'cnfigtb',     'old_atmfuncs' )
-      call de_alloc( nkblsave,    'nkblsave',    'old_atmfuncs' )
-      call de_alloc( semicsave,   'semicsave',   'old_atmfuncs' )
-      deallocate( label_save )
-!      call de_alloc( label_save, 'label_save', 'old_atmfuncs' )
-      deallocate( basistype_save )
-!      call de_alloc( basistype_save, 'basistype_save', 'old_atmfuncs' )
+        call de_alloc( rcotb, name='rcotb' )
+        call de_alloc( rcpoltb, name='rcpoltb' )
+        call de_alloc( lambdatb, name='lambdatb' )
+        call de_alloc( qtb, name='qtb' )
+        call de_alloc( slfe, name='slfe' )
+        call de_alloc( rctb, name='rctb' )
+        call de_alloc( smasstb, name='smasstb' )
+        call de_alloc( chargesave, name='chargesave' )
+
+        call de_alloc( table, name='table' )
+        call de_alloc( tab2, name='tab2' )
+
+        call de_alloc( tabpol, name='tabpol' )
+        call de_alloc( tab2pol, name='tab2pol' )
+        call de_alloc( coretab, name='coretab' )
+        call de_alloc( chloctab, name='chloctab' )
+        call de_alloc( vlocaltab, name='vlocaltab' )
+
+        call de_alloc( izsave, name='izsave' )
+        call de_alloc( lmxkbsave, name='lmxkbsave' )
+        call de_alloc( lmxosave, name='lmxosave' )
+        call de_alloc( npolorbsave, name='npolorbsave' )
+        call de_alloc( nsemicsave, name='nsemicsave' )
+        call de_alloc( nzetasave, name='nzetasave' )
+        call de_alloc( nomax, name='nomax' )
+        call de_alloc( nkbmax, name='nkbmax' )
+        call de_alloc( zvaltb, name='zvaltb' )
+        call de_alloc( cnfigtb, name='cnfigtb' )
+        call de_alloc( nkblsave, name='nkblsave' )
+        call de_alloc( semicsave, name='semicsave' )
+        call de_alloc( label_save, name='label_save' )
+        call de_alloc( basistype_save, name='basistype_save' )
 
       end subroutine deallocate_old_arrays
 
@@ -257,31 +304,30 @@ C     chemical species present in the calculation.
 
       integer is
 
-      do is=1,nsmax
-        izsave(is)=0
-        lmxosave(is)=0
-        lmxkbsave(is)=0
-        label_save(is)='  '
-        nkbmax(is)=0
-        nomax(is)=0  
-        semicsave(is)=.false.
+           do is=1,nsmax
+              izsave(is)=0
+              lmxosave(is)=0
+              lmxkbsave(is)=0
+              label_save(is)='  '
+              nkbmax(is)=0
+              nomax(is)=0  
+              semicsave(is)=.false.
               
-        nsemicsave(:,is) = 0
-        nzetasave(:,:,is) = 0
-        rcotb(:,:,:,is) = 0.0_dp
-        lambdatb(:,:,:,is) = 0.0_dp
-        filtercuttb(:,:,is) = 0.0_dp
-        rcpoltb(:,:,:,is) = 0.0_dp
+              nsemicsave(:,is) = 0
+              nzetasave(:,:,is) = 0
+              rcotb(:,:,:,is) = 0.0_dp
+              lambdatb(:,:,:,is) = 0.0_dp
+              rcpoltb(:,:,:,is) = 0.0_dp
 
-        table(:,:,is) = 0.0_dp
-        tab2(:,:,is) = 0.0_dp
-        tabpol(:,:,is) = 0.0_dp
-        tab2pol(:,:,is) = 0.0_dp
+              table(:,:,is) = 0.0_dp
+              tab2(:,:,is) = 0.0_dp
+             tabpol(:,:,is) = 0.0_dp
+             tab2pol(:,:,is) = 0.0_dp
 
-        qtb(1:maxos,is)=0.00_dp
+             qtb(1:maxos,is)=0.00_dp
 
-      enddo 
-      end subroutine clear_tables
+           enddo 
+       end subroutine clear_tables
 
       subroutine check_is(name,is)
       character(len=*), intent(in) :: name
@@ -399,17 +445,18 @@ C ground state configuration.
       integer, intent(in) :: is    ! Species index
       integer, intent(in) :: io    ! Orbital index (within atom)
 
-C   INTEGER CNFIGFIO: Principal quantum number of the shell to which
-C                     the orbital belongs
+C Returns the valence-shell configuration in the atomic ground state
+C (i.e. the principal quatum number for orbitals of angular momentum l)
 
-C               (Formerly, for polarization orbitals
-C               the quantum number corresponded to the shell which
-C               is polarized by the orbital io.
-C               This behavior for polarization orbitals is meaningless,
-C               and has been replaced.)
-      
-      integer l, norb, izeta, ipol, nsm
+C   INTEGER CNFIGFIO: Principal quantum number of the shell to what 
+C                     the orbital belongs ( for polarization orbitals
+C                     the quantum number corresponds to the shell which
+C                     is polarized by the orbital io) 
 
+      integer l, norb, lorb, izeta, ipol,nsm
+      integer  indx, nsmorb
+
+C
       call check_is('cnfigfio',is)
       if ((io.gt.nomax(is)).or.(io.lt.1)) then
             write(6,*) 'CNFIGFIO: THERE ARE NO DATA FOR IO=',IO
@@ -418,38 +465,41 @@ C               and has been replaced.)
          call die()
       endif
 
-      ! This routine assumes that polarization orbitals are the last ones
-      ! in the list indexed by 'io'
-      
         norb=0
+        indx=0
         do 10 l=0,lmxosave(is)
          do 8 nsm=1,nsemicsave(l,is)+1
           do 5 izeta=1,nzetasave(l,nsm,is)
             norb=norb+(2*l+1)
-            if(norb.ge.io) then
-               cnfigfio=cnfigtb(l,nsm,is)
-               return
-            endif
+            indx=indx+1
+            if(norb.ge.io) goto 30
  5        continue
  8       continue
 10      continue
 
+        indx=0
         do  20 l=0,lmxosave(is)
           do 18 nsm=1,nsemicsave(l,is)+1
             do 15 ipol=1, npolorbsave(l,nsm,is)
               norb=norb+(2*(l+1)+1)
-              if(norb.ge.io) then
-                 ! Deal properly with polarization orbitals
-                 ! Return the highest n for l+1
-                 cnfigfio=maxval(cnfigtb(l+1,:,is))
-                 return
-              endif
+              indx=indx+1
+              if(norb.ge.io) goto 40
 15          continue
 18        continue
 20      continue
            write(6,*) 'CNFIGFIO: ERROR: ORBITAL INDEX IO=',IO
            write(6,*) 'CNFIGFIO: ERROR: NOT FOUND'
         call die()
+
+30      lorb=l
+        nsmorb=nsm
+        cnfigfio=cnfigtb(lorb,nsmorb,is)
+        return
+
+40      lorb=l
+        nsmorb=nsm
+        cnfigfio=cnfigtb(lorb,nsmorb,is)  
+        return
 
       end function cnfigfio
 !

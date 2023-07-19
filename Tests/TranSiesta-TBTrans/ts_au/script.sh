@@ -26,15 +26,6 @@ OBJDIR=$(basename ${ABS_EXEC_DIR})
 ROOT_DIR=$(dirname ${ABS_EXEC_DIR})
 echo "Running script with TranSIESTA=$TS, compiled in OBJDIR=${OBJDIR}"
 
-
-if [ -z "$TBT" ] ; then
-    TBT="${TS_EXEC_PREFIX} ${ROOT_DIR}/Util/TS/TBtrans/tbtrans"
-    if [ ! -e ${ROOT_DIR}/Util/TS/TBtrans/tbtrans ]; then
-	(cd "${ROOT_DIR}/Util/TS/TBtrans" ;
-	 make -j OBJDIR="$OBJDIR" )
-    fi
-fi
-
 #
 # Start with the electrode calculation
 #
@@ -44,9 +35,10 @@ mkdir Elec
 cd Elec
 ln ../../Au.psf .
 ln ../../${ELEC}.fdf .
-${TS} --electrode ${ELEC}.fdf > ${ELEC}.out
+${TS} < ${ELEC}.fdf > ${ELEC}.out
 RETVAL=$?
-if [ $RETVAL -ne 0 ]; then
+if [ $RETVAL -ne 0 ]
+then
    echo "The electrode calculation did not go well ..."
    exit
 fi
@@ -59,7 +51,7 @@ cd ..
 #
 # Scattering region calculation
 #
-for SCAT in bulk_au_111 au_111_capacitor au_111_capacitor_single
+for SCAT in bulk_au_111 au_111_capacitor 
 do
   echo "==> Scattering Region Calculation for $SCAT"
   mkdir Scat_$SCAT
@@ -68,9 +60,10 @@ do
   ln ../../${SCAT}.fdf .
   # Copy the electrode's .TSHS
   ln ../Elec/${ELEC}.TSHS .
-  $TS ${SCAT}.fdf > ${SCAT}.out
+  $TS < ${SCAT}.fdf > ${SCAT}.out
   RETVAL=$?
-  if [ $RETVAL -ne 0 ]; then
+  if [ $RETVAL -ne 0 ]
+      then
       echo "** The scattering region calculation for $SCAT did not go well ..."
       exit
   fi
@@ -83,8 +76,20 @@ do
 #
 # TBTrans calculation
 #
- echo "==> TBTrans Calculation for $SCAT"
-
+  echo "==> TBTrans Calculation for $SCAT"
+#
+# TBT can be specified in the command line, and will override
+# the default location in Util
+#
+ if [ -z "$TBT" ] ; then
+  TBT=${ROOT_DIR}/Util/TBTrans/tbtrans
+  echo "==> (Compiling $TBT...)"
+  # Clean in case the compiled version there is not compatible
+  (cd "${ROOT_DIR}/Util/TBTrans" ; make OBJDIR="$OBJDIR" clean ;
+       make OBJDIR="$OBJDIR" )
+  TBT="${TS_EXEC_PREFIX} ${ROOT_DIR}/Util/TBTrans/tbtrans"
+ fi
+#
  echo "==> Running $SCAT with tbtrans=$TBT"
  mkdir TBT_$SCAT
  cd TBT_$SCAT
@@ -92,14 +97,17 @@ do
  ln ../Elec/${ELEC}.TSHS .
  ln ../Scat_$SCAT/${SCAT}.TSHS .
  ln ../../${SCAT}.fdf .
- $TBT ${SCAT}.fdf > tbt_${SCAT}.out
+ $TBT < ${SCAT}.fdf  > tbt_${SCAT}.out
  RETVAL=$?
- if [ $RETVAL -ne 0 ]; then
+ if [ $RETVAL -ne 0 ]
+ then
    echo "The scattering region calculation did not go well ..."
    exit
  fi
- cp tbt_$SCAT.out $SCAT.TBT.TRANS_Left-Right ../..
- 
+ cp tbt_${SCAT}.out ../..
+ #
+ # Go back to base directory
+ #
  cd ..
 done
 # If it gets here it's because it finished without error

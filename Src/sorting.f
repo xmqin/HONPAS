@@ -1,23 +1,14 @@
-! ---
-! Copyright (C) 1996-2016	The SIESTA group
-!  This file is distributed under the terms of the
-!  GNU General Public License: see COPYING in the top directory
-!  or http://www.gnu.org/copyleft/gpl.txt .
-! See Docs/Contributors.txt for a list of contributors.
-! ---
-!!@LICENSE
+! 
+! This file is part of the SIESTA package.
 !
-!**********************************************************************
-! module sorting
+! Copyright (c) Fundacion General Universidad Autonoma de Madrid:
+! E.Artacho, J.Gale, A.Garcia, J.Junquera, P.Ordejon, D.Sanchez-Portal
+! and J.M.Soler, 1996- .
+! 
+! Use of this software constitutes agreement with the full conditions
+! given in the SIESTA license, as signed by all legitimate users.
 !
-! Provides the following public procedures:
-!   iorder  ! Orders elements of an integer array according to some index
-!   ordix   ! Finds an order index of increasing array elements
-!   order   ! Orders elements of a real array according to some index
-!   ordvec  ! Orders a set of vectors in a well defined order
-!**********************************************************************
-
-      MODULE sorting
+      module sorting
 
       CONTAINS
 
@@ -60,9 +51,7 @@ C **********************************************************************
           IV1 = NV
   60      CONTINUE
           IF (IV1 .GT. IV0+1) THEN
-!JMS 2008_03_02
-!            CALL ORDIX(  V(IX:IX,IV0+1:), NX, IV1-IV0, IAUX )
-            CALL ORDIX(  V(IX,IV0+1), NX, IV1-IV0, IAUX )
+            CALL ORDIX(  V(IX:IX,IV0+1:), NX, IV1-IV0, IAUX )
             CALL ORDER(  V(1,IV0+1),  NX, IV1-IV0, IAUX )
             CALL IORDER( INDEX(IV0+1), 1, IV1-IV0, IAUX )
           ENDIF
@@ -70,147 +59,154 @@ C **********************************************************************
         IF (IV0 .LT. NV-1) GO TO 30
       ENDDO
 
-      END SUBROUTINE ORDVEC
+      END subroutine ordvec
+
+      SUBROUTINE ORDIX( X, M, N, INDX )
+C *******************************************************************
+C Makes an index table of array X, with size N and stride M.
+C Ref: W.H.Press et al. Numerical Recipes, Cambridge Univ. Press.
+C Adapted by J.M.Soler from routine INDEXX of Num. Rec. May'96.
+C *************** INPUT *********************************************
+C REAL*8  X(M,N)   : Array with the values to be ordered
+C INTEGER M, N     : Dimensions of array X
+C *************** OUTPUT ********************************************
+C INTEGER INDEX(N) : Array which gives the increasing order of X(1,I):
+C                    X(1,INDEX(I)) .LE. X(1,INDEX(I+1)) )
+C *************** USAGE *********************************************
+C Example to order atomic positions X(I,IA), I=1,3, IA=1,NA by
+C increasing z coordinate:
+C    CALL ORDIX( X(3,1), 3, NA, INDEX )
+C    CALL ORDER( X(1,1), 3, NA, INDEX )
+C *******************************************************************
+      IMPLICIT          NONE
+      INTEGER           I, N, INDX(:), INDXT, IR, J, L, M
+      DOUBLE PRECISION  X(:,:), Q
+
+!
+!     Important: avoid instabilities leading to compiler-dependent
+!     behavior by introducing a smearing in the .LT. test
+!
+      double precision, parameter :: delta = 1.0d-12
+
+      DO 1 J=1,N
+         INDX(J)=J
+   1  CONTINUE
+      IF (N.LE.1) RETURN
+      L=N/2+1
+      IR=N
+   2  CONTINUE
+         IF (L.GT.1) THEN
+            L=L-1
+            INDXT=INDX(L)
+            Q=X(1,INDXT)
+         ELSE
+            INDXT=INDX(IR)
+            Q=X(1,INDXT)
+            INDX(IR)=INDX(1)
+            IR=IR-1
+            IF (IR.EQ.1) THEN
+               INDX(1)=INDXT
+               RETURN
+            ENDIF
+         ENDIF
+         I=L
+         J=L+L
+   3     IF (J.LE.IR) THEN
+            IF (J.LT.IR) THEN
+               IF (X(1,INDX(J)).LT.(X(1,INDX(J+1)) - delta)) J=J+1
+            ENDIF
+            IF (Q.LT.(X(1,INDX(J)) - delta)) THEN
+               INDX(I)=INDX(J)
+               I=J
+               J=J+J
+            ELSE
+               J=IR+1
+            ENDIF
+         GO TO 3
+         ENDIF
+         INDX(I)=INDXT
+      GO TO 2
+
+      END subroutine ordix
 
 
-      SUBROUTINE ordix( x, m, n, indx )
-! *******************************************************************
-! SUBROUTINE ORDIX( X, M, N, INDX )
-! Makes an index table of increasing array X, with size N and
-! stride M using the heapsort algorithm.
-! Written by J.M.Soler, May.2015
-! *************** INPUT *********************************************
-! REAL*8  X(M,N)   : Array with the values to be ordered
-! INTEGER M, N     : Dimensions of array X
-! *************** OUTPUT ********************************************
-! INTEGER INDX(N)  : Array which gives the increasing order of X(1,I):
-!                    X(1,INDX(I)) .LE. X(1,INDX(I+1)) )
-! *************** USAGE *********************************************
-! Example to order atomic positions X(I,IA), I=1,3, IA=1,NA by
-! increasing z coordinate:
-!    CALL ORDIX( X(3,1), 3, NA, INDEX )
-!    CALL ORDER( X(1,1), 3, NA, INDEX )
-! *************** ALGORITHM *****************************************
-! A hierarchical 'family tree' (heap) is generated, with each parent
-! k older than its two children (2*k and 2*k+1). Persons k with k>np
-! are children (np = highest power of 2 smaller than n). Persons with
-! np/2<k<=np are parents (but only those with k<=n/2 have actually
-! one or two children). Persons np/4<k<=np/2 are grandparents, etc.
-! Then, the person with k=1 (the oldest) is removed and the tree is
-! reconstructed. This is iterated until all members are picked.
-! Ref: W.H.Press et al. Numerical Recipes, Cambridge Univ. Press.
-! *******************************************************************
-
-      implicit none
-      integer, parameter  :: dp = kind(1.d0)
-      real(dp),parameter  :: tol = 1.e-12_dp  ! tolerance for value comparisons
-
-      integer, intent(in) :: m, n     ! Dimensions of array x
-      real(dp),intent(in) :: x(m,n)   ! Array with the values to be ordered
-                                      ! will order against the first element (m)
-      integer, intent(out):: indx(n)  ! Increasing order of x(1,:)
-
-      integer:: k, nFamily, parent
-      real(dp):: ageTol
-
-      ! Construct the heap (family tree)
-      indx = (/(k,k=1,n)/)            ! initial array order, to be modified
-
-      ageTol = tol*maxval(x(1,:)) - tol*minval(x(1,:))  ! tolerance for age comparisons
-
-      ! Swap to create the actual parent tree
-
-      nFamily = n                     ! number of persons in the family tree
-      do parent = n/2,1,-1            ! sift 'parents' down the tree
-        call siftDown(parent)         ! siftDown inherits age and indx arrays
-      enddo
-
-      ! Reduce the tree size, retiring its succesive patriarchs (first element)
-      do nFamily = n-1,1,-1           ! nFamily is the new size of the tree
-        call swap( indx(1), indx(nFamily+1) ) ! swap patriarch and youngest child
-        call siftDown(1)              ! now recolocate child in tree
-      enddo
-
-      contains
-
-      subroutine siftDown( person )   ! place person in family tree
-
-      implicit none
-      integer, intent(in) :: person
-
-      ! Inherited from ordix: age(:), ageTol, indx(:), nFamily
-      integer:: child, sw, parent
-
-      ! initialize
-      parent = person                    ! assume person is a parent
-      child = 2 * parent                 ! first child of parent
-      sw = parent                        ! sorted swap child
-      do while ( child <= nFamily )      ! iterate the sift-down process
-         ! check current child
-         if ( x(1,indx(sw)) < x(1,indx(child)) - ageTol ) then
-            sw = child
-         end if
-         ! Check neighbouring child
-         if ( child < nFamily ) then
-            if ( x(1,indx(sw)) < x(1,indx(child+1)) - ageTol ) then
-               sw = child + 1
-            end if
-         end if
-         if ( sw == parent ) then
-            exit ! break
-         else
-            call swap( indx(parent) , indx(sw) )
-            ! update for next sift
-            parent = sw
-            child = sw * 2
-         end if
-      end do
-      
-      end subroutine siftDown
-
-      subroutine swap(i,j)            ! exchange integers i and j
-      integer:: i,j,k
-      k = i
-      i = j
-      j = k
-      end subroutine swap
-
-      END SUBROUTINE ordix
-
-
-      SUBROUTINE ORDER( X, M, N, INDX )
+      SUBROUTINE ORDER( X, M, N, INDEX )
 C *******************************************************************
 C Orders array X(M,N) according to array INDEX(N), which may be
 C   generated by routine ORDIX.
 C Written by J.M.Soler. May'96.
 C *************** INPUT *********************************************
 C INTEGER M, N     : Dimensions of array X
-C INTEGER INDX(N)  : Array which gives the desired order
+C INTEGER INDEX(N) : Array which gives the desired order
 C *************** INPUT AND OUTPUT **********************************
 C REAL*8  X(M,N) : Array(s) to be ordered: Xout(I,J) = Xin(I,INDEX(J))
 C *******************************************************************
       IMPLICIT          NONE
-      INTEGER           M, N, INDX(N)
-      DOUBLE PRECISION  X(M,N)
-      X = X(:,INDX)
-      END SUBROUTINE ORDER
+      INTEGER           I, N, INDEX(N), IORDER, ISTORE, J, M
+      DOUBLE PRECISION  X(M,N), XI
+
+      DO 40 J = 1,M
+        DO 20 I = 1,N
+          XI = X(J,I)
+          IORDER = I
+   10     CONTINUE
+          ISTORE = INDEX(IORDER)
+          IF (ISTORE .GT. 0) THEN
+            IF (ISTORE .EQ. I) THEN
+              X(J,IORDER) = XI
+            ELSE
+              X(J,IORDER) = X(J,ISTORE)
+            ENDIF
+            INDEX(IORDER) = -INDEX(IORDER)
+            IORDER = ISTORE
+            GOTO 10
+          ENDIF
+   20   CONTINUE
+        DO 30 I = 1,N
+          INDEX(I) = -INDEX(I)
+   30   CONTINUE
+   40 CONTINUE
+      END subroutine order
 
 
-      SUBROUTINE IORDER( IA, M, N, INDX )
+      SUBROUTINE IORDER( IA, M, N, INDEX )
 C *******************************************************************
 C Orders integer array IA(M,N) according to array INDEX(N), which
 C   may be generated by routine ORDIX.
 C Written by J.M.Soler. May'96 and Oct'97.
 C *************** INPUT *********************************************
 C INTEGER M, N     : Dimensions of array IA
-C INTEGER INDX(N)  : Array which gives the desired order
+C INTEGER INDEX(N) : Array which gives the desired order
 C *************** INPUT AND OUTPUT **********************************
 C REAL*8  IA(M,N): Array(s) to be ordered: IAout(I,J) = IAin(I,INDEX(J))
 C *******************************************************************
       IMPLICIT NONE
       INTEGER  M, N
-      INTEGER  IA(M,N), INDX(N)
-      IA = IA(:,INDX)
-      END SUBROUTINE IORDER
+      INTEGER  IA(M,N), INDEX(N)
 
-      END MODULE sorting
+      INTEGER  I, IAI, IORD, ISTORE, J
+
+      DO 40 J = 1,M
+        DO 20 I = 1,N
+          IAI = IA(J,I)
+          IORD = I
+   10     CONTINUE
+          ISTORE = INDEX(IORD)
+          IF (ISTORE .GT. 0) THEN
+            IF (ISTORE .EQ. I) THEN
+              IA(J,IORD) = IAI
+            ELSE
+              IA(J,IORD) = IA(J,ISTORE)
+            ENDIF
+            INDEX(IORD) = -INDEX(IORD)
+            IORD = ISTORE
+            GOTO 10
+          ENDIF
+   20   CONTINUE
+        DO 30 I = 1,N
+          INDEX(I) = -INDEX(I)
+   30   CONTINUE
+   40 CONTINUE
+      END subroutine iorder
+
+      end module sorting

@@ -1,9 +1,12 @@
 ! 
-! Copyright (C) 1996-2016	The SIESTA group
-!  This file is distributed under the terms of the
-!  GNU General Public License: see COPYING in the top directory
-!  or http://www.gnu.org/copyleft/gpl.txt.
-! See Docs/Contributors.txt for a list of contributors.
+! This file is part of the SIESTA package.
+!
+! Copyright (c) Fundacion General Universidad Autonoma de Madrid:
+! E.Artacho, J.Gale, A.Garcia, J.Junquera, P.Ordejon, D.Sanchez-Portal
+! and J.M.Soler, 1996- .
+! 
+! Use of this software constitutes agreement with the full conditions
+! given in the SIESTA license, as signed by all legitimate users.
 !
       module m_ksvinit
       USE precision, only : dp
@@ -169,7 +172,10 @@ C
       use precision
       use parallel,  only : Node
       use fdf
-      use sys
+      use parsing
+#ifdef MPI
+      use mpi_siesta
+#endif
 
       implicit          none
 
@@ -179,11 +185,13 @@ C Passed variables and arrays
 
 C Internal variables and arrays
  
-      character         yiorno
-      integer           ni, nn, igrd, ix
-
-      type(block_fdf)            :: bfdf
-      type(parsed_line), pointer :: pline
+      character         line*130, names*80, yiorno
+      integer           ni, nn, nr, nv, igrd, iu, ix
+      integer           integs(4), lastc, lc(0:3)
+      real(dp)          reals(4), values(4)
+#ifdef MPI
+      integer           MPIerror
+#endif
 
 C Set outputs to zero
       do igrd = 1,3
@@ -195,43 +203,58 @@ C Set outputs to zero
 
 C Check for block and read
 
-      if ( fdf_block('PolarizationGrids',bfdf) ) then
+      if (Node.eq.0) then
+        if ( fdf_block('PolarizationGrids',iu) ) then
 
-        do igrd= 1, 3
-          if (.not. fdf_bline(bfdf,pline)) then
-            call die('repol: ERROR not enough lines in ' //
-     &               'PolarizationGrids block')
-          endif
-          nn = fdf_bnnames(pline)
-          ni = fdf_bnintegers(pline)
-          if (ni .eq. 3) then
-            nmeshk(1,igrd) = fdf_bintegers(pline,1)
-            nmeshk(2,igrd) = fdf_bintegers(pline,2)
-            nmeshk(3,igrd) = fdf_bintegers(pline,3)
-               
-            if (nn .ge. 1) then 
-              yiorno = fdf_bnames(pline,1)
-              if ( yiorno.eq.'yes'  .or.
-     .             yiorno.eq.'YES'  .or.
-     .             yiorno.eq.'y'    .or.
-     .             yiorno.eq.'Y'    .or.
-     .             yiorno.eq.'true' .or.
-     .             yiorno.eq.'TRUE' .or.
-     .             yiorno.eq.'t'    .or.
-     .             yiorno.eq.'T' ) then 
-                      
-                displ(igrd) = 0.5d0
-                           
-              endif 
-            endif         
-          else
-            call die('repol: Check syntax in PolarizationGrids block')
-          endif
+          do igrd = 1, 3
+            read(iu,'(a)', end=50) line
+            lastc = index(line,'#') - 1
+            if (lastc .le. 0) lastc = len(line)
+            call parse( line(1:lastc), nn, lc, names, nv, values,
+     .                  ni, integs, nr, reals )
+            if (ni .eq. 3) then
+              nmeshk(1,igrd) = integs(1)
+              nmeshk(2,igrd) = integs(2)
+              nmeshk(3,igrd) = integs(3)
+                 
+              if (nn.ge.1) then 
+                yiorno = names(lc(0)+1:lc(1)) 
+                if ( yiorno.eq.'yes'  .or.
+     .               yiorno.eq.'YES'  .or.
+     .               yiorno.eq.'y'    .or.
+     .               yiorno.eq.'Y'    .or.
+     .               yiorno.eq.'true' .or.
+     .               yiorno.eq.'TRUE' .or.
+     .               yiorno.eq.'t'    .or.
+     .               yiorno.eq.'T' ) then 
+                        
+                  displ(igrd) = 0.5d0
+                             
+                endif 
+              endif         
+            else
+              goto 10
+            endif
 
-        enddo
-        call fdf_bclose(bfdf)
+          enddo
+
+        endif
+
+  10    continue
+
       endif
+
+  50  continue 
+
+#ifdef MPI
+C Globalise output
+      call MPI_Bcast(displ,3,MPI_double_precision,0,MPI_Comm_World,
+     .  MPIerror)
+      call MPI_Bcast(nmeshk(1,1),9,MPI_integer,0,MPI_Comm_World,
+     .  MPIerror)
+#endif
 
       end subroutine repol
 
       end module m_ksvinit
+

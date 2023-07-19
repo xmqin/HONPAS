@@ -1,21 +1,24 @@
 ! 
-! Copyright (C) 1996-2016	The SIESTA group
-!  This file is distributed under the terms of the
-!  GNU General Public License: see COPYING in the top directory
-!  or http://www.gnu.org/copyleft/gpl.txt.
-! See Docs/Contributors.txt for a list of contributors.
+! This file is part of the SIESTA package.
+!
+! Copyright (c) Fundacion General Universidad Autonoma de Madrid:
+! E.Artacho, J.Gale, A.Garcia, J.Junquera, P.Ordejon, D.Sanchez-Portal
+! and J.M.Soler, 1996- .
+! 
+! Use of this software constitutes agreement with the full conditions
+! given in the SIESTA license, as signed by all legitimate users.
 !
 #ifndef CDF
       subroutine dummy_diagk_file()
       end subroutine dummy_diagk_file
 #else
       subroutine diagk_file( nspin, nuo, no, maxspn,
-     $                  maxnh, maxnd, 
+     $                  maxuo, maxnh, maxnd, 
      .                  maxo, numh, listhptr, listh, numd, listdptr, 
      .                  listd, H, S, getD, getPSI, fixspin, qtot, qs, 
      .                  temp, e1, e2, xij, indxuo, nk, kpoint, wk,
      .                  eo, qo, Dnew, Enew, ef, efs, Entropy,
-     .                  Haux, Saux, psi, Dk, Ek, nuotot, occtol,
+     .                  Haux, Saux, psi, Dk, Ek, aux, nuotot, occtol,
      .                  iscf, n_eigenvectors )
 C *********************************************************************
 C Subroutine to calculate the eigenvalues and eigenvectors, density
@@ -30,6 +33,8 @@ C integer nuo                 : Number of basis orbitals in unit cell
 C                               local to this processor
 C integer no                  : Number of basis orbitals in supercell
 C integer maxspn              : Second dimension of eo and qo
+C integer maxuo               : Last dimension of xij
+C                               Must be at least max(indxuo)
 C integer maxo                : First dimension of eo and qo
 C integer maxnh               : Maximum number of orbitals interacting  
 C integer maxnd               : First dimension of listd and DM
@@ -79,6 +84,7 @@ C *************************** AUXILIARY *******************************
 C real*8 Haux(2,nuotot,nuo) : Auxiliary space for the hamiltonian matrix
 C real*8 Saux(2,nuotot,nuo) : Auxiliary space for the overlap matrix
 C real*8 psi(2,nuotot,nuo)  : Auxiliary space for the eigenvectors
+C real*8 aux(2,nuotot*5)    : Extra auxiliary space
 C real*8 Dk(2,nuotot,nuo)   : Aux. space that may be the same as Haux 
 C real*8 Ek(2,nuotot,nuo)   : Aux. space that may be the same as Saux 
 C *************************** UNITS ***********************************
@@ -114,7 +120,7 @@ C
      .  MPIerror
 #endif
 
-      integer           maxnd, maxnh, maxspn, maxo, nk, no,
+      integer           maxnd, maxnh, maxspn, maxuo, maxo, nk, no,
      .                  nspin, nuo, nuotot, iscf, n_eigenvectors
       integer           indxuo(no), listh(maxnh), numh(nuo),
      .                  listd(maxnd), numd(nuo), listhptr(nuo),
@@ -127,14 +133,14 @@ C
      .                  xij(3,maxnh), qs(nspin)
       real(dp)          Dk(2,nuotot,nuo), Ek(2,nuotot,nuo),
      .                  Haux(2,nuotot,nuo), Saux(2,nuotot,nuo),
-     .                  psi(2,nuotot,nuo)
+     .                  psi(2,nuotot,nuo), aux(2,nuotot*5)
       logical           getD, getPSI, fixspin
       external          cdiag
 
 C  Internal variables .............................................
       integer
      .  BNode, BTest, ie, ierror, iie, ik, ind, io, iio,
-     .  ispin, iuo, j, jo, juo, nd, neigneeded
+     .  ispin, iuo, j, jo, juo, nd, neigneeded, iu
 
       real(dp)
      .  ckxij, ee, kxij, pipj1, pipj2, qe, skxij, t
@@ -147,9 +153,6 @@ C  Internal variables .............................................
 C  ....................
 
 C Find eigenvalues and eigenvectors
-#ifdef DEBUG
-      call write_debug( '    PRE diagk_file' )
-#endif
 
       ! Setup netCDF file
       !
@@ -163,7 +166,7 @@ C Find eigenvalues and eigenvectors
           call build_dense_HS(ik,ispin)
           ! Compute all eigenvectors for now
           call cdiag(Haux,Saux,nuotot,nuo,nuotot,eo(1,ispin,ik),psi,
-     .      nuotot,iscf,ierror, BlockSize)
+     .      nuotot,iscf,ierror)
 
           if (ierror.gt.0) then
             call die('Terminating due to failed diagonalisation')
@@ -173,7 +176,7 @@ C Find eigenvalues and eigenvectors
              call build_dense_HS(ik,ispin)
 
              call cdiag(Haux,Saux,nuotot,nuo,nuotot,eo(1,ispin,ik),psi,
-     .            nuotot,iscf,ierror, BlockSize)
+     .            nuotot,iscf,ierror)
           endif
           call timer( 'c-eigval', 2 )
 !
@@ -194,8 +197,14 @@ C Find new Fermi energy and occupation weights ........................
         call fermispin( nspin, nspin, nk, wk, maxo, nuotot, eo,
      .               temp, qs, qo, efs, Entropy )
       else
-        call fermid(nspin, maxspn, nk, wk, maxo, nuotot, eo,
+        call fermid( nspin, maxspn, nk, wk, maxo, nuotot, eo, 
      .             temp, qtot, qo, ef, Entropy )
+      endif
+
+      if (Node .eq. 0) then
+         call io_assign(iu)
+         open(iu,file="OCCS",form="formatted",status="unknown",
+     $           action="write",position="rewind")
       endif
 
 C Find weights for local density of states ............................
@@ -235,6 +244,10 @@ C Loop over k points
               if (abs(qe).gt.occtol) neigneeded = ie
               ie = ie - 1
             enddo
+            if (Node .eq. 0) then
+             write(iu,"(i6,i3,f12.8,i8)")
+     $              ik, ispin, wk(ik), neigneeded
+            endif
             if (neigneeded > n_eigenvectors) then
                if (Node == 0) then
                   write(6,"(a)") "ERROR: More eigenvectors are needed!"
@@ -312,11 +325,10 @@ C Global operation to form new density matrix
       enddo     ! ik
 
       deallocate(psi_block)
+      if (Node .eq. 0) then
+         call io_close(iu)
+      endif
       call close_wfs_netcdf_file()
-
-#ifdef DEBUG
-      call write_debug( '    POS diagk_file' )
-#endif
 
       CONTAINS
 

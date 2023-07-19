@@ -1,9 +1,12 @@
 ! 
-! Copyright (C) 1996-2016	The SIESTA group
-!  This file is distributed under the terms of the
-!  GNU General Public License: see COPYING in the top directory
-!  or http://www.gnu.org/copyleft/gpl.txt.
-! See Docs/Contributors.txt for a list of contributors.
+! This file is part of the SIESTA package.
+!
+! Copyright (c) Fundacion General Universidad Autonoma de Madrid:
+! E.Artacho, J.Gale, A.Garcia, J.Junquera, P.Ordejon, D.Sanchez-Portal
+! and J.M.Soler, 1996-2006.
+! 
+! Use of this software constitutes agreement with the full conditions
+! given in the SIESTA license, as signed by all legitimate users.
 !
       module m_chempot
       use precision, only: dp
@@ -85,8 +88,7 @@ C
       use parallel,      only : Node, Nodes
       use parallelsubs,  only : GlobalToLocalOrb
       use sys,           only : die
-      use neighbour,     only : jan, r2ij, xij, mneighb, maxnna,
-     &                          reset_neighbour_arrays
+      use neighbour,     only : jan, r2ij, xij, mneighb, maxnna
 #ifdef MPI
       use mpi_siesta
 #endif
@@ -108,6 +110,10 @@ C    .  homo, lumo, gap
 C Internal variables...
 
       integer ::  ind, nhmax, nvmaxnew
+#ifdef MPI
+      integer
+     . MPIerror
+#endif
 
 C nvmax = maximum number of non-zero elements within a sparse vector v
       integer, save ::   nvmax = 1000
@@ -127,12 +133,8 @@ C nvmax = maximum number of non-zero elements within a sparse vector v
       integer,  dimension(:,:), pointer :: listhp, listhpp
       real(dp), dimension(:),   pointer :: paux, vec
       real(dp), dimension(:,:), pointer :: hbar, Hdense, Sdense
-      real(dp), dimension(:,:), pointer :: v
-
-#ifdef MPI
-      integer ::  MPIerror
       real(dp), dimension(:),   pointer :: dpbuffer1
-#endif
+      real(dp), dimension(:,:), pointer :: v, dpbuffer2
 C ...
 
 C Start timer
@@ -275,12 +277,12 @@ C  Globalise Hdense and Sdense for now
         call re_alloc( dpbuffer1, 1, nu, name='dpbuffer1',
      &                 routine='chempot' )
         do i = 1,nu
-          call MPI_AllReduce(Sdense(1,i),dpbuffer1,nu,
+          call MPI_AllReduce(Sdense(1:,i),dpbuffer1,nu,
      .      MPI_double_precision,MPI_sum,MPI_Comm_World,MPIerror)
           do j = 1,nu
             Sdense(j,i) = dpbuffer1(j)
           enddo
-          call MPI_AllReduce(Hdense(1,i),dpbuffer1,nu,
+          call MPI_AllReduce(Hdense(1:,i),dpbuffer1,nu,
      .      MPI_double_precision,MPI_sum,MPI_Comm_World,MPIerror)
           do j = 1,nu
             Hdense(j,i) = dpbuffer1(j)
@@ -290,7 +292,7 @@ C  Globalise Hdense and Sdense for now
 #endif
 
 C  Cholesky factorization:
-        call cholDcmp(Sdense,nu,nhmax,paux)
+        call choldc(Sdense,nu,nhmax,paux)
 
 C Loop over orbitals of atom ia ....
         do i = 1,nu
@@ -300,7 +302,7 @@ C  Check if ii is in atom ia
             do j = 1,nu
               vec(j) = Hdense(j,i)
             enddo
-            call cholLinSys(Sdense,nu,nhmax,paux,vec,vec)
+            call cholsl(Sdense,nu,nhmax,paux,vec,vec)
 
 C  vec contains the elements of H' in reduced space.
 C  now H' must be formed in sparse format -
@@ -507,16 +509,13 @@ C  lays between (-1,+1)
       betap = beta * deltae
 
 C      do p=1,pmax
-         chpotsh=root(numb,mu1,mu2,tol)
+         chpotsh=zbrent(numb,mu1,mu2,tol)
          ! Shift and scale the result to absolute energy scale ...
          chpot=chpotsh*deltae+emean
 
 C      enddo
 
 C Deallocate local arrays 
-      if (2.*rcoor .lt. rmax) then
-        call reset_neighbour_arrays( )
-      endif
       call de_alloc( listhp, name='listhp' )
       call de_alloc( listhpp, name='listhpp' )
       call de_alloc( paux, name='paux' )
@@ -683,8 +682,8 @@ C ***********************************************************************
 C Calculates the coefficients of the Chebyshev polynomials
 C expansion of the Fermi-Dirac function.
 C Ref: W.H.Press et al. Numerical Recipes, Cambridge Univ. Press.
-C Wrtten by Maider Machado and P. Ordejon, June'98
-C Restyled by J.M.Soler, May 2015
+C
+C Adapted by Maider Machado and P. Ordejon,  June'98
 C ****************************** INPUT **********************************
 C integer n                    : order of the expansion
 C real*8 mu                    : chemical potential for F-D function
@@ -694,53 +693,65 @@ C ***********************************************************************
   
       use precision, only: dp
 
-!     Host association: betap
+!     Host association: BETAP
 
-      integer, intent(in)   ::  n
-      real(dp), intent(in)  ::  mu
-      real(dp), intent(out) ::  cof(n)
+      INTEGER, intent(in)   ::  N    
+      real(dp), intent(in)  ::  MU
+      real(dp), intent(out) ::  COF(N)
 
-      real(dp),parameter:: ymax = 50._dp
-      real(dp):: f(n), pi, y(n)
-      integer :: j, k
+      real(dp), PARAMETER :: A=-1.0_dp, B=1.0_dp
+      real(dp), PARAMETER :: PI =3.141592653589793_dp
+      real(dp) BMA,BPA
 
-      ! Find Fermi-Dirac function
-      pi = acos(-1.0_dp)
-      do k = 1,n
-        y(k) = cos(pi*(k-0.5_dp)/n)
-        y(k) = betap*(y(k)-mu)
-        if (abs(y(k))<ymax) then
-          f(k)=1.0_dp/(exp(y(k))+1)
-        elseif (y(k)<0._dp) then
-          f(k) = 1
-        else
-          f(k) = 0
-        endif
-      enddo
+      real(dp), allocatable :: F(:)
 
-      ! Find expansion coefficients
-      do j=1,n
-        forall(k=1:n) y(k) = cos(pi*(j-1)*(k-0.5_dp)/n)
-        cof(j) = 2*sum(f*y)/n
-      enddo
- 
+      INTEGER J,K
+      real(dp) FAC, Y
+      real(dp) SUM
+
+      allocate(F(N))
+
+      BMA=0.5*(B-A)
+      BPA=0.5*(B+A)
+      DO K=1,N
+        Y= COS(PI*(K-0.5)/N)
+        IF (BETAP*(Y*BMA+BPA-MU) .GT. 50.)  THEN
+          F(K) = 0.0d0
+        ELSE IF (BETAP*(Y*BMA+BPA-MU) .LT. -50.) THEN
+          F(K) = 1.0d0
+        ELSE
+          F(K)=1.0D0/(EXP(BETAP*(Y*BMA+BPA-MU))+1.0D0)     
+        ENDIF
+      ENDDO
+      FAC=2.0_dp/N
+      DO 30 J=1,N
+        SUM=0.0_dp
+        DO 20 K=1,N
+          SUM=SUM+F(K)*COS(PI*(J-1)*(K-0.5D0)/N)
+  20    CONTINUE
+        COF(J) =FAC*SUM
+  30  CONTINUE  
+
+      deallocate(F)
       END subroutine chebfd
 
 
-      function root(func,xmin,xmax,tol) result(x0)
+      FUNCTION ZBRENT(FUNC,X1,X2,TOL)
 c  ***************************************************
-c Returns the root of function func(x) bracketed by x1 and x2,
-c with accuracy tol. Uses the bisection method.
-c J.M.Soler, May.2015
+c Finds the root of a function FUNC known to lie
+c between X1 and X2. The root, returned as zbrent,
+c will be refined until its accuracy is tol.
+c
+C Converted to double precision from same routine in
+C "Numerical Recipes", W.Press et al, Cambridge U.P.
 c  ***************************************************     
       use precision, only: dp
       use sys, only      : die
+      IMPLICIT NONE
 
-      ! Arguments
-      implicit none
-      real(dp),intent(in):: xmin, xmax  ! interval bracketing root
-      real(dp),intent(in):: tol     ! precision required for root
-      real(dp)           :: x0      ! root value
+      INTEGER ITMAX
+      real(dp)  ZBRENT,TOL,X1,X2,EPS
+
       interface
          function func(x) result(y)
          use precision, only: dp
@@ -749,94 +760,137 @@ c  ***************************************************
          end function func
       end interface
 
-      real(dp):: x1, x2, y1, y2, y0
+      PARAMETER (ITMAX=300,EPS=3.0E-4_dp)
+      INTEGER ITER
+      real(dp) A,B,C,D,E,FA,FB,FC,P,Q,R,S,TOL1,XM
 
-      ! Check input arguments
-      x1 = xmin
-      x2 = xmax
-      y1 = func(x1)
-      y2 = func(x2)
-      if (y1*y2>0._dp) then
-        call die('chempot/root: xmin,xmax not a root bracket')
-      elseif (tol<abs(x2-x1)*1.e-12_dp) then
-       call die('chempot/root: tol too small')
-      endif
+c      integer ix
 
-      ! Use bisection to reduce interval
-      do while (abs(x2-x1)>tol)
-        x0 = (x1+x2)/2
-        y0 = func(x0)
-        if (y0*y1>0.0_dp) then
-          x1 = x0
-          y1 = y0
-        else
-          x2 = x0
-          y2 = y0
-        endif
-      enddo
-
-      ! Linear approximation within last interval
-      y0 = func(x0)
-      x0 = (x1*(y2-y0)+x2*(y0-y1))/(y2-y1)
-
-      end function root
-
-
-      subroutine cholDcmp(a,n,np,p)
-C Cholesky decomposition of a symmetric matrix a
-C Ref: "Numerical Recipes", W.Press et al, Cambridge U.P.
-C Written by J.M.Soler, May.2015
+      A=X1
+      B=X2
+      FA=FUNC(A)
+      FB=FUNC(B)
+      IF(FB*FA.GT.0.) call die('ZBRENT: Root must be bracketed')
+      C=B
+      D=B-A
+      E=D
+      FC=FB
+      DO 11 ITER=1,ITMAX
+        IF(FB*FC.GT.0.) THEN
+          C=A
+          FC=FA
+          D=B-A
+          E=D
+        ENDIF
+        IF(ABS(FC).LT.ABS(FB)) THEN
+          A=B
+          B=C
+          C=A
+          FA=FB
+          FB=FC
+          FC=FA
+        ENDIF
+        TOL1=2.*EPS*ABS(B)+0.5*TOL
+        XM=.5*(C-B)
+        IF(ABS(XM).LE.TOL1 .OR. FB.EQ.0.)THEN
+          ZBRENT=B
+          RETURN
+        ENDIF
+        IF(ABS(E).GE.TOL1 .AND. ABS(FA).GT.ABS(FB)) THEN
+          S=FB/FA
+          IF(A.EQ.C) THEN
+            P=2.*XM*S
+            Q=1.-S
+          ELSE
+            Q=FA/FC
+            R=FB/FC
+            P=S*(2.*XM*Q*(Q-R)-(B-A)*(R-1.))
+            Q=(Q-1.)*(R-1.)*(S-1.)
+          ENDIF
+          IF(P.GT.0.) Q=-Q
+          P=ABS(P)
+          IF(2.*P .LT. MIN(3.*XM*Q-ABS(TOL1*Q),ABS(E*Q))) THEN
+            E=D
+            D=P/Q
+          ELSE
+            D=XM
+            E=D
+          ENDIF
+        ELSE
+          D=XM
+          E=D
+        ENDIF
+        A=B
+        FA=FB
+        IF(ABS(D) .GT. TOL1) THEN
+          B=B+D
+        ELSE
+          B=B+SIGN(TOL1,XM)
+        ENDIF
+        FB=FUNC(B)
+11    CONTINUE
+      CALL DIE('ZBRENT exceeding maximum iterations.')
+C      ZBRENT=B
+C      RETURN
+      END function zbrent
+ 
+      subroutine choldc(a,n,np,p)
+C Cholesky decomposition of symmetric matrix
+C Converted to double precision from same routine in
+C "Numerical Recipes", W.Press et al, Cambridge U.P.
 
       use precision, only: dp
       use sys,       only: die
 
       implicit none
-      integer, intent(in)   :: n        ! true dimension of matrix a
-      integer, intent(in)   :: np       ! physical size of array a
-      real(dp),intent(inout):: a(np,np) ! matrix to be decomposed
-      real(dp),intent(out)  :: p(n)     ! auxiliary vector
-
-      integer :: i,j
-      real(dp):: a2
+      integer n,np
+      real(dp) a(np,np),p(n)
+      integer i,j,k
+      real(dp) sum
 
       do i=1,n
-        a2 = sum(a(i,1:i-1)**2)
-        if (a2>a(i,i)) call die('chempot/cholDcmp failed')
-        p(i) = sqrt(a(i,i)-a2)        
-        do j=i+1,n
-          a2 = sum( a(i,1:i-1) * a(j,1:i-1) )
-          a(j,i) = (a(i,j)-a2)/p(i)
+        do j=i,n
+          sum=a(i,j)
+          do k=i-1,1,-1
+            sum=sum-a(i,k)*a(j,k)
+          enddo
+          if (i .eq. j) then
+            if (sum .le. 0.) CALL DIE( 'choldc failed')
+            p(i)=sqrt(sum)
+          else
+            a(j,i)=sum/p(i)
+          endif
         enddo
       enddo
+      end subroutine choldc
 
-      end subroutine cholDcmp
-
-
-      subroutine cholLinSys(a,n,np,p,b,x)
-C Solves linear system a*x=b for a symmetric matrix a
-C (in Cholesky form, as output from output of cholDcmp)
-C Ref: "Numerical Recipes", W.Press et al, Cambridge U.P.
-C Written by J.M.Soler, May.2015
+      subroutine cholsl(a,n,np,p,b,x)
+C Solves linear system for a symmetric matrix 
+C (in Cholesky form, as output from output of choldc)
+C Converted to double precision from same routine in
+C "Numerical Recipes", W.Press et al, Cambridge U.P.
       implicit none
-      integer, intent(in) :: n        ! true dimension of matrix a
-      integer, intent(in) :: np       ! physical size of array a
-      real(dp),intent(in) :: a(np,np) ! matrix decomposed by cholDcmp
-      real(dp),intent(in) :: p(n)     ! auxiliary vector from cholDcmp
-      real(dp),intent(in) :: b(n)     ! vector of linear system
-      real(dp),intent(out):: x(n)     ! solution vector
-
+      integer n,np
+      real(dp) a(np,np),b(n),p(n),x(n)
       integer i,k
       real(dp) sum
 
       do i=1,n
-        x(i) = ( b(i) - sum(a(i,1:i-1)*x(1:i-1)) ) / p(i)
+        sum=b(i)
+        do k=i-1,1,-1
+          sum=sum-a(i,k)*x(k)
+        enddo
+        x(i)=sum/p(i)
       enddo
       do i=n,1,-1
-        x(i) = ( x(i) - sum(x(i+1:n)*a(i+1:n,i)) ) / p(i)
+        sum=x(i)
+        do k=i+1,n
+          sum=sum-a(k,i)*x(k)
+        enddo
+        x(i)=sum/p(i)
       enddo
-
-      end subroutine cholLinSys
-
+      return
+      end       subroutine cholsl
 
       subroutine lanc1(opt,hbar,nhmax,numh,listhptr,listh,
      .                   maxnh,nbasis,ener,Node)
@@ -889,11 +943,11 @@ C  Internal variables ...
 
       real(dp)
      .  a0, b1, b2, c1, diff, ecomp, eivec(2), 
-     .  mod, norm, randomg, wr(2)
+     .  mod, norm, ran3, wr(2)
 
       real(dp), dimension(:), pointer ::  hv0, u0, v0
 
-      external  randomg
+      external  ran3
 
 C ...
 
@@ -912,7 +966,7 @@ C ...
 C  Generate an initial normalized random vector ........
       mod=0.0d0
       do i=1,nbasis
-        u0(i)=2.0d0*randomg(-i)-1.
+        u0(i)=2.0d0*ran3(-i)-1.
         mod=mod+u0(i)**2 
       enddo
       mod=sqrt(mod)
@@ -1128,11 +1182,11 @@ C  Internal variables ...
 
       real(dp)
      .  a0, b1, b2, c1, diff, ecomp, eivec(2), 
-     .  mod, norm, randomg, wr
+     .  mod, norm, ran3, wr
 
       real(dp), dimension(:), pointer :: hv0, u0, v0, v00
 
-      external randomg
+      external ran3
 
 C ...
 
@@ -1153,7 +1207,7 @@ C ...
 C  Generate an initial normalized random vector ........
       mod=0.0d0
       do i=1,nbasis
-        u0(i)=2.0d0*randomg(-i)-1.
+        u0(i)=2.0d0*ran3(-i)-1.
         mod=mod+u0(i)**2 
       enddo
       mod=sqrt(mod)

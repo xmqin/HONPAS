@@ -9,11 +9,11 @@ $(label)-completed:
 	@for i in `cat $(name).pseudos` ; do \
 		echo "    ==> Copying pseudopotential file for $$i..." ;\
 		ln ../Pseudos/$$i.psf $(label)/$$i.psf ;\
-	done 
+   	done 
 
-	@echo "    ==> Running SIESTA as $(SIESTA)"
-	@(cd $(label) ; ../../Scripts/eggbox_size.sh $(SIESTA) $(name) ) \
-		&& touch $(label)-completed
+	#@echo "    ==> Running SIESTA as ${SIESTA}"
+	@(cd $(label) ; ../../Scripts/eggbox_size.sh ${SIESTA} $(name) ) \
+   		&& touch $(label)-completed
 	@if [ -f $(label)-completed ]; then \
 	   echo "    ===> SIESTA finished";\
 	   else \

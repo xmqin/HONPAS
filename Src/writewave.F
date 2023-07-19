@@ -1,38 +1,48 @@
 ! 
-! Copyright (C) 1996-2016	The SIESTA group
-!  This file is distributed under the terms of the
-!  GNU General Public License: see COPYING in the top directory
-!  or http://www.gnu.org/copyleft/gpl.txt.
-! See Docs/Contributors.txt for a list of contributors.
+! This file is part of the SIESTA package.
+!
+! Copyright (c) Fundacion General Universidad Autonoma de Madrid:
+! E.Artacho, J.Gale, A.Garcia, J.Junquera, P.Ordejon, D.Sanchez-Portal
+! and J.M.Soler, 1996- .
+! 
+! Use of this software constitutes agreement with the full conditions
+! given in the SIESTA license, as signed by all legitimate users.
 !
       module writewave
 
-      USE precision, only : dp
-      use alloc,     only : re_alloc, de_alloc
+      use precision, only: dp
       use sys, only: die, message
+      use alloc, only: re_alloc
+      use m_fdf_global, only: fdf_global_get
+
       implicit none
 
-      private
-      character(len=192), save, public :: wfs_filename
+      integer :: maxlin
+      parameter (maxlin=1000)
+
+      character,  save :: label(maxlin)*8
+      character(len=200), save, public :: wfs_filename
+      integer,    save :: lastk(maxlin)
 
       integer,    save :: nwf = 1
       logical,    save :: wwf = .false.
       logical,    save :: scf_set = .false.
       logical,    save :: debug = .false.
 
-
       integer, save, dimension(:), pointer   :: nwflist => null()
       integer, save, dimension(:,:), pointer :: iwf => null()
-
-      integer, public, save           :: nwk
-      real(dp), public, pointer, save :: wfk(:,:) => null()
-      logical, public, save           :: gamma_wavefunctions
+ 
+      integer, public, save               :: nwk
+      integer, public, save               :: maxwk
+      real(dp), public, pointer, save     :: wfk(:,:) => null()
+      logical, public, save               :: gamma_wavefunctions
 
       real(dp),   save :: wfs_energy_min = -huge(1.0_dp)
       real(dp),   save :: wfs_energy_max =  huge(1.0_dp)
       logical,    save :: wfs_energy_window  = .true.
 
-      public :: setup_wfs_list, setup_wf_kpoints, wwave, writew 
+      private 
+      public :: setup_wfs_list, setup_wf_kpoints, wwave, writew
 
       CONTAINS
 
@@ -40,27 +50,39 @@
       USE alloc, only: re_alloc
       USE sys, only: die
       USE atomlist, only: no_u
-      USE m_spin, only: spin
 
       implicit none
 
-      integer :: max_n_states
-      
-      ! Find number of k-points for wavefunction printout
+      ! Find number of k-points for wavefunction printout ....................
 
-      nullify(wfk)
+      logical  :: overflow
 
       nwk = 0
-      if ( spin%Grid == 4 ) then
-        max_n_states = 2 * no_u
-      else
-        max_n_states = no_u
-      end if
-      call initwave( max_n_states, nwk, wfk )
+      maxwk = 1
+      nullify(wfk)
+      call re_alloc(wfk,1,3,1,maxwk,name='wfk',
+     $              routine='setup_wf_kpoints')
 
-      if (nwk .eq. 0) then
+      call initwave( maxwk, no_u, nwk, wfk, overflow )
+
+      if (overflow) then
+! If there wasn't enough space to store bands on first call correct
+! the dimensions and repeat the initialisation        
+         if (nwk .gt. maxwk) then
+            maxwk = max(nwk,1)
+            call re_alloc(wfk,1,3,1,maxwk,name='wfk',
+     $           routine='setup_wf_kpoints')
+         endif
+         nwk = 0
+         call initwave( maxwk, no_u, nwk, wfk, overflow )
+         if (overflow)
+     $      call die('siesta: ERROR: Unsuccessful initialization of' //
+     $     ' list of wavefunctions to print')
+      endif
+
+      if (nwk == 0) then
          gamma_wavefunctions = .true.
-      else if (nwk .eq. 1) then
+      else if (nwk == 1) then
          if (dot_product(wfk(:,1),wfk(:,1)) < 1.0e-20_dp) then
             gamma_wavefunctions = .true.
          else
@@ -74,7 +96,6 @@
 
       subroutine setup_wfs_list(nk,norb,wfs_band_min,wfs_band_max,
      $                          use_scf_weights,use_energy_window)
-      use fdf
       !
       ! Initialize structures if the number of bands
       ! to output is the same for all k-points
@@ -95,7 +116,7 @@
       scf_set = use_scf_weights
       wfs_energy_window = use_energy_window
 !
-      debug = fdf_get("WriteWaveDebug", .false.)
+      call fdf_global_get(debug,"WriteWaveDebug", .false.)
 
 !     Here we request output of all the eigenstates in a k-point
 !     except if the user selects a band or energy range.
@@ -104,10 +125,10 @@
          call die("WFS.BandMin < 1")
       endif
       if (wfs_band_max > norb) then
-         call die("WFS.BandMax > maximum number of states")
+         call die("WFS.BandMax > number of orbitals")
       endif
       if (wfs_band_max < wfs_band_min) then
-         call message("WARNING","WFS.BandMax < WFS.BandMin." //
+         call message("WFS.BandMax < WFS.BandMin." //
      $        " Nothing written to file")
       endif
 
@@ -120,39 +141,41 @@
 !     The energy window, if allowed, will take effect inside the routine
 !     that writes to file, as the energies are not yet known
 
-      wfs_energy_min = fdf_get("WFS.EnergyMin",
+      call fdf_global_get(wfs_energy_min,"WFS.EnergyMin",
      $                                -huge(1.0_dp),"Ry")
-      wfs_energy_max = fdf_get("WFS.EnergyMax",
+      call fdf_global_get(wfs_energy_max,"WFS.EnergyMax",
      $                                 huge(1.0_dp),"Ry")
 
       end subroutine setup_wfs_list
 
-
-      subroutine initwave( norb, nk, kpoint )
+      subroutine initwave( maxk, norb, nk, kpoint, overflow)
 C *********************************************************************
 C Finds k-points for wavefunction printout
 C Based on initband routine by J.Soler
 C Written by P. Ordejon, June 2003
 C **************************** INPUT **********************************
-C integer norb           : Number of orbitals (actually max number of bands)
+C integer maxk           : Last dimension of kpoint
+C integer norb           : Number of orbitals
 C *************************** OUTPUT **********************************
 C integer nk             : Number k points to compute wavefunctions
 C real*8  kpoint(3,maxk) : k point vectors
+C logical overflow       : true if the internal memory was not sufficient
+C                          in which case it should be called again
 C *************************** UNITS ***********************************
 C Lengths in atomic units (Bohr).
 C k vectors in reciprocal atomic units.
 C ***************** BEHAVIOUR *****************************************
-C - If nk=0 on input, k-points are read from labels WaveFuncKPoints and
-C   WaveFuncKPointsScale from the input fdf data file. If these labels
+C - If nk=0 on input, k-points are read from labels WaveFuncKPoints and 
+C   WaveFuncKPointsScale from the input fdf data file. If these labels 
 C   are not present, it returns with nk=0.
-C - Allowed values for WaveFuncKPointsScale are ReciprocalLatticeVectors
+C - Allowed values for WaveFuncKPointsScale are ReciprocalLatticeVectors 
 C   and pi/a (default). If another value is given, it returns with nk=0
 C   after printing a warning.
-C - If nk>maxk, k-points and wavefunctions are not calculated and no
+C - If nk>maxk, k-points and wavefunctions are not calculated and no 
 C   warning is printed before return
 C ***************** USAGE *********************************************
 C Example of fdf wavefunction k-points specification for an FCC lattice.
-C
+C 
 C     WaveFuncKPointsScale  pi/a
 C     %block WaveFuncKPoints              # These are comments
 C     0.000  0.000  0.000  from 1 to 10   # eigenstates 1-10 of Gamma
@@ -160,7 +183,7 @@ C     2.000  0.000  0.000  1 3 5          # eigenstates 1,3,5 of X
 C     1.500  1.500  1.500                 # all eigenstates of K
 C     %endblock WaveFuncKPoints
 C
-C If only given points (not lines) are desired, simply specify 1 as
+C If only given points (not lines) are desired, simply specify 1 as 
 C the number of points along the line.
 C *********************************************************************
 C
@@ -169,240 +192,393 @@ C
       use precision
       use parallel,     only : Node
       use fdf
-      use sys,          only : die
-      use alloc,        only : re_alloc
-      use m_get_kpoints_scale, only: get_kpoints_scale
-      
+      use parsing
+#ifdef MPI
+      use mpi_siesta
+#endif
       implicit          none
 
-      integer           :: norb, nk
-      real(dp), pointer :: kpoint(:,:)
-      external          :: memory
+      integer           maxk, norb, nk
+      real(dp)          kpoint(3,maxk)
+      logical           overflow
+      external          redcel, memory
 C *********************************************************************
 
-      character
-     .  name1*10, name2*10, name3*10,
-     .  msg*120
+      character 
+     .  line*130, names*80, name1*10, name2*10, name3*10,
+     .  scale*30
 
+      logical, save :: Frstime = .true.
       logical       :: outlng
+      logical       :: overread
       logical       :: WaveFuncPresent
 
+
       integer
-     .  i, ix, iw, iw1, iw2, iw3, ierr,
-     .  ni, nn, nr, nv
+     .  i, il, iu, ix, iw, iw1, iw2, iw3,
+     .  lastc, lc(0:3), mscell(3,3), ni, nn, nr, nv, nmk
+
+#ifdef MPI
+      integer
+     .  MPIerror
+#endif
 
       real(dp)
-     .  caux(3,3), 
-     .  rcell(3,3)
+     .  alat, caux(3,3), pi,
+     .  rcell(3,3), reals(4), ucell(3,3)
 
-      type(block_fdf)            :: bfdf
-      type(parsed_line), pointer :: pline
+      real(dp), dimension(:), allocatable :: values(:)
+      integer :: maxnv 
+   
+      integer, dimension(:), allocatable :: integs(:)
+      integer :: maxni 
+ 
+C Start time counter 
+      call timer( 'writewave', 1 )
+
+      overflow = .false.
+
+      if (Frstime) then
+         call re_alloc(nwflist, 1, maxk, name="nwflist",
+     $        routine="initwave")
+         call re_alloc(iwf, 1, maxk, 1, 1, name="iwf",
+     $        routine="initwave")
+      endif
 
       wfs_energy_window = .true.
-C Find if there are k-points data
-      outlng = fdf_boolean('LongOutput', .false.)
-      wwf = fdf_boolean('WriteWaveFunctions',outlng)
+      call fdf_global_get(wfs_energy_min,"WFS.EnergyMin",
+     $                                -huge(1.0_dp),"Ry")
+      call fdf_global_get(wfs_energy_max,"WFS.EnergyMax",
+     $                                 huge(1.0_dp),"Ry")
+
+C Find k points if they are not given in argument 
+      if (nk .le. 0) then
 
 C Find if there are k-points data
-      WaveFuncPresent = fdf_block('WaveFuncKPoints',bfdf)
-      if ( WaveFuncPresent ) then
+        if (Node.eq.0) then
+          outlng = fdf_boolean('LongOutput', .false.)
+          wwf = fdf_boolean('WriteWaveFunctions',outlng)
+        endif
 
-         call get_kpoints_scale('WaveFuncKPointsScale',rcell,ierr)
+C Find if there are k-points data
+        if (Node.eq.0) then
+          WaveFuncPresent = fdf_defined('WaveFuncKPoints')
+          debug = fdf_boolean('WriteWaveDebug',.false.)
+        endif
+#ifdef MPI
+        call MPI_Bcast(WaveFuncPresent,1,MPI_logical,0,MPI_Comm_World,
+     .    MPIerror)
+        call MPI_Bcast(debug,1,MPI_logical,0,MPI_Comm_World,
+     .    MPIerror)
+#endif
+        if ( WaveFuncPresent ) then
 
-         if (ierr /= 0) then
-            nk = 0
-            RETURN
-         endif
+C Find lattice constant
+          if (Node.eq.0) then
+            alat = fdf_physical( 'LatticeConstant', 0.d0, 'Bohr' )
+          endif
+#ifdef MPI
+          call MPI_Bcast(alat,1,MPI_double_precision,0,
+     .      MPI_Comm_World,MPIerror)
+#endif
+          if (alat .eq. 0.d0) then
+            if (Node.eq.0) then
+              write(6,'(a)') 
+     .          'writewave: ERROR: Lattice constant required'
+            endif
+            goto 999
+          endif
 
-C Find max number of k points and max number of bands per k-point
+C Find scale used in k point data
+          if (Node.eq.0) then
+            scale = fdf_string( 'WaveFuncKPointsScale', 'pi/a' )
+          endif
+#ifdef MPI
+          call MPI_Bcast(scale,30,MPI_character,0,
+     .      MPI_Comm_World,MPIerror)
+#endif
+
+          if (scale .eq. 'pi/a') then
+            pi = 4.d0 * atan(1.d0)
+          elseif (scale .eq. 'ReciprocalLatticeVectors') then
+            if (Node.eq.0) then
+              call redcel( alat, caux, ucell, mscell )
+            endif
+#ifdef MPI
+            call MPI_Bcast(alat,1,MPI_double_precision,0,
+     .        MPI_Comm_World,MPIerror)
+            call MPI_Bcast(ucell(1,1),9,MPI_double_precision,0,
+     .        MPI_Comm_World,MPIerror)
+#endif
+            call reclat( ucell, rcell, 1 )
+          elseif (Node.eq.0) then
+            write(6,'(a,/,2a,/,a)')
+     .     'writewave: WARNING: Invalid value for WaveFuncKPointsScale',
+     .     'writewave: Allowed values are pi/a and',
+     .                ' ReciprocalLatticeVectors',
+     .     'writewave: No band calculation performed'
+          endif
+
 C Loop on data lines
-        nk = 0
-        nwf = 0
-        do while(fdf_bline(bfdf,pline))
+          if (Node.eq.0) then
+            nk = 0
+            WaveFuncPresent = fdf_block('WaveFuncKPoints',iu)
+            do il = 1,maxlin
 C Read and parse data line
-          nn = fdf_bnnames(pline)
-          nv = fdf_bnvalues(pline)
-          ni = fdf_bnintegers(pline)
-          nr = fdf_bnreals(pline)
+              read(iu,'(a)',end=50) line
+              lastc = index(line,'#') - 1
+              if (lastc .le. 0) lastc = len(line)
+ 45           continue
+C The maximum number of integers that could be introduced 
+C in the input file is the 
+C number of bands per k-point = number of atomic orbitals per cell
+              if( .not. allocated(integs)) then
+                maxni = norb
+                allocate(integs(maxni))
+                integs(:) = 0
+              endif
+C The maximum number of values that could be introduced 
+C in the input file is the number of bands plus
+C the coordinates of the k-point (three real numbers).
+              if( .not. allocated(values)) then
+                maxnv = norb + 3
+                allocate(values(maxnv))
+                values(:) = 0.d0
+              endif
 
-C Check if syntax line is correct
-          if (nv .ge. 3) then
+              call parse( line(1:lastc), nn, lc, names, nv, values,
+     .                  ni, integs, nr, reals )
+
+              overread = .false.
+              if( nv .gt. maxnv ) then
+                maxnv    = nv
+                overread = .true.
+              endif
+              if( ni .gt. maxni ) then
+                maxni    = ni
+                overread = .true.
+              endif
+              if( overread ) then
+                if( allocated(values) ) then
+                  deallocate(values)
+                  allocate(values(maxnv))
+                endif
+                if( allocated(integs) ) then
+                  deallocate(integs)
+                  allocate(integs(maxni))
+                endif
+                goto 45
+              endif
+
+C Check if data are already finished
+              if (nv .ge. 3) then
 
 C Check syntax
-            if (nr .ne. 3) then
-              write(msg,'(a,/,a)')
-     .          'writewave: syntax ERROR in %block WaveFuncKPoints:',
-     .          trim(fdf_getline(bfdf%mark))
-              call die(msg)
-            endif
-
-C Add this point to total number of k points
-            nk = nk + 1
-
-C Find which eigenvectors should be printed
-C Store indexes of wave functions to printout
-
-C #X.XXX #Y.YYY #Z.ZZZ from #start to #end [step] #step
-            if (nn .ge. 1) then
-
-C Check that line contains 'from', 'to' and maybe 'step'
-              if ((nn .ne. 2) .and. (nn .ne. 3)) then
-                write(msg,'(a,/,a)')
-     .            'writewave: syntax ERROR in %block WaveFuncKPoints:',
-     .            trim(fdf_getline(bfdf%mark))
-                call die(msg)
-              endif
-              name1 = fdf_bnames(pline,1)
-              name2 = fdf_bnames(pline,2)
-              if (nn .eq. 3) name3 = fdf_bnames(pline,3)
-              if (name1 .ne. 'from' .or. name2 .ne. 'to') then
-                write(msg,'(a,/,a)')
-     .            'writewave: syntax ERROR in %block WaveFuncKPoints:',
-     .            trim(fdf_getline(bfdf%mark))
-                call die(msg)
-              endif
-              if (nn .eq. 3) then
-                if (name3 .ne. 'step') then
-                  write(msg,'(a,/,a)')
+                if (nr.ne.0 .and. nr.ne.3) then
+                  write(6,'(a,/,a)')
      .             'writewave: syntax ERROR in %block WaveFuncKPoints:',
-     .             trim(fdf_getline(bfdf%mark))
-                  call die(msg)
+     .              line(1:lastc)
+                  goto 10
                 endif
-              endif
 
-              iw1 = fdf_bintegers(pline,1)
-              iw2 = fdf_bintegers(pline,2)
-              if (iw1 .lt. 0) iw1 = norb + iw1 + 1
-              if (iw2 .lt. 0) iw2 = norb + iw2 + 1
-              if (nn .eq. 3) then
-                iw3 = abs(fdf_bintegers(pline,3))
-              else
-                iw3 = 1
-              endif
-              ni = 0
-              do iw = min(iw1,iw2), max(iw1,iw2), iw3
-                ni = ni + 1
-              enddo
-              nwf = max(nwf,ni)
-
-C #X.XXX #Y.YYY #Z.ZZZ #eigen1 [#eigen2 ...]
-            elseif (ni .ne. 0) then
-              nwf = max(nwf,ni)
-
-C #X.XXX #Y.YYY #Z.ZZZ
-            elseif (ni .eq. 0) then
-              nwf = max(nwf,norb)
-            endif
-          else
-C Bad syntax
-            write(msg,'(a,/,a)')
-     .        'writewave: syntax ERROR in %block WaveFuncKPoints:',
-     .        trim(fdf_getline(bfdf%mark))
-            call die(msg)
-          endif
-        enddo
-
-        ! Minimize to the maximum number of eigenvalues
-        nwf = min(nwf, norb)
-        
-C Allocate nwflist, iwf and kpoints structures according to nk and nwf
-        call re_alloc( nwflist, 1, nk, 'nwflist', 'initwave' )
-        call re_alloc( iwf, 1, nk, 1, nwf, 'iwf', 'initwave' )
-
-        call re_alloc( kpoint, 1, 3, 1, nk, 'kpoint', 'initwave' )
-
-C Fill nwflist, iwf and kpoints structures
-C Loop on data lines
-        nk = 0
-        call fdf_brewind(bfdf)
-        do while(fdf_bline(bfdf,pline))
-C Read and parse data line
-          nn = fdf_bnnames(pline)
-          nv = fdf_bnvalues(pline)
-          ni = fdf_bnintegers(pline)
-          nr = fdf_bnreals(pline)
 
 C Add this point to total number of k points
-          nk = nk + 1
+                nk = nk + 1
+
+C If there is room to store k points
+                if (nk .le. maxk) then
 
 C Find coordinates of k point
+                  if (scale .eq. 'pi/a') then
+                    kpoint(1,nk) = values(1) * pi / alat
+                    kpoint(2,nk) = values(2) * pi / alat
+                    kpoint(3,nk) = values(3) * pi / alat
+                  elseif (scale .eq. 'ReciprocalLatticeVectors') then
+                    do ix = 1,3
+                      kpoint(ix,nk) = rcell(ix,1) * values(1) +
+     .                                rcell(ix,2) * values(2) +
+     .                                rcell(ix,3) * values(3)
+                    enddo
+                  endif
+                else
+                  overflow = .true.
+                  if (.not. Frstime)
+     $                 call die('writewave: invalid initialization')
+                endif
 
-            do ix = 1,3
-              kpoint(ix,nk) = rcell(ix,1) * fdf_bvalues(pline,1) +
-     .                        rcell(ix,2) * fdf_bvalues(pline,2) +
-     .                        rcell(ix,3) * fdf_bvalues(pline,3)
-            enddo
+
+C Do the next even if there is no room to store k points
+C so that the information on number of vectors to print
+C is available on next call
 
 C Find which eigenvectors should be printed
+
+                if (nn .ge. 1) then
+
+C Check that line contains 'from', 'to' and maybe 'step'
+                  if (nn .ne. 2 .and. nn .ne. 3) then
+                    write(6,'(a,/,a)')
+     .             'writewave: syntax ERROR in %block WaveFuncKPoints:',
+     .              line(1:lastc)
+                    goto 10
+                  endif
+                  name1 = names(lc(0)+1:lc(1))
+                  name2 = names(lc(1)+1:lc(2))
+                  if (nn .eq. 3) name3=names(lc(2)+1:lc(3))
+                  if (name1 .ne. 'from' .or. name2 .ne. 'to') then
+                    write(6,'(a,/,a)')
+     .             'writewave: syntax ERROR in %block WaveFuncKPoints:',
+     .              line(1:lastc)
+                    goto 10
+                  endif
+                  if (nn .eq. 3) then
+                    if (name3 .ne. 'step') then
+                      write(6,'(a,/,a)')
+     .             'writewave: syntax ERROR in %block WaveFuncKPoints:',
+     .                line(1:lastc)
+                      goto 10
+                    endif
+                  endif
+
+                  iw1=integs(1)
+                  iw2=integs(2)
+                  if (iw1 .lt. 0) iw1 = norb + iw1 +1
+                  if (iw2 .lt. 0) iw2 = norb + iw2 +1
+                  if (nn .eq. 3) then
+                    iw3 = abs(integs(3))
+                  else
+                    iw3 = 1
+                  endif
+                  ni = 0
+                  do iw = min(iw1,iw2),max(iw1,iw2),iw3
+                    ni = ni + 1
+                    integs(ni) = iw
+                  enddo
+
+                endif
+
 C Store indexes of wave functions to printout
 
-C #X.XXX #Y.YYY #Z.ZZZ from #start to #end [step] #step
-          if (nn .ge. 2) then
+                if (ni .eq. 0) then
+                  ni = norb
+                  iw1=1
+                  iw2=norb
+                  do i=1,ni
+                    integs(i)=i
+                  enddo
+                endif
 
-            name1 = fdf_bnames(pline,1)
-            name2 = fdf_bnames(pline,2)
-            if (nn .eq. 3) name3 = fdf_bnames(pline,3)
 
-            iw1 = fdf_bintegers(pline,1)
-            iw2 = fdf_bintegers(pline,2)
-            if (iw1 .lt. 0) iw1 = norb + iw1 + 1
-            if (iw2 .lt. 0) iw2 = norb + iw2 + 1
-            ! Reduce to maximally the number of orbitals
-            iw2 = min(iw2, norb)
-            if (nn .eq. 3) then
-              iw3 = abs(fdf_bintegers(pline,3))
-            else
-              iw3 = 1
-            endif
-            ni = 0
-            do iw = min(iw1,iw2), max(iw1,iw2), iw3
-              ni = ni + 1
-              if (iw .lt. 0) then
-                iwf(nk,ni) = norb + iw + 1
+                if (ni .le. nwf) then
+
+                  if (nk .le. maxk) then
+                    nwflist(nk) = ni
+                    do i = 1,ni
+                      iw = integs(i)
+                      if (iw .lt. 0) iw = norb +iw +1
+                      iwf(nk,i) = iw
+                    enddo
+
+                  else 
+
+                    overflow = .true.
+                    nmk=nk
+                    call re_alloc(nwflist, 1, nmk, name="nwflist",
+     $                   routine="initwave")
+                    call re_alloc(iwf, 1, nmk, 1, nwf, name="iwf",
+     $                   routine="initwave")
+
+                  endif
+
+                else 
+
+                  overflow = .true.
+                  if (.not. Frstime)
+     $                 call die('writewave: invalid initialization')
+
+                  nwf = ni
+                  nmk = max(nk,maxk)
+                  call re_alloc(nwflist, 1, nmk, name="nwflist",
+     $                 routine="initwave")
+                  call re_alloc(iwf, 1, nmk, 1, nwf, name="iwf",
+     $                 routine="initwave")
+
+                endif
               else
-                iwf(nk,ni) = iw
+C No more lines to read => Exit do loop
+                goto 50
               endif
+   10         continue
             enddo
-
-C #X.XXX #Y.YYY #Z.ZZZ #eigen1 [#eigen2 ...]
-          elseif (ni .ne. 0) then
-            do i= 1, ni
-              iw = fdf_bintegers(pline,i)
-              if (iw .lt. 0) then
-                iw = norb + iw + 1
-              endif
-              if ( iw <= norb ) then
-                iwf(nk,i) = iw
-              end if
-            enddo
-
-C #X.XXX #Y.YYY #Z.ZZZ
-          elseif (ni .eq. 0) then
-            ni = norb
-            do i= 1, ni
-              iwf(nk,i) = i
-            enddo
+            write(6,'(a)') 'writewave: ERROR Parameter maxlin too small'
+   50       continue
           endif
-
-          nwflist(nk) = ni
-        enddo
-
+        else
+C No k-point data available => go to exit point
+          goto 999
+        endif
       endif
+
+C Global broadcast of values
+#ifdef MPI
+      call MPI_Bcast(nk,1,MPI_integer,0,MPI_Comm_World,MPIerror)
+      call MPI_Bcast(nwf,1,MPI_integer,0,MPI_Comm_World,MPIerror)
+      call MPI_Bcast(nmk,1,MPI_integer,0,MPI_Comm_World,MPIerror)
+      call MPI_Bcast(overflow,1,MPI_logical,0,MPI_Comm_World,MPIerror)
+
+      if (.not. overflow) then
+         call MPI_Bcast(kpoint(1,1),3*nk,MPI_double_precision,0,
+     .     MPI_Comm_World,MPIerror)
+      endif
+
+      if (overflow) then
+         if (Node .ne. 0) then
+            call re_alloc(nwflist, 1, nmk, name="nwflist",
+     $           routine="initwave")
+            call re_alloc(iwf, 1, nmk, 1, nwf, name="iwf",
+     $           routine="initwave")
+         endif
+       endif
+
+      if (.not. overflow) then
+        call MPI_Bcast(nwflist(1),maxk,MPI_integer,0,
+     .     MPI_Comm_World,MPIerror)
+        call MPI_Bcast(iwf(1,1),maxk*nwf,MPI_integer,0,
+     .     MPI_Comm_World,MPIerror)
+      endif
+ 
+#endif
+
+
+C This is the only exit point 
+  999 continue
+
+      if( allocated(values) ) then
+         deallocate(values)
+      endif
+                                                                                
+      if( allocated(integs) ) then
+         deallocate(integs)
+      endif
+
+
+      Frstime = .false.
+      call timer( 'writewave', 2 )
 
       end subroutine initwave
 
-      subroutine wwave( no, spin, maxo, maxuo, maxnh, 
-     .                  maxk,
+
+      subroutine wwave( no, nspin, maxspn, maxo, maxuo, maxnh, maxk,
      .                  numh, listhptr, listh, H, S, ef, xij, indxuo,
-     .                  gamma, nk, kpoint, nuotot, occtol)
+     .                  nk, kpoint, nuotot, gamma, occtol)
 C *********************************************************************
 C Finds wavefunctions at selected k-points.
 C Written by P. Ordejon, June 2003
 C from routine 'bands' written by J.M.Soler
-C Changed to use tSpin, N. Papior, August 2019
 C **************************** INPUT **********************************
 C integer no                  : Number of basis orbitals
-C tSpin spin                  : Contains spin information
+C integer nspin               : Number of spin components
+C integer maxspn              : Second dimension of ek
 C integer maxo                : First dimension of ek
 C integer maxuo               : Second dimension of H and S
 C integer maxnh               : Maximum number of orbitals interacting  
@@ -414,7 +590,7 @@ C integer listhptr(nuo)       : Pointer to start of each row of the
 C                               hamiltonian matrix
 C integer listh(maxlh)        : Nonzero hamiltonian-matrix element  
 C                               column indexes for each matrix row
-C real*8  H(maxnh,spin%H)     : Hamiltonian in sparse form
+C real*8  H(maxnh,nspin)      : Hamiltonian in sparse form
 C real*8  S(maxnh)            : Overlap in sparse form
 C real*8  ef                  : Fermi energy
 C real*8  xij(3,maxnh)        : Vectors between orbital centers (sparse)
@@ -423,10 +599,10 @@ C integer indxuo(no)          : Index of equivalent orbital in unit cell
 C                               Unit cell orbitals must be the first in
 C                               orbital lists, i.e. indxuo.le.nuo, with
 C                               nuo the number of orbitals in unit cell
-C logical Gamma               : whether only the Gamma-point is sampled
 C integer nk                  : Number of band k points
 C real*8  kpoint(3,maxk)      : k point vectors
 C integer nuotot              : Total number of orbitals in unit cell
+C logical gamma               : Indicates if this is a Gamma point run
 C real*8  occtol              : Occupancy threshold for DM build
 C *************************** OUTPUT **********************************
 C None; output is dumped to wave functions file SystemLabel.WFSX
@@ -439,30 +615,25 @@ C  Modules
 C
       use precision
       use parallel,    only : Node, Nodes
+      use parallel,    only : ParallelOverK, ResetFirstCall
       use fdf
-      use densematrix, only : allocDenseMatrix, resetDenseMatrix
       use densematrix, only : Haux, Saux, psi
       use alloc
       use atmfuncs,     only : symfio, cnfigfio, labelfis, nofis
       use atomlist,     only : iaorb, iphorb
       use siesta_geom,  only : isa
-      use t_spin, only: tSpin
-      use units, only : eV
 
 #ifdef MPI
       use parallelsubs, only : GetNodeOrbs
 #endif
-      use m_diag_option, only: Serial, ParallelOverK
-      use m_diag, only: diag_init
 
       implicit          none
 
-      type(tSpin), intent(in) :: spin
-      logical, intent(in) :: Gamma
-      integer           maxk, maxnh, maxo, maxuo, nk, no, 
+      integer           maxk, maxnh, maxspn, maxo, maxuo, nk, no, nspin,
      .                  nuotot, indxuo(no), listh(maxnh), numh(*), 
      .                  listhptr(*)
-      real(dp)          ef, H(maxnh,spin%H), kpoint(3,maxk), 
+      logical           gamma
+      real(dp)          ef, H(maxnh,nspin), kpoint(3,maxk), 
      .                  S(maxnh), xij(3,maxnh), occtol
 
       external          io_assign, io_close, memory
@@ -472,23 +643,24 @@ C *********************************************************************
      .  fixspin
 
       integer
-     .  io, iu, iuo, naux, nuo, j, nhs
+     .  io, iu, iuo, naux, nuo, j
 
       real(dp)
-     .  Dnew, qs(2), e1, e2, efs(2), Enew, qk, qtot, 
+     .  Dnew, qs(2), e1, e2, efs(2), Enew, eV, qk, qtot, 
      .  temp, wk, Entropy
 
 C Dynamic arrays
-      logical, parameter :: getD = .false.
-      logical, parameter :: getPSI = .true.
-      real(dp), allocatable :: aux(:)
-      real(dp), allocatable :: ek(:,:,:)
+      integer,  allocatable,   save :: muo(:)
+      logical,                 save :: getD = .false.
+      logical,                 save :: getPSI = .true.
+      real(dp), allocatable,   save :: aux(:)
+      real(dp), allocatable,   save :: ek(:,:,:)
 
+      parameter ( eV = 1.d0 / 13.60580d0 )
       save Dnew, Enew, e1, e2, qk, qtot, temp, wk
       data Dnew, Enew, e1, e2, qk, qtot, temp, wk /8*0.d0/
 
-      logical :: SaveParallelOverK
-      
+      logical  SaveParallelOverK
 
 C Get local number of orbitals
 #ifdef MPI
@@ -511,20 +683,57 @@ C Check parameter maxk
       endif
 
 C Check spin
+      if (nspin .gt. 2) then
+        if (Node.eq.0) then
+          write(6,'(/,a,/,a)')
+     .       'writewave: WARNING: wavefunctions printed is only '
+          write(6,'(/,a,/,a)')
+     .       '           implemented for nspin = 1 or 2'
+        endif
+        goto 999
+      endif
 
 C Allocate local arrays - only aux is relevant here
-      if ( spin%Grid == 4 ) then
-         nhs = 2 * (2*nuotot) * (2*nuo)
-      else
-         nhs = 2 * nuotot * nuo
-      endif
-      call allocDenseMatrix(nhs, nhs, nhs) 
-
-      allocate(ek(nuotot,spin%spinor,nk))
-      call memory('A','D',nuotot*spin%spinor*nk,'writewave')
+      call re_alloc(Haux,1,2*nuotot*nuo,name='Haux',routine='writewave')
+      call re_alloc(Saux,1,2*nuotot*nuo,name='Saux',routine='writewave')
+      call re_alloc(psi,1,2*nuotot*nuo,name='psi',routine='writewave')
+      allocate(ek(nuotot,nspin,nk))
+      call memory('A','D',nspin*nk*nuotot,'writewave')
       naux = 2*nuotot*5
       allocate(aux(naux))
       call memory('A','D',naux,'writewave')
+      allocate(muo(nuotot))
+      call memory('A','I',nuotot,'writewave')
+
+C Check indxuo 
+      do iuo = 1,nuotot
+        muo(iuo) = 0
+      enddo
+      do io = 1,no
+        iuo = indxuo(io)
+        if (indxuo(io).le.0 .or. indxuo(io).gt.nuotot) then
+          if (Node.eq.0) then
+            write(6,*) 'writewave: invalid index: io, indxuo =',
+     .        io, indxuo(io)
+            call die('writewave: invalid indxuo')
+          else
+            call die()
+          endif
+        endif
+        muo(iuo) = muo(iuo) + 1
+      enddo
+      do iuo = 1,nuotot
+        if (muo(iuo) .ne. muo(1)) then
+          if (Node.eq.0) then
+          write(6,'(/,2a,3i6)') 'writewave: ERROR: inconsistent indxuo.'
+     .     ,' iuo, muo(iuo), muo(1) =', iuo, muo(iuo), muo(1)
+            call die('writewave: ERROR: inconsistent indxuo.')
+          else
+            call die()
+          endif
+        endif
+      enddo
+
 
 C Open file
 
@@ -540,12 +749,12 @@ C Open file
           write(6,'(a)') 'writewave: Wave Functions Coefficients'
           write(6,*)
           write(6,'(a26,2x,i6)') 'Number of k-points = ', nk
-          write(6,'(a26,2x,i6)') 'Number of Spins = ', spin%H
+          write(6,'(a26,2x,i6)') 'Number of Spins = ', nspin
           write(6,'(a26,2x,i6)') 'Number of basis orbs = ',nuotot
           write(6,*)
         endif
         write(iu) nk, gamma
-        write(iu) spin%H   ! This will be 1, 2, 4 or 8 (to tell NC from SOC)
+        write(iu) nspin
         write(iu) nuotot
         write(iu) (iaorb(j),labelfis(isa(iaorb(j))),
      .            iphorb(j), cnfigfio(isa(iaorb(j)),iphorb(j)),
@@ -561,85 +770,46 @@ c fixspin and qs are not used in diagk, since getD=.false. ...
       qs(1) = 0.0d0
       qs(2) = 0.0d0
 
-C Handle parallel over K points option which is not allowed for here
-      SaveParallelOverK = ParallelOverK
-      if ( ParallelOverK ) then
-        if ( Node .eq. 0 ) then
-          write(*,"(a)")
-     $        "*** Note: ParallelOverK option not used for "//
-     &        "WF info generation"
-        end if
-        ParallelOverK = .false.
-        Serial = (Nodes == 1)
-        call diag_init()
-      end if
-
 C Call appropriate diagonalization routine
 
-      if ( spin%none .or. spin%Col ) then
-       if (gamma) then
-         call diagg( spin%H, nuo, maxuo, maxnh, maxnh, 
+      if (gamma) then
+         call diagg( nspin, nuo, no, maxuo, maxnh, maxnh, 
      .               maxo, numh, listhptr, listh, numh, listhptr, 
      .               listh, H, S, getD, getPSI,
      .               fixspin, qtot, qs, temp,
      .               e1, e2, ek, qk, Dnew, Enew, ef, efs, Entropy,
-     .               Haux, Saux, psi, nuotot, occtol, 1, nuotot )
-       else
-         call diagk( spin%H, nuo, no, spin%spinor, maxnh, maxnh,
+     .               Haux, Saux, psi, aux, nuotot, occtol, 1, nuotot )
+      else
+C Handle parallel over K points option which is not allowed for here
+         SaveParallelOverK = ParallelOverK
+         if ((Node .eq. 0) .and. ParallelOverK) then
+            write(6,"(a)")
+     $           "*** Note: ParallelOverK option " //
+     $           "not used for WF info generation"
+         endif
+         ParallelOverK = .false.
+         ResetFirstCall = .true.
+
+            
+         call diagk( nspin, nuo, no, maxspn, maxuo, maxnh, maxnh, 
      .               maxo, numh, listhptr, listh, numh, listhptr, 
      .               listh, H, S, getD, getPSI,
      .               fixspin, qtot, qs, temp,
      .               e1, e2, xij, indxuo, nk, kpoint, wk,
      .               ek, qk, Dnew, Enew, ef, efs, Entropy,
      .               Haux, Saux, psi, Haux, Saux, aux, nuotot,
-     .               occtol, 1, nuotot )
-       endif
+     .               occtol, 1 )
+         ParallelOverK = SaveParallelOverK
+         ResetFirstCall = .false.
 
-      elseif ( spin%NCol) then
-        if (gamma) then
-          call diag2g( nuo, no, maxnh, maxnh, maxo, numh,
-     .                 listhptr, listh, numh, listhptr, listh,
-     .                 H, S, getD, getPSI, qtot, temp, e1, e2, ek, qk,
-     .                 Dnew, Enew, ef, Entropy,
-     .                 Haux, Saux, psi, aux,
-     .                 nuotot, occtol, 1, nuotot )
-        else
-          call diag2k( nuo, no, maxnh, maxnh, maxo, numh,
-     .                 listhptr, listh, numh, listhptr, listh,
-     .                 H, S, getD, getPSI, qtot, temp, e1, e2, xij,
-     .                 indxuo, nk, kpoint, wk, ek, qk, Dnew,
-     .                 Enew, ef, Entropy,
-     .                 Haux, Saux, psi, Haux, Saux, aux,
-     .                 nuotot, occtol, 1, nuotot )
-        endif
-      elseif ( spin%SO ) then
-        if (gamma) then
-          call diag3g( nuo, no, maxnh, maxnh, maxo, numh,
-     .                 listhptr, listh, numh, listhptr, listh,
-     .                 H, S, getD, getPSI, qtot, temp, e1, e2, ek, qk,
-     .                 Dnew, Enew, ef, Entropy,
-     .                 Haux, Saux, psi, aux,
-     .                 nuotot, occtol, 1, nuotot )
-        else
-          call diag3k( nuo, no, maxnh, maxnh, maxo, numh,
-     .                 listhptr, listh, numh, listhptr, listh,
-     .                 H, S, getD, getPsi, qtot, temp, e1, e2, xij,
-     .                 indxuo, nk, kpoint, wk, ek, qk, Dnew,
-     .                 Enew, ef, Entropy,
-     .                 Haux, Saux, psi, Haux, Saux, aux,
-     .                 nuotot, occtol, 1, nuotot )
-        endif
       endif
 
-      ! Restore ParallelOverK
-      ParallelOverK = SaveParallelOverK
-      if ( ParallelOverK ) Serial = .true.
-
-      call resetDenseMatrix()
 C Free local arrays 
+      call memory('D','I',size(muo),'writewave')
+      deallocate(muo)
       call memory('D','D',size(aux),'writewave')
       deallocate(aux)
-      call memory('D','D',size(ek),'writewave')
+      call memory('D','I',size(ek),'writewave')
       deallocate(ek)
 
 C This is the only exit point 
@@ -649,16 +819,15 @@ C This is the only exit point
       end subroutine wwave
 
 
-      subroutine writew(nuotot,nuo,ik,k,ispin,eo,psi,
-     $                  gamma,non_coll,blocksize)
+      subroutine writew(nuotot,nuo,ik,k,ispin,eo,psi,gamma)
 
       use precision
       use sys
       use parallel,     only : Node, Nodes
-      use parallel,     only : Module_Blocksize=>BlockSize
       use parallelsubs, only : GlobalToLocalOrb, WhichNodeOrb
       use units,        only : eV
       use kpoint_grid,  only : kweight
+
 #ifdef MPI
       use mpi_siesta
 #endif
@@ -670,17 +839,16 @@ C This is the only exit point
 #endif
 
       integer, intent(in)  ::  nuotot, nuo, ispin, ik
-      logical, intent(in)  ::  non_coll, gamma
-      real(dp), intent(in) ::  eo(*), k(3)
-      real(dp), intent(in) ::  psi(:)
-      integer, intent(in)  ::  blocksize
+      real(dp), intent(in) ::  eo(*), psi(*), k(3)
 
+      logical gamma
 
 C  Internal variables .............................................
-      integer  BNode, iie, iw, indwf, j, ind, iu
-      integer  :: blocksize_saved
+      integer  BNode, ntot, iie, iw, indwf, j, ind, iu
+
       integer number_of_wfns
       integer, allocatable  :: ind_wfn(:)
+
       real(dp)  :: kpoint_weight
       real(SP), dimension(:,:), allocatable :: aux   !! NOTE SP
 
@@ -690,17 +858,12 @@ C ...................
 
 C Allocate auxiliary arrays
 
-      if (non_coll) then
-         allocate(aux(4,nuotot))
-         call memory('A','D',4*nuotot,'writewave')
+      if (gamma) then
+         allocate(aux(1,nuotot))
+         call memory('A','D',nuotot,'writewave')
       else
-         if (gamma) then
-            allocate(aux(1,nuotot))
-            call memory('A','D',nuotot,'writewave')
-         else
-            allocate(aux(2,nuotot))
-            call memory('A','D',2*nuotot,'writewave')
-         endif
+         allocate(aux(2,nuotot))
+         call memory('A','D',2*nuotot,'writewave')
       endif
 
 C Find file name, and open for Node 0
@@ -710,6 +873,21 @@ C Find file name, and open for Node 0
         open(iu,file=wfs_filename,form="unformatted",position='append',
      .        status='old')
       endif
+
+C Check that the total number of orbitals is correct
+
+#ifdef MPI
+      if (Nodes.gt.1) then
+        call MPI_AllReduce(nuo,ntot,1,MPI_integer,MPI_sum,
+     .    MPI_Comm_World,MPIerror)
+      else
+        ntot = nuo
+      endif
+#else
+      ntot = nuo
+#endif
+
+      if (ntot .ne. nuotot) call die('Inconsistent number of orbitals')
 
       if (wfs_energy_window) then  
          allocate(ind_wfn(nwflist(ik)))
@@ -735,12 +913,9 @@ C First print the index and value of k-point
       if (Node .eq. 0) then
         if (wwf) then
           write(6,*)
+          write(6,'(a72)')     ' ******'
           write(6,'(a22,2x,i6,2x,3f10.6)') 'k-point = ',ik, k(1:3)
-          if (non_coll) then
-             write(6,'(a22,2x)') 'Spinors have mixed spins'
-          else
-             write(6,'(a22,2x,i6)') 'Spin component = ',ispin
-          endif
+          write(6,'(a22,2x,i6)') 'Spin component = ',ispin
           write(6,'(a22,2x,i6)') 'Num. wavefunctions = ',nwflist(ik)
           write(6,'(a)') 'Use readwfsx utility to print '
      $                   // "wavefunction coefficients from WFSX file"
@@ -755,31 +930,16 @@ C First print the index and value of k-point
         write(iu) nwflist(ik)
       endif
 
-      ! Loop over wavefunctions that should be stored
+C Loop over wavefunctions that should be printed
 
-      ! The effective blocksize to use is passed as an argument.
-      ! Module_blocksize is the variable in the 'parallel' module that
-      ! holds the value that all the helper functions (WhichNodeOrb,
-      ! GetNodeOrb, etc) see.  Hence, we must temporarily set
-      ! Module_blocksize to the passed blocksize.
-
-      ! Examples: non-collinear calculations need a wf blocksize double
-      ! the 'orbital' one
-
-      blocksize_saved = Module_blocksize
-      Module_blocksize = blocksize
-      
       if (Node .eq. 0 .and. debug) then
          print *, " -*- Will print ", nwflist(ik), " wfns."
          print *, " -*- ", iwf(ik,1:nwflist(ik))
       endif
       do iw = 1,nwflist(ik)
-         indwf = iwf(ik,iw)
+        indwf = iwf(ik,iw)
 
-        ! Determine which node handles this wavefunction
-        ! Note that the distribution is block cyclic,
-        ! so the same 'orbital' helper functions apply
-
+C Determine which node handles this wavefunction
         call WhichNodeOrb(indwf,Nodes,BNode)
 
         if (Node .eq. 0 .and. debug) then
@@ -789,44 +949,30 @@ C First print the index and value of k-point
 
         if (Node.eq.BNode) then
 
-          ! Determine the index of the wavefunction in the local node
+C Determine the index of the orbital in the local node
+
           call GlobalToLocalOrb( indwf, BNode, Nodes, iie)
 
-          ! Save wavefunction in aux array
+C Save wavefunction in aux array
 
-          ! Despite being passed as a one-dimensional array, psi has
-          ! different underlying structures for different cases, so the
-          ! indexing must be handled differently
+C psi has different structure in diagk and diagg, so the indexing
+C must be handled differently
 
-          if (.not. non_coll) then
-             if (gamma) then
-                ! Real functions
-                do j = 1,nuotot
-                   ind = j + (iie-1)*nuotot 
-                   aux(1,j) = real(psi(ind),kind=sp)
-                enddo
-             else
-                ! Complex functions: two reals per orbital coefficient
-                do j = 1,nuotot
-                   ind = 1+(j-1)*2+(iie-1)*2*nuotot
-                   aux(1,j) = real(psi(ind),kind=sp)
-                   aux(2,j) = real(psi(ind+1),kind=sp)
-                enddo
-             endif
-          else                  ! non-collinear case, including SOC
-             ! Each 'orbital' coefficient is actually four reals: complex up/down
-             ! (spinor)
-             do j = 1,nuotot
-                ind = 1 + (j-1)*4 + (iie-1)*4*nuotot 
-                aux(1,j) = real(psi(ind),kind=sp)
-                aux(2,j) = real(psi(ind+1),kind=sp)
-                aux(3,j) = real(psi(ind+2),kind=sp)
-                aux(4,j) = real(psi(ind+3),kind=sp)
-             enddo
-          endif  !  non-coll or not
+          if (gamma) then
+            do j = 1,ntot
+              ind = j + (iie-1)*nuotot 
+              aux(1,j) = real(psi(ind),kind=sp)
+            enddo
+          else
+            do j = 1,ntot
+              ind = 1+(j-1)*2+(iie-1)*2*nuotot
+              aux(1,j) = real(psi(ind),kind=sp)
+              aux(2,j) = real(psi(ind+1),kind=sp)
+            enddo
+          endif
 
-       endif          ! Node == BNode
-       
+        endif
+
 #ifdef MPI
 C Pass the wf to the master node
         if (BNode.ne.0) then
@@ -845,24 +991,22 @@ C Pass the wf to the master node
         endif
 #endif
 
-C eigenvector is now stored in aux in Node 0, and can be printed
+C eigenvector is now stored in aux in all processors, and can be printed
 
         if (Node .eq. 0) then
-           write(iu) indwf
-           write(iu) eo(indwf)/eV
-           write(iu) (aux(1:,j), j=1,nuotot)
-        endif
+          write(iu) indwf
+          write(iu) eo(indwf)/eV
+          write(iu) (aux(1:,j), j=1,ntot)
+       endif
 
       enddo
-      
+
 C Close output file
 
       if (Node .eq. 0) then
+        close (iu)
         call io_close(iu)
       endif
-
-      ! Restore blocksize value in module
-      Module_blocksize = blocksize_saved
 
 C Deallocate auxiliary arrays
 

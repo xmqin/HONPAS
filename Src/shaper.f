@@ -1,9 +1,12 @@
 ! 
-! Copyright (C) 1996-2016	The SIESTA group
-!  This file is distributed under the terms of the
-!  GNU General Public License: see COPYING in the top directory
-!  or http://www.gnu.org/copyleft/gpl.txt.
-! See Docs/Contributors.txt for a list of contributors.
+! This file is part of the SIESTA package.
+!
+! Copyright (c) Fundacion General Universidad Autonoma de Madrid:
+! E.Artacho, J.Gale, A.Garcia, J.Junquera, P.Ordejon, D.Sanchez-Portal
+! and J.M.Soler, 1996- .
+! 
+! Use of this software constitutes agreement with the full conditions
+! given in the SIESTA license, as signed by all legitimate users.
 !
       SUBROUTINE SHAPER( CELL, NA, ISA, XA, SHAPE, NV, VECS )
 
@@ -37,10 +40,12 @@ C Assumes that all the atoms in one unit cell are connected, i.e. it
 C will fail if one atom evaporates from one slab and reaches another
 C image of the slab, reporting the system as bulk.
 C **********************************************************************
+
       use atmfuncs,  only : rcut
       use precision, only : dp
-      use neighbour, only : jna=>jan, r2ij, xij, mneighb,
-     &                      reset_neighbour_arrays
+      use neighbour, only : jna=>jan, r2ij, xij, mneighb
+      use alloc,       only : re_alloc, de_alloc
+
       implicit          none
 
       INTEGER           NA, ISA(NA), NV
@@ -48,28 +53,29 @@ C **********************************************************************
       EXTERNAL          LIVEC
       CHARACTER         SHAPE*(*)
 
-C     Internal variables and arrays
+C Internal variables and arrays
+
       integer :: IA, IN, IS, JA, JS, NNA
       real(dp) :: RI, RIJ, RJ, RMAX, XXJ(3)
 
-C     Find maximum interaction range
+C Find maximum interaction range
       RMAX = 0.0D0
       do IA = 1,NA
         IS = ISA(IA)
         RMAX = MAX( RMAX, RCUT(IS,0) )
       enddo
 
-C     Initialize neighbour-locater routine
-      CALL mneighb( CELL, 2*RMAX, NA, XA, 0, 0, NNA )
+C Initialize neighbour-locater routine
+      CALL MNEIGHB( CELL, 2*RMAX, NA, XA, 0, 0, NNA )
 
-C     Main loop
+C Main loop
       NV = 0
       do IA = 1,NA
         IS = ISA(IA)
         RI = RCUT(IS,0)
 
-C       Find neighbours of atom IA
-        CALL mneighb( CELL, RI+RMAX, NA, XA, IA, 0, NNA )
+C Find neighbours of atom IA
+        CALL MNEIGHB( CELL, RI+RMAX, NA, XA, IA, 0, NNA )
 
           do IN = 1,NNA
             JA = JNA(IN)
@@ -77,16 +83,16 @@ C       Find neighbours of atom IA
             RJ = RCUT(JS,0)
             RIJ = SQRT(R2IJ(IN))
 
-C           Check if IA and JA interact
+C Check if IA and JA interact
             IF (RIJ .LT. RI+RJ) THEN
 
-C             Find vector between two images of atom JA
-C             (we assume that all atoms in one unit cell are connected)
+C Find vector between two images of atom JA
+C (we assume that all atoms in one unit cell are connected)
               XXJ(1) = XA(1,IA) + XIJ(1,IN) - XA(1,JA)
               XXJ(2) = XA(2,IA) + XIJ(2,IN) - XA(2,JA)
               XXJ(3) = XA(3,IA) + XIJ(3,IN) - XA(3,JA)
 
-C             Add to set of linearly independent vectors
+C Add to set of linearly independent vectors
               CALL LIVEC( XXJ, NV, VECS )
 
               IF (NV .EQ. 3) GOTO 999
@@ -94,7 +100,7 @@ C             Add to set of linearly independent vectors
           enddo
       enddo
 
-C     Exit point
+C Exit point
   999 continue
       IF (NV.EQ.0 .AND. NA.EQ.1) SHAPE = 'atom'
       IF (NV.EQ.0 .AND. NA.GT.1) SHAPE = 'molecule'
@@ -102,20 +108,19 @@ C     Exit point
       IF (NV.EQ.2) SHAPE = 'slab'
       IF (NV.EQ.3) SHAPE = 'bulk'
 
-C     Deallocate local arrays
-      call reset_neighbour_arrays( )
-
-      END SUBROUTINE SHAPER
+      end
 
       SUBROUTINE LIVEC( X, NV, V )
-C     Adds vector X to set of NV linearly-independent vectors V (if true)
-C     Written by J.M.Soler. July 1997.
       use precision, only : dp
+
+C Adds vector X to set of NV linearly-independent vectors V (if true)
+C Written by J.M.Soler. July 1997.
+
       IMPLICIT          NONE
       INTEGER           LV, NV
       real(dp)          TOL, V(3,3), VV(3), VV2, VVX, X(3), X2
-      PARAMETER  ( TOL = 1.0e-6_dp ) 
 
+      PARAMETER  ( TOL = 1.0e-6_dp ) 
 
       LV = NV
       IF (NV .EQ. 0) THEN
@@ -141,4 +146,4 @@ C     Written by J.M.Soler. July 1997.
         V(3,NV) = X(3)
       ENDIF
 
-      END SUBROUTINE LIVEC
+      END

@@ -1,9 +1,12 @@
 ! 
-! Copyright (C) 1996-2016	The SIESTA group
-!  This file is distributed under the terms of the
-!  GNU General Public License: see COPYING in the top directory
-!  or http://www.gnu.org/copyleft/gpl.txt.
-! See Docs/Contributors.txt for a list of contributors.
+! This file is part of the SIESTA package.
+!
+! Copyright (c) Fundacion General Universidad Autonoma de Madrid:
+! E.Artacho, J.Gale, A.Garcia, J.Junquera, P.Ordejon, D.Sanchez-Portal
+! and J.M.Soler, 1996- .
+! 
+! Use of this software constitutes agreement with the full conditions
+! given in the SIESTA license, as signed by all legitimate users.
 !
       module periodic_table
 
@@ -48,7 +51,7 @@ C Originally written by A.R.Williams. Modified by J.M.Soler
       DATA (Q(0,I),I=19,36) /1,2, 2,2,2,1,2,2,2,2,1,2, 2,2,2,2,0,0/
       DATA (Q(0,I),I=37,54) /1,2, 2,2,1,1,2,1,1,1,1,2, 2,2,2,2,0,0/
       DATA (Q(0,I),I=55,71) /1,2, 2,                               14*2/
-      DATA (Q(0,I),I=72,86) /       2,2,2,2,2,2,1,1,2, 2,2,2,2,0,0/
+      DATA (Q(0,I),I=72,86) /       2,2,2,2,2,2,0,1,2, 2,2,2,2,0,0/
       DATA (Q(0,I),I=87,98) /1,2, 10*2/
 
       DATA (Q(1,I),I= 0, 2) / 3*0/                ! H-He
@@ -62,7 +65,7 @@ C Originally written by A.R.Williams. Modified by J.M.Soler
       DATA (Q(2,I),I= 0,36) /21*0, 1,2,3,5,5,6,7, 8,10,10, 6*0/
       DATA (Q(2,I),I=37,54) / 2*0, 1,2,4,5,5,7,8, 9,10,10, 6*0/
       DATA (Q(2,I),I=55,71) / 2*0, 1,                      6*0,1,6*0,1/
-      DATA (Q(2,I),I=72,86) /        2,3,4,5,6,7,9,10,10, 6*0/
+      DATA (Q(2,I),I=72,86) /        2,3,4,5,6,7,10,10,10, 6*0/
       DATA (Q(2,I),I=87,98) / 2*0, 1,2,1,1,3*0,1,2,1/
 
       DATA (Q(3,I),I= 0,71) /58*0, 2,3,4,5,6,7,7,9,10,11,12,13,14,14/
@@ -190,8 +193,6 @@ C Written by J. Soler
          SYMBOL = NAME(ABS(Z))
       ELSE IF (Z.GT.200) THEN
          write(SYMBOL,'(a1,i1)') 'S', mod(Z-200,10)
-      ELSE IF (Z.LT.-200) THEN
-         write(SYMBOL,'(a1,i1)') 'G', mod(abs(Z)-200,10)
       ELSE
          WRITE(6,*) 'SYMBOL: ERROR: No data for Z =', Z
          SYMBOL = ' '

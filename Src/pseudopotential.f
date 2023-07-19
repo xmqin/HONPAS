@@ -1,15 +1,18 @@
 ! 
-! Copyright (C) 1996-2016	The SIESTA group
-!  This file is distributed under the terms of the
-!  GNU General Public License: see COPYING in the top directory
-!  or http://www.gnu.org/copyleft/gpl.txt.
-! See Docs/Contributors.txt for a list of contributors.
+! This file is part of the SIESTA package.
+!
+! Copyright (c) Fundacion General Universidad Autonoma de Madrid:
+! E.Artacho, J.Gale, A.Garcia, J.Junquera, P.Ordejon, D.Sanchez-Portal
+! and J.M.Soler, 1996- .
+! 
+! Use of this software constitutes agreement with the full conditions
+! given in the SIESTA license, as signed by all legitimate users.
 !
       module pseudopotential
 
       use sys, only: die
       use precision, only: dp
-      use interpolation, only: generate_spline, evaluate_spline
+      use flib_spline, only: generate_spline, evaluate_spline
       use atom_options, only: write_ion_plot_files
       
       implicit none
@@ -19,7 +22,6 @@
       private
 
       public :: pseudopotential_t, pseudo_read, pseudo_header_print
-      public :: pseudo_init_constant
       public :: pseudo_write_formatted, pseudo_reparametrize
       public :: read_ps_conf, pseudo_dump
 
@@ -40,39 +42,18 @@
         character(len=70)       :: text
         integer                 :: npotu
         integer                 :: npotd
-        real(dp), pointer       :: r(:) => null()
-        real(dp), pointer       :: chcore(:) => null()
-        real(dp), pointer       :: chval(:) => null()
-        real(dp), pointer       :: vdown(:,:) => null()
-        real(dp), pointer       :: vup(:,:) => null()
-        integer, pointer        :: ldown(:) => null()
-        integer, pointer        :: lup(:) => null()
+        real(dp), pointer       :: r(:)
+        real(dp), pointer       :: chcore(:)
+        real(dp), pointer       :: chval(:)
+        real(dp), pointer       :: vdown(:,:)
+        real(dp), pointer       :: vup(:,:)
+        integer, pointer        :: ldown(:)
+        integer, pointer        :: lup(:)
       end type pseudopotential_t
 
-      CONTAINS
+        CONTAINS
 
-      subroutine pseudo_init_constant(p)
-      type(pseudopotential_t), intent(inout) :: p
-
-      p%nr = 0
-      p%nrval = 0
-      p%zval = 0._dp
-      p%gen_zval = 0._dp
-      p%relativistic = .false.
-      p%correlation = ' '
-      p%icorr = ' '
-      p%irel = ' '
-      p%nicore = ' '
-      p%a = 0._dp
-      p%b = 0._dp
-      p%method(:) = ' '
-      p%text = ' '
-      p%npotu = 0
-      p%npotd = 0
-
-      end subroutine pseudo_init_constant
-
-      subroutine pseudo_read(label,p)
+        subroutine pseudo_read(label,p)
         character(len=*), intent(in)   :: label
         type(pseudopotential_t)                    :: p
 
@@ -165,8 +146,7 @@
 
         integer io_ps, i, j, ios
         character(len=70) dummy
-        character(len=256) line
-        real(dp) :: r2
+        real(dp) :: r2, gen_zval_inline
 
         call io_assign(io_ps)
         open(io_ps,file=fname,form='formatted',status='unknown')
@@ -176,25 +156,32 @@
  8000   format(1x,i2)
  8005   format(1x,a2,1x,a2,1x,a3,1x,a4)
  8010   format(1x,6a10,/,1x,a70)
- 8015   format(1x,2i3,i5,3g20.12)
+ 8015   format(1x,2i3,i5,4g20.12)
  8030   format(4(g20.12))
  8040   format(1x,a)
 
         read(io_ps,8005) p%name, p%icorr, p%irel, p%nicore
         read(io_ps,8010) (p%method(i),i=1,6), p%text
+        read(io_ps,8015,iostat=ios)
+     $       p%npotd, p%npotu, p%nr, p%b, p%a, p%zval,
+     $       gen_zval_inline
+        if (ios < 0) gen_zval_inline = 0.0_dp
+        call read_ps_conf(p%irel,p%npotd-1,p%text,p%gen_zval)
+!
+!       (Some .psf files contain an extra field corresponding
+!       to the ps valence charge at generation time. If that
+!       field is not present, the information has to be decoded
+!       from the "text" variable.
+!
+!       "Zero" pseudos have gen_zval = 0, so they need a special case.
 
-        read(io_ps,fmt="(a)") line
-        read(line,8015)  p%npotd, p%npotu, p%nr, p%b, p%a, p%zval
-
-        ! Above statement reads up to 72 chars
-        if (len_trim(line) >= 74) then
-           ! There is an explicit field for the total
-           ! generation valence charge
-           read(line(74:),fmt=*) p%gen_zval
-        else
-           ! Set total generation valence charge from the packed
-           ! information on pseudized shells
-           call read_ps_conf(p%irel,p%npotd-1,p%text,p%gen_zval)
+        if (p%gen_zval == 0.0_dp) then
+           if (gen_zval_inline == 0.0_dp) then
+              if (p%method(1) /= "ZEROPSEUDO")
+     $             call die("Cannot get gen_zval")
+           else
+              p%gen_zval = gen_zval_inline
+           endif
         endif
 
         p%nrval = p%nr + 1
@@ -334,23 +321,23 @@
 
         end subroutine pseudo_header_print
 
-c        subroutine pseudo_header_string(p,s)
-c        type(pseudopotential_t)  :: p
-c        character(len=*), intent(inout) :: s
-c
-c        integer :: n, i
-c
-c 8005   format(1x,a2,1x,a2,1x,a3,1x,a4)
-c 8010   format(1x,6a10,/,1x,a70)
-c 8015   format(1x,2i3,i5,3g20.12)
-c        
-c        write(s,8005) p%name, p%icorr, p%irel, p%nicore
-c        n = len_trim(s) + 1
-c        write(s(n:),fmt="(a1)") char(10)
-c        n = len_trim(s) + 1
-c        write(s(n:),8010) (p%method(i),i=1,6), p%text
-c
-c        end subroutine pseudo_header_string
+c$$$        subroutine pseudo_header_string(p,s)
+c$$$        type(pseudopotential_t)  :: p
+c$$$        character(len=*), intent(inout) :: s
+c$$$
+c$$$        integer :: n, i
+c$$$
+c$$$ 8005   format(1x,a2,1x,a2,1x,a3,1x,a4)
+c$$$ 8010   format(1x,6a10,/,1x,a70)
+c$$$ 8015   format(1x,2i3,i5,3g20.12)
+c$$$        
+c$$$        write(s,8005) p%name, p%icorr, p%irel, p%nicore
+c$$$        n = len_trim(s) + 1
+c$$$        write(s(n:),fmt="(a1)") char(10)
+c$$$        n = len_trim(s) + 1
+c$$$        write(s(n:),8010) (p%method(i),i=1,6), p%text
+c$$$
+c$$$        end subroutine pseudo_header_string
 !--------
 !
       subroutine read_ps_conf(irel,lmax,text,chgvps)
@@ -393,6 +380,12 @@ c        end subroutine pseudo_header_string
                   write(6,'(/,2a)')
      .          'Pseudopotential generated from a ',
      .                 'relativistic atomic calculation'
+                  write(6,'(2a)')
+     .          'There are spin-orbit pseudopotentials ',
+     .                 'available'
+                  write(6,'(2a)')
+     .          'Spin-orbit interaction is not included in ',
+     .                 'this calculation'
                endif
 
                write(6,'(/,a)') 'Valence configuration '//
@@ -470,7 +463,7 @@ c        end subroutine pseudo_header_string
 !       Use natural spline (zero second derivative)
 !
         func => p%chcore
-        call generate_spline(p%r,func,p%nrval,0.0_dp,0.0_dp,y2)
+        call generate_spline(p%r,func,p%nrval,y2,0.0_dp,0.0_dp)
         allocate(tmp(new_nrval))
         do j = 1, new_nrval
            call evaluate_spline(p%r,func,y2,p%nrval,new_r(j),tmp(j))
@@ -481,7 +474,7 @@ c        end subroutine pseudo_header_string
         nullify(tmp)            ! To re-use tmp
 !--------------------------------------------------------------------
         func => p%chval
-        call generate_spline(p%r,func,p%nrval,0.0_dp,0.0_dp,y2)
+        call generate_spline(p%r,func,p%nrval,y2,0.0_dp,0.0_dp)
         allocate(tmp(new_nrval))
         do j = 1, new_nrval
            call evaluate_spline(p%r,func,y2,p%nrval,new_r(j),tmp(j))
@@ -497,7 +490,7 @@ c        end subroutine pseudo_header_string
         allocate(tmp2(p%npotd,new_nrval))
         do i=1,p%npotd
            func => p%vdown(i,:)
-           call generate_spline(p%r,func,p%nrval,0.0_dp,0.0_dp,y2)
+           call generate_spline(p%r,func,p%nrval,y2,0.0_dp,0.0_dp)
            do j = 1, new_nrval
             call evaluate_spline(p%r,func,y2,p%nrval,new_r(j),tmp2(i,j))
            enddo
@@ -510,7 +503,7 @@ c        end subroutine pseudo_header_string
         if (p%npotu > 0) allocate(tmp2(p%npotu,new_nrval))
         do i=1,p%npotu         ! Only executed if npotu > 0 ...
            func => p%vup(i,:)
-           call generate_spline(p%r,func,p%nrval,0.0_dp,0.0_dp,y2)
+           call generate_spline(p%r,func,p%nrval,y2,0.0_dp,0.0_dp)
            do j = 1, new_nrval
             call evaluate_spline(p%r,func,y2,p%nrval,new_r(j),tmp2(i,j))
            enddo
@@ -532,7 +525,7 @@ c        end subroutine pseudo_header_string
         p%a     = a
         p%b     = b
 
-        call de_alloc( y2, name='y2' )
+        call de_alloc( y2, name='y2', routine='pseudo_reparametrize' )
 
         call pseudo_write_formatted(trim(label)// ".Reparam.psf",p)
         if (write_ion_plot_files) then

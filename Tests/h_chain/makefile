@@ -4,4 +4,3 @@
 name=h_chain
 #
 include ../test.mk
-MPI=

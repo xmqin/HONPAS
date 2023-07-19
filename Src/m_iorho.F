@@ -1,9 +1,12 @@
 ! 
-! Copyright (C) 1996-2016	The SIESTA group
-!  This file is distributed under the terms of the
-!  GNU General Public License: see COPYING in the top directory
-!  or http://www.gnu.org/copyleft/gpl.txt.
-! See Docs/Contributors.txt for a list of contributors.
+! This file is part of the SIESTA package.
+!
+! Copyright (c) Fundacion General Universidad Autonoma de Madrid:
+! E.Artacho, J.Gale, A.Garcia, J.Junquera, P.Ordejon, D.Sanchez-Portal
+! and J.M.Soler, 1996- .
+! 
+! Use of this software constitutes agreement with the full conditions
+! given in the SIESTA license, as signed by all legitimate users.
 !
       module m_iorho
 !
@@ -23,7 +26,6 @@
       use precision,    only : dp, grid_p, sp
       use parallel,     only : Node, ProcessorY
       use sys,          only : die
-      use alloc,        only : re_alloc, de_alloc
 #ifdef MPI
       use mpi_siesta
       use parallel,     only : Nodes
@@ -44,6 +46,7 @@
 
 ! Writes the electron density or potential at the mesh points.
 !
+
 C Writen by J.Soler July 1997.
 C Parallel modifications added, while maintaining independence
 C of density matrix on disk from parallel distribution. Uses a
@@ -63,8 +66,8 @@ C records.
           ! Number of mesh divisions of each lattice vector
       integer, intent(in)          ::     maxp
       integer, intent(in)          ::     nspin
-      real(grid_p), intent(in)     ::     rho(maxp,nspin)
-      real(dp), intent(in)         ::     cell(3,3)
+      real(grid_p), intent(in)     ::     rho(maxp,nspin)  ! Grid magnitude
+      real(dp), intent(in)         ::     cell(3,3)    ! Lattice vectors
 
       external          io_assign, io_close, memory
 
@@ -77,52 +80,50 @@ C Internal variables and arrays
 #ifdef MPI
       integer    Ind2, MPIerror, Request,
      .           Status(MPI_Status_Size), BNode, NBlock
-      real(grid_p), pointer :: bdens(:) => null()
+      real(grid_p), dimension(:), allocatable, save :: bdens
 #endif
-      real(sp),     pointer :: temp(:) => null()
+      real(sp), dimension(:), allocatable :: temp
 
 #ifdef MPI
-#ifdef DEBUG
-        call write_debug( 'ERROR: write_rho not ready yet' )
-        call write_debug( fname )
-#endif
-
 C Work out density block dimensions
       if (mod(Nodes,ProcessorY).gt.0)
      $     call die('ERROR: ProcessorY must be a factor of the' //
      $     ' number of processors!')
       ProcessorZ = Nodes/ProcessorY
       BlockSizeY = ((((mesh(2)/nsm)-1)/ProcessorY) + 1)*nsm
-      call re_alloc(bdens, 1, BlockSizeY*mesh(1), 'bdens', 'write_rho')
+      allocate(bdens(BlockSizeY*mesh(1)))
+      call memory('A','X',BlockSizeY*mesh(1),'iorho')
 #else
       ProcessorZ = 1
 #endif
 
-      call re_alloc( temp, 1, mesh(1), 'temp', 'write_rho' )
+         allocate(temp(mesh(1)))
+         call memory('A','S',mesh(1),'iorho')
+
 C Open file
-      if (Node.eq.0) then
-        call io_assign( iu )
-        open( iu, file=fname, form=fform, status='unknown' )      
-      endif
+        if (Node.eq.0) then
+          call io_assign( iu )
+          open( iu, file=fname, form=fform, status='unknown' )      
+        endif
 
-      np = mesh(1) * mesh(2) * mesh(3)
+        np = mesh(1) * mesh(2) * mesh(3)
 
-      meshnsm(1) = mesh(1)/nsm
-      meshnsm(2) = mesh(2)/nsm
-      meshnsm(3) = mesh(3)/nsm
+        meshnsm(1) = mesh(1)/nsm
+        meshnsm(2) = mesh(2)/nsm
+        meshnsm(3) = mesh(3)/nsm
 
 C Write data
-      if (Node.eq.0) then
-        if (fform .eq. 'formatted') then
-          do i = 1,3
-            write(iu,*) (cell(j,i),j=1,3)
-          enddo
-          write(iu,*) mesh, nspin
-        else
-          write(iu) cell
-          write(iu) mesh, nspin
+        if (Node.eq.0) then
+          if (fform .eq. 'formatted') then
+            do i = 1,3
+              write(iu,*) (cell(j,i),j=1,3)
+            enddo
+            write(iu,*) mesh, nspin
+          else
+            write(iu) cell
+            write(iu) mesh, nspin
+          endif
         endif
-      endif
 
 C Outer loop over spins
         do is = 1,nspin
@@ -228,9 +229,12 @@ C Close file
 
 #ifdef MPI
 C Deallocate density buffer memory
-      call de_alloc( bdens, 'bdens', 'write_rho' )
+      call memory('D','X',size(bdens),'iorho')
+      deallocate(bdens)
 #endif
-      call de_alloc( temp, 'temp', 'write_rho' )
+      call memory('D','S',size(temp),'iorho')
+      deallocate(temp)
+
       end subroutine write_rho
 
 !------------------------------------------------------------------------
@@ -290,9 +294,9 @@ C Internal variables and arrays
       integer    Ind2, MPIerror, Request, meshl(3),
      .           Status(MPI_Status_Size), BNode, NBlock
       logical    ltmp
-      real(grid_p), pointer :: bdens(:) => null()
+      real(grid_p), dimension(:), allocatable, save :: bdens
 #endif
-      real(sp),     pointer :: temp(:) => null()
+      real(sp), dimension(:), allocatable :: temp
 
       logical    baddim, found
 
@@ -304,7 +308,8 @@ C Work out density block dimensions
      $     ' number of processors!')
       ProcessorZ = Nodes/ProcessorY
       BlockSizeY = ((((mesh(2)/nsm)-1)/ProcessorY) + 1)*nsm
-      call re_alloc( bdens, 1, BlockSizeY*mesh(1), 'bdens', 'read_rho' )
+      allocate(bdens(BlockSizeY*mesh(1)))
+      call memory('A','X',BlockSizeY*mesh(1),'iorho')
 #else
       ProcessorZ = 1
 #endif
@@ -329,7 +334,9 @@ C Read cell vectors and number of points
               read(iu) mesh, ns
             endif
           endif
-          call re_alloc( temp, 1, mesh(1), 'temp', 'read_rho' )
+          allocate(temp(mesh(1)))
+          call memory('A','S',mesh(1),'iorho')
+
 #ifdef MPI
           call MPI_Bcast(cell(1,1),9,MPI_double_precision,0,
      .      MPI_Comm_World,MPIerror)
@@ -360,7 +367,7 @@ C Globalise dimension check
           baddim = ltmp
 #endif
 
-          if (baddim) then
+          if (baddim) then 
              call die("Dimensions of array rho too small in read_rho")
           endif
 
@@ -468,9 +475,14 @@ C Close file
 
 #ifdef MPI
 C Deallocate density buffer memory
-      call de_alloc( bdens, 'bdens', 'read_rho' )
+      call memory('D','X',size(bdens),'iorho')
+      deallocate(bdens)
 #endif
-      call de_alloc( temp, 'temp', 'read_rho' )
+      if (allocated(temp)) then
+         call memory('D','S',size(temp),'iorho')
+         deallocate(temp)
+      endif
+
       end subroutine read_rho
 
 !------------------------------------------------------------------
@@ -561,9 +573,8 @@ C Find largest value of npl
 #endif
             maxp = npmax
             nspin = ns
+            if (Node.eq.0) call io_close( iu )
           endif
-
-          if (Node.eq.0) call io_close( iu )
 
           end subroutine check_rho
 

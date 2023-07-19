@@ -1,9 +1,12 @@
 ! 
-! Copyright (C) 1996-2016	The SIESTA group
-!  This file is distributed under the terms of the
-!  GNU General Public License: see COPYING in the top directory
-!  or http://www.gnu.org/copyleft/gpl.txt.
-! See Docs/Contributors.txt for a list of contributors.
+! This file is part of the SIESTA package.
+!
+! Copyright (c) Fundacion General Universidad Autonoma de Madrid:
+! E.Artacho, J.Gale, A.Garcia, J.Junquera, P.Ordejon, D.Sanchez-Portal
+! and J.M.Soler, 1996- .
+! 
+! Use of this software constitutes agreement with the full conditions
+! given in the SIESTA license, as signed by all legitimate users.
 !
       module electrostatic
 !
@@ -14,10 +17,9 @@
       use atm_types, only: nspecies, species, elec_corr, npairs
       use radial
       use atmfuncs, only: floating, zvalfis, psch
-      use interpolation, only: polint  ! polynomial interpolation
+      use m_recipes, only: polint
       use m_radfft
       use sys, only: die
-      use m_bessph, only: bessph   ! Spherical Bessel functions
 !-----------------------------------------------
       
       public :: elec_corr_setup
@@ -104,7 +106,7 @@ C     integration.
 
 
       REAL(DP) cons, qmax, rmax, delt, c, dlt, z1, z2, ch1, ch2, pi
-      REAL(DP) r, vd, vv1, vv2, energ1, energ2
+      REAL(DP) r, vd, vv1, vv2, energ1, energ2, bessph
       integer itb, nr, nmin, nmax, nn, iq, ir
       real(dp) zval1, zval2
 
@@ -191,7 +193,6 @@ C****FOURIER-TRANSFORM OF RADIAL CHARGE DENSITY****
 C
       CALL RADFFT( 0, NQ, RMAX, CH(0:NQ,1), CH(0:NQ,1) )
       CALL RADFFT( 0, NQ, RMAX, CH(0:NQ,2), CH(0:NQ,2) )
-      CALL RESET_RADFFT( )
 C
 
 CNEUTRALIZE CHARGE DENSITY FOR FOURIER-SPACE CALCULATION

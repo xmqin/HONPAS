@@ -1,10 +1,3 @@
-! ---
-! Copyright (C) 1996-2016	The SIESTA group
-!  This file is distributed under the terms of the
-!  GNU General Public License: see COPYING in the top directory
-!  or http://www.gnu.org/copyleft/gpl.txt .
-! See Docs/Contributors.txt for a list of contributors.
-! ---
 subroutine setup_ordern_indexes(no_l,no_u,Nodes)
 
   use spatial, only:  nL2G, nG2L, nNode, nOrbPerNode
@@ -14,7 +7,8 @@ subroutine setup_ordern_indexes(no_l,no_u,Nodes)
   use parallel, only: Node
 
 #ifdef MPI
-  use mpi_siesta
+  use mpi_siesta, only: MPI_Comm_World, MPI_Integer
+  use mpi_siesta, only: MPI_AllGather, MPI_AllGatherV
 #endif
 
   implicit none

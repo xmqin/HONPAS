@@ -1,9 +1,12 @@
 ! 
-! Copyright (C) 1996-2016	The SIESTA group
-!  This file is distributed under the terms of the
-!  GNU General Public License: see COPYING in the top directory
-!  or http://www.gnu.org/copyleft/gpl.txt.
-! See Docs/Contributors.txt for a list of contributors.
+! This file is part of the SIESTA package.
+!
+! Copyright (c) Fundacion General Universidad Autonoma de Madrid:
+! E.Artacho, J.Gale, A.Garcia, J.Junquera, P.Ordejon, D.Sanchez-Portal
+! and J.M.Soler, 1996- .
+! 
+! Use of this software constitutes agreement with the full conditions
+! given in the SIESTA license, as signed by all legitimate users.
 !
       subroutine iodm( task, maxnd, nbasis, nspin, numd, 
      .                 listdptr, listd, dm, found )
@@ -35,7 +38,6 @@ C
       use sys,          only : die
       use fdf,          only : fdf_boolean, fdf_string
       use files,        only : slabel, label_length
-      use alloc,        only : re_alloc, de_alloc
 #ifdef MPI
       use mpi_siesta
       use parallelsubs, only : WhichNodeOrb, GlobalToLocalOrb
@@ -60,12 +62,17 @@ C Internal variables
       logical   file_exists
       integer   im, is, unit1, m, nb, ndmax, ns
       integer   nbasistot, ml, ndmaxg
-      integer, pointer :: numdg(:) => null()
+      integer, dimension(:), allocatable, save :: numdg
 #ifdef MPI
       integer   MPIerror, Request, Status(MPI_Status_Size)
       integer   BNode
-      real(dp), pointer :: buffer(:) => null()
-      integer,  pointer :: ibuffer(:) => null()
+#ifdef ALLOC_SAVE_BUG
+      real(dp), dimension(:), allocatable :: buffer
+      integer,  dimension(:), allocatable :: ibuffer
+#else
+      real(dp), dimension(:), allocatable, save :: buffer
+      integer,  dimension(:), allocatable, save :: ibuffer
+#endif
 #endif
       
 
@@ -103,9 +110,6 @@ C External procedures
 ! Therefore, on all steps after the first, the 
 
 C Find file name
-#ifdef IO_TIMING
-      call timer( 'iodm', 1 )
-#endif
       if (ionode) then
         if (frstme) then
           fmto = fdf_boolean('DM.FormattedFiles', .false.)
@@ -144,7 +148,8 @@ C Find total number of basis functions over all Nodes
 #endif
 
 C Allocate local buffer array for globalised numd
-      call re_alloc( numdg, 1, nbasistot, 'numdg', 'iodm' )
+      allocate(numdg(nbasistot))
+      call memory('A','I',nbasistot,'iodm')
 
       if (task.eq.'read' .or. task.eq.'READ') then
         if (Node.eq.0) then
@@ -220,8 +225,10 @@ C Check size of first dimension of dm
 
 #ifdef MPI
 C Create buffer arrays for transfering density matrix between nodes and lists
-          call re_alloc( buffer, 1, ndmaxg, 'buffer', 'iodm' )
-          call re_alloc( ibuffer, 1, ndmaxg, 'ibuffer', 'iodm' )
+          allocate(buffer(ndmaxg))
+          call memory('A','D',ndmaxg,'iodm')
+          allocate(ibuffer(ndmaxg))
+          call memory('A','I',ndmaxg,'iodm')
 #endif
 
           do m = 1,nbasistot
@@ -261,7 +268,8 @@ C Create buffer arrays for transfering density matrix between nodes and lists
           enddo
 
 #ifdef MPI
-          call de_alloc( ibuffer, 'ibuffer', 'iodm' )
+          call memory('D','I',size(ibuffer),'iodm')
+          deallocate(ibuffer)
 #endif
 
           do is = 1,nspin
@@ -305,7 +313,8 @@ C Create buffer arrays for transfering density matrix between nodes and lists
 
 #ifdef MPI
 C Free buffer array
-          call de_alloc( buffer, 'buffer', 'iodm' )
+          call memory('D','D',size(buffer),'iodm')
+          deallocate(buffer)
 #endif
           if (Node.eq.0) then
             call io_close(unit1)
@@ -323,7 +332,6 @@ C Free buffer array
 
         if (Node.eq.0) then
           call io_assign(unit1)
-
           open( unit1, file=fnameo, form=formout, status='unknown' )
           rewind(unit1)
           if (fmto) then
@@ -372,8 +380,10 @@ C Write out numd array
             write(unit1) (numdg(m),m=1,nbasistot)
           endif
 #ifdef MPI
-          call re_alloc( buffer, 1, ndmaxg, 'buffer', 'iodm' )
-          call re_alloc( ibuffer, 1, ndmaxg, 'ibuffer', 'iodm' )
+          allocate(buffer(ndmaxg))
+          call memory('A','D',ndmaxg,'iodm')
+          allocate(ibuffer(ndmaxg))
+          call memory('A','I',ndmaxg,'iodm')
 #endif
         endif
 
@@ -418,7 +428,8 @@ C Write out listd array
 
 #ifdef MPI
         if (Node.eq.0) then
-          call de_alloc( ibuffer, 'ibuffer', 'iodm' )
+          call memory('D','I',size(ibuffer),'iodm')
+          deallocate(ibuffer)
         endif
 #endif
 
@@ -466,7 +477,8 @@ C Write density matrix
 
         if (Node.eq.0) then
 #ifdef MPI
-          call de_alloc( buffer, 'buffer', 'iodm' )
+          call memory('D','D',size(buffer),'iodm')
+          deallocate(buffer)
 #endif
           call io_close(unit1)
         endif
@@ -478,9 +490,7 @@ C Write density matrix
       endif
 
 C Deallocate local buffer array for globalised numd
-      call de_alloc( numdg, 'numdg', 'iodm' )
+      call memory('D','I',size(numdg),'iodm')
+      deallocate(numdg)
 
-#ifdef IO_TIMING
-      call timer( 'iodm', 2 )
-#endif
       end subroutine iodm

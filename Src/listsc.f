@@ -1,19 +1,20 @@
 ! 
-! Copyright (C) 1996-2016	The SIESTA group
-!  This file is distributed under the terms of the
-!  GNU General Public License: see COPYING in the top directory
-!  or http://www.gnu.org/copyleft/gpl.txt.
-! See Docs/Contributors.txt for a list of contributors.
+! This file is part of the SIESTA package.
+!
+! Copyright (c) Fundacion General Universidad Autonoma de Madrid:
+! E.Artacho, J.Gale, A.Garcia, J.Junquera, P.Ordejon, D.Sanchez-Portal
+! and J.M.Soler, 1996- .
+! 
+! Use of this software constitutes agreement with the full conditions
+! given in the SIESTA license, as signed by all legitimate users.
 !
       MODULE LISTSC_MODULE
 
-      implicit none
-
       private 
-      public :: LISTSC_INIT, LISTSC, LISTSC_RESET
+      public :: LISTSC_INIT, LISTSC
 
-      integer, pointer, save :: IND1(:) => null()
-      integer, pointer, save :: IND2(:) => null()
+      integer, pointer, save :: IND1(:), IND2(:)
+      logical, save          :: nullified_pointers = .false.
 
       CONTAINS
 
@@ -36,8 +37,15 @@ C *********************************************************************
 
       INTEGER I1, I2, I3, IC, J1, J2, J3, JC,
      .        KUO, LASTIO, LASTJO, NCELLS, NO
+      EXTERNAL MEMORY
+      
       NCELLS = NSC(1) * NSC(2) * NSC(3)
       NO = NUO * NCELLS
+
+      if (.not. nullified_pointers) then
+         nullify(ind1, ind2)
+         nullified_pointers = .true.
+      endif
 
       call re_alloc(IND1,1,8*NO,name="ind1",routine="listsc_init")
       call re_alloc(IND2,1,NO,name="ind2",routine="listsc_init")
@@ -77,18 +85,10 @@ C       IND2 inserts the single supercell into the extended supercell
       ENDDO
       ENDDO
       ENDDO
+
       END SUBROUTINE LISTSC_INIT
 
 
-      ! Reset the arrays allocated by LISTSC_INIT
-      subroutine LISTSC_RESET()
-
-      use alloc, only: de_alloc
-
-      call de_alloc(IND1,name="ind1",routine="listsc_init")
-      call de_alloc(IND2,name="ind2",routine="listsc_init")
-
-      end subroutine
 
       FUNCTION LISTSC( IO, IUO, JUO )
 C *********************************************************************

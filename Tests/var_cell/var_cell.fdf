@@ -1,7 +1,7 @@
 #
-# MgCO3 in primitive cell. SZ. Variable cell. Broyden Optim
+# MgCO3 in primitive cell. SZ. Variable cell. Harris. Broyden Optim
 #
-SystemName	MgCo3 R-3c -- SZ, 100 R -- variable cell at 100 Gpa
+SystemName	MgCo3 R-3c Harris -- SZ, 100 R -- variable cell at 100 Gpa
 SystemLabel	var_cell
 NumberOfSpecies		3
 NumberOfAtoms	       10
@@ -47,8 +47,11 @@ DM.UseSaveDM           T
 DM.MixingWeight        0.1         # New DM amount for next SCF cycle
 DM.Tolerance           1.d-3       # Tolerance in maximum difference
                                    # between input and output DM
+MaxSCFIterations       20
+
 WriteCoorStep      .true.
 WriteForces        .true.
+HarrisFunctional T
 
 MD.TypeOfRun         Broyden
 MD.Variable-Cell      T

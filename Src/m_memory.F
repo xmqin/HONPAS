@@ -1,9 +1,12 @@
 ! 
-! Copyright (C) 1996-2016	The SIESTA group
-!  This file is distributed under the terms of the
-!  GNU General Public License: see COPYING in the top directory
-!  or http://www.gnu.org/copyleft/gpl.txt.
-! See Docs/Contributors.txt for a list of contributors.
+! This file is part of the SIESTA package.
+!
+! Copyright (c) Fundacion General Universidad Autonoma de Madrid:
+! E.Artacho, J.Gale, A.Garcia, J.Junquera, P.Ordejon, D.Sanchez-Portal
+! and J.M.Soler, 1996- .
+! 
+! Use of this software constitutes agreement with the full conditions
+! given in the SIESTA license, as signed by all legitimate users.
 !
       module m_memory
 
@@ -33,7 +36,6 @@ C                   :                    'L' = logical
 C                   :                    'C' = single precision complex
 C                   :                    'Z' = double precision complex
 C                   :                    'S' = character data (we assume takes one word)
-C                   :                    'E' = double precision integer
 C integer NElements : number of array elements being 
 C                   : allocated/deallocated
 C character         :
@@ -118,9 +120,6 @@ C Add number of elements to appropriate pointer
       elseif (Type .eq. 'S' .or. Type .eq. 's') then
         WordsString = WordsString + Sign*NElements
         CurrentMemory = CurrentMemory + Sign*NElements*ByteSize(7)
-      elseif (Type .eq. 'E' .or. Type .eq. 'e') then
-        WordsLongInt  = WordsLongInt + Sign*NElements
-        CurrentMemory = CurrentMemory + Sign*NElements*ByteSize(8)
       endif
 
 C Check whether memory is greater than peak memory so far

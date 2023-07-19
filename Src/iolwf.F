@@ -1,9 +1,12 @@
 ! 
-! Copyright (C) 1996-2016	The SIESTA group
-!  This file is distributed under the terms of the
-!  GNU General Public License: see COPYING in the top directory
-!  or http://www.gnu.org/copyleft/gpl.txt.
-! See Docs/Contributors.txt for a list of contributors.
+! This file is part of the SIESTA package.
+!
+! Copyright (c) Fundacion General Universidad Autonoma de Madrid:
+! E.Artacho, J.Gale, A.Garcia, J.Junquera, P.Ordejon, D.Sanchez-Portal
+! and J.M.Soler, 1996- .
+! 
+! Use of this software constitutes agreement with the full conditions
+! given in the SIESTA license, as signed by all legitimate users.
 !
       subroutine iolwf( task, nbasis, nbasisCloc, nbasisloc, maxnc, 
      .                  found, nspin)
@@ -34,6 +37,7 @@ C
       use precision,     only : dp
       use parallel,      only : Node, Nodes
       use parallelsubs
+      use fdf
       use files,         only : slabel, label_length
       use on_main,       only : c, cold, numc, numcold, listc, listcold
       use on_main,       only : xi, g, hg
@@ -48,31 +52,40 @@ C
       implicit  none
 
       character task*(*)
+      character(len=label_length+4) :: paste
       logical   found
       integer   nbasis, nbasisCloc, nbasisloc, nspin, maxnc
-      external  chkdim, io_assign, io_close, timer
+      external  chkdim, io_assign, io_close, paste, timer, memory
 
 C Internal variables and arrays
-      character(len=label_length+4) :: fname
-      logical                       :: exist3
-      integer, pointer :: numcg(:) => null()
-      integer :: im, is, unit1, m, nb, ncmax, ns
+      character(len=label_length+4),       save :: fname
+      logical                                   :: exist3
+      logical,                             save :: frstme = .true.
+      integer,  dimension(:), allocatable, save :: numcg
+      integer   im, is, unit1, m, nb, ncmax, ns 
 #ifdef MPI
-      integer :: MPIerror, n, ndata, Request, Status(MPI_Status_Size)
-      real(dp), pointer :: bdens(:) => null()
-      integer, pointer :: idens(:) => null()
+      integer   MPIerror, n, ndata, Request, Status(MPI_Status_Size)
+      real(dp), dimension(:), allocatable, save :: bdens
+      integer,  dimension(:), allocatable, save :: idens
 #endif
 
-      call timer( 'iolwf', 1 )
+*     call timer( 'iolwf', 1 )
 
 #ifdef MPI
 C Allocate local buffer array
-      call re_alloc( idens, 1, nbasis, 'idens', 'iolwf' )
-      call re_alloc( bdens, 1, nbasis, 'bdens', 'iolwf' )
+      allocate(idens(nbasis))
+      call memory('A','I',nbasis,'iolwf')
+      allocate(bdens(nbasis))
+      call memory('A','D',nbasis,'iolwf')
 #endif
       
-C     Find file name
-      fname = trim(slabel) // '.LWF'
+C Find file name
+      if (frstme) then
+        if (Node.eq.0) then
+          fname = paste(slabel,'.LWF')
+        endif
+        frstme = .false.
+      endif
 
       if (task.eq.'read' .or. task.eq.'READ') then
         if (Node.eq.0) then
@@ -88,7 +101,7 @@ C Look now for new-format files
         if (exist3) then
 
 C Allocate local workspace
-          call re_alloc( numcg, 1, nbasis, 'numcg', 'iolwf' )
+          allocate(numcg(nbasis))
 
           if (Node.eq.0) then
             call io_assign(unit1)
@@ -233,16 +246,19 @@ C Receive data on IO node
           endif
 
 C Free local workspace
-          call de_alloc( numcg, 'numcg', 'iolwf' )
+          deallocate(numcg)
           found = .true.
+
         else
+
           found = .false.
+
         endif
 
       elseif (task.eq.'write' .or. task.eq.'WRITE') then
 
 C Allocate local workspace
-        call re_alloc( numcg, 1, nbasis, 'numcg', 'iolwf' )
+        allocate(numcg(nbasis))
 
         if (Node.eq.0) then
           call io_assign(unit1)
@@ -360,7 +376,7 @@ C Receive data on IO node
         endif
 
 C Free local workspace
-        call de_alloc( numcg, 'numcg', 'iolwf' )
+        deallocate(numcg)
 
       else
          call die('iolwf: incorrect task')
@@ -368,9 +384,11 @@ C Free local workspace
 
 #ifdef MPI
 C Free local buffer memory
-      call de_alloc( bdens, 'bdens', 'iolwf' )
-      call de_alloc( idens, 'idens', 'iolwf' )
+      call memory('D','D',size(bdens),'iolwf')
+      deallocate(bdens)
+      call memory('D','I',size(idens),'iolwf')
+      deallocate(idens)
 #endif
 
-      call timer( 'iolwf', 2 )
+*     call timer( 'iolwf', 2 )
       end

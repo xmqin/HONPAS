@@ -1,10 +1,3 @@
-! ---
-! Copyright (C) 1996-2016	The SIESTA group
-!  This file is distributed under the terms of the
-!  GNU General Public License: see COPYING in the top directory
-!  or http://www.gnu.org/copyleft/gpl.txt .
-! See Docs/Contributors.txt for a list of contributors.
-! ---
       module m_partial_charges
       public :: compute_partial_charges
       logical, public :: want_partial_charges = .false.
@@ -67,10 +60,11 @@ C
       integer ::   ia, ispin, ns, ispec, is
 
 #ifdef MPI
-      integer :: MPIerror
-      real(dp), dimension(:), allocatable :: qtmp
+      integer
+     .  MPIerror
 #endif
-      real(dp), dimension(:), allocatable :: q
+
+      real(dp), dimension(:), allocatable       :: q, qtmp
 
       character(len=20) ::  atm_label
 
@@ -81,7 +75,7 @@ C General initialisation
 C ----------------------------------------------------------------------
 
       if (nspin .eq. 4) then
-        call message("WARNING","Hirshfeld and Voronoi populations" //
+        call message("Hirshfeld and Voronoi populations" //
      $               " not implemented for non-collinear spin")
         return
       endif
@@ -89,10 +83,8 @@ C ----------------------------------------------------------------------
 C ----------------------------------------------------------------------
       allocate(q(na_u))
       call memory('A','D',na_u,'hirsh')
-#ifdef MPI
       allocate(qtmp(na_u))
       call memory('A','D',na_u,'hirsh')
-#endif
 
 C ----------------------------------------------------------------------
 C Find Hirshfeld charges
@@ -115,8 +107,8 @@ C ----------------------------------------------------------------------
            do ia = 1,na_u
               is = isa(ia)
               atm_label = labelfis(is)
-              write(6,'(i6,2x,f7.3,2x,a20)') ia,
-     .             zvalfis(is)-q(ia)*dvol, atm_label
+              write(6,'(i6,2x,f7.3,2x,a20)'), ia,
+     $             zvalfis(is)-q(ia)*dvol, atm_label
            enddo
         endif
       endif
@@ -141,16 +133,14 @@ C ----------------------------------------------------------------------
            do ia = 1,na_u
               is = isa(ia)
               atm_label = labelfis(is)
-              write(6,'(i6,2x,f7.3,2x,a20)') ia,
-     .             -q(ia)*dvol, atm_label
+              write(6,'(i6,2x,f7.3,2x,a20)'), ia,
+     $             -q(ia)*dvol, atm_label
            enddo
         endif
       endif
 
-#ifdef MPI
       call memory('D','D',size(qtmp),'hirsh')
       deallocate(qtmp)
-#endif
       call memory('D','D',size(q),'hirsh')
       deallocate(q)
 

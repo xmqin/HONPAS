@@ -1,0 +1,25 @@
+Makefile fragments to compile SIESTA on different architectures and compilers.
+
+* Look for a .make file in this directory that might be appropriate
+  for your particular configuration. If there is none, write your own
+  using the existing files, and DOCUMENTED-TEMPLATE.make as guides.
+  Note that some of these files are retained for historical purposes,
+  and they might be out of date. Some files refer to computers of
+  special interest to developers, and the locations of installed
+  libraries might differ from your own.
+
+* Copy or link the file to the build directory (Obj in the top level
+  by default), renaming it as "arch.make".
+
+THINGS TO WATCH OUT FOR:
+
+* If you have trouble compiling .F90 files, it might be that your compiler
+does not recognize the .F90 suffix as a "in need of preprocessing, free
+form, source file". Then you need to do the preprocessing *before* invoking
+the compiler. See example in DOCUMENTED-TEMPLATE.make.
+
+* The Portland Group's pgf9X compiler (several versions) produces bad
+code when compiling atom.f and electrostatic.f with optimization. A
+special set of rules has been inserted in some files so that no
+optimization is used. You might need to consider it for your own
+arch.make. See example in DOCUMENTED-TEMPLATE.make.

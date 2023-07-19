@@ -1,9 +1,12 @@
 # 
-# Copyright (C) 1996-2016	The SIESTA group
-#  This file is distributed under the terms of the
-#  GNU General Public License: see COPYING in the top directory
-#  or http://www.gnu.org/copyleft/gpl.txt.
-# See Docs/Contributors.txt for a list of contributors.
+# This file is part of the SIESTA package.
+#
+# Copyright (c) Fundacion General Universidad Autonoma de Madrid:
+# E.Artacho, J.Gale, A.Garcia, J.Junquera, P.Ordejon, D.Sanchez-Portal
+# and J.M.Soler, 1996- .
+# 
+# Use of this software constitutes agreement with the full conditions
+# given in the SIESTA license, as signed by all legitimate users.
 #
 #
 # Makefile for DM to DM-netCDF converter
@@ -20,8 +23,8 @@
 .SUFFIXES: 
 .SUFFIXES: .f .F .o .a  .f90 .F90
 #
-default: dm2cdf cdf2dm dmbs2dm dmUnblock
-all: dm2cdf cdf2dm dmfilter dmbs2dm dmUnblock dm_noncol_sign_flip4
+default: dm2cdf cdf2dm
+all: dm2cdf cdf2dm dmfilter
 #
 OBJDIR=Obj
 include ../../$(OBJDIR)/arch.make
@@ -37,16 +40,6 @@ include ../../$(OBJDIR)/arch.make
 #
 INCFLAGS:= $(NETCDF_INCFLAGS) $(INCFLAGS)
 #
-OPT_OBJS=m_getopts.o f2kcli.o 
-#
-dmbs2dm.o: $(OPT_OBJS)
-dmbs2dm: dmbs2dm.o $(OPT_OBJS)
-	$(FC) $(LDFLAGS) -o $@ dmbs2dm.o $(OPT_OBJS)
-#
-dmUnblock.o: $(OPT_OBJS)
-dmUnblock: dmUnblock.o $(OPT_OBJS)
-	$(FC) $(LDFLAGS) -o $@ dmUnblock.o $(OPT_OBJS)
-#
 dm2cdf: dm2cdf.o
 	$(FC) $(LDFLAGS) -o $@ dm2cdf.o  $(NETCDF_LIBS)
 #
@@ -56,15 +49,9 @@ cdf2dm: cdf2dm.o
 dmfilter: dmfilter.o
 	$(FC) $(LDFLAGS) -o $@ dmfilter.o
 #
-dm_noncol_sign_flip4: dm_noncol_sign_flip4.o
-	$(FC) $(LDFLAGS) -o $@ dm_noncol_sign_flip4.o
-#
 clean: 
-	rm -f *.o dm2cdf cdf2dm dmfilter dmbs2dm dmUnblock *.o *.*d
-	rm -f dm_noncol_sign_flip4
+	rm -f *.o dm2cdf cdf2dm dmfilter *.o *.*d
 #
-m_getopts.o: f2kcli.o
-
 
 
 

@@ -1,0 +1,67 @@
+# 
+# This file is part of the SIESTA package.
+#
+# Copyright (c) Fundacion General Universidad Autonoma de Madrid:
+# E.Artacho, J.Gale, A.Garcia, J.Junquera, P.Ordejon, D.Sanchez-Portal
+# and J.M.Soler, 1996- .
+# 
+# Use of this software constitutes agreement with the full conditions
+# given in the SIESTA license, as signed by all legitimate users.
+#
+.SUFFIXES:
+.SUFFIXES: .f .F .o .a .f90 .F90
+
+SIESTA_ARCH=@SIESTA_ARCH@
+
+FPP=@FPP@
+FPP_OUTPUT=@FPP_OUTPUT@
+FC=@FC@
+RANLIB=@RANLIB@
+
+SYS=@SYS@
+
+SP_KIND=@SP_KIND@
+DP_KIND=@DP_KIND@
+KINDS=$(SP_KIND) $(DP_KIND)
+
+FFLAGS=@FCFLAGS@
+FPPFLAGS=@FPPFLAGS@
+LDFLAGS=@LDFLAGS@
+
+ARFLAGS_EXTRA=
+
+FCFLAGS_fixed_f=@FCFLAGS_fixed_f@
+FCFLAGS_free_f90=@FCFLAGS_free_f90@
+FPPFLAGS_fixed_F=@FPPFLAGS_fixed_F@
+FPPFLAGS_free_F90=@FPPFLAGS_free_F90@
+
+BLAS_LIBS=@BLAS_LIBS@
+LAPACK_LIBS=@LAPACK_LIBS@
+BLACS_LIBS=@BLACS_LIBS@
+SCALAPACK_LIBS=@SCALAPACK_LIBS@
+
+COMP_LIBS=@COMP_LIBS@
+
+NETCDF_LIBS=@NETCDF_LIBS@
+NETCDF_INTERFACE=@NETCDF_INTERFACE@
+
+LIBS=$(SCALAPACK_LIBS) $(BLACS_LIBS) $(LAPACK_LIBS) $(BLAS_LIBS) $(NETCDF_LIBS)
+
+#SIESTA needs an F90 interface to MPI
+#This will give you SIESTA's own implementation
+#If your compiler vendor offers an alternative, you may change
+#to it here.
+MPI_INTERFACE=@MPI_INTERFACE@
+MPI_INCLUDE=@MPI_INCLUDE@
+
+#Dependency rules are created by autoconf according to whether
+#discrete preprocessing is necessary or not.
+.F.o:
+	@F_RULE@
+.F90.o:
+	@F90_RULE@
+.f.o:
+	$(FC) -c $(FFLAGS) $(INCFLAGS) $(FCFLAGS_fixed_f)  $<
+.f90.o:
+	$(FC) -c $(FFLAGS) $(INCFLAGS) $(FCFLAGS_free_f90)  $<
+

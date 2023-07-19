@@ -1,9 +1,12 @@
 ! 
-! Copyright (C) 1996-2016	The SIESTA group
-!  This file is distributed under the terms of the
-!  GNU General Public License: see COPYING in the top directory
-!  or http://www.gnu.org/copyleft/gpl.txt.
-! See Docs/Contributors.txt for a list of contributors.
+! This file is part of the SIESTA package.
+!
+! Copyright (c) Fundacion General Universidad Autonoma de Madrid:
+! E.Artacho, J.Gale, A.Garcia, J.Junquera, P.Ordejon, D.Sanchez-Portal
+! and J.M.Soler, 1996- .
+! 
+! Use of this software constitutes agreement with the full conditions
+! given in the SIESTA license, as signed by all legitimate users.
 !
       subroutine iohs( task, gamma, no_u, no_s, nspin, indxuo, maxnh, 
      .                 numh, listhptr, listh, H, S, qtot, temp, xij)
@@ -52,9 +55,9 @@ C
       use siesta_geom,  only : na_u, isa
       use atmfuncs,     only : nofis, labelfis, zvalfis
       use atmfuncs,     only : cnfigfio, lofio, zetafio
+      use fdf
       use files,        only : slabel, label_length
       use sys,          only : die
-      use alloc,        only : re_alloc, de_alloc
 #ifdef MPI
       use mpi_siesta
 #endif
@@ -62,36 +65,36 @@ C
       implicit          none
 
       character         task*(*)
+      character(len=label_length+3) :: paste
       logical           gamma
       integer           maxnh, no_u, no_s, nspin
       integer           indxuo(no_s), listh(maxnh), numh(*), listhptr(*)
       real(dp)          H(maxnh,nspin), S(maxnh),
      .                  qtot, temp, xij(3,maxnh)
 
-      external          io_assign, io_close
+      external          io_assign, io_close, paste
 
 C Internal variables and arrays
       character(len=label_length+3) :: fname
       integer    im, is, iu, ju, k, mnh, ns, ia, io
       integer    ih,hl,nuo,maxnhtot,maxhg
-      integer, pointer :: numhg(:)
+      integer, dimension(:), allocatable :: numhg
 #ifdef MPI
       integer    MPIerror, Request, Status(MPI_Status_Size), BNode
-      integer,  pointer :: ibuffer(:)
-      real(dp), pointer :: buffer(:), buffer2(:,:)
+      integer,  dimension(:),   allocatable :: ibuffer
+      real(dp), dimension(:),   allocatable :: buffer
+      real(dp), dimension(:,:), allocatable :: buffer2
 #endif
       logical    baddim, found, frstme, gammaonfile, write_xijk
       save       frstme, fname
       data frstme /.true./
+
 C Find name of file
       if (frstme) then
-        fname = trim(slabel)//'.HS'
+        fname = paste( slabel, '.HS' )
         frstme = .false.
       endif
 
-#ifdef MPI
-      nullify( numhg, ibuffer, buffer, buffer2 )
-#endif
 C Find total numbers over all Nodes
 #ifdef MPI
       call MPI_AllReduce(maxnh,maxnhtot,1,MPI_integer,MPI_sum,
@@ -170,7 +173,8 @@ C Read indxuo
           endif
 
 C Allocate local array for global numh
-          call re_alloc( numhg, 1, no_u, 'numhg', 'iohs' )
+          allocate(numhg(no_u))
+          call memory('A','I',no_u,'iohs')
 
 C Read numh and send to appropriate Node
           if (Node.eq.0) then
@@ -200,8 +204,10 @@ C Create listhptr
 
 #ifdef MPI
 C Create buffer arrays for transfering density matrix between nodes and lists
-          call re_alloc( buffer, 1, maxhg, 'buffer', 'iohs' )
-          call re_alloc( ibuffer, 1, maxhg, 'ibuffer', 'iohs' )
+          allocate(buffer(maxhg))
+          call memory('A','D',maxhg,'iohs')
+          allocate(ibuffer(maxhg))
+          call memory('A','I',maxhg,'iohs')
 #endif
 
           do ih = 1,no_u
@@ -236,7 +242,8 @@ C Create buffer arrays for transfering density matrix between nodes and lists
           enddo
 
 #ifdef MPI
-          call de_alloc( ibuffer, 'ibuffer', 'iohs' )
+          call memory('D','I',size(ibuffer),'iohs')
+          deallocate(ibuffer)
 #endif
 
 C Read Hamiltonian
@@ -309,7 +316,8 @@ C Read Overlap matrix
 
 #ifdef MPI
 C Free buffer array
-          call de_alloc( buffer, 'buffer', 'iohs' )
+          call memory('D','D',size(buffer),'iohs')
+          deallocate(buffer)
 #endif
           
           if (Node.eq.0) then
@@ -325,7 +333,8 @@ C Free buffer array
           if (.not.gamma) then
 #ifdef MPI
 C Allocate buffer array
-            call re_alloc( buffer2, 1, 3, 1, maxhg, 'buffer2', 'iohs' )
+            allocate(buffer2(3,maxhg))
+            call memory('A','D',3*maxhg,'iohs')
 #endif
 C Read interorbital vectors for K point phasing
             do ih = 1,no_u
@@ -362,12 +371,14 @@ C Read interorbital vectors for K point phasing
             enddo
 #ifdef MPI
 C Free buffer array
-            call de_alloc( buffer2, 'buffer2', 'iohs' )
+            call memory('D','D',size(buffer2),'iohs')
+            deallocate(buffer2)
 #endif
           endif
 
 C Deallocate local array for global numh
-          call de_alloc( numhg, 'numhg', 'iohs' )
+          call memory('D','I',size(numhg),'iohs')
+          deallocate(numhg)
 
 C Close file
           if (Node .eq. 0) then
@@ -388,7 +399,7 @@ C Close file
         if (Node.eq.0) then
 C Open file
           call io_assign( iu )
-          open( iu, file=fname, form='unformatted', status='unknown' )
+          open( iu, file=fname, form='unformatted', status='unknown' )      
 
 C Write overall data
           write(iu) no_u, no_s, nspin, maxnhtot
@@ -397,7 +408,8 @@ C Read logical
           write(iu) gamma
 
 C Allocate local array for global numh
-          call re_alloc( numhg, 1, no_u, 'numhg', 'iohs' )
+          allocate(numhg(no_u))
+          call memory('A','I',no_u,'iohs')
 
 C Write out indxuo
           if (.not.gamma) then
@@ -443,8 +455,10 @@ C Write numh
             write(iu) numhg(ih)
           enddo
 #ifdef MPI
-          call re_alloc( buffer, 1, maxhg, 'buffer', 'iohs' )
-          call re_alloc( ibuffer, 1, maxhg, 'ibuffer', 'iohs' )
+          allocate(buffer(maxhg))
+          call memory('A','D',maxhg,'iohs')
+          allocate(ibuffer(maxhg))
+          call memory('A','I',maxhg,'iohs')
 #endif
         endif
 
@@ -484,7 +498,8 @@ C Write listh
 
 #ifdef MPI
         if (Node.eq.0) then
-          call de_alloc( ibuffer, 'ibuffer', 'iohs' )
+          call memory('D','I',size(ibuffer),'iohs')
+          deallocate(ibuffer)
         endif
 #endif
 
@@ -564,7 +579,8 @@ C Write Overlap matrix
 #ifdef MPI
           if (Node .eq. 0) then
 C Free buffer array
-            call de_alloc( buffer, 'buffer', 'iohs' )
+             call memory('D','D',size(buffer),'iohs')
+             deallocate(buffer)
           endif
 #endif
 
@@ -579,7 +595,8 @@ C Free buffer array
 #ifdef MPI
 C Allocate buffer array
           if (Node .eq. 0) then
-            call re_alloc( buffer2, 1, 3, 1, maxhg, 'buffer2', 'iohs' )
+             allocate(buffer2(3,maxhg))
+             call memory('A','D',3*maxhg,'iohs')
           endif
 #endif
           do ih = 1,no_u
@@ -619,7 +636,8 @@ C Allocate buffer array
 #ifdef MPI
           if (Node .eq. 0) then
 C Free buffer array
-            call de_alloc( buffer2, 'buffer2', 'iohs' )
+             call memory('D','D',size(buffer2),'iohs')
+             deallocate(buffer2)
           endif
 #endif
         endif   ! write_xijk
@@ -641,7 +659,8 @@ C Free buffer array
            write(iu) (iaorb(io), iphorb(io), io=1,no_u)
 
 C Deallocate local array for global numh
-          call de_alloc( numhg, 'numhg', 'iohs' )
+          call memory('D','I',size(numhg),'iohs')
+          deallocate(numhg)
 C Close file
           call io_close( iu )
         endif

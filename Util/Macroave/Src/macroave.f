@@ -1,9 +1,12 @@
 ! 
-! Copyright (C) 1996-2016	The SIESTA group
-!  This file is distributed under the terms of the
-!  GNU General Public License: see COPYING in the top directory
-!  or http://www.gnu.org/copyleft/gpl.txt.
-! See Docs/Contributors.txt for a list of contributors.
+! This file is part of the SIESTA package.
+!
+! Copyright (c) Fundacion General Universidad Autonoma de Madrid:
+! E.Artacho, J.Gale, A.Garcia, J.Junquera, P.Ordejon, D.Sanchez-Portal
+! and J.M.Soler, 1996- .
+! 
+! Use of this software constitutes agreement with the full conditions
+! given in the SIESTA license, as signed by all legitimate users.
 !
 
       PROGRAM MACROAVE
@@ -29,8 +32,6 @@ C **********************************************************************
 C Modules --------------------------------------------------------------
       USE DEFS_BASIS
       USE DEFS_COMMON
-      use interpolation, only: spline, splint
-      use m_fft_gpfa,only : fft_gpfa_ez
 
       IMPLICIT NONE
 
@@ -60,13 +61,11 @@ C ********* VARIABLES **************************************************
 
       CHARACTER
      .   SNAME*15, INPDATA*15, FNAMERHO*24, 
-     .   FNAMEPLAVE*26, FNAMEDELV*25
+     .   FNAMEPLAVE*26, FNAMEDELV*25, PASTE*26
 
       LOGICAL
      .  SIESTA, ABINIT, POTENTIAL, CHARGE, TOTALCHARGE,
-     .  FOUND
-
-      logical :: linear =.false., splin=.false., poly=.false.
+     .  FOUND, LINEAR, SPLIN
 
       INTEGER
      .   NATOMS, NSPIN, NSM, MESH(3), NCONV, NPOINTS, NPT, 
@@ -110,7 +109,7 @@ C ABINIT variables
 C end ABINIT variables
 
       EXTERNAL
-     .   IO_ASSIGN, IO_CLOSE, THETAFT, VOLCEL 
+     .   IO_ASSIGN, IO_CLOSE, PASTE, FOUR1, THETAFT, VOLCEL 
 
 C *********************************************************************
 C CHARACTER CODE       : First principles-code used to generate the
@@ -232,28 +231,24 @@ C from the electrostatic potential? ------------------------------------
 
 C What kind of interpolation will we use to get the charge density/
 C potential in a FFT grid? ---------------------------------------------
-          
       IF ( INTERP .EQ. 'linear' .OR. INTERP .EQ. 'Linear' .OR.
      .     INTERP .EQ. 'LINEAR' ) THEN
-         LINEAR = .true.
+             LINEAR = .TRUE.
+             SPLIN  = .FALSE.
       ELSE IF ( INTERP .EQ. 'spline' .OR. INTERP .EQ. 'Spline' .OR.
      .          INTERP .EQ. 'SPLINE' ) THEN
-         SPLIN = .true.
-      ! New option 'poly' with a cleaner implmentation
-      ! It can replace 'linear' below, or provide a new order
-      ! (interface to be decided)
-      ELSE IF ( INTERP .EQ. 'poly') THEN
-         POLY = .true.
+             LINEAR = .FALSE.
+             SPLIN  = .TRUE.
       ENDIF
 
 C Reading charge density from a file -----------------------------------
       IF ( SIESTA ) THEN
          IF (POTENTIAL) THEN
-           FNAMERHO = TRIM(SNAME)//'.VH'
+           FNAMERHO = PASTE(SNAME,'.VH')
          ELSEIF (CHARGE) THEN 
-           FNAMERHO = TRIM(SNAME)//'.RHO'
+           FNAMERHO = PASTE(SNAME,'.RHO')
          ELSEIF (TOTALCHARGE) THEN 
-           FNAMERHO = TRIM(SNAME)//'.TOCH'
+           FNAMERHO = PASTE(SNAME,'.TOCH')
          ENDIF
       ELSE IF ( ABINIT ) THEN
          FNAMERHO = SNAME
@@ -400,26 +395,13 @@ C in fft grid, interpolating the planar average calculated before ------
                 DATA(II+1) = 0.D0
                 GOTO 20
              ENDIF
-          ENDDO
-          ! X > Z(NPOINTS)
+          ENDDO         
           DATA(II)=RHOZ(NPOINTS) +
      .             (X-Z(NPOINTS))*(RHOZ(1)-RHOZ(NPOINTS))/
      .             (Z(NPOINTS)-Z(NPOINTS-1))
           DATA(II+1) = 0.D0
  20       CONTINUE
         ENDDO
-      ELSE IF (POLY) THEN
-        Z(NPOINTS+1)    = L
-        RHOZ(NPOINTS+1) = RHOZ(1)
-        I = 0
-        do II = 1,2*N-1,2
-           I = I + 1
-           X = (I-1)*L/DBLE(N)
-           ! quadratic polynomial for now
-           ! interface to be decided
-           call dpnint1(2,z,rhoz,npoints+1,x,data(ii),.true.)
-           data(ii+1) = 0.d0
-        enddo
       ENDIF
 
 C  Renormalize the charge density ---------------------------------------
@@ -446,7 +428,7 @@ C ...
  
 C Print planar average of the electrostatic potential or ---------------
 C the electronic charge density ----------------------------------------
-      FNAMEPLAVE = TRIM(SNAME)//'.PAV'
+      FNAMEPLAVE = PASTE(SNAME,'.PAV')
       CALL IO_ASSIGN(UNIT3)
         OPEN(UNIT=UNIT3, FILE=FNAMEPLAVE,STATUS='UNKNOWN') 
           I = 0
@@ -464,14 +446,14 @@ C ...
 
 C Calculate fourier transform of the electrostatic potential or 
 C the electronic density -----------------------------------------------
-      CALL fft_gpfa_ez(DATA,N,1)       
+      CALL FOUR1(DATA,N,1)       
 C ...
 
 C Calculate macroscopic average of the electrostatic potential or the
 C electronic charge density taking the convolution with two step functions.
 C In Fourier space, it is a product of the Fourier transform components -
 C The decompositions in the sum over II is due to the spetial way in which
-C the data are stored in the fft subroutine ( see Fig. 12.2.2, in 
+C the data are stored in subroutine four1( see Fig. 12.2.2, in 
 C 'Numerical Recipes, The Art of Scientific Computing' 
 C by W.H. Press, S.A. Teukolsky, W.T. Veterling and B.P. Flannery, 
 C Cambridge U.P. 1987 and 1992.
@@ -542,7 +524,7 @@ C ...
 
 C Transform average electronic density and potential to real space -----
 C The decompositions in the sum over J is due to the spetial way in which
-C the data are stored in the fft subroutine ( see Fig. 12.2.2, in 
+C the data are stored in subroutine four1( see Fig. 12.2.2, in 
 C 'Numerical Recipes, The Art of Scientific Computing' 
 C by W.H. Press, S.A. Teukolsky, W.T. Veterling and B.P. Flannery, 
 C Cambridge U.P. 1987 and 1992.
@@ -585,7 +567,7 @@ c          ENDIF
 C ...
 
 C Print averaged electronic charge density and potential ---------------
-      FNAMEDELV = TRIM(SNAME)//'.MAV'
+      FNAMEDELV = PASTE( SNAME,'.MAV')
       CALL IO_ASSIGN(UNIT4)
         OPEN(UNIT=UNIT4, FILE=FNAMEDELV, STATUS='UNKNOWN') 
           DO I = 1, N
@@ -600,7 +582,7 @@ C ...
 
 C Print electrostatic potential ----------------------------------------
 c      IF (POISON) THEN
-c        FNAMEVEC = TRIM(SNAME)//'.VEC'
+c        FNAMEVEC = PASTE( SNAME,'.VEC')
 c        CALL IO_ASSIGN(UNIT5)
 c        OPEN(UNIT=UNIT5, FILE=FNAMEVEC, STATUS='UNKNOWN')
 c        DO I = 1, N

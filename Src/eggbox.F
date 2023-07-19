@@ -1,9 +1,12 @@
 ! 
-! Copyright (C) 1996-2016	The SIESTA group
-!  This file is distributed under the terms of the
-!  GNU General Public License: see COPYING in the top directory
-!  or http://www.gnu.org/copyleft/gpl.txt.
-! See Docs/Contributors.txt for a list of contributors.
+! This file is part of the SIESTA package.
+!
+! Copyright (c) Fundacion General Universidad Autonoma de Madrid:
+! E.Artacho, J.Gale, A.Garcia, J.Junquera, P.Ordejon, D.Sanchez-Portal
+! and J.M.Soler, 1996- .
+! 
+! Use of this software constitutes agreement with the full conditions
+! given in the SIESTA license, as signed by all legitimate users.
 !
       subroutine eggbox(task,cell,na,isa,ntm,xa,fa,Etot,eggbox_block)
 
@@ -34,6 +37,10 @@ C  Modules
       use precision
       use parallel,    only : Node
       use fdf
+      use parsing
+#ifdef MPI
+      use mpi_siesta
+#endif
 
 C External
 
@@ -60,21 +67,21 @@ C Internal variables
 
       logical, save :: frstme = .true.
 
-      integer  ia, ix, i, a, b, c
-      real(dp) pi, xac(3), k(3), xa_frac(3,na), 
+      integer  ni, nn, nr, nv, integers(maxw), lc(0:maxw),
+     .     ia, ix, i, iu, a, b, c
+      real(dp) reals(maxw), values(maxw),
+     .     pi, xac(3), k(3), xa_frac(3,na), 
      .     celli(3,3), f(3,na), E, x, y, z, 
      .     fxyz(3,na), eV, escale,
      .     vreal(0:maxshell,0:maxshell,0:maxshell,maxispe)
-
-      type(block_fdf)            :: bfdf
-      type(parsed_line), pointer :: pline
+      character         line*200, names*80, name1*10
+#ifdef MPI
+      integer  MPIerror, nvreal
+#endif
 
       save vreal, escale, pi
 
 c --------------------------------------------------------------
-#ifdef DEBUG
-      call write_debug( '    PRE eggbox' )
-#endif
 
       if (frstme) then
          frstme = .false.
@@ -93,30 +100,44 @@ C Initalise vreal
          enddo
          
 C Read cooeficents from fdf
-         eggbox_block = fdf_block('EggBoxRemove',bfdf)
+         if (Node.eq.0) then
+           eggbox_block = fdf_block('EggBoxRemove',iu)
+         endif
+#ifdef MPI
+         call MPI_Bcast(eggbox_block,1,MPI_logical,0,MPI_Comm_World,
+     .                  MPIerror)
+#endif
          if (eggbox_block) then
            if (Node.eq.0) then
              write(6,'(/a)') 'eggbox: Reading %block EggBoxRemove'
-           endif
-           i = 1
-           do while (fdf_bline(bfdf,pline) .and. (i .le. maxl))
+             do i=1,maxl
+               read(iu,'(a)') line
+               call parse(line, nn, lc, names, nv, values, ni, integers,
+     .                    nr, reals)
+C Check if block has finished
+               name1 = names(lc(0)+1:lc(1))
+               if (name1 .eq. '%end' .or.name1 .eq. '%endblock') goto 30
 C vreal is set out as vreal(kx,ky,kz,species)
-             vreal(fdf_bintegers(pline,2),fdf_bintegers(pline,3),
-     .             fdf_bintegers(pline,4),fdf_bintegers(pline,1)) =
-     .             fdf_breals(pline,1)
-             i = i + 1
-           enddo
- 30        continue
+               vreal(integers(2),integers(3),integers(4),
+     .              integers(1))=reals(1)
+             enddo
+ 30          continue
 
 C Get the scale (default 1 eV)
-           escale = fdf_physical('EggBoxScale', 1.d0, 'eV')
-           escale = escale/eV
+             escale = fdf_physical('EggBoxScale', 1.d0, 'eV')
+             escale = escale/eV
+           endif
 
+C Pass data to other nodes
+#ifdef MPI
+           nvreal = maxispe*(maxshell+1)**3
+           call MPI_Bcast(vreal(0,0,0,1),nvreal,MPI_double_precision,
+     .                    0,MPI_Comm_World,MPIerror)
+           call MPI_Bcast(escale,1,MPI_double_precision,0,
+     .                    MPI_Comm_World,MPIerror)
+#endif
          else
 c          write(6,'a') "eggbox: The eggbox effect will not be removed"
-#ifdef DEBUG
-           call write_debug( '    POS eggbox' )
-#endif
            return
          endif
       endif
@@ -204,8 +225,5 @@ C Remove the eggbox energy
       if (task.eq.'energy') then
          Etot=Etot-E*escale
       endif
-
-#ifdef DEBUG
-      call write_debug( '    POS eggbox' )
-#endif
+         
       end subroutine eggbox

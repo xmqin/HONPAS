@@ -1,9 +1,12 @@
 ! 
-! Copyright (C) 1996-2016	The SIESTA group
-!  This file is distributed under the terms of the
-!  GNU General Public License: see COPYING in the top directory
-!  or http://www.gnu.org/copyleft/gpl.txt.
-! See Docs/Contributors.txt for a list of contributors.
+! This file is part of the SIESTA package.
+!
+! Copyright (c) Fundacion General Universidad Autonoma de Madrid:
+! E.Artacho, J.Gale, A.Garcia, J.Junquera, P.Ordejon, D.Sanchez-Portal
+! and J.M.Soler, 1996- .
+! 
+! Use of this software constitutes agreement with the full conditions
+! given in the SIESTA license, as signed by all legitimate users.
 !
       subroutine kgrid( cell, kscell, displ, nk, points, weight )
 c **********************************************************************
@@ -35,6 +38,9 @@ C
       use precision
       use parallel,     only : Node
       use fdf
+#ifdef MPI
+      use mpi_siesta
+#endif
 
       implicit          none
 
@@ -45,25 +51,29 @@ C
 c ----------------------------------------------------------------------
 
 c Internal variables
-
       character(len=24), save        :: accum
 
-      integer           i, i1, i2, i3, igmax(3), igmin(3),
+      integer           i, i1, i2, i3, igmax(3), igmin(3), iu,
      .                  ir, ik, ix, j,
      .                  kdsc(3,3), maux(3,3,2), ml(3,3), mr(3,3),
      .                  ng(3), ni, nkr(3), nktot, proj(3,3)
+#ifdef MPI
+      integer           MPIerror
+#endif
       real(dp)          d(3), dkg(3), dkx(3), dscell(3,3),
      .                  gridk(3,3), gscell(3,3), pi,
      .                  scell(3,3), tiny, w1, wtot
-
-      type(block_fdf) :: bfdf
-
       external          idiag, reclat
       logical           spiral
       parameter (tiny   = 1.d-12)
 
 C Find out if there is spiral arrangement of spins
-      spiral = fdf_isblock('SpinSpiral')
+      if (Node.eq.0) then
+        spiral = fdf_block('SpinSpiral',iu)
+      endif
+#ifdef MPI
+      call MPI_Bcast(spiral,1,MPI_logical,0,MPI_Comm_World,MPIerror)
+#endif
 
 C Find total number of points (determinant of kscell)
       nktot = abs( kscell(1,1) * kscell(2,2) * kscell(3,3) +

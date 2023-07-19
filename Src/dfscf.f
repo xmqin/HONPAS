@@ -1,16 +1,13 @@
 ! 
-! Copyright (C) 1996-2016	The SIESTA group
-!  This file is distributed under the terms of the
-!  GNU General Public License: see COPYING in the top directory
-!  or http://www.gnu.org/copyleft/gpl.txt.
-! See Docs/Contributors.txt for a list of contributors.
+! This file is part of the SIESTA package.
 !
-      module m_dfscf
-   
-      public :: dfscf
-    
-      contains
-
+! Copyright (c) Fundacion General Universidad Autonoma de Madrid:
+! E.Artacho, J.Gale, A.Garcia, J.Junquera, P.Ordejon, D.Sanchez-Portal
+! and J.M.Soler, 1996- .
+! 
+! Use of this software constitutes agreement with the full conditions
+! given in the SIESTA license, as signed by all legitimate users.
+!
       subroutine dfscf( ifa, istr, na, no, nuo, nuotot, np, nspin,
      .                  indxua, isa, iaorb, iphorb,
      .                  maxnd, numd, listdptr, listd, Dscf, Datm,
@@ -28,9 +25,7 @@ C integer no              : Number of basis orbitals
 C integer nuo             : Number of orbitals in unit cell (local)
 C integer nuotot          : Number of orbitals in unit cell (global)
 C integer np              : Number of mesh points (total is nsp*np)
-C integer nspin           : spin%Grid (i.e., min(nspin,4))
-C                           nspin=1 => Unpolarized, nspin=2 => polarized
-C                           nspin=4 => Noncollinear spin/SOC
+C integer nspin           : Number of spin components
 C integer indxua(na)      : Index of equivalent atom in unit cell
 C integer isa(na)         : Species index of each atom
 C integer iaorb(no)       : Atom to which orbitals belong
@@ -39,8 +34,8 @@ C integer maxnd           : First dimension of Dscf
 C integer numd(nuo)       : Number of nonzero elemts in each row of Dscf
 C integer listdptr(nuo)   : Pointer to start of row in listd
 C integer listd(maxnd)    : List of nonzero elements of Dscf
-C real*8  Dscf(maxnd,*)   : Value of nonzero elemens of density matrix
-C                         : It is used in "hermitified" here
+C real*8  Dscf(maxnd,nspin): Value of nonzero elemens of density matrix
+C real*8  Datm(nuotot)    : Occupations of basis orbitals in free atom
 C real*4  Vscf(nsp,np,nspin): Value of SCF potential at the mesh points
 C real*4  Vatm(nsp,np)    : Value of Harris potential (Hartree potential
 C                           of sum of atomic desities) at mesh points
@@ -54,37 +49,33 @@ C *********************************************************************
 C    6  10        20        30        40        50        60        7072
 
 C  Modules
-      use precision,     only: dp, grid_p
-      use atmfuncs,      only: rcut, all_phi
-      use atm_types,     only: nsmax=>nspecies
-      use atomlist,      only: indxuo
+      use precision, only: dp, grid_p
+      use atmfuncs, only: rcut, all_phi
+      use atm_types, only: nsmax=>nspecies
+      use atomlist, only: indxuo
       use listsc_module, only: listsc
-      use mesh,          only: dxa, nsp, xdop, xdsp
-      use meshphi,       only: endpht, lstpht, listp2
-      use meshdscf,      only: matrixOtoM
-      use meshdscf,      only: DscfL, nrowsDscfL, needDscfL
-      use meshdscf,      only: listDl, listDlPtr, numdL
-      use alloc,         only: re_alloc, de_alloc, alloc_default,
-     $                         allocDefaults
-      use parallel,      only: Nodes, Node
-      use sys,           only: die
-      use parallelsubs,  only: GlobalToLocalOrb
+      use mesh, only: dxa, nsp, xdop, xdsp
+      use meshphi, only: endpht, lstpht, listp2
+      use meshdscf, only: DscfL, nrowsDscfL, needDscfL
+      use meshdscf, only: listDl, listDlPtr, numdL
+      use alloc,    only: re_alloc, de_alloc, alloc_default,
+     $                    allocDefaults
+      use parallel, only: Nodes
+      use sys,      only: die
 
       implicit none
 
-C  Passed arguments  
-
+C  Passed arguments
       integer, intent(in) ::
-     .   ifa, istr, na, no, nuo, nuotot, np, 
-     .   nspin,
+     .   ifa, istr, na, no, nuo, nuotot, np, nspin,  
      .   indxua(na), isa(na), iaorb(no), iphorb(no), 
      .   maxnd, numd(nuo), listdptr(nuo), listd(maxnd)
 
       real(grid_p), intent(in) ::
      .   Vscf(nsp,np,nspin), Vatm(nsp,np)
 
-      real(dp), intent(in) ::  Datm(nuotot), dvol, VolCel
-      real(dp), intent(in), target :: Dscf(:,:)
+      real(dp), intent(in) ::
+     .   Datm(nuotot), Dscf(maxnd,nspin), dvol, VolCel
 
       real(dp), intent(inout) :: Fal(3,*), Stressl(9)
 
@@ -100,18 +91,13 @@ C Internal variables
       real(dp)
      .   CD(nsp), CDV(nsp), DF(12), Dji, dxsp(3,nsp),  
      .   gCi(12,nsp), grada(3,maxoa,nsp),
-     .     phia(maxoa,nsp), rvol, r2sp, r2cut(nsmax)
-
-      ! Allocate
-      real(dp), pointer :: V(:,:) => null()
-      real(dp), pointer :: DM_spbherm(:,:) => null()
+     .   phia(maxoa,nsp), rvol, r2sp, r2cut(nsmax), V(nsp,nspin)
 !
       integer, pointer, save ::  ibc(:), iob(:)
       real(dp), pointer, save :: C(:,:), D(:,:,:),
      .                           gC(:,:,:), xgC(:,:,:)
       logical ::           Parallel_Run, nullified=.false.
       type(allocDefaults) oldDefaults
-  
 
 C  Start time counter
       call timer('dfscf',1)
@@ -126,34 +112,17 @@ C  Get old allocation defaults and set new ones
       call alloc_default( old=oldDefaults,
      .                    copy=.false., shrink=.false.,
      .                    imin=1, routine='dfscf' )
-
-      if ( size(Dscf, 2) == 8 ) then
-         if (nspin /= 4) call die("Spin size inconsistency in dfscf")
-         !     Prepare "spin-box hermitian" form of DM for work below
-         !     We could re-use similar work in rhoofd
-         !     This is the relevant part of the DM in view of the structure
-         !     of the potential Vscf.
-         call re_alloc(DM_spbherm,1,size(Dscf,1),1,4,"DM_spbherm")   
-         DM_spbherm(:,1) = Dscf(:,1)
-         DM_spbherm(:,2) = Dscf(:,2)
-         DM_spbherm(:,3) = 0.5_dp * (Dscf(:,3)+Dscf(:,7))
-         DM_spbherm(:,4) = 0.5_dp * (Dscf(:,4)+Dscf(:,8))
-      else
-         DM_spbherm => Dscf    ! Just use passed Dscf
-      end if
-
+      
 C  Allocate buffers to store partial copies of Dscf and C
       maxc = maxval(endpht(1:np)-endpht(0:np-1))
       maxb = maxc + minb
       maxb = min( maxb, no )
-      call re_alloc( C, 1, nsp, 1, maxc, 'C', 'dfscf' )
-      call re_alloc( D, 0, maxb, 0, maxb, 1, nspin, 'D', 'dfscf' )
-      call re_alloc( gC, 1, 3, 1, nsp, 1, maxc, 'gC', 'dfscf' )
-      call re_alloc( ibc, 1, maxc, 'ibc', 'dfscf' )
-      call re_alloc( iob, 0, maxb, 'iob', 'dfscf' )
-      call re_alloc( xgC, 1, 9, 1, nsp, 1, maxc, 'xgC', 'dfscf' )
-      call re_alloc( V, 1, nsp, 1, nspin, 'V', 'dfscf' )
-      V = 0._dp
+      call re_alloc( C,   1,nsp,  1,maxc,          name='C'   )
+      call re_alloc( D,   0,maxb, 0,maxb, 1,nspin, name='D'   )
+      call re_alloc( gC,  1,3,    1,nsp,  1,maxc,  name='gC'  )
+      call re_alloc( ibc, 1,maxc,                  name='ibc' )
+      call re_alloc( iob, 0,maxb,                  name='iob' )
+      call re_alloc( xgC, 1,9,    1,nsp,  1,maxc,  name='xgC' )
 
 C  Set logical that determines whether we need to use parallel or serial mode
       Parallel_Run = (Nodes.gt.1)
@@ -166,19 +135,13 @@ C  If parallel, allocate temporary storage for Local Dscf
           maxndl = 1
         endif
         call re_alloc( DscfL, 1, maxndl, 1, nspin,
-     .                 'DscfL', 'dfscf' )
+     &                 name='DscfL',  routine='dfscf' )
 C Redistribute Dscf to DscfL form
-        call matrixOtoM( maxnd, numd, listdptr, maxndl, nuo,
-     .                   nspin, DM_spbherm, DscfL )
+        call matrixOtoM( maxnd, numd, listdptr, maxndl, nuo, nuotot,
+     .                   nspin, Dscf, DscfL )
 
       endif
 
-!     Note: Since this routine is only called to get forces AND stresses,
-!     ifa = 1 and istr = 1 always. We could get rid of ix1 and ix2 and
-!     unroll the relevant loops below for more efficiency.
-!     Also, it might be worth unrolling some of the nsp loops below
-!     if nsp is always 8.
-      
 C  Find range of a single array to hold force and stress derivatives
 C  Range 1-3 for forces
       if (ifa.eq.1) then
@@ -240,7 +203,7 @@ C  last runs circularly over rows of D
               if (last .gt. maxb) last = 1
               if (iob(last) .le. 0) goto 10
             enddo
-            call die('dfscf: no slot available in D')
+            call die('rhoofd: no slot available in D')
    10       continue
 
 C  Copy row i of Dscf into row last of D
@@ -257,19 +220,17 @@ C  Copy row i of Dscf into row last of D
                 j = listdl(ind)
                 if (i.ne.iu) j = listsc( i, iu, j )
                 jb = ibuff(j)
-                ! i-j symmetry due to the spin-box hermiticity
-                D(ib,jb,:) = DscfL(ind,:)
-                D(jb,ib,:) = DscfL(ind,:)
+                D(ib,jb,1:nspin) = DscfL(ind,1:nspin)
+                D(jb,ib,1:nspin) = DscfL(ind,1:nspin)
               enddo
             else
-              call GlobalToLocalOrb( iu, Node, Nodes, iul )
-              do ii = 1, numd(iul)
-                ind = listdptr(iul)+ii
+              do ii = 1, numd(iu)
+                ind = listdptr(iu)+ii
                 j = listd(ind)
                 if (i.ne.iu) j = listsc( i, iu, j )
                 jb = ibuff(j)
-                D(ib,jb,:) = DM_spbherm(ind,:)
-                D(jb,ib,:) = DM_spbherm(ind,:)
+                D(ib,jb,1:nspin) = Dscf(ind,1:nspin)
+                D(jb,ib,1:nspin) = Dscf(ind,1:nspin)
               enddo
             endif
           endif
@@ -303,7 +264,7 @@ C  Calculate all phi values and derivatives at all subpoints
               dxsp(1:3,isp) = xdop(1:3,iop)+xdsp(1:3,isp)-dxa(1:3,ia)
               r2sp = dxsp(1,isp)**2 + dxsp(2,isp)**2 + dxsp(3,isp)**2
               if (r2sp.lt.r2cut(is)) then
-                call all_phi( is,+1, dxsp(:,isp), maxoa, nphiloc,
+                call all_phi( is,+1, dxsp(:,isp), nphiloc,
      .                        phia(:,isp), grada(:,:,isp))
               else
                 phia(:,isp) = 0.0_dp
@@ -328,16 +289,13 @@ C  If stress required. Generate stress derivatives
           endif
         enddo
 
-C     Copy potential to a double precision array
-
+C  Copy potential to a double precision array
         V(1:nsp,1:nspin) = Vscf(1:nsp,ip,1:nspin)
 
-C     Factor two for nondiagonal elements for non-collinear spin (and SO)
-        if ( nspin == 4 ) then
-           V(1:nsp,3:4) = 2.0_dp * V(1:nsp,3:4)
-        end if
+C  Factor two for nondiagonal elements for non-collinear spin
+        V(1:nsp,3:nspin) = 2.0_dp * V(1:nsp,3:nspin)
 
-C     Loop on first orbital of mesh point
+C  Loop on first orbital of mesh point
         do ic = 1,nc
 
           imp = endpht(ip-1) + ic
@@ -401,25 +359,18 @@ C  End of mesh point loop
       enddo
   
 C  Deallocate local memory
-      call de_alloc( xgC, 'xgC', 'dfscf' )
-      call de_alloc( iob, 'iob', 'dfscf' )
-      call de_alloc( ibc, 'ibc', 'dfscf' )
-      call de_alloc( gC, 'gC', 'dfscf' )
-      call de_alloc( D, 'D', 'dfscf' )
-      call de_alloc( C, 'C', 'dfscf' )
-      call de_alloc( V, 'V', 'dfscf' )
+      call de_alloc( xgC, name='xgC'  )
+      call de_alloc( iob, name='iob' )
+      call de_alloc( ibc, name='ibc'  )
+      call de_alloc( gC,  name='gC'   )
+      call de_alloc( D,   name='D'    )
+      call de_alloc( C,   name='C'    )
       if (Parallel_Run) then
-        call de_alloc( DscfL, 'DscfL', 'dfscf' )
-      endif
-      if (size(Dscf,2) == 8) then
-         call de_alloc( DM_spbherm, 'DM_spbherm', 'dfscf' )
+        call de_alloc( DscfL,  name='DscfL' )
       endif
 
 C  Restore old allocation defaults
       call alloc_default( restore=oldDefaults )
 
       call timer('dfscf',2)
- 
-      end subroutine dfscf
-
-      end module m_dfscf
+      end

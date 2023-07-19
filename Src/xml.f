@@ -1,9 +1,12 @@
 ! 
-! Copyright (C) 1996-2016	The SIESTA group
-!  This file is distributed under the terms of the
-!  GNU General Public License: see COPYING in the top directory
-!  or http://www.gnu.org/copyleft/gpl.txt.
-! See Docs/Contributors.txt for a list of contributors.
+! This file is part of the SIESTA package.
+!
+! Copyright (c) Fundacion General Universidad Autonoma de Madrid:
+! E.Artacho, J.Gale, A.Garcia, J.Junquera, P.Ordejon, D.Sanchez-Portal
+! and J.M.Soler, 1996- .
+! 
+! Use of this software constitutes agreement with the full conditions
+! given in the SIESTA license, as signed by all legitimate users.
 !
       module xml
 !
@@ -20,8 +23,7 @@
         module procedure
      $     str_integer,
      $     str_double,
-     $     str_string,
-     $     str_logical
+     $     str_string
       end interface
 
       CONTAINS
@@ -61,17 +63,6 @@
       write(dummy,'(g22.12)')  num
       str_double = trim(dummy)
       end function str_double
-
-      function str_logical(v)
-      logical, intent(in)  :: v
-      character(len=5) str_logical
-
-      if ( v ) then
-         str_logical = 'true'
-      else
-         str_logical = 'false'
-      end if
-      end function str_logical
 
       function str_string(num)
       character(len=*), intent(in)  :: num

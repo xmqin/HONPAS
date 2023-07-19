@@ -1,10 +1,3 @@
-! ---
-! Copyright (C) 1996-2016	The SIESTA group
-!  This file is distributed under the terms of the
-!  GNU General Public License: see COPYING in the top directory
-!  or http://www.gnu.org/copyleft/gpl.txt .
-! See Docs/Contributors.txt for a list of contributors.
-! ---
 program para
 
 ! A very simple driver for Siesta-as-subroutine (or siesta-as-server) 
@@ -25,7 +18,7 @@ program para
 
   call siesta_units( 'Ang', 'eV' )
 
-  call siesta_launch( 'h2o.fast' , nnodes=2) ! mpi_launcher="mpiexec -n " )
+  call siesta_launch( 'h2o.fast' , nnodes=2, mpi_launcher="mpiexec -n " )
   print*, 'siesta launched'
 
   call siesta_forces( 'h2o.fast', na, xa, energy=e, fa=fa )

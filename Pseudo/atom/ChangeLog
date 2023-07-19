@@ -1,0 +1,187 @@
+	THIS CHANGELOG IS OUT-OF-DATE
+	SEE THE MAIN SIESTA CHANGES FILE
+	
+2006-10-02   <albertog@icmab.es>
+
+	* Added Wu-Cohen functional (with help from M.V. Fdez-Serra
+	  and J. Gale) Updated manual. Version 3.2.3.
+
+2006-01-27    <wdpgaara@lcmxaa.lc.ehu.es>
+
+	* Added RPBE and revPBE exchange and correlation functionals.
+          Updated manual. Put complete version (now 3.2.2) in header
+	  and wrapup routines.
+
+2002-09  Alberto Garcia  <wdpgaara@lcpxlz.lc.ehu.es>
+
+	* Imported xc.f file from Siesta distribution. It fixes some
+	problems with very small densities. It is the default in the
+	makefile, but the old suite of xc files can be used, if
+	desired. Pzxc.f has been fixed to avoid computing vxc for very
+	small densities, but the fix in xc.f (by J.M. Soler) is in 
+	principle better. Tagged as atom-3-2-1.
+
+Thu Jul 25 15:48:48 2002  Alberto Garcia  <wdpgaara@lcpxbi.wm.lc.ehu.es>
+
+	* Consolidated new version by removing old material from Samples.
+	  Old pswatch program removed from Util.
+
+2002-07-12  Alberto Garcia  <wdpgaara@lg.ehu.es>
+
+	* Major revision with a view to ease analysis of pseudopotentials
+	and streamline testing. Wrote a manual (Docs/atom.tex). 
+	Incompatible changes:
+	 - The "energy differences" section is now printed only after a
+	   homogeneous series of calculations.
+	 - The input file can contain comments, directives, and blank
+           lines at the beginning and at the end.
+	 - PSCHARGE file contains the true pseudo valence charge, not
+	   the rescaled value.
+	Other changes:
+	 - Bug fixes for XC polarized routines (avoid crashes)
+	 - Bug fix in tm2 in calculation of norm (negligible effect)	
+	 - New implementation of "valence charge modify"
+	 - More output files, including screened pseudopotentials.
+	 - More plotting scripts (mainly gnuplot as lowest common
+	   denominator)
+	 - Output file rigged for easier extraction of data.
+	 - Tutorial directory created (work in progress)
+	 - ae.sh pg.sh pt.sh scripts re-designed.
+
+Sun Sep 16 19:46:05 2001  Alberto Garcia  <wdpgaara@lg.ehu.es>
+
+	* Pseudopotential files are now generated in both unformatted
+	( VPSOUT) and formatted (VPSFMT) versions.
+
+2000-04-10    <wdpgaara@node1.wm.lc.ehu.es>
+
+	* Changed once more the management of the "compatibility
+	strings". Went back to the tried and true "symbols" approach. Now
+	it is possible to 
+
+	%define COMPAT_UCB
+
+	to revert back to the old parameters, and to change the GGA
+	vs. LDA default for the core-correction scheme by using either of
+
+	%define NEW_CC
+	%define OLD_CC
+
+	Introduced a version string, and set it to 3.1.
+
+2000-02-21    <wdpgaara@node1.wm.lc.ehu.es>
+
+	* Set the spacing to 0.01 in the real-space wavefunction plotting
+	routines. Some nodes were not seen in the plots... 
+	Added a few not very sophisticated GNUPLOT drivers in the Samples
+	directory, for those without SM.
+
+2000-02-16    <wdpgaara@node1.wm.lc.ehu.es>
+
+	* Changed the defaults regarding the CC schemes. The old method is
+	the default for LDA calculations, and the new one is used only for
+	GGA calculations. This behavior can be overriden by specifying
+	"mons-old-cc" or "mons-new-cc" as compatibility string. (See
+	updated User.Guide.)
+
+	* Implemented calculation of the Fourier transform of the
+	pseudocore charge.
+
+2000-02-10    <wdpgaara@node1.wm.lc.ehu.es>
+
+	* Implemented new scheme for the calculation of the pseudocore
+	charge, using a routine from Jose Luis Martins. The new method
+	results in a larger pseudocore, so it is not clear whether to
+	enable it by default. For now, it is indeed the default, unless
+	the "compatibility string" (see compat_params.f) is set to
+	"mons-old-cc" or "ucb".
+
+	* Added a new macro "core" for the plotting of core charges in
+	atom.sm. 
+
+	* Note that the initializations mentioned in the next entry
+	(Nov99) were actually done in a "real" subdirectory Pseudo/atom of
+	the siesta cvs tree, instead of in the symbolic link to atom. They
+	are merged now.
+
+1999-11-19    <wdpgaara@node1.wm.lc.ehu.es>
+
+	* Initialized variables (ddelta, fdold, ehart) in tm2.f, v0pp.f,
+	and velect.f
+
+Fri Nov 27 15:41:46 1998  Alberto Garcia  <wdpgaara@lcpxbi.wm.lc.ehu.es>
+
+	* (Maider Machado) Added support for Becke-Lee-Yang-Parr exchange
+	and correlation flavor. It is requested by the string "bl" in the
+	input file.
+
+Fri May 23 10:13:55 1997  Alberto Garcia  <wdpgaara@lcpxbi.wm.lc.ehu.es>
+
+	* Put the Berkeley RCS sources under CVS control, and tagged them
+	as RCSfiles.
+
+	* Added some extra files to synch the module to ATM_1_0. Tagged as
+	ATOM_1_0. Still no BHS, Contrib, Docs, or Utils subdirectories.
+	The presence of Id and Log keyword flags made it appear as if
+	there have been changes in every file...
+	
+	* Made some cosmetic changes (mainly use of 'unknown' as opening
+	status for files and explicit setting of function values before
+	exceptional returns). Added BHS, Contrib, and Docs. 
+	Tagged as ATOM_1_1.
+
+	* Implemented an interface to the Balbas-Soler XC package, and
+	changed the default grid generation procedure. The old Berkeley
+	behavior can be recovered by specifying the 'ucb' compatibility
+	mode (implemented through the 'compat' files). Added an improved
+	Util (including a ghostwatcher program from the UAM) and a Samples
+	directory with execution and plotting scripts. Tagged as ATOM_1_2
+	
+************************
+	The following changes were done at Berkeley starting from
+	the Troullier-Martins code (actually, from a heavily modified
+	version of it with declared variables, include files, and better
+	structure).
+
+Tue Jul 28 12:56:44 1992  Alberto Garcia  (alberto at savanna)
+
+	* Modified the decision tree in atm.f dealing with
+	charge and potential initialization for multiple runs.
+	(Tip from somebody in Stuttgart via Christian Elsasser).
+
+Thu May 21 16:58:41 1992  Alberto Garcia  (alberto at savanna)
+
+	* Modified dsolv2. The core charge was always computed
+	non-relativistically!.
+
+Mon May 18 10:57:02 1992  Alberto Garcia  (alberto at savanna)
+
+	* Modified dsolv2 to compute the core charge density in
+	all cases (not only for core corr ps generation). Wrote	
+	subroutine denplot to process the core and valence charge
+	resulting from an all-electron calculation.
+
+Wed Apr 22 20:23:33 1992  Alberto Garcia  (alberto at savanna)
+
+	* Tentatively removed the code snippet in wrapup that
+	  turns off relativity.
+
+	* The logarithmic derivative of the pseudo-wave function is
+	now computed in routine wrapup. A separate pseudopotential
+	test is not required. (This is experimental).
+	Logder now accepts character*2 flag (current values: 'AE', 'PS')
+	to write the information to the appropriate file.
+	
+	Relativistic calculations are tricky: The pseudopotential is
+	treated in a non-relativistic manner in wrapup, and that results
+	in eigenvalue mismatches that in turn produce errors in the
+	logarithmic derivative comparison.
+
+
+
+
+
+
+
+
+	

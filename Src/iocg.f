@@ -1,9 +1,12 @@
 ! 
-! Copyright (C) 1996-2016	The SIESTA group
-!  This file is distributed under the terms of the
-!  GNU General Public License: see COPYING in the top directory
-!  or http://www.gnu.org/copyleft/gpl.txt.
-! See Docs/Contributors.txt for a list of contributors.
+! This file is part of the SIESTA package.
+!
+! Copyright (c) Fundacion General Universidad Autonoma de Madrid:
+! E.Artacho, J.Gale, A.Garcia, J.Junquera, P.Ordejon, D.Sanchez-Portal
+! and J.M.Soler, 1996- .
+! 
+! Use of this software constitutes agreement with the full conditions
+! given in the SIESTA license, as signed by all legitimate users.
 !
       subroutine iocg( task, naux, cgaux, cgcntr, relaxd, found )
 
@@ -21,31 +24,39 @@ c***************** OUTPUT *************************************************
 c logical found : Has DM been found in disk? (Only when task='read')
 c**************************************************************************
 
+      use fdf
       use files,     only : slabel, label_length
       use precision, only : dp
       use sys,  only      : die
 
       implicit          none
 
+      character(len=label_length+3) :: paste
       character         task*(*)
       logical           found, relaxd
       integer           naux
       real(dp)          cgaux(naux), cgcntr(0:20)
 
-      external          chkdim, io_assign, io_close
+      external          chkdim, io_assign, io_close, paste
 
 
 c Internal variables and arrays ------------------------------------------
 
       character(len=label_length+3) :: fname
-      logical   exist1
+      logical   exist1, frstme
       integer   nauxr, i, unit1
+
+      save      frstme, fname
+      data      frstme /.true./
 
 c ------------------------------------------------------------------------
 
 c find file name ---------------------------------------------------------
 
-      fname = trim(slabel) // '.CG'
+      if (frstme) then
+        fname = paste(slabel,'.CG')
+        frstme = .false.
+      endif
 
 c read it if it is there -------------------------------------------------
 

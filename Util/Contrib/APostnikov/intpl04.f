@@ -16,7 +16,7 @@ C     drela(1..3)  : relative coordinates of point in the microcell
 C     func         : function to be interpolated 
 C     fintp        : interpolation result
 C
-      integer mesh01,mesh02,mesh03,nrela(3),inear(3),id(3),
+      integer mesh01,mesh02,nrela(3),inear(3),id(3),
      .        igrid0(3),igrid1(3),igrid2(3),igrid3(3)
       integer ii,ix
       double precision drela(3),xx(3)

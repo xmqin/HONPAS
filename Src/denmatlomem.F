@@ -1,15 +1,19 @@
 ! 
-! Copyright (C) 1996-2016	The SIESTA group
-!  This file is distributed under the terms of the
-!  GNU General Public License: see COPYING in the top directory
-!  or http://www.gnu.org/copyleft/gpl.txt.
-! See Docs/Contributors.txt for a list of contributors.
+! This file is part of the SIESTA package.
+!
+! Copyright (c) Fundacion General Universidad Autonoma de Madrid:
+! E.Artacho, J.Gale, A.Garcia, J.Junquera, P.Ordejon, D.Sanchez-Portal
+! and J.M.Soler, 1996- .
+! 
+! Use of this software constitutes agreement with the full conditions
+! given in the SIESTA license, as signed by all legitimate users.
 !
       subroutine denmatlomem(c,eta,h,s,qs,nbasis,nbasisloc,nbands,
      .                       ncmax,nctmax,nfmax,nftmax,nhmax,nhijmax,
      .                       numc,listc,numct,listct,cttoc,numf,listf,
-     .                       numft,listft,numh,listh,listhptr,numhij,
-     .                       listhij,dm,edm,nbasisCloc,nspin,Node)
+     .                       numft,listft,fttof,numh,listh,listhptr,
+     .                       numhij,listhij,dm,edm,nbasisCloc,nspin,
+     .                       Node)
 C *******************************************************************
 C Subroutine to compute the Density and Energy Density matrices
 C for the Order-N functional of Kim et al. (PRB 52, 1640 (95))
@@ -68,6 +72,7 @@ C integer numft(nbasis)       : Control vector of F transpose matrix
 C                               (number of <>0  elements of each col of F)
 C integer listft(nfmax,nbasis): Control vector of F transpose matrix
 C                               (list of <>0  elements of each col of F)
+C integer fttof(nfmax,nbasis) : Map from Ft to F indexing
 C integer numh(nbasis)        : Control vector of H matrix
 C                               (number of nonzero elements of each row of H)
 C integer listh(nhmax)        : Control vector of H matrix
@@ -110,7 +115,8 @@ C *******************************************************************
      .  numh(nbasisloc),numhij(nbandsloc)
      
       integer
-     .  nftmax, listft(nftmax,nbasisCloc), numft(nbasisCloc)
+     .  nftmax,fttof(nftmax,nbasisCloc),
+     .  listft(nftmax,nbasisCloc), numft(nbasisCloc)
 
       real(dp) ::
      .  c(ncmax,nbasisCloc,nspin),dm(nhmax,nspin),edm(nhmax,nspin),

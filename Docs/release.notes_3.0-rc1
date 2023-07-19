@@ -1,0 +1,167 @@
+Release Notes for SIESTA-3.0-rc1, Apr 18, 2010
+
+GENERAL NOTES
+
+Since the release of Siesta-3.0-beta in September 2009, we have fixed
+a few bugs and made other improvements (see below). This version,
+tagged siesta-3.0-rc1, (which stands for "3.0 release-candidate number 1"),
+is one step closer to the "stable" siesta-3.0 release.
+
+Users of versions 11.X of the Intel fortran compiler should note that
+we have been unable to find robust workarounds for the bugs in that
+compiler.  Until the bugs are fixed we recommend users to stick to
+version 10.X of the compiler.
+
+
+CHANGES SINCE SIESTA-3.0-beta
+
+(A complete list of changes can be found in the Docs/CHANGES file.)
+
+BUG FIXES
+
+* Fix for bug in density-matrix reuse after geometry changes
+  
+  In some cases the re-use of the DM after a geometry change led to
+  large values of ddmax and instabilities in SCF convergence. The
+  problem stemmed from a faulty procedure to change the sparsity
+  pattern of the density-matrix.
+  
+* Fix initialization of target_stress in some cell-only relaxations
+    
+  When using the RelaxCellOnly option in tandem with Broyden relaxation,
+  the target stress was not properly initialized. 
+
+* Fix bug in "kick" code in Pulay mixing
+  
+  The program was not taking into account the requested value of the
+  DM.KickMixingWeight coefficient if the 'DM.NumberKick N' option was
+  specified in combination with Pulay mixing. It was always set
+  implicitly to 1.0 (i.e., every N steps the full "output" density
+  matrix was taken as the input for the next iteration, instead of the
+  appropriate mix of input and output DMs).
+
+* Avoid extrapolation of DM during geometry optimization
+  
+  When performing a geometry optimization (CG, Broyden, etc) there
+  might be sudden jumps in the geometry (e.g., at the end of a
+  line-minimization) that render a extrapolation of the DM risky. For
+  these calculations the default in Siesta 2.0 was not to extrapolate
+  the DM, but due to an oversight Siesta 3.0-b did extrapolate the DM
+  in these cases. Now the default is not to extrapolate unless
+  requested by explicitly setting 'DM.AllowExtrapolation' to
+  "true". The previous step's DM is reused.
+
+* Fix parallel wrapping logic in doping and efield modules
+  
+  - In the doping module, some fdf calls were unwrapped for MPI operation.
+  
+  - In m_efield, an early return was not properly executed in parallel,
+    resulting in a hung broadcast.
+
+* Fix test scripts for correct executable path
+  
+  Some scripts in Tests/Scripts still referred to the old "Src"-style
+  siesta executable.
+
+* Clarification of the use of geometry information for analysis tasks
+  
+  The variables xa_last (formerly xalast), ucell_last, and scell_last
+  are used to hold the information related to the last geometry for
+  which the electronic structure has been computed. This is necessary
+  since the "siesta_move" routine updates the geometry after every step.
+  By using the "*_last" variables instead of "xa", "ucell", and "scell",
+  we make sure that "siesta_analysis", when calculating the
+  polarization, optical properties, etc, uses the coordinates actually
+  used to compute the electronic structure.
+  
+  The *_last variables are set at the beginning of "siesta_move", before
+  the actual displacements. Due to a bug in the program, however, this
+  was being done only at the final scheduled step ('fincoor'), instead
+  of inconditionally after every step. Thus they could be used undefined
+  if, for example, a relaxation finishes before the scheduled number of
+  steps (which is typical).
+  
+  While fixing this bug, it became apparent that some other sections
+  of "siesta_analysis" are using the "predicted" coordinates (for
+  example, the output of coordinates in various formats) instead of
+  the last "used" coordinates. This can be considered a feature or a
+  bug.
+  
+  Similarly, the computation of the spin polarization uses a density
+  matrix that is actually the result of a mixing after the last SCF
+  step.
+
+* Fix bug in electric field initialization 
+  
+  When using the ExternalElectricField option (block), a bug prevented
+  the actual use of the field to generate the potential ramp on the grid
+  (but not the calculation of an extra contribution to the energy).
+
+* Correct number of orbital nodes with 'nodes' option 
+  
+  The (mainly obsolete) 'nodes' option for basis orbital generation was
+  producing orbitals with one excess radial node (i.e. one and two nodes
+  for double zeta, instead of zero and one node). 
+
+NEW FEATURES
+
+* Add option to keep orbital grid array in SP when using GRID_DP
+  
+  By defining the preprocessor variable PHI_GRID_SP at the same time
+  as GRID_DP, the user can keep memory consumption down while enjoying
+  the benefits of double-precision charge densities and potentials.
+  
+  This is because the array that holds orbital values on the grid takes
+  up most of the memory, but can safely be stored in single-precision.
+  
+  (This fact was not properly understood until after the release of
+  siesta-3.0-beta, and so a standalone definition of GRID_DP maintains
+  its documented meaning of "all the grid magnitudes in single precision")
+
+* Update FoX library and add error and warnings handling options
+  
+  It is sometimes useful for warnings or errors generated by the FoX
+  libary to result in an abort to generate a core dump or stack trace to
+  see where in Siesta the call causing the error is being made. It is
+  now possible to turn on this behaviour at runtime using two new fdf
+  boolean tags:
+  
+   XML.AbortOnErrors  XML.AbortOnWarnings
+  
+  Both are boolean and default to .false. (which mirrors the current
+  stopping behaviour).
+  
+  These features have been made possible by an update in the FoX library
+  that adds an interface to allow errors and warnings to result in an
+  abort signal. In the update there is also a fix to work around a PGI
+  bug for the overloaded wxml interfaces (aparently not used in Siesta)
+  and a change to the prng to avoid using initalised data in prng_init.
+  
+  Documentation for these new options is in the XML appendix of
+  siesta.tex
+  
+  The as-yet undocumented WriteXML option has been renamed to XML.Write
+  for consistency, although the old form is retained for now. This option
+  is useful to deactivate the production of CML files.
+
+  (Thanks to Andrew Walker for his work on FoX)
+
+COSMETIC CHANGES
+
+* Print value of dipole if applying correcting field
+    
+  If the SlabDipoleCorrection option is active, print the computed
+  value of the total system dipole at every iteration, to help
+  diagnose possible problems.
+
+  Added note in the manual warning about the use of non-corrected
+  density matrices with this option.
+
+* Format change in the output of the number of orbitals and
+  projectors.
+
+
+We thank Oswaldo Dieguez, Marcos Verissimo, Ney H., S. Savinov, and
+other people in the Siesta mailing list for their help in tracking
+down some of the bugs.
+

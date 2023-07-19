@@ -1,11 +1,14 @@
 ! 
-! Copyright (C) 1996-2016	The SIESTA group
-!  This file is distributed under the terms of the
-!  GNU General Public License: see COPYING in the top directory
-!  or http://www.gnu.org/copyleft/gpl.txt.
-! See Docs/Contributors.txt for a list of contributors.
+! This file is part of the SIESTA package.
 !
-      subroutine reord( fclust, fseq, nm, nsm, itr )
+! Copyright (c) Fundacion General Universidad Autonoma de Madrid:
+! E.Artacho, J.Gale, A.Garcia, J.Junquera, P.Ordejon, D.Sanchez-Portal
+! and J.M.Soler, 1996- .
+! 
+! Use of this software constitutes agreement with the full conditions
+! given in the SIESTA license, as signed by all legitimate users.
+!
+      SUBROUTINE REORD( FCLUST, FSEQ, NM, NSM, ITR )
 
 C ********************************************************************
 C Re-orders a clustered data array into a sequential one and viceversa
@@ -46,9 +49,9 @@ C
 C  Allocate local memory
 C
       nullify ( AUX )
-      call re_alloc( AUX, 1, NAUX, 'AUX', 'reord' )
+      call re_alloc( AUX, 1, NAUX, name='AUX', routine='reord' )
       nullify ( JS )
-      call re_alloc( JS,  1, NSM3, 'JS',  'reord' )
+      call re_alloc( JS, 1, NSM3, name='JS', routine='reord' )
 
       IS = 0
       DO IS3 = 0,NSM-1
@@ -105,8 +108,8 @@ C
 C
 C  Free local memory
 C
-      call de_alloc( JS,  'JS',   'reord' )
-      call de_alloc( AUX, 'AUX',  'reord' )
+      call de_alloc( JS,  name='JS' )
+      call de_alloc( AUX,  name='AUX' )
 
       CALL TIMER('REORD',2)
       END

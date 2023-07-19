@@ -1,21 +1,17 @@
 ! 
-! Copyright (C) 1996-2016	The SIESTA group
-!  This file is distributed under the terms of the
-!  GNU General Public License: see COPYING in the top directory
-!  or http://www.gnu.org/copyleft/gpl.txt.
-! See Docs/Contributors.txt for a list of contributors.
+! This file is part of the SIESTA package.
+!
+! Copyright (c) Fundacion General Universidad Autonoma de Madrid:
+! E.Artacho, J.Gale, A.Garcia, J.Junquera, P.Ordejon, D.Sanchez-Portal
+! and J.M.Soler, 1996- .
+! 
+! Use of this software constitutes agreement with the full conditions
+! given in the SIESTA license, as signed by all legitimate users.
 !
       module m_ordern
 !
 !     We need an explicit interface since assumed-shape arrays are used
 !
-      public   :: ordern
-      private
-      ! These variables were moved here by Rogeli Grima
-      integer, save :: iterm = 0
-      integer, save :: maxnc = 1
-      integer, save :: no_cl            ! set in cspa
-
       CONTAINS
 
       subroutine ordern(usesavelwf,ioptlwf,natoms,no_u,no_l,
@@ -37,8 +33,8 @@ C                                0 = Read blindly from disk
 C                                1 = Functional of Kim et al.
 C                                2 = Functional of Ordejon-Mauri
 C integer natoms               : Number of atoms
-C integer no_u                 : Number of basis orbitals globally
-C integer no_l                 : Number of basis orbitals locally
+C integer no_u               : Number of basis orbitals globally
+C integer no_l            : Number of basis orbitals locally
 C integer lasto(0:natoms)      : Index of last orbital of each atom
 C integer isa(natoms)          : Species index of each atom
 C real*8 qa(natoms)            : Neutral atom charge
@@ -56,11 +52,11 @@ C real*8 eta(2)                : Fermi level parameter of Kim et al.
 C real*8 enum                  : Total number of electrons
 C integer nhmax                : First dimension of listh and H, and maximum
 C                                number of nonzero elements of each row of H
-C integer numh(no_u)           : Control vector of H matrix
+C integer numh(no_u)         : Control vector of H matrix
 C                                (number of nonzero elements of each row of H)
 C integer listh(nhmax)         : Control vector of H matrix
 C                                (list of nonzero elements of each row of H)
-C integer listhptr(no_u)       : Control vector of H matrix
+C integer listhptr(no_u)     : Control vector of H matrix
 C                                (pointer to start of row in listh / H)
 C real*8 h(nhmax,nspin)        : Hamiltonian matrix (sparse)
 C real*8 s(nhmax)              : Overlap matrix (sparse)
@@ -85,6 +81,7 @@ C ****************************************************************************
 
 C  Modules
       use precision, only: dp
+      use fdf
       use alloc
       use on_main,    only: c, cold, listc, listcold, numc, numcold
       use on_main,    only: ncg2l, ncl2g, ncp2t, nct2p
@@ -127,6 +124,10 @@ C Internal variables ..........................................................
      .  in, io, iopt, iord, is, iter, ncmax, nctmax, 
      .  nfmax, nftmax, nhijmax, nbands, nh, gen_istep
 
+      integer, save :: iterm = 0
+      integer, save :: maxnc = 1
+      integer, save :: no_cl
+
 #ifdef MPI
       integer :: ntmp
       real(dp) ::
@@ -151,9 +152,6 @@ C Internal variables ..........................................................
      .  nbands
      
 C ...................
-#ifdef DEBUG
-      call write_debug( '    PRE ordern' )
-#endif
 
 *     call timer( 'ordern', 1 )
 
@@ -285,13 +283,10 @@ C and HOMO and LUMO levels ..........
         endif
         if (cml_p) then
           call cmlAddProperty(xf=mainXML, value=chpot/eV, 
-     .          dictref='siesta:chemical_pot',
-     .          units='siestaUnits:ev', title='Chemical potential')
+     .     units='siestaUnits:ev', title='Chemical potential')
           call cmlAddProperty(xf=mainXML, value=emax/eV,
-     .         dictref='siesta:max_eigenv',
      .     units='siestaUnits:ev', title='Maximum eigenvalue')
           call cmlAddProperty(xf=mainXML, value=emin/eV, 
-     .         dictref='siesta:min_eigenv',
      .     units='siestaUnits:ev', title='Minimum eigenvalue')
         endif
 
@@ -389,11 +384,9 @@ C Global reduction of qtot
 C Save LWF's to disk .................................................
       call iolwf( 'write', no_u, no_cl, no_l, maxnc, 
      .            found, nspin)
+
       frstme = .false.
 
-#ifdef DEBUG
-      call write_debug( '    POS ordern' )
-#endif
       end subroutine ordern
 
       end module m_ordern

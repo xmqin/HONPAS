@@ -1,24 +1,21 @@
 ! 
-! Copyright (C) 1996-2016	The SIESTA group
-!  This file is distributed under the terms of the
-!  GNU General Public License: see COPYING in the top directory
-!  or http://www.gnu.org/copyleft/gpl.txt.
-! See Docs/Contributors.txt for a list of contributors.
+! This file is part of the SIESTA package.
+!
+! Copyright (c) Fundacion General Universidad Autonoma de Madrid:
+! E.Artacho, J.Gale, A.Garcia, J.Junquera, P.Ordejon, D.Sanchez-Portal
+! and J.M.Soler, 1996- .
+! 
+! Use of this software constitutes agreement with the full conditions
+! given in the SIESTA license, as signed by all legitimate users.
 !
       module m_overlap
 
       use precision,     only : dp
       use parallel,      only : Node, Nodes
       use parallelsubs,  only : GlobalToLocalOrb
-      use atmfuncs,      only : rcut, orb_gindex
-      use neighbour,     only : jna=>jan, r2ij, xij, mneighb,
-     &                          reset_neighbour_arrays
+      use atmfuncs,      only : rcut
+      use neighbour,     only : jna=>jan, r2ij, xij, mneighb
       use alloc,         only : re_alloc, de_alloc
-      use m_new_matel,   only : new_matel
-      use m_iodm_old,    only : write_dm
-      use m_matio,       only : write_mat
-      use atomlist, only: no_l
-      use fdf
 
       implicit none
 
@@ -28,8 +25,8 @@
       CONTAINS
 
       subroutine overlap(nua, na, no, scell, xa, indxua, rmaxo,
-     &                   maxnh, lasto, iphorb, isa, 
-     &                   numh, listhptr, listh, S)
+     .                   maxnh, lasto, iphorb, isa, 
+     .                   numh, listhptr, listh, S)
 C *********************************************************************
 C Computes the overlap matrix
 C Energies in Ry. Lengths in Bohr.
@@ -56,55 +53,61 @@ C                            of each row of the overlap matrix
 C **************************** OUTPUT *********************************
 C real*8  S(maxnh)         : Sparse overlap matrix
 
-      integer, intent(in)   ::  maxnh, na, no, nua
-      integer, intent(in)   :: indxua(na), iphorb(no), isa(na),
-     &                         lasto(0:na), listh(maxnh), numh(*),
-     &                         listhptr(*)
-      real(dp) , intent(in) :: scell(3,3), rmaxo, xa(3,na)
-      real(dp), intent(out) :: S(maxnh)
-C Internal variables ......................................................
-      integer               :: ia, ind, io, ioa, is,  iio, j, ja, jn,
-     &                         jo, joa, js, jua, nnia, ig, jg
-      real(dp)              :: grSij(3) , rij, Sij
-      real(dp),     pointer :: Si(:)
-      external  timer
+      integer, intent(in) ::  maxnh, na, no, nua
 
-C     Start timer
+      integer, intent(in) ::
+     . indxua(na), iphorb(no), isa(na), lasto(0:na), 
+     . listh(maxnh), numh(*), listhptr(*)
+      real(dp) , intent(in)     :: scell(3,3), rmaxo, xa(3,na)
+      real(dp), intent(out)     :: S(maxnh)
+
+C Internal variables ......................................................
+  
+      integer
+     .  ia, ind, io, ioa, is,  iio, 
+     .  j, ja, jn, jo, joa, js, jx, nnia
+
+      real(dp) grSij(3) , rij, Sij, volcel, volume
+
+      real(dp), dimension(:), pointer  :: Si
+
+      external  timer
+C ......................
+
+C Start timer
       call timer( 'overlap', 1 )
 
-C     Initialize neighb subroutine 
+      volume = nua * volcel(scell) / na
+
+C Initialize neighb subroutine 
       call mneighb( scell, 2.d0*rmaxo, na, xa, 0, 0, nnia )
 
-C     Allocate local memory
+C Allocate local memory
+
       nullify(Si)
-      call re_alloc( Si, 1, no, 'Si', 'overlap' )
+      call re_alloc(Si,1,no,name="Si",routine="overlap")
 
       do ia = 1,nua
-        is = isa(ia)
         call mneighb( scell, 2.d0*rmaxo, na, xa, ia, 0, nnia )
         do io = lasto(ia-1)+1,lasto(ia)
 
-C         Is this orbital on this Node?
+C Is this orbital on this Node?
           call GlobalToLocalOrb(io,Node,Nodes,iio)
           if (iio.gt.0) then
 
-C           Valid orbital
-            ioa = iphorb(io)
-            ig = orb_gindex(is,ioa)
+C Valid orbital 
+
             do jn = 1,nnia
               ja = jna(jn)
-              jua = indxua(ja)
               rij = sqrt( r2ij(jn) )
               do jo = lasto(ja-1)+1,lasto(ja)
+                ioa = iphorb(io)
                 joa = iphorb(jo)
+                is = isa(ia)
                 js = isa(ja)
-                !
-                ! Use global indexes for new version of matel
-                !
-                jg = orb_gindex(js,joa)
                 if (rcut(is,ioa)+rcut(js,joa) .gt. rij) then
-                  call new_MATEL( 'S', ig, jg, xij(1:3,jn),
-     &                        Sij, grSij )
+                  call matel( 'S', is, js, ioa, joa, xij(1,jn),
+     .                      Sij, grSij )
                   Si(jo) = Si(jo) + Sij
                 endif
               enddo
@@ -114,34 +117,21 @@ C           Valid orbital
               jo = listh(ind)
               S(ind) = Si(jo)
               Si(jo) = 0.0d0
+!           if(node.eq.0) write(98,*) io, jo, ind
             enddo
           endif
         enddo
       enddo
 
-C     Deallocate local memory
-!      call new_MATEL( 'S', 0, 0, xij, Sij, grSij )
-      call reset_neighbour_arrays( )
-      call de_alloc( Si, 'Si', 'overlap' )
+C Deallocate local memory
+      call de_alloc(Si,name="Si",routine="overlap")
 
-      if (fdf_get("Sonly",.false.)) then
-         call write_dm(maxnh, no_l, 1,
-     &               numh, listhptr, listh, S,
-     $               userfile="SOLD")
-
-         call write_mat(maxnh, no_l, 1,
-     &               numh, listhptr, listh, S,
-     $               userfile="SMAT")
-
-         call timer("fastWriteMat",1)
-         call write_mat(maxnh, no_l, 1,
-     &               numh, listhptr, listh, S,
-     $               userfile="SMATBS",compatible=.false.)
-         call timer("fastWriteMat",2)
-      endif
-
-
-C     Finish timer
+C Finish timer
       call timer( 'overlap', 2 )
+
       end subroutine overlap
       end module m_overlap
+
+
+
+

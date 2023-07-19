@@ -1,9 +1,12 @@
 ! 
-! Copyright (C) 1996-2016	The SIESTA group
-!  This file is distributed under the terms of the
-!  GNU General Public License: see COPYING in the top directory
-!  or http://www.gnu.org/copyleft/gpl.txt.
-! See Docs/Contributors.txt for a list of contributors.
+! This file is part of the SIESTA package.
+!
+! Copyright (c) Fundacion General Universidad Autonoma de Madrid:
+! E.Artacho, J.Gale, A.Garcia, J.Junquera, P.Ordejon, D.Sanchez-Portal
+! and J.M.Soler, 1996- .
+! 
+! Use of this software constitutes agreement with the full conditions
+! given in the SIESTA license, as signed by all legitimate users.
 !
       module globalise
 #ifdef MPI
@@ -15,7 +18,7 @@
       use on_core, only : numft, listft
       use on_core,   only : numhij, listhij
       use on_main,   only : ncL2G, ncG2L, nbandsloc, nbL2G
-      use alloc,     only : re_alloc, de_alloc
+      use alloc,     only : re_alloc
       use mpi_siesta, only: mpi_comm_world
       use mpi_siesta, only: mpi_status_size, mpi_integer
       use mpi_siesta, only: mpi_sum, mpi_logical
@@ -46,27 +49,27 @@ C
         integer,          save :: NNodes
         integer,          save :: MaxBandsSendB
         integer,          save :: MaxBasisSendC
-        integer, pointer, save :: NNodeNo(:) => null()
-        integer, pointer, save :: NNodeInBux(:) => null()
-        integer, pointer, save :: NNodeInBux2(:) => null()
-        integer, pointer, save :: NNodeInBuxPreN(:) => null()
-        integer, pointer, save :: NNodeInBux2PreN(:) => null()
-        integer, pointer, save :: Node2NNodePtr(:) => null()
-        integer, pointer, save :: NNodeBandsSendB(:) => null()
-        integer, pointer, save :: NNodeBasisSendC(:) => null()
-        integer, pointer, save :: NNodeBandsSendListB(:,:) => null()
-        integer, pointer, save :: NNodeBandsSendListB2(:,:) => null()
-        integer, pointer, save :: NNodeBasisSendListC(:,:) => null()
-        integer, pointer, save, public :: numft2(:) => null()
-        integer, pointer, save :: numftG(:,:) => null()
-        integer, pointer, save :: numftL(:,:) => null()
-        integer, pointer, save :: numhijG(:,:) => null()
-        integer, pointer, save :: numhijL(:,:) => null()
-        integer, pointer, save :: listhijG(:) => null()
-        integer, pointer, save :: listhijL(:) => null()
-        integer, pointer, save, public  :: listft2(:,:) => null()
-        integer, pointer, save :: listftG(:,:) => null()
-        integer, pointer, save :: listftL(:,:) => null()
+        integer, pointer, save :: NNodeNo(:)
+        integer, pointer, save :: NNodeInBux(:)
+        integer, pointer, save :: NNodeInBux2(:)
+        integer, pointer, save :: NNodeInBuxPreN(:)
+        integer, pointer, save :: NNodeInBux2PreN(:)
+        integer, pointer, save :: Node2NNodePtr(:)
+        integer, pointer, save :: NNodeBandsSendB(:)
+        integer, pointer, save :: NNodeBasisSendC(:)
+        integer, pointer, save :: NNodeBandsSendListB(:,:)
+        integer, pointer, save :: NNodeBandsSendListB2(:,:)
+        integer, pointer, save :: NNodeBasisSendListC(:,:)
+        integer, pointer, save, public :: numft2(:)
+        integer, pointer, save :: numftG(:,:)
+        integer, pointer, save :: numftL(:,:)
+        integer, pointer, save :: numhijG(:,:)
+        integer, pointer, save :: numhijL(:,:)
+        integer, pointer, save :: listhijG(:)
+        integer, pointer, save :: listhijL(:)
+        integer, pointer, save, public  :: listft2(:,:)
+        integer, pointer, save :: listftG(:,:)
+        integer, pointer, save :: listftL(:,:)
         integer,          save :: MaxListHijG
         integer,          save :: MaxListHijL
         integer,          save :: MaxFtG
@@ -75,13 +78,13 @@ C
 C
 C  Data store for communication of B
 C
-        integer, pointer, save :: ndataBR(:) => null()
-        integer, pointer, save :: ndataBS(:) => null()
-        integer, pointer, save :: ndataBR2(:) => null()
-        integer, pointer, save :: ndataFR(:) => null()
-        integer, pointer, save :: ndataFS(:) => null()
-        real(dp),pointer, save :: buxstore(:) => null()
-        real(dp),pointer, save :: buxstore2(:) => null()
+        integer, pointer, save :: ndataBR(:)
+        integer, pointer, save :: ndataBS(:)
+        integer, pointer, save :: ndataBR2(:)
+        integer, pointer, save :: ndataFR(:)
+        integer, pointer, save :: ndataFS(:)
+        real(dp),pointer, save :: buxstore(:)
+        real(dp),pointer, save :: buxstore2(:)
 C
 C  Statistics for data transfer
 C
@@ -110,29 +113,48 @@ C Passed variables
      .  numh(no_l),listhptr(no_l),listh(maxnh)
 
 C Internal variables
-      integer                 :: ind
-      integer                 :: m
-      integer                 :: mn
-      integer                 :: MPIerror
-      integer                 :: mu
-      integer                 :: mug
-      integer                 :: n
-      integer                 :: nRequest
-      integer, pointer, save :: Request(:) => null()
-      integer, pointer, save :: Status(:,:) => null()
-      logical, pointer, save :: lConnected(:,:) => null()
-      logical, pointer, save :: lConnectedL(:) => null()
-      logical, pointer, save :: lNodeNeeded(:) => null()
+      integer                    :: ind
+      integer                    :: m
+      integer                    :: mn
+      integer                    :: MPIerror
+      integer                    :: mu
+      integer                    :: mug
+      integer                    :: n
+      integer                    :: nRequest
+      integer, allocatable, save :: Request(:)
+      integer, allocatable, save :: Status(:,:)
+      logical,              save :: firstcall = .true.
+      logical, allocatable, save :: lConnected(:,:)
+      logical, allocatable, save :: lConnectedL(:)
+      logical, allocatable, save :: lNodeNeeded(:)
 
 C Call timer
       call timer('setglobal',1)
+
+C Nullify arrays on firstcall
+      if (firstcall) then
+        nullify(NNodeNo)
+        nullify(Node2NNodePtr)
+        nullify(NNodeBasisSendC)
+        nullify(NNodeBasisSendListC)
+        nullify(ndataBR)
+        nullify(ndataBS)
+        nullify(ndataBR2)
+        nullify(NNodeInBux)
+        nullify(NNodeInBux2)
+        nullify(NNodeInBuxPreN)
+        nullify(NNodeInBux2PreN)
+        nullify(buxstore)
+        nullify(buxstore2)
+        firstcall = .false.
+      endif
 
 C--------------------------
 C Find neighbouring nodes -
 C--------------------------
 C Check orbitals to see which ones are connected to orbitals on other nodes
-      call re_alloc( lConnected, 1, no_u, 1, Nodes, 'lConnected',
-     &               'globalise' )
+      allocate(lConnected(no_u,Nodes))
+      call memory('A','L',no_u*Nodes,'globalise')
 
       lConnected(1:no_u,1:Nodes) = .false.
       do m = 1,no_l
@@ -148,7 +170,8 @@ C Check orbitals to see which ones are connected to orbitals on other nodes
       enddo
 
 C Set flag as to whether a Node needs to be communicated with
-      call re_alloc( lNodeNeeded, 1, Nodes, 'lNodeNeeded', 'globalise' )
+      allocate(lNodeNeeded(Nodes))
+      call memory('A','L',Nodes,'globalise')
       lNodeNeeded(1:Nodes) = .false.
       do n = 1,Nodes
         do mu = 1,no_u
@@ -179,7 +202,8 @@ C Store node numbers
           NNodeNo(NNodes) = n - 1
         endif
       enddo
-      call de_alloc(lNodeNeeded, 'lNodeNeeded', 'globalise' )
+      call memory('D','L',size(lNodeNeeded),'globalise')
+      deallocate(lNodeNeeded)
 
 C Size data counter arrays
       call re_alloc(ndataBR,1,NNodes,name='ndataBR')
@@ -194,7 +218,8 @@ C----------------------------------------------
 C Find elements of C/grad to be communicated  -
 C----------------------------------------------
 C Allocate array for local flags as to columns needed
-      call re_alloc( lConnectedL, 1, no_u, 'lConnectedL', 'globalise')
+      allocate(lConnectedL(no_u))
+      call memory('A','L',no_u,'globalise')
       lConnectedL(1:no_u) = .false.
 
 C Set local flags for C columns held locally
@@ -204,9 +229,10 @@ C Set local flags for C columns held locally
       enddo
 
 C Allocate communication arrays
-      call re_alloc( Request, 1, 2*NNodes, 'Request', 'globalise')
-      call re_alloc( Status, 1, MPI_Status_Size, 1, 2*NNodes, 'Request',
-     &               'globalise')
+      allocate(Request(2*NNodes))
+      call memory('A','I',2*NNodes,'globalise')
+      allocate(Status(MPI_Status_Size,2*NNodes))
+      call memory('A','I',2*NNodes*MPI_Status_Size,'globalise')
 
 C Communicate flags to neighbouring nodes
       nRequest = 0
@@ -262,10 +288,14 @@ C Find basis functions that need to be transfered
       enddo
 
 C Free communication arrays
-      call de_alloc( Status, 'Status', 'globalise' )
-      call de_alloc( Request, 'Request', 'globalise' )
-      call de_alloc( lConnectedL, 'lConnectedL', 'globalise' )
-      call de_alloc( lConnected, 'lConnected', 'globalise' )
+      call memory('D','I',size(Status),'globalise')
+      deallocate(Status)
+      call memory('D','I',size(Request),'globalise')
+      deallocate(Request)
+      call memory('D','L',size(lConnectedL),'globalise')
+      deallocate(lConnectedL)
+      call memory('D','L',size(lConnected),'globalise')
+      deallocate(lConnected)
 
 C Call timer
       call timer('setglobal',2)
@@ -289,33 +319,49 @@ C Passed variables
      .  nbands,Node
 
 C Internal variables
-      integer                :: i
-      integer                :: ig
-      integer                :: il
-      integer                :: jn
-      integer                :: n
-      integer                :: MPIerror
-      integer                :: nRequest
-      logical, pointer, save :: lBneededG(:,:) => null()
-      logical, pointer, save :: lBneededL(:) => null()
-      integer, pointer, save :: Request(:) => null()
-      integer, pointer, save :: Status(:,:) => null()
+      integer                    :: i
+      integer                    :: ig
+      integer                    :: il
+      integer                    :: jn
+      integer                    :: n
+      integer                    :: nsize
+      logical,              save :: firstcall = .true.
+      integer                    :: MPIerror
+      integer                    :: nRequest
+      logical, allocatable, save :: lBneededG(:,:)
+      logical, allocatable, save :: lBneededL(:)
+      integer, allocatable, save :: Request(:)
+      integer, allocatable, save :: Status(:,:)
 
 C Call timer
       call timer('setglobalB',1)
+
+C Nullify arrays on firstcall
+      if (firstcall) then
+        nullify(NNodeBandsSendB)
+        nullify(NNodeBandsSendListB)
+        nullify(NNodeBandsSendListB2)
+        nullify(numhijG)
+        nullify(numhijL)
+        nullify(listhijG)
+        nullify(listhijL)
+        firstcall = .false.
+      endif
 
 C----------------------------------------------
 C Find elements of bux1/2 to be communicated  -
 C----------------------------------------------
 C Allocate array for storing which bands are needed 
-      call re_alloc( lBneededL, 1, nbands, 'lBneededL', 'globalise' )
-      call re_alloc( lBneededG, 1, nbands, 1, NNodes, 'lBneededG',
-     &               'globalise' )
+      allocate(lBneededL(nbands))
+      call memory('A','L',nbands,'globalise')
+      allocate(lBneededG(nbands,NNodes))
+      call memory('A','L',nbands*NNodes,'globalise')
 
 C Allocate space for communication arrays
-      call re_alloc( Request, 1, 2*NNodes, 'Request', 'globalise' )
-      call re_alloc( Status, 1, MPI_Status_Size, 1, 2*NNodes, 'Status',
-     &               'globalise' )
+      allocate(Request(2*NNodes))
+      call memory('A','I',2*NNodes,'globalise')
+      allocate(Status(MPI_Status_Size,2*NNodes))
+      call memory('A','I',2*NNodes*MPI_Status_Size,'globalise')
 
 C Initialise local flag array as to whether band is needed
       lBneededL(1:nbands) = .false.
@@ -498,12 +544,16 @@ C Wait for everything to finish
       call MPI_WaitAll(nRequest,Request,Status,MPIerror)
 
 C Free communication arrays
-      call de_alloc( Status, 'Status', 'globalise' )
-      call de_alloc( Request, 'Request', 'globalise' )
+      call memory('D','I',size(Status),'globalise')
+      deallocate(Status)
+      call memory('D','I',size(Request),'globalise')
+      deallocate(Request)
 
 C Free workspace array
-      call de_alloc( lBneededG, 'lBneededG', 'globalise' )
-      call de_alloc( lBneededL, 'lBneededL', 'globalise' )
+      call memory('D','L',size(lBneededG),'globalise')
+      deallocate(lBneededG)
+      call memory('D','L',size(lBneededL),'globalise')
+      deallocate(lBneededL)
 
 C Call timer
       call timer('setglobalB',2)
@@ -536,18 +586,18 @@ C Passed variables
      .  c(ncmax,no_cl,nspin)
 
 C Internal variables
-      integer                 :: i
-      integer                 :: ik
-      integer                 :: is
-      integer                 :: mu
-      integer                 :: mug
-      integer                 :: n
-      integer                 :: ndata
-      integer                 :: MPIerror
-      integer,  pointer, save :: Request(:,:) => null()
-      integer,  pointer, save :: Status(:,:) => null()
-      real(dp), pointer, save :: gtmp(:,:) => null()
-      real(dp), pointer, save :: gtmp2(:,:) => null()
+      integer                     :: i
+      integer                     :: ik
+      integer                     :: is
+      integer                     :: mu
+      integer                     :: mug
+      integer                     :: n
+      integer                     :: ndata
+      integer                     :: MPIerror
+      integer,  allocatable, save :: Request(:,:)
+      integer,  allocatable, save :: Status(:,:)
+      real(dp), allocatable, save :: gtmp(:,:)
+      real(dp), allocatable, save :: gtmp2(:,:)
 
 C Call timer
       call timer('globaliseC',1)
@@ -557,13 +607,14 @@ C Global reduction only involving neighbouring nodes
 C
 
 C Allocate space for communication arrays
-      call re_alloc( Request, 1, 2, 1, NNodes, 'Request', 'globalise' )
-      call re_alloc( Status, 1, MPI_Status_Size, 1, 2*NNodes, 'Status',
-     &               'globalise' )
-      call re_alloc( gtmp, 1, ncmax*MaxBasisSendC*nspin, 1, NNodes,
-     &               'gtmp', 'globalise' )
-      call re_alloc( gtmp2, 1, ncmax*MaxBasisSendC*nspin, 1, NNodes,
-     &               'gtmp2', 'globalise' )
+      allocate(Request(2,NNodes))
+      call memory('A','I',2*NNodes,'globalise')
+      allocate(Status(MPI_Status_Size,2*NNodes))
+      call memory('A','I',2*NNodes*MPI_Status_Size,'globalise')
+      allocate(gtmp(ncmax*MaxBasisSendC*nspin,NNodes))
+      call memory('A','D',ncmax*MaxBasisSendC*NNodes*nspin,'globalise')
+      allocate(gtmp2(ncmax*MaxBasisSendC*nspin,NNodes))
+      call memory('A','D',ncmax*MaxBasisSendC*NNodes*nspin,'globalise')
 
 C Loop over neighbouring nodes
       do n = 1,NNodes
@@ -618,10 +669,14 @@ C Load data arrays
       enddo
 
 C Deallocate space for communication arrays
-      call de_alloc( gtmp2, 'gtmp2', 'globalise' )
-      call de_alloc( gtmp, 'gtmp', 'globalise' )
-      call de_alloc( Status, 'Status', 'globalise' )
-      call de_alloc( Request, 'Request', 'globalise' )
+      call memory('D','D',size(gtmp2),'globalise')
+      deallocate(gtmp2)
+      call memory('D','D',size(gtmp),'globalise')
+      deallocate(gtmp)
+      call memory('D','I',size(Status),'globalise')
+      deallocate(Status)
+      call memory('D','I',size(Request),'globalise')
+      deallocate(Request)
 
 C Call timer
       call timer('globaliseC',2)
@@ -816,19 +871,20 @@ C Passed variables
      .  Node
 
 C Internal variables
-      integer                 :: n
-      integer                 :: MPIerror
-      integer                 :: nRequest
-      integer,  pointer, save :: Request(:) => null(),
-     $                           Status(:,:) => null()
+      integer          :: n
+      integer          :: MPIerror
+      integer          :: nRequest
+      integer,  allocatable, save ::
+     .  Request(:), Status(:,:)
 
 C Call timer
       call timer('globaliseB',1)
 
 C Allocate space for communication arrays
-      call re_alloc( Request, 1, 2*NNodes, 'Request', 'globalise' )
-      call re_alloc( Status, 1, MPI_Status_Size, 1, 2*NNodes, 'Status',
-     &               'globalise' )
+      allocate(Request(2*NNodes))
+      call memory('A','I',2*NNodes,'globalise')
+      allocate(Status(MPI_Status_Size,2*NNodes))
+      call memory('A','I',2*NNodes*MPI_Status_Size,'globalise')
 
 C Loop over neighbouring nodes to distribute elements
       nRequest = 0
@@ -865,8 +921,10 @@ C Reinitialise data counters ready for unloading
       ndataBR(1:NNodes) = 0
 
 C Deallocate space for communication arrays
-      call de_alloc( Status, 'Status', 'globalise' )
-      call de_alloc( Request, 'Request', 'globalise' )
+      call memory('D','I',size(Status),'globalise')
+      deallocate(Status)
+      call memory('D','I',size(Request),'globalise')
+      deallocate(Request)
 
 C Call timer
       call timer('globaliseB',2)
@@ -891,6 +949,7 @@ C Passed variables
 
 C Internal variables
       integer          :: i
+      integer          :: iadd
       integer          :: ig
       integer          :: j
       integer          :: jn
@@ -1282,17 +1341,17 @@ C Passed variables
      .  ft(nftmax,no_cl),ftG(MaxFt2,no_cl)
 
 C Internal variables
-      integer                 :: i
-      integer                 :: ik
-      integer                 :: mu
-      integer                 :: mug
-      integer                 :: n
-      integer                 :: MPIerror
-      integer,  pointer, save :: Request(:,:) => null()
-      integer,  pointer, save :: Status(:,:) => null()
-      real(dp), pointer, save :: gtmp(:,:) => null()
-      real(dp), pointer, save :: gtmp2(:,:) => null()
-      real(dp), pointer, save :: gvec(:) => null()
+      integer          :: i
+      integer          :: ik
+      integer          :: mu
+      integer          :: mug
+      integer          :: n
+      integer          :: MPIerror
+      integer,  allocatable, save :: Request(:,:)
+      integer,  allocatable, save :: Status(:,:)
+      real(dp), allocatable, save :: gtmp(:,:)
+      real(dp), allocatable, save :: gtmp2(:,:)
+      real(dp), allocatable, save :: gvec(:)
 
 C Call timer
       call timer('globaliseF',1)
@@ -1302,12 +1361,16 @@ C Global reduction only involving neighbouring nodes
 C
 
 C Allocate space for communication arrays
-      call re_alloc( Request, 1, 2, 1, NNodes, 'Request', 'globalise' )
-      call re_alloc( Status, 1, MPI_Status_Size, 1, 2*NNodes, 'Status',
-     &               'globalise' )
-      call re_alloc( gtmp, 1, MaxFtL, 1, NNodes, 'gtmp', 'globalise' )
-      call re_alloc( gtmp2, 1, MaxFtG, 1, NNodes, 'gtmp2', 'globalise' )
-      call re_alloc( gvec, 1, nbands, 'gvec', 'globalise' )
+      allocate(Request(2,NNodes))
+      call memory('A','I',2*NNodes,'globalise')
+      allocate(Status(MPI_Status_Size,2*NNodes))
+      call memory('A','I',2*NNodes*MPI_Status_Size,'globalise')
+      allocate(gtmp(MaxFtL,NNodes))
+      call memory('A','D',MaxFtL*NNodes,'globalise')
+      allocate(gtmp2(MaxFtG,NNodes))
+      call memory('A','D',MaxFtG*NNodes,'globalise')
+      allocate(gvec(nbands))
+      call memory('A','D',nbands,'globalise')
 
       ftG(1:MaxFt2,1:no_cl) = 0.0d0
       gvec(1:nbands) = 0.0d0
@@ -1379,11 +1442,16 @@ C Load data arrays
       enddo
 
 C Deallocate space for communication arrays
-      call de_alloc( gvec, 'gvec', 'globalise' )
-      call de_alloc( gtmp2, 'gtmp2', 'globalise' )
-      call de_alloc( gtmp, 'gtmp', 'globalise' )
-      call de_alloc( Status, 'Status', 'globalise' )
-      call de_alloc( Request, 'Request', 'globalise' )
+      call memory('D','D',size(gvec),'globalise')
+      deallocate(gvec)
+      call memory('D','D',size(gtmp2),'globalise')
+      deallocate(gtmp2)
+      call memory('D','D',size(gtmp),'globalise')
+      deallocate(gtmp)
+      call memory('D','I',size(Status),'globalise')
+      deallocate(Status)
+      call memory('D','I',size(Request),'globalise')
+      deallocate(Request)
 
 C Call timer
       call timer('globaliseF',2)
@@ -1405,22 +1473,35 @@ C Passed variables
      .  no_u,nbands,no_cl,maxnft,Node
 
 C Internal variables
-      integer                :: i
-      integer                :: m
-      integer                :: MPIerror
-      integer                :: mu
-      integer                :: mug
-      integer                :: muk
-      integer                :: n
-      integer                :: nRequest
-      integer                :: nsizeL
-      integer                :: nsizeG
-      integer, pointer, save :: Request(:) => null(),
-     $                          Status(:,:) => null()
-      logical, pointer, save :: lNeeded(:) => null()
+      integer                    :: i
+      integer                    :: m
+      integer                    :: MPIerror
+      integer                    :: mu
+      integer                    :: mug
+      integer                    :: muk
+      integer                    :: n
+      integer                    :: nRequest
+      integer                    :: nsizeL
+      integer                    :: nsizeG
+      integer, allocatable, save :: Request(:), Status(:,:)
+      logical,              save :: firstcall = .true.
+      logical, allocatable, save :: lNeeded(:)
 
 C Call timer
       call timer('setglobalF',1)
+
+C Nullify arrays on firstcall
+      if (firstcall) then
+        nullify(numft2)
+        nullify(numftG)
+        nullify(numftL)
+        nullify(listft2)
+        nullify(listftG)
+        nullify(listftL)
+        nullify(ndataFR)
+        nullify(ndataFS)
+        firstcall = .false.
+      endif
 
 C----------------------------------------------
 C Find elements of Ft/Fst to be communicated  -
@@ -1432,12 +1513,14 @@ C Size data arrays
       call re_alloc(numftG,1,MaxBasisSendC,1,NNodes,name='numftG')
 
 C Allocate array for local flags as to columns needed
-      call re_alloc( lNeeded, 1, no_u, 'Request', 'globalise' )
+      allocate(lNeeded(no_u))
+      call memory('A','L',no_u,'globalise')
 
 C Allocate communication arrays
-      call re_alloc( Request, 1, 2*NNodes, 'Request', 'globalise' )
-      call re_alloc( Status, 1, MPI_Status_Size, 1, 2*NNodes, 'Status',
-     &               'globalise' )
+      allocate(Request(2*NNodes))
+      call memory('A','I',2*NNodes,'globalise')
+      allocate(Status(MPI_Status_Size,2*NNodes))
+      call memory('A','I',2*NNodes*MPI_Status_Size,'globalise')
 
 C Loop over neighbouring nodes
       nRequest = 0
@@ -1578,9 +1661,12 @@ C Find true list of Ft elements
       enddo
 
 C Free communication arrays
-      call de_alloc( Status, 'Status', 'globalise' )
-      call de_alloc( Request, 'Request', 'globalise' )
-      call de_alloc( lNeeded, 'lNeeded', 'globalise' )
+      call memory('D','I',size(Status),'globalise')
+      deallocate(Status)
+      call memory('D','I',size(Request),'globalise')
+      deallocate(Request)
+      call memory('D','L',size(lNeeded),'globalise')
+      deallocate(lNeeded)
 
 C Call timer
       call timer('setglobalF',2)

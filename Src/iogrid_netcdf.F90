@@ -1,10 +1,3 @@
-! ---
-! Copyright (C) 1996-2016	The SIESTA group
-!  This file is distributed under the terms of the
-!  GNU General Public License: see COPYING in the top directory
-!  or http://www.gnu.org/copyleft/gpl.txt .
-! See Docs/Contributors.txt for a list of contributors.
-! ---
 module iogrid_netcdf
 
 use parallel, only: Node, Nodes, ProcessorY
@@ -115,13 +108,13 @@ subroutine set_box_limits(mesh,nsm)
         call die()
      endif
 
-! JMS: commented out. 2009/02/06
-!     if (Node == 0) then
-!        do iNode= 1, Nodes
-!           write(6,"(a,i4,a,i12,3x,3(i4,a1,i4))") "iogrid_netcdf: -- Node ", iNode, " :", npt_node(iNode), &
-!                           (distr%box(1,j,iNode), ":", distr%box(2,j,iNode), j=1,3)
-!        enddo
-!     endif
+     if (Node == 0) then
+        do iNode= 1, Nodes
+!!$        write(6,"(a,i4,a,i12,3x,3(i4,a1,i4))")
+!!$                "-- Node ", iNode, " :", npt_node(iNode), &
+!!$               (distr%box(1,j,iNode), ":", distr%box(2,j,iNode), j=1,3)
+        enddo
+     endif
 
      deallocate(npt_node)
 
@@ -267,12 +260,9 @@ end subroutine write_grid_netcdf
 !----------------------------------------
 subroutine read_grid_netcdf(mesh,nspin,npt_l,gridfunc,name)
 use precision, only: dp, grid_p
-
 #ifdef CDF
 use netcdf
 #endif
-
-implicit none
 
       integer, intent(in)          ::     mesh(3)      ! Number of mesh divisions of each lattice vector
       integer, intent(in)          ::     nspin

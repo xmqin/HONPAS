@@ -1,0 +1,143 @@
+#	ATOM plotting package -- SM version
+#
+#	Send bugs and comments to wdpgaara@lg.ehu.es
+#
+#	High level macros:
+#
+#	wfns   : Plots wavefunctions in real space and reciprocal space
+#	pots   : Plots pseudopotentials in real and reciprocal space
+#	logder : Plots logarithmic derivative information
+#       core   : Plots core charge (and pseudocore)
+#       coreq  : Plots Fourier transform of pseudocore charge
+#
+pot_macro 4
+		data $1
+		read { x 1 y 2}
+		limits 0 $4 y
+		box
+		connect x y
+		read y 3
+		ltype 2
+		connect x y
+		ltype 0
+		xlabel $2
+		ylabel $3
+
+potsq	#(ATOM) Fourier-space pseudopotentials
+
+		window 2 3 2 3
+		pot_macro PSPOTQ0 q(a.u.) q^2V_s(q)  20 
+		window 2 3  2 2
+		pot_macro PSPOTQ1 q(a.u.) q^2V_p(q)  20 
+		window 2 3  2 1
+		pot_macro PSPOTQ2 q(a.u.) q^2V_d(q)  20
+
+potsr	#(ATOM) Real-space pseudopotentials
+
+		window 2 3  1 3
+		pot_macro PSPOTR0 r(a.u.) V_s(r)   10
+		window 2 3  1 2
+		pot_macro PSPOTR1 r(a.u.) V_p(r)   10
+		window 2 3  1 1
+		pot_macro PSPOTR2 r(a.u.) V_d(r)   10 
+
+pots
+		erase
+		potsr
+		potsq
+
+wfnq_mac  3			
+		data $1
+		read { x 1 y 2}
+		limits x y
+		box
+		connect x y
+		xlabel $2
+		ylabel $3
+
+wfnr_mac 4
+		data $4
+		read { x 1 y 2}
+		limits 0 10  y
+		box
+		ltype 1
+		connect x y
+		ltype 0
+		data $1
+		read { x 1 y 2}
+		connect x y
+		read { x 3 y 1}
+		ltype 2
+		connect x y
+		ltype 0
+		xlabel $2
+		ylabel $3
+
+qwfns	#(ATOM) Wavefunctions in Fourier space
+		window 2 3 2 3
+		wfnq_mac PSWFNQ0 q(a.u.) \psi_s(q)/q^2
+		window 2 3 2 2
+		wfnq_mac PSWFNQ1 q(a.u.) \psi_p(q)/q^2
+		window 2 3 2 1
+		wfnq_mac PSWFNQ2 q(a.u.) \psi_d(q)/q^2
+
+rwfns	#(ATOM)Real space wavefunctions (all-electron and pseudo)
+		window 2 3  1 3
+		wfnr_mac PSWFNR0 r(a.u.) \psi_s(r)  AEWFNR0
+		window 2 3  1 2
+		wfnr_mac PSWFNR1 r(a.u.) \psi_p(r)  AEWFNR1
+		window 2 3  1 1
+		wfnr_mac PSWFNR2 r(a.u.) \psi_d(r)  AEWFNR2
+
+wfns
+		erase
+		rwfns          #  Only the real-space plots are interesting.
+		qwfns
+
+ld_mac  3
+		data $2
+		read { x 1 y 2}
+		limits x -10 10     # A heuristic range
+		box
+		ltype 1 connect x y ltype 0
+		data $1
+		read { x 1 y 2}
+		connect x y
+		read { eigv 3 y 2 }
+		ltype 2 connect eigv y ltype 0
+		xlabel E(ryd)
+		ylabel $3
+
+logder 		#(ATOM) Logarithmic derivatives
+		erase
+		window 1 3 1 3
+                ld_mac AELOGD0 PSLOGD0 {\psi_s'/\psi_s}
+		window 1 3 1 2
+                ld_mac AELOGD1 PSLOGD1 {\psi_p'/\psi_p} 
+		window 1 3 1 1
+                ld_mac AELOGD2 PSLOGD2 {\psi_d'/\psi_d}
+
+core		#(ATOM) core and pseudocore
+		erase
+		data CHARGE
+		read { r 1 c 4}
+		data PSCHARGE
+		read { cc 4}
+		limits 0 3 c
+		box
+		connect r c
+		ctype red connect r cc
+		ctype 0
+
+coreq		#(ATOM) pseudocore fourier transform
+		erase
+		data COREQ
+		read { q 1 c 2}
+		limits q c
+		box
+		connect q c
+
+
+
+
+

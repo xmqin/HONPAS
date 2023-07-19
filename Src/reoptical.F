@@ -1,9 +1,12 @@
 ! 
-! Copyright (C) 1996-2016	The SIESTA group
-!  This file is distributed under the terms of the
-!  GNU General Public License: see COPYING in the top directory
-!  or http://www.gnu.org/copyleft/gpl.txt.
-! See Docs/Contributors.txt for a list of contributors.
+! This file is part of the SIESTA package.
+!
+! Copyright (c) Fundacion General Universidad Autonoma de Madrid:
+! E.Artacho, J.Gale, A.Garcia, J.Junquera, P.Ordejon, D.Sanchez-Portal
+! and J.M.Soler, 1996- .
+! 
+! Use of this software constitutes agreement with the full conditions
+! given in the SIESTA license, as signed by all legitimate users.
 !
       subroutine reoptical(DoOptical,nmeshk,displ,wmin,wmax,smooth,
      .                     efield,nbands,option,escissor)
@@ -58,9 +61,12 @@ C *******************************************************************
       use precision
       use parallel,    only : Node, Nodes
       use fdf
+      use parsing,     only : parse
       use sys,         only : die
-      use m_spin, only: NonCol, SpOrb
-      
+#ifdef MPI
+      use mpi_siesta
+#endif
+
       implicit          none
 
 C Passed variables 
@@ -71,12 +77,15 @@ C Passed variables
       character*12      option
 
 C Internal variables 
-      integer           ni, nn, nr, ix
+      character         line*130, names*80
+      integer           ni, nn, nr, nv, iu, ix
+      integer           integs(4), lastc, lc(0:3)
       logical           offset
       logical           present
-
-      type(block_fdf)            :: bfdf
-      type(parsed_line), pointer :: pline
+      real(dp)          reals(4), values(4)
+#ifdef MPI
+      integer           MPIerror
+#endif
 
 C Initialise outputs to defaults
       do ix = 1,3
@@ -89,94 +98,119 @@ C Initialise outputs to defaults
       smooth = 0.0d0
       option = 'polycrystal'
 
+      if (Node.eq.0) then
 C Read flag for optical calculation
-      DoOptical = fdf_boolean('OpticalCalculation',.false.)
-      if ( NonCol .or. SpOrb ) then
-         if ( DoOptical ) then
-            if (Node.eq.0) then
-               write(6,'(/2a)') 'reoptical: Not possible ',
-     + 'with non-collinear spin configuration.'
-            end if
-         end if
-         DoOptical = .false.
-      end if
+        DoOptical = fdf_boolean('OpticalCalculation',.false.)
 
-      if (DoOptical) then
+        if (DoOptical) then
 C Read energy range
-        wmin = fdf_physical('Optical.EnergyMinimum', 0.0d0,'Ry')
-        wmax = fdf_physical('Optical.EnergyMaximum',10.0d0,'Ry')
-        wmin = abs(wmin)
-        wmax = abs(wmax)
+          wmin = fdf_physical('Optical.EnergyMinimum', 0.0d0,'Ry')
+          wmax = fdf_physical('Optical.EnergyMaximum',10.0d0,'Ry')
+          wmin = abs(wmin)
+          wmax = abs(wmax)
 
 C Read Gaussian smearing width
-        smooth = fdf_physical('Optical.Broaden',0.0d0,'Ry')
-        smooth = abs(smooth)
+          smooth = fdf_physical('Optical.Broaden',0.0d0,'Ry')
+          smooth = abs(smooth)
 
 C Read scissor operator
-        escissor = fdf_physical('Optical.Scissor',0.0d0,'Ry')
-        escissor = abs(escissor)
+          escissor = fdf_physical('Optical.Scissor',0.0d0,'Ry')
+          escissor = abs(escissor)
 
 C Read number of bands
-        nn = nbands
-        nbands = fdf_integer('Optical.NumberOfBands',nn)
-        nbands = min(nbands,nn)
-        nbands = max(nbands,1)
+          nn = nbands
+          nbands = fdf_integer('Optical.NumberOfBands',nn)
+          nbands = min(nbands,nn)
+          nbands = max(nbands,1)
 
 C Read whether to offset the mesh from gamma
-        offset = fdf_boolean('Optical.OffsetMesh',.false.)
-        if (offset) displ = 0.5d0
+          offset = fdf_boolean('Optical.OffsetMesh',.false.)
+          if (offset) displ = 0.5d0
 
 C Read BZ sampling grid
-        present = fdf_block('Optical.Mesh',bfdf)
-        if (present) then
-          if (.not. fdf_bline(bfdf,pline))
-     +      call die('reoptical: ERROR in Optical.Mesh block')
-          ni = fdf_bnintegers(pline)
-          if (ni .lt. 3) then 
-            call die('reoptical: Check syntax in Optical.Mesh block')
-          endif  
-          nmeshk(1) = fdf_bintegers(pline,1)
-          nmeshk(2) = fdf_bintegers(pline,2)
-          nmeshk(3) = fdf_bintegers(pline,3)
-          call fdf_bclose(bfdf)
-        endif
+          present = fdf_block('Optical.Mesh',iu)
+          if (present) then
+            read(iu,'(a)', end=50) line
+            lastc = index(line,'#') - 1
+            if (lastc .le. 0) lastc = len(line)
+            call parse( line(1:lastc), nn, lc, names, nv, values,
+     .                  ni, integs, nr, reals )
+            if (.not.(ni.ge.3)) then 
+              call die('reoptical: Check syntax in Optical.Mesh block')
+            endif  
+            nmeshk(1) = integs(1)
+            nmeshk(2) = integs(2)
+            nmeshk(3) = integs(3)
+          endif
 
 C Read whether this is a polarised, unpolarised or polycrystal calc
-        option = fdf_string('Optical.PolarizationType','polycrystal')
-        if ((option.ne.'polycrystal') .and. (option.ne.'unpolarized')
-     +      .and. (option.ne.'polarized')) then
-          if (Node.eq.0) then
-            write(6,'(/a)') 'reoptical: WARNING '
-            write(6,'(a,a)')
-     +        'reoptical: read Optical.PolarizationType: ', option
-            write(6,'(a,/a,/a)')
-     +      'reoptical: input Optical.PolarizationType must be one of ',
-     +      'reoptical: the followings: ', 
-     +      'reoptical: polarized, unpolarized, or polycrystal' 
-            write(6,'(a)')
-     +      'reoptical: Assuming Optical.PolarizationType = polycrystal'
-            option = 'polycrystal'
+          option = fdf_string('Optical.PolarizationType','polycrystal')
+          if(option.ne.'polycrystal' .and. option.ne.'unpolarized' 
+     +         .and. option.ne.'polarized' ) then 
+               write(6,'(/a)')
+     + 'reoptical: WARNING '
+              write(6,'(a,a)')
+     + 'reoptical: read Optical.PolarizationType: ',option
+              write(6,'(a,/a,/a)')
+     + 'reoptical: input Optical.PolarizationType must be one of ',
+     + 'reoptical: the followings: ', 
+     + 'reoptical: polarized, unpolarized, or polycrystal' 
+              write(6,'(a)')
+     + 'reoptical: Assuming Optical.PolarizationType = polycrystal'
+              option='polycrystal'
           endif
-        endif
 
 C Read datablock for electric field
-        if (option .ne. 'polycrystal') then
-          present = fdf_block('Optical.Vector',bfdf)
-          if (present) then
-            if (.not. fdf_bline(bfdf,pline))
-     +        call die('reoptical: ERROR in Optical.Vector block')
-            nr = fdf_bnreals(pline)
-            if (nr .lt. 3) then   
-              call die('reoptical: Check syntax in ' //
-     +                 'Optical.Vector block')
+          if (option.ne.'polycrystal') then
+            present = fdf_block('Optical.Vector',iu)
+            if (present) then
+              read(iu,'(a)', end=50) line
+              lastc = index(line,'#') - 1
+              if (lastc .le. 0) lastc = len(line)
+              call parse( line(1:lastc), nn, lc, names, nv, values,
+     .                    ni, integs, nr, reals )
+              if (.not.(nr.ge.3)) then   
+                call die('reoptical: Check Optical.Vector block')
+              endif  
+              efield(1) = reals(1)
+              efield(2) = reals(2)
+              efield(3) = reals(3)
             endif
-            efield(1) = fdf_breals(pline,1)
-            efield(2) = fdf_breals(pline,2)
-            efield(3) = fdf_breals(pline,3)
           endif
+
         endif
 
       endif
+
+  50  continue 
+
+#ifdef MPI
+C Distribute information to all nodes
+      if (Nodes.gt.1) then
+        call MPI_Bcast(DoOptical,1,MPI_logical,0,MPI_Comm_World,
+     .    MPIerror)
+        if (DoOptical) then
+          call MPI_Bcast(nmeshk,3,MPI_integer,0,MPI_Comm_World,
+     .      MPIerror)
+          call MPI_Bcast(nbands,1,MPI_integer,0,MPI_Comm_World,
+     .      MPIerror)
+          call MPI_Bcast(displ,1,MPI_double_precision,0,
+     .      MPI_Comm_World,MPIerror)
+          call MPI_Bcast(wmin,1,MPI_double_precision,0,
+     .      MPI_Comm_World,MPIerror)
+          call MPI_Bcast(wmax,1,MPI_double_precision,0,
+     .      MPI_Comm_World,MPIerror)
+          call MPI_Bcast(smooth,1,MPI_double_precision,0,
+     .      MPI_Comm_World,MPIerror)
+          call MPI_Bcast(escissor,1,MPI_double_precision,0,
+     .      MPI_Comm_World,MPIerror)
+          call MPI_Bcast(efield,3,MPI_double_precision,0,
+     .      MPI_Comm_World,MPIerror)
+          call MPI_Bcast(option,12,MPI_character,0,
+     .      MPI_Comm_World,MPIerror)
+        endif
+      endif
+#endif
 
       return
       end

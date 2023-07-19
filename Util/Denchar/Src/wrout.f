@@ -1,10 +1,3 @@
-! ---
-! Copyright (C) 1996-2016	The SIESTA group
-!  This file is distributed under the terms of the
-!  GNU General Public License: see COPYING in the top directory
-!  or http://www.gnu.org/copyleft/gpl.txt .
-! See Docs/Contributors.txt for a list of contributors.
-! ---
 
       SUBROUTINE WROUT(IDIMEN, CHARGE, WAVES, IOPTION, NORMAL, COORPO, 
      .                 DIRVER1, DIRVER2, 
@@ -89,7 +82,15 @@ C Write general information only if called for the first time
 
       IF (FRSTME) THEN
 
-         WRITE(UNIT1,'(A,A)')
+
+        WRITE(UNIT1,'(A)')
+     .    '                          ************************       '
+        WRITE(UNIT1,'(A)')
+     .    '                          *  WELCOME TO DENCHAR  *       '
+        WRITE(UNIT1,'(A)')
+     .    '                          ************************       '
+
+        WRITE(UNIT1,'(A,A)')
      .    '  You are running DENCHAR for system: ',SNAME
         WRITE(UNIT1,'(A)')
      .    '  '
@@ -242,6 +243,25 @@ C Write general information only if called for the first time
         FRSTME = .FALSE.
 
       ENDIF
+
+      IF (CHARGE) THEN
+        
+        WRITE(UNIT1,'(A)')
+     .    '  '
+        WRITE(UNIT1,'(A)')
+     .    '  You are now computing charge density on the grid'
+
+      ENDIF
+
+      IF (WAVES) THEN
+        
+        WRITE(UNIT1,'(A)')
+     .    '  '
+        WRITE(UNIT1,'(A)')
+     .    '  You are now computing Wave Functions on the grid'
+
+      ENDIF
+
 
       END
        

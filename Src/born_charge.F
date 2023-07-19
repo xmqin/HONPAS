@@ -1,10 +1,3 @@
-! ---
-! Copyright (C) 1996-2016	The SIESTA group
-!  This file is distributed under the terms of the
-!  GNU General Public License: see COPYING in the top directory
-!  or http://www.gnu.org/copyleft/gpl.txt .
-! See Docs/Contributors.txt for a list of contributors.
-! ---
       module m_born_charge
 
       private
@@ -13,15 +6,14 @@
       CONTAINS
       
       subroutine born_charge()
-      use precision
       use siesta_options, only:dx
       use sparse_matrices
-      use parallel,       only: Node, Nodes, IOnode
+      use parallel,       only: Node, Nodes, IOnode, ParallelOverK
       USE m_ksvinit,      only: nkpol, kpol, wgthpol
       use siesta_geom,    only: na_u, na_s, xa, scell, ucell, isa
       use atomlist,       only: no_u, indxuo, iphorb, iaorb, lasto
       use atomlist,       only: rmaxo, no_s, no_l
-      use m_spin,         only: nspin, SPpol, NonCol, SpOrb ! CC RC Added
+      use m_spin,         only: nspin
       use m_ksv,          only: KSV_pol
       use siesta_geom,    only: shape
 #ifdef MPI
@@ -45,18 +37,6 @@
 !     It is called only for those steps (even) in which the dx
 !     is positive.
 !
-      if (NonCol .or. SpOrb) then
-       if ( IONode ) then
-          write(*,'(/,a)')
-     .         'born_charge: implemented only for spin-polarized '
-          write(*,'(a)')
-     .         'born_charge: or paramagnetic calculations'
-       end if
-       
-       return
-       
-      endif
-
       if (nkpol.lt.1) then
          if (IOnode) write(6,'(/,a,f12.6)')
      .        'siesta: specify polarization grid for BC calculation'
@@ -92,12 +72,12 @@
          call KSV_pol(na_u, na_s, xa, rmaxo, scell, ucell,
      .        no_u, no_l, no_s, nspin, qspin,
      .        maxnh, nkpol, numh, listhptr, listh,
-     .        H, S, xijo, indxuo, isa, iphorb,
+     .        H, S, H0, xijo, indxuo, isa, iphorb,
      .        iaorb, lasto, shape,
      .        nkpol,kpol,wgthpol, polR, polxyz)
       endif
       if (nkpol.gt.0.and.IOnode) then
-         call obc( polR, ucell, dx, nspin)
+         call obc( polxyz, polR, ucell, dx, nspin)
       endif
 
       end subroutine born_charge

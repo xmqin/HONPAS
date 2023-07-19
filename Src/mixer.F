@@ -1,203 +1,170 @@
-! ---
-! Copyright (C) 1996-2016	The SIESTA group
-!  This file is distributed under the terms of the
-!  GNU General Public License: see COPYING in the top directory
-!  or http://www.gnu.org/copyleft/gpl.txt .
-! See Docs/Contributors.txt for a list of contributors.
-! ---
       MODULE m_mixer
       private
       public :: mixer
 
       CONTAINS
  
-      subroutine mixer( iscf )
-
-      use precision,        only: dp
-      use siesta_options,   only: mixH, mix_scf_first
-      use siesta_options,   only: mullipop, muldeb, orbmoms
-      ! Spin mixing options
-      use m_mixing_scf, only: MIX_SPIN_ALL, MIX_SPIN_SPINOR
-      use m_mixing_scf, only: MIX_SPIN_SUM, MIX_SPIN_SUM_DIFF
-      use m_mixing_scf, only: mix_spin
-
-      use sparse_matrices,  only: Dold, Dscf, Hold, H, S
-      use sparse_matrices,  only: maxnh, numh, listhptr, listh
-      use siesta_geom,      only: na_u, isa
-      use atomlist,         only: iaorb, iphorb, lasto, no_u, no_l
-      use atomlist,         only: indxuo
-
-      use m_mixing_scf, only: scf_mix
-      use m_mixing, only: mixing
-      
-      use m_spin,           only: spin
-
-      use parallel,         only: IONode
+      subroutine mixer( iscf, dDmax )
+      USE siesta_options
+      use sparse_matrices
+      use siesta_geom
+      use atomlist, only: iaorb, iphorb, lasto, no_u, no_l
+      use m_broyden_mixing
+      use m_fire_mixing
+      use m_steps
+      use m_spin,   only: nspin
+      use m_pulay
+      use m_iodm,   only: write_dm
+      use parallel, only: IONode
+#ifdef MPI
+      use m_mpi_utils, only: globalize_max
+#endif
+#ifdef CDF
+      use iodm_netcdf, only: write_dm_netcdf
+#endif
+#ifdef TRANSIESTA
+      use m_energies, only: ef
+      use m_ts_iodm, only : write_ts_dm
+      use m_ts_options, only: mixH
+      use m_ts_global_vars, only: TSrun, TSiscf, Hold
+#endif /* TRANSIESTA */
 
       implicit none
 
-      real(dp), pointer :: Xin(:,:), Xout(:,:)
-      real(dp), allocatable :: F(:,:)
+      real(dp), dimension(:,:), pointer :: Xin => null()
+      real(dp), dimension(:,:), pointer :: Xout => null()  
 
-      integer,  intent(in)  :: iscf
+      integer,  intent(in)   :: iscf
+      real(dp), intent(out) :: dDmax     ! Max. change in density matrix elements
 
-      real(dp)              :: dtmp
-      integer               :: iiscf, i, is
-      integer :: nspin_mix
+      integer :: iiscf
+      logical :: mmix       ! Same as mix. Used in pulayx
 
-      external :: mulliken
-!-------------------------------------------------------------------- BEGIN
+#ifdef MPI
+      real(dp):: buffer1   ! Temporary for the result of a globalize operation
+#endif
+      external ::  mulliken
 
-      call timer( 'MIXER', 1 )
+!------------------------------------------------------------------------- BEGIN
 
-      if ( mixH ) then
-        ! Mix Hamiltonian
-        Xin => Hold
-        Xout => H
-        nspin_mix = spin%H
+#ifdef TRANSIESTA
+      if (mixH) then
+         ! Mix Hamiltonian
+         Xin => Hold
+         Xout => H
       else
-        ! Mix density matrix
-        Xin => Dold
-        Xout => Dscf
-        nspin_mix = spin%DM
-      end if
-
-
-      ! Create residual function to minimize
-      allocate(F(maxnh,nspin_mix))
-
-!$OMP parallel default(shared), private(dtmp,i,is)
-
-      ! prepare input...
-      select case ( mix_spin )
-      case ( MIX_SPIN_ALL , MIX_SPIN_SPINOR )
-        ! Xin and Xout are unchanged...
-      case ( MIX_SPIN_SUM , MIX_SPIN_SUM_DIFF )
-
-        ! transfer spin density to
-        ! spin-sum and spin-difference
-!$OMP do
-        do i = 1 , size(Xin,1)
-          dtmp = (Xin(i,1) + Xin(i,2)) * 0.5_dp
-          Xin(i,2) = (Xin(i,1) - Xin(i,2)) * 0.5_dp
-          Xin(i,1) = dtmp
-        end do
-!$OMP end do nowait
-
-!$OMP do
-        do i = 1 , size(Xout,1)
-          dtmp = (Xout(i,1) + Xout(i,2)) * 0.5_dp
-          Xout(i,2) = (Xout(i,1) - Xout(i,2)) * 0.5_dp
-          Xout(i,1) = dtmp
-        end do
-!$OMP end do
-
-      end select
-
-      ! Calculate the residual
-!$OMP do
-      do is = 1 , nspin_mix
-        do i = 1 , size(Xin, 1)
-          F(i,is) = Xout(i,is) - Xin(i,is)
-        end do
-      end do
-!$OMP end do nowait
-
-!$OMP end parallel
-
-      ! Call mixing routine
-      ! Xin contains the input element, F contains
-      !  F = Xout - Xin
-      ! Upon exit Xout contains the mixed quantity
-      select case ( mix_spin )
-      case ( MIX_SPIN_ALL )
-        call mixing( scf_mix, maxnh, nspin_mix, Xin, F, Xout)
-      case ( MIX_SPIN_SPINOR, MIX_SPIN_SUM_DIFF )
-        call mixing( scf_mix, maxnh, nspin_mix, Xin, F, Xout,
-     &      nsub=2)
-      case ( MIX_SPIN_SUM )
-        call mixing( scf_mix, maxnh, nspin_mix, Xin, F, Xout,
-     &      nsub=1)
-      end select
-
-!$OMP parallel default(shared), private(dtmp,i,is)
-
-      ! correct output...
-      select case ( mix_spin )
-      case ( MIX_SPIN_ALL , MIX_SPIN_SPINOR )
-        ! Xin and Xout are unchanged...
-      case ( MIX_SPIN_SUM , MIX_SPIN_SUM_DIFF )
-
-        ! transfer spin-sum and difference to
-        ! spin-up and spin-down
-!$OMP do
-        do i = 1 , size(Xin,1)
-          dtmp = Xin(i,1) + Xin(i,2)
-          Xin(i,2) = Xin(i,1) - Xin(i,2)
-          Xin(i,1) = dtmp
-        end do
-!$OMP end do nowait
-
-!$OMP do
-        do i = 1 , size(Xout,1)
-          dtmp = Xout(i,1) + Xout(i,2)
-          Xout(i,2) = Xout(i,1) - Xout(i,2)
-          Xout(i,1) = dtmp
-        end do
-!$OMP end do
-
-      end select
-
-      
-      ! Correctly handle mixed quantity
-      ! move over mixed quantity to "input"
-      if ( mix_scf_first ) then
-
-        ! always allow mixing
-        ! I.e. we do nothing
-        
-      else if ( iscf == 1 ) then
-         
-        ! We are not allowed to mix the first SCF
-        ! Remember that Xout contains the MIXED
-        ! quantity and F is the current residual
-        ! hence for no mixing we re-create Xout:
-        !   Xout = Xin + F
-!$OMP do
-        do is = 1 , nspin_mix
-          do i = 1 , size(Xin, 1)
-            Xout(i,is) = Xin(i,is) + F(i,is)
-          end do
-        end do
-!$OMP end do nowait
-
-      end if
-
-!$OMP end parallel
-      
-      deallocate(F)
-
-      ! Print populations at each SCF step, if requested
-      ! Note that this is after mixing, which is not
-      ! entirely correct. It should be moved to the top,
-      ! or done somewhere else.
-
-      if (muldeb .and. (.not. MixH) ) then 
-         if (IONode) write (6,"(/a)") 'Using DM after mixing:'
-         if ( spin%SO .and. orbmoms) then
-            call moments( 1, na_u, no_u, maxnh, numh, listhptr,
-     .           listh, S, Dscf, isa, lasto, iaorb, iphorb,
-     .           indxuo )
-         endif
-         ! Call this unconditionally
-         call mulliken( mullipop, na_u, no_u, maxnh,
-     &           numh, listhptr, listh, S, Dscf, isa,
-     &           lasto, iaorb, iphorb )
+         ! Mix density matrix
+         Xin => Dold
+         Xout => Dscf
       endif
+#else
+      Xin => Dold
+      Xout => Dscf
+#endif
 
-      call timer( 'MIXER', 2 )
+! Mix input and output energy-density and density matrices ............
+! Following line for using and saving the density matrix without mix ..
 
-!-------------------------------------------------------- END
+          if (wmix.ne.0._dp) then
+! Pulay or Broyden mixing
+            mmix  = mix
+            iiscf = iscf
+            if (maxsav .le. 0) then
+              iiscf = 1
+              if (iscf .ne. 1) mmix = .true.
+            endif
+#ifdef TRANSIESTA
+            if ( TSrun ) then
+               iiscf=TSiscf
+               if (maxsav .le. 0) then
+                 iiscf = 1
+                 if (TSiscf .ne. 1) mmix = .true.
+               endif
+            end if
+#endif /* TRANSIESTA */
+            if (fire_mix) then
+               call fire_mixing(iscf, mix, no_l, maxnh,
+     .                 numh(1:no_l), listhptr(1:no_l), nspin,
+     $                 wmix, nkick, wmixkick, Xout, Xin, dDmax)
+            else if (broyden_maxit == 0) then
+               call pulayx( iiscf, mmix, no_l, maxnh,
+     .                   numh, listhptr, nspin, maxsav, wmix, nkick, 
+     .                   wmixkick, XOut, XIn, dDmax)
+            else
+               call broyden_mixing(iscf, mix, no_l, maxnh,
+     .                 numh(1:no_l), listhptr(1:no_l), nspin,
+     $                 wmix, nkick, wmixkick, XOut, XIn, dDmax)
+            endif
+          endif
+
+! Ensure that dDmax is the same on all nodes for convergence test/output
+#ifdef MPI
+          call globalize_max(dDmax,buffer1)
+          dDmax = buffer1
+#endif
+! ...................
+
+! Print populations at each SCF step, if requested, after mixing ......
+
+          if (muldeb) then 
+             write (6,"(/a)")
+     .             'siesta: Mulliken populations after mixing'
+             call mulliken( mullipop, nspin, na_u, no_u, maxnh,
+     .                      numh, listhptr, listh, S, Dscf, isa,
+     .                      lasto, iaorb, iphorb )
+          endif
+! ..................
+
+! Save density matrix on disk, after mixing ...........................
+#ifdef CDF
+          if (writedm_cdf_history) then
+             call write_dm_netcdf( no_l, maxnh, nspin, Dscf,
+     $                             overwrite=.false.)
+          else if (writedm_cdf) then
+             call write_dm_netcdf( no_l, maxnh, nspin, Dscf,
+     $                             overwrite=.true. )
+          endif
+#endif
+
+#ifndef TRANSIESTA
+          if (writedm) then
+            if ((idyn .eq. 6) .or. (idyn .eq. 7)) then
+              if (istp.eq.1)
+     .        call write_dm (maxnh, no_l, nspin,
+     .                   numh, listhptr, listh, Dscf)
+            else
+              call write_dm (maxnh, no_l, nspin,
+     .                   numh, listhptr, listh, Dscf)
+            endif
+          endif ! writedm
+#else /* TRANSIESTA */
+          if (writedm) then
+! TSS Begin
+           if (.not.TSrun) then   !TSS save DM
+             if ((idyn .eq. 6) .or. (idyn .eq. 7)) then
+               if (istp.eq.1)
+     .           call write_dm (maxnh, no_l, nspin,
+     .                   numh, listhptr, listh, Dscf)
+             else
+               call write_dm (maxnh, no_l, nspin,
+     .                   numh, listhptr, listh, Dscf)
+             endif
+           else
+! TSS write DME
+             if ((idyn .eq. 6) .or. (idyn .eq. 7)) then
+               if (istp .eq.1)
+     .           call write_ts_dm (maxnh, no_l, nspin,
+     .                   numh, listhptr, listh, Dscf, Escf,ef)
+             else
+                call write_ts_dm (maxnh, no_l, nspin,
+     .                   numh, listhptr, listh, Dscf, Escf,ef)
+             endif            ! idyn.eq.6
+           endif
+! TSS End
+          endif ! writedm
+#endif /* TRANSIESTA */
+
+!--------------------------------------------------------------------------- END
       END subroutine mixer
 
       End MODULE m_mixer

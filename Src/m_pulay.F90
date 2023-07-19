@@ -1,78 +1,39 @@
-! ---
-! Copyright (C) 1996-2016	The SIESTA group
-!  This file is distributed under the terms of the
-!  GNU General Public License: see COPYING in the top directory
-!  or http://www.gnu.org/copyleft/gpl.txt .
-! See Docs/Contributors.txt for a list of contributors.
-! ---
 module m_pulay
-
   use precision, only: dp
-  use m_spin,    only: h_spin_dim, SpOrb
+  !
   implicit none
-
+  !
   private
-
-  save
-
-  real(dp), pointer :: auxpul(:,:)  => null()
-  integer           :: n_records_saved = 0
-  real(dp)          :: alpha_pulay
-  real(dp)          :: alpha_before_pulay
-  real(dp)          :: alpha_after_pulay
-  real(dp)          :: max_dmax_for_pulay
-  integer           :: pulay_minimum_history = 2
-  logical           :: last_was_pulay = .false.
-  integer           :: LM_before_pulay = 0
-  logical           :: LM_after_pulay = .false.
-  logical           :: use_svd_in_pulay = .false.
-  logical           :: debug_svd_in_pulay = .true.
-  real(dp)          :: rcond_svd_pulay = 1.0e-8_dp
-
-  public :: pulayx, init_pulay_arrays, resetPulayArrays
-
+  !
+  real(dp), pointer  :: auxpul(:,:)  => null()
+  integer            :: n_records_saved = 0
+  !
+  public :: pulayx, init_pulay_arrays
+  !
 CONTAINS
-
+  !
   subroutine init_pulay_arrays()
     use siesta_options, only: maxsav
     use alloc
     use atomlist, only: no_l
     use m_spin, only: nspin
     use sparse_matrices, only: numh
-    use fdf
-
+    !
+    implicit none
+    !
     integer :: ntmp, nauxpul
-
+    !
     n_records_saved = 0
 
     if (maxsav .le. 0) then
        ! No need for auxiliary arrays
     else
-       nauxpul = sum(numh(1:no_l)) * h_spin_dim * maxsav
+       nauxpul = sum(numh(1:no_l)) * nspin * maxsav
        !
        call re_alloc(auxpul,1,nauxpul,1,2,name="auxpul",        &
-            routine="pulay")
+            routine="init_pulay_arrrays")
     endif
-  
-    ! Read some operational parameters
-
-    alpha_pulay = fdf_get("SCF.Pulay.Damping",-1.0_dp) ! Default will set it to alpha
-    alpha_after_pulay = fdf_get("SCF.MixingWeightAfterPulay",0.5_dp)
-
-    alpha_after_pulay = fdf_get("SCF.Pulay.MixingWeight.After",alpha_after_pulay)
-    LM_after_pulay = fdf_get("SCF.LinearMixingAfterPulay",.false.)
-    LM_after_pulay = fdf_get("SCF.Pulay.LinearMixing.After",LM_after_pulay)
-
-    alpha_before_pulay = fdf_get("SCF.Pulay.MixingWeight.Before",0.01_dp)
-    LM_before_pulay = fdf_get("SCF.Pulay.LinearMixing.Before",0)
-
-    pulay_minimum_history = fdf_get("SCF.PulayMinimumHistory",2)
-    max_dmax_for_pulay = fdf_get("SCF.PulayDmaxRegion",1000.0_dp) ! No effect by default
-    use_svd_in_pulay = fdf_get("SCF.Pulay.UseSVD",.false.)
-    debug_svd_in_pulay = fdf_get("SCF.Pulay.DebugSVD",.true.)
-    ! Note that 1.0e-6 seems too conservative
-    rcond_svd_pulay = fdf_get("SCF.Pulay.RcondSVD",1.0e-8_dp)
-
+    !
   end subroutine init_pulay_arrays
   !---------------------------------------------------------------------
 
@@ -153,42 +114,38 @@ CONTAINS
     use sys,        only : die
     use alloc
     use siesta_options, only: avoid_first_after_kick
-    use fdf,        only : fdf_get
-    use m_svd,      only : solve_with_svd
 #ifdef MPI
     use mpi_siesta
-    use m_mpi_utils, only: globalize_max
 #endif
-
+    !
+    implicit none
+    !
     integer , intent(in) ::  iscf,maxsav,maxnd, no_l,nkick,nspin
-
+    !
     integer , intent(in) :: numd(*),listdptr(*)
     logical, intent(in) ::  mix1
-
+    !
     real(dp), intent(in)    ::  alpha,alphakick
     real(dp), intent(inout) ::  dmnew(maxnd,nspin),dmold(maxnd,nspin)
     real(dp), intent(out)   :: dmax
-
+    !
+    !
     real(dp), pointer :: savedm(:), saveres(:)
-    real(dp), pointer :: res1(:), res2(:)
-
+    !
     ! Internal variables ....................................................
     integer :: i0,i,ii,in,is,isite,j,jj,numel,ind,info,maxmix
     logical :: after_kick
-    logical :: no_new_information
     logical :: debug_inverse = .false.
-
-!    logical, save :: kick_due = .false.
-    integer :: rank
-
+    !
 #ifdef MPI
     integer  MPIerror
-    real(dp) :: buffer1
 #endif
-    real(dp) :: ssum, cur_alpha
+    !
+    real(dp) ::   ssum
     real(dp), dimension(:,:), pointer ::  b, bi
     real(dp), dimension(:), pointer   ::  buffer
-    real(dp), dimension(:), pointer   ::  coeff, sigma, rhs, beta
+    real(dp), dimension(:), pointer   ::  coeff
+    !
 
 #ifdef DEBUG_PULAY_INVERSE
     ! Typically, inversion problems in the DIIS procedure
@@ -204,12 +161,12 @@ CONTAINS
        !
        ! Check some input and dimensions 
        numel = sum(numd(1:no_l))
-       call assert(numel == maxnd, "sum(numd) /= maxnd")
+       call assert(numel == maxnd, "sum(numd) // maxnd")
        numel = numel*nspin
-       call assert(numel*maxsav == size(savedm), &
-            "maxnd*spin*maxsav /= savedm")
+       call assert(numel*maxsav == size(savedm), "maxnd*spin*maxsav // savedm")
 
-       if (size(saveres) .lt. numel*maxsav) &
+       !
+       if (size(saveres) .lt. numel*maxsav)                            &
             call die('pulayx: dimensions are too small')
     endif
 
@@ -227,134 +184,103 @@ CONTAINS
        if (mod(iscf,nkick)==1) after_kick = .true.
     endif
 
-    !  Compute current maximum deviation ...........
-    dmax = 0.0_dp
-    do is = 1,nspin
-       do ind = 1 , maxnd
-          dmax = max(dmax, abs(dmnew(ind,is) - dmold(ind,is)))
-       end do
-    enddo
-
-#ifdef MPI
-    ! Ensure that dmax is the same on all nodes for convergence test/output
-    call globalize_max(dmax,buffer1)
-    dmax = buffer1
-#endif
-
-    if ( (after_kick .and. avoid_first_after_kick) .or. &
-         (last_was_pulay .and. LM_after_pulay) .or. &
-         (dmax > max_dmax_for_pulay) ) then
+    if (after_kick .and. avoid_first_after_kick) then
 
        ! Do not keep the residual of the very first iteration, or of 
        ! the first iteration after a kick, if so instructed
-       ! Or if the deviation is too large
-       no_new_information = .true.
-    else
-       if ( iscf <= LM_before_pulay ) then
-          ! ensure that we overwrite the old
-          ! history for bookkeeping
-          n_records_saved = 0
-       end if
 
+    else
        call WriteCurrentDinAndResidualInStore()
-       no_new_information = .false.
        ! updates n_records_saved
     endif
 
-    if ( last_was_pulay ) then
-       last_was_pulay = .false.
-       if ( LM_after_pulay ) then
-          if (Node==0) write(6,*) "Linear mixing after Pulay step"
-          call linear_mixing(alpha_after_pulay)
-          RETURN
-       endif
-    endif
-
-    ! Perform linear mixing if we do not have new information
-    ! or not enough history
-    ! (by default, 2, but it is settable by the user)
+    !  Compute current maximum deviation ...........
+    dmax = 0.0_dp
+    do is = 1,nspin
+       do i = 1,no_l
+          do in = 1,numd(i)
+             ind = listdptr(i) + in
+             dmax = max(dmax, abs(dmnew(ind,is) - dmold(ind,is)))
+          enddo
+       enddo
+    enddo
+    ! .......
     !
-    if ( no_new_information .or. &
-         n_records_saved < pulay_minimum_history .or. &
-         iscf <= LM_before_pulay ) then
+    ! Perform linear mixing if we do not have enough history
+
+    if (n_records_saved <= 1) then
 
        ! Could do simply:  
        ! if (iscf > 1 .or. mix1) DMnew = (1.0_dp-alpha)*DMold + alpha*DMnew
        ! DMold = DMnew
 
-       if (iscf .gt. 1 .or. mix1) then
-          if ( iscf <= LM_before_pulay ) then
-             call linear_mixing(alpha_before_pulay)
-          else
-             call linear_mixing(alpha)
-          end if
-       endif
-
+       do is = 1,nspin
+          do i = 1,no_l
+             do in = 1,numd(i)
+                ind = listdptr(i) + in
+                if (iscf .gt. 1 .or. mix1) then
+                   dmnew(ind,is) =                                        &
+                        (1.0d0-alpha)*dmold(ind,is) + alpha*dmnew(ind,is)
+                endif
+                dmold(ind,is) = dmnew(ind,is)
+             enddo
+          enddo
+       enddo
        RETURN
 
     endif
-
+    !
     ! Perform linear mixing if iscf = N x nkick
     !
-    if ( nkick > 0 ) then
-      if ( mod(iscf,nkick).eq.0) then
-        ! Reset the history information
-        if (Node == 0) then
+    if (nkick > 0 .AND. mod(iscf,nkick).eq.0) then
+       ! Reset the history information
+       if (Node == 0) then
           write(6,"(a,i4)") "Applying kick at iscf: ", iscf
           write(6,"(a,i4)") "Re-setting Pulay history"
-        endif
-        n_records_saved = 0
-        
-        call linear_mixing(alphakick)
-        RETURN
-      end if
+       endif
+       n_records_saved = 0
+
+       do is = 1,nspin
+          do i = 1,no_l
+             do in = 1,numd(i)
+                ind = listdptr(i) + in
+                dmnew(ind,is) =                                        &
+                     (1.0d0-alphakick)*dmold(ind,is) + alphakick *dmnew(ind,is)
+                dmold(ind,is) = dmnew(ind,is)
+             enddo
+          enddo
+       enddo
+       RETURN
     endif
-
-
-    ! Perform Pulay mixing if we have reached this point
     !
-    ! sanity check
+    ! .......................
+    !
+    ! Perform Pulay mixing if n_records_saved > 1
+    !
     call assert(n_records_saved > 1, "N_SCF_records <= 1")
     ! Use only as many records as we have in the history store
-    maxmix = min(n_records_saved, maxsav)
-
-    ! Respect historical value for alpha_pulay if not specified
-    if ( alpha_pulay < 0.0_dp ) then
-       cur_alpha = alpha
-    else
-       cur_alpha = alpha_pulay
-    endif
+    maxmix= min(n_records_saved, maxsav)
 
     ! Allocate local arrays
     !
     nullify( b )
-    call re_alloc( b, 1, maxmix+1, 1, maxmix+1, name='b', &
+    call re_alloc( b, 1, maxmix+1, 1, maxmix+1, name='b',           &
          routine='pulayx' )
     nullify( bi )
-    call re_alloc( bi, 1, maxmix+1, 1, maxmix+1, name='bi', &
+    call re_alloc( bi, 1, maxmix+1, 1, maxmix+1, name='bi',         &
          routine='pulayx' )
     nullify( coeff )
-    call re_alloc( coeff, 1, maxmix, name='coeff', &
-         routine='pulayx' )
-    nullify( rhs )
-    call re_alloc( rhs, 1, maxmix+1, name='rhs', &
-         routine='pulayx' )
-    nullify( beta )
-    call re_alloc( beta, 1, maxmix+1, name='beta', &
-         routine='pulayx' )
-    nullify( sigma )
-    call re_alloc( sigma, 1, maxmix+1, name='sigma', &
+    call re_alloc( coeff, 1, maxmix+1, name='coeff',                &
          routine='pulayx' )
     nullify( buffer )
-    i = maxmix + 1
-    call re_alloc( buffer, 1, i*maxmix, name='buffer', &
+    call re_alloc( buffer, 1, maxmix, name='buffer',                &
          routine='pulayx' )
-
+    !
+    !
     !  calculate mixing coefficients
     !
-    do i = 1 , maxmix
-
-       ! Get i'th residual array
+    !
+    do i=1,maxmix
        i0 = (i-1) * numel
        do is = 1,nspin
           do ii = 1,no_l
@@ -367,33 +293,16 @@ CONTAINS
        enddo
        !
        ! B(i,i) = dot_product(Res(i)*Res(i))
-       b(i,i) = 0.0_dp
-       ssum=0.0_dp
-! CC RC Added for on-site SO
-       if ( .not. SpOrb ) then
-        do is=1,nspin
-         do ii=1,no_l
-          do jj=1,numd(ii)
-           ind = listdptr(ii) + jj
-           ssum=ssum+dmnew(ind,is)*dmnew(ind,is)
+       b(i,i) = 0.0d0
+       ssum=0.0d0
+       do is=1,nspin
+          do ii=1,no_l
+             do jj=1,numd(ii)
+                ind = listdptr(ii) + jj
+                ssum=ssum+dmnew(ind,is)*dmnew(ind,is)
+             enddo
           enddo
-         enddo
-        enddo
-       elseif ( SpOrb ) then
-        do ii=1,no_l
-         do jj=1,numd(ii)
-          ind = listdptr(ii) + jj
-          ssum=ssum+dmnew(ind,1)*dmnew(ind,1)
-          ssum=ssum+dmnew(ind,2)*dmnew(ind,2)
-          ssum=ssum+  &
-          0.5*(dmnew(ind,3)*dmnew(ind,3)+dmnew(ind,7)*dmnew(ind,7))
-          ssum=ssum+  &
-          0.5*(dmnew(ind,4)*dmnew(ind,4)+dmnew(ind,8)*dmnew(ind,8))
-         enddo
-        enddo
-       endif
-! CC RC
-
+       enddo
        b(i,i)=ssum
        !
        do j=1,i-1
@@ -411,156 +320,135 @@ CONTAINS
 
           !          ! B(i,j) = B(j,i) = dot_product(Res(i)*Res(j))
 
-          b(i,j)=0.0_dp
-          ssum=0.0_dp
-          if ( .not. SpOrb ) then
-           do is=1,nspin
-            do ii=1,no_l
-             do jj=1,numd(ii)
-              ind = listdptr(ii) + jj
-              ssum=ssum+dmold(ind,is)*dmnew(ind,is)
+          b(i,j)=0.0d0
+          ssum=0.0d0
+          do is=1,nspin
+             do ii=1,no_l
+                do jj=1,numd(ii)
+                   ind = listdptr(ii) + jj
+                   ssum=ssum+dmold(ind,is)*dmnew(ind,is)
+                enddo
              enddo
-            enddo
-           enddo
-          elseif ( SpOrb ) then
-           do ii=1,no_l
-            do jj=1,numd(ii)
-             ind = listdptr(ii) + jj
-             ssum=ssum+dmold(ind,1)*dmnew(ind,1)
-             ssum=ssum+dmold(ind,2)*dmnew(ind,2)
-             ssum=ssum+  &
-             0.5*(dmnew(ind,3)*dmold(ind,3)+dmold(ind,7)*dmnew(ind,7))
-             ssum=ssum+  &
-             0.5*(dmnew(ind,4)*dmold(ind,4)+dmold(ind,8)*dmnew(ind,8))
-            enddo
-           enddo
-          endif
+          enddo
           b(i,j)=ssum
           b(j,i)=ssum
        enddo
 
        ! Now extend the matrix with ones in an extra colum
        ! and row ...
-       b(i,maxmix+1) = 1.0_dp
-       b(maxmix+1,i) = 1.0_dp
-
-    end do
-    
-    ! ... except in the extra diagonal entry
-    b(maxmix+1,maxmix+1) = 0.0_dp
-
+       b(i,maxmix+1)=1.0d0
+       b(maxmix+1,i)=1.0d0
+    enddo
+    !      ! ... except in the extra diagonal entry
+    b(maxmix+1,maxmix+1)=0.0d0
+    !
 #ifdef MPI
     ! Global operations, but only for the non-extended entries
-    i = maxmix + 1
-    call MPI_AllReduce(b(1,1),buffer(1),i*maxmix, &
-         MPI_double_precision, MPI_Sum, &
-         MPI_Comm_World,MPIerror)
-    i0 = 0
-    do j = 1 , maxmix
-       do i = 1 , maxmix
-          i0 = i0 + 1
-          b(i,j) = buffer(i0)
-       end do
-       i0 = i0 + 1 ! skipping non-extended entries
-    end do
+    do i=1,maxmix
+       call MPI_AllReduce(b(1:maxmix,i),buffer,maxmix,     &
+            MPI_double_precision,            &
+            MPI_sum,MPI_Comm_World,MPIerror)
+       do j=1,maxmix
+          b(j,i)=buffer(j)
+       enddo
+    enddo
 #endif
-
-    if (use_svd_in_pulay) then
-       rhs(1:maxmix) = 0.0_dp
-       rhs(maxmix+1) = 1.0_dp
-
-       call solve_with_svd(b,rhs,beta,info,rcond=rcond_svd_pulay, &
-            rank_out=rank,sigma=sigma)
-
-       if (Node == 0 .AND. debug_svd_in_pulay) then
-          print "(a,i2,7g12.5)", "SVD rank, s(i):", rank, sigma(:)
-       endif
-       if (info == 0) then
-          coeff(1:maxmix) = beta(1:maxmix)
-       else
-          if (Node == 0) then
-             write(6,"(a,i5)") "SVD failed - fallback to linear mixing"
-          endif
-          coeff(1:maxmix-1) = 0.0_dp
-          coeff(maxmix) = 1.0_dp
-       endif
-          
-       ! Use a more sophisticated history of rank degradation...
-       !kick_due =  (rank < maxmix + 1)
-    else
-       call inverse(b,bi,maxmix+1,maxmix+1,info,debug_inverse)
-       !
-       ! If inver was successful, get coefficients for Pulay mixing
-       if (info .eq. 0) then
-          do i= 1 , maxmix
-             coeff(i) = bi(i,maxmix+1)
-          enddo
-       else
-          ! Otherwise, use only last step
-          if (Node == 0) then
-            write(6,"(a)")  &
-            "Warning: unstable inversion in Pulayx - fallback to linear mixing"
-          endif
-          do i=1,maxmix
-             coeff(i)=0.0_dp
-          enddo
-          j=mod(iscf,maxmix)
-          if(j.eq.0) j=maxmix
-          coeff(j) = 1.0_dp
-       endif
-
-    endif ! SVD
-
-    ! Read former matrices for mixing .........
     !
-    dmnew(1:maxnd,1:nspin) = 0._dp
-    do i = 1 , maxmix
+    call inverse(b,bi,maxmix+1,maxmix+1,info,debug_inverse)
+    !
+    ! If inver was successful, get coefficients for Pulay mixing
+    if (info .eq. 0) then
+       do i=1,maxmix
+          coeff(i)=bi(i,maxmix+1)
+       enddo
+    else
+       ! Otherwise, use only last step
+#ifdef DEBUG_PULAY_INVERSE
+       if (Node == 0) then
+         write(6,"(a,i5)")  &
+         "Warning: unstable inversion in Pulayx - fallback to linear mixing"
+       endif
+#endif
+       do i=1,maxmix
+          coeff(i)=0.0d0
+       enddo
+       j=mod(iscf,maxmix)
+       if(j.eq.0) j=maxmix
+       coeff(j) = 1.0d0
+    endif
+    !
+    ! ........
+    !
+    ! Read former matrices for mixing .........
+    dmnew(1:maxnd,1:nspin)=0.0d0
+    do i=1,maxmix
        i0 = (i-1) * numel
-       do is = 1 , nspin
-          res1 => savedm (i0+1:i0+maxnd)
-          res2 => saveres(i0+1:i0+maxnd)
-          i0 = i0 + maxnd
-!$OMP parallel do default(shared), &
-!$OMP&private(ind)
-          do ind = 1 , maxnd
-             dmnew(ind,is) = dmnew(ind,is) + coeff(i) * &
-                  ( res1(ind) + cur_alpha * res2(ind) )
-          end do
-!$OMP end parallel do
-       end do
-    end do
-    dmold(1:maxnd,1:nspin) = dmnew(1:maxnd,1:nspin)
+       do is = 1,nspin
+          do ii = 1,no_l
+             do j = 1,numd(ii)
+                ind = listdptr(ii) + j
+                i0 = i0 + 1
+                dmold(ind,is) = savedm(i0)
+             enddo
+          enddo
+       enddo
+       !
+       do is=1,nspin
+          do ii=1,no_l
+             do j=1,numd(ii)
+                ind = listdptr(ii) + j
+                dmnew(ind,is)=dmnew(ind,is)+dmold(ind,is)*coeff(i)
+             enddo
+          enddo
+       enddo
 
-    if (LM_after_pulay) last_was_pulay = .true.
+    enddo
+    !
+    do i=1,maxmix
+
+       i0 = (i-1) * numel
+       do is = 1,nspin
+          do ii = 1,no_l
+             do j = 1,numd(ii)
+                ind = listdptr(ii) + j
+                i0 = i0 + 1
+                dmold(ind,is) = saveres(i0)
+             enddo
+          enddo
+       enddo
+
+       !
+       do is=1,nspin
+          do ii=1,no_l
+             do j=1,numd(ii)
+                ind = listdptr(ii) + j
+                dmnew(ind,is) = dmnew(ind,is)  +     &
+                     alpha*coeff(i)*dmold(ind,is)
+             enddo
+          enddo
+       enddo
+
+    enddo
+    !
+    ! Test in case processor has no orbitals.  ?????
+
+    if (no_l>0) then
+       do is=1,nspin
+          do ii=1,listdptr(no_l)+numd(no_l)   ! 1, maxnd
+             dmold(ii,is)=dmnew(ii,is)
+          enddo
+       enddo
+    endif
 
     ! Deallocate local arrays
-    call de_alloc( b, name='b', routine='pulayx' )
-    call de_alloc( bi, name='bi', routine='pulayx' )
-    call de_alloc( coeff, name='coeff', routine='pulayx' )
-    call de_alloc( rhs, name='rhs', routine='pulayx' )
-    call de_alloc( beta, name='beta', routine='pulayx' )
-    call de_alloc( sigma, name='sigma', routine='pulayx' )
-    call de_alloc( buffer, name='buffer', routine='pulayx' )
-
+    !
+    call de_alloc( b, name='b' )
+    call de_alloc( bi, name="bi" )
+    call de_alloc( coeff, name="coeff" )
+    call de_alloc( buffer, name="buffer" )
+    !
   CONTAINS
 
-    subroutine linear_mixing(alp)
-      real(dp), intent(in) :: alp
-      real(dp) :: alp1m
-
-      alp1m = 1._dp - alp
-      do is = 1 , nspin
-!$OMP parallel do default(shared), private(ind)
-         do ind = 1 , maxnd
-            dmnew(ind,is) = &
-                 alp1m * dmold(ind,is) + alp * dmnew(ind,is)
-            dmold(ind,is) = dmnew(ind,is)
-         end do
-!$OMP end parallel do
-      end do
-
-    end subroutine linear_mixing
-    
     subroutine WriteCurrentDinAndResidualInStore()
 
       ! The store is really a circular array of size maxsav. It is
@@ -582,17 +470,16 @@ CONTAINS
          ! for the different processors...
          ! ... that is why it is difficult to parallelize the on-file version
    
-         do is = 1 , nspin
-            res1 => savedm(i0+1:i0+maxnd)
-            res2 => saveres(i0+1:i0+maxnd)
-            i0 = i0 + maxnd
-!$OMP parallel do default(shared), private(ind)
-            do ind = 1 , maxnd
-               res1(ind) = dmold(ind,is)
-               res2(ind) = dmnew(ind,is) - dmold(ind,is)
-            end do
-!$OMP end parallel do
-         end do
+         do is = 1,nspin
+            do i = 1,no_l
+               do j = 1,numd(i)
+                  i0 = i0 + 1
+                  savedm(i0) = dmold(listdptr(i)+j,is)
+                  saveres(i0) = dmnew(listdptr(i)+j,is) -                 &
+                       dmold(listdptr(i)+j,is)
+               enddo
+            enddo
+         enddo
       endif
 
     end subroutine WriteCurrentDinAndResidualInStore
@@ -798,13 +685,5 @@ CONTAINS
     end subroutine print_mat
   end subroutine pulayx
   !
-  subroutine resetPulayArrays( )
-    use alloc, only: de_alloc
-    implicit none
-    if (associated(auxpul))      &
-      call de_alloc( auxpul, 'auxpul', 'pulay' )
-  end subroutine resetPulayArrays
-
-
 end module m_pulay
-
+!

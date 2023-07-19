@@ -1,14 +1,17 @@
 ! 
-! Copyright (C) 1996-2016	The SIESTA group
-!  This file is distributed under the terms of the
-!  GNU General Public License: see COPYING in the top directory
-!  or http://www.gnu.org/copyleft/gpl.txt.
-! See Docs/Contributors.txt for a list of contributors.
+! This file is part of the SIESTA package.
+!
+! Copyright (c) Fundacion General Universidad Autonoma de Madrid:
+! E.Artacho, J.Gale, A.Garcia, J.Junquera, P.Ordejon, D.Sanchez-Portal
+! and J.M.Soler, 1996- .
+! 
+! Use of this software constitutes agreement with the full conditions
+! given in the SIESTA license, as signed by all legitimate users.
 !
       module band
       use precision, only: dp
       use sys,       only: die
-      use alloc,     only: re_alloc, de_alloc
+      use alloc,     only: re_alloc
       implicit none
       private
 
@@ -22,37 +25,34 @@
       character, save :: label(maxlin)*8
       integer,   save :: lastk(maxlin), nlines
 
-      public  :: setup_bands, bands, reset_bands
+      public  :: setup_bands, bands
       
       contains
 
       subroutine setup_bands( )
         implicit none
         ! Find number of band k-points
-        maxbk = 1
         nullify(bk)
-        call re_alloc( bk, 1, 3, 1, maxbk, 'bk', 'band',
-     .                copy=.false. )
+        nbk = 0
+        maxbk = 1
+        call re_alloc(bk,1,3,1,maxbk,name='bk',routine='siesta',
+     .                copy=.false.)
 
         call initbands( maxbk, nbk, bk )
 
         if (nbk .gt. maxbk) then
-          ! If there wasn't enough space to store bands on first call 
-          ! correct the dimensions and repeat the initialisation
+          ! If there wasn't enough space to store bands on first call correct
+          ! the dimensions and repeat the initialisation
           maxbk = max(nbk,1)
-          call re_alloc( bk, 1, 3, 1, maxbk, 'bk', 'band',
-     .                  copy=.false. )
+          call re_alloc(bk,1,3,1,maxbk,name='bk',routine='siesta',
+     .                  copy=.false.)
+          nbk = 0
           call initbands( maxbk, nbk, bk )
         endif
         
         gamma_bands = (nbk == 0)   ! Flag for use of auxiliary cell
 
       end subroutine setup_bands
-
-      subroutine reset_bands( )
-      implicit none
-      if (associated(bk)) call de_alloc( bk, 'bk', 'band' )
-      end subroutine reset_bands
 
       subroutine initbands( maxk, nk, kpoint )
 C *********************************************************************
@@ -130,27 +130,40 @@ C
       use precision
       use parallel,     only : Node
       use fdf
-      use m_get_kpoints_scale, only: get_kpoints_scale
-      
+      use parsing
+#ifdef MPI
+      use mpi_siesta
+#endif
       implicit          none
 
       integer, intent(in) :: maxk
       integer, intent(out) :: nk
       real(dp), pointer ::  kpoint(:,:)
 
+      character         paste*30
+      external          paste, redcel
 C *********************************************************************
 
-      logical BandLinesPresent, BandPointsPresent
-      logical :: Nlines_overflow
+      character 
+     .  line*130, names*80,
+     .  scale*30
+
+      logical
+     .  BandLinesPresent, BandPointsPresent
 
       integer
-     .  ik, il, ix, ierr,
+     .  ik, il, integs(4), iu, ix, 
+     .  lastc, lc(0:3), mscell(3,3),
      .  ni, nkl, nn, nr, nv
 
-      real(dp) caux(3,3), rcell(3,3)
+#ifdef MPI
+      integer
+     .  MPIerror
+#endif
 
-      type(block_fdf)            :: bfdf
-      type(parsed_line), pointer :: pline
+      real(dp)
+     .  alat, caux(3,3), pi,
+     .  rcell(3,3), reals(4), ucell(3,3), values(4)
 
 C Start time counter 
       call timer( 'bands', 1 )
@@ -158,136 +171,200 @@ C Start time counter
 C Initialise the number of band lines
       nlines = 0
 
+C Find k points if they are not given in argument 
+      if (nk .le. 0) then
+
 C Find if there are band-lines data
-        BandLinesPresent = fdf_defined('BandLines')
-        BandPointsPresent = fdf_defined('BandPoints')
+        if (Node.eq.0) then
+          BandLinesPresent = fdf_defined('BandLines')
+CEA
+          BandPointsPresent = fdf_defined('BandPoints')
+        endif
+#ifdef MPI
+        call MPI_Bcast(BandLinesPresent,1,MPI_logical,0,MPI_Comm_World,
+     .    MPIerror)
+CEA
+        call MPI_Bcast(BandPointsPresent,1,MPI_logical,0,MPI_Comm_World,
+     .    MPIerror)
+#endif
 
         if ( BandLinesPresent .or. BandPointsPresent ) then
 
-           call get_kpoints_scale('BandLinesScale',rcell,ierr)
-
-           if (ierr /= 0) then
-              nk = 0
-              goto 999
-           endif
-        endif
-!
-        if ( BandLinesPresent .and. BandPointsPresent ) then
-           if (Node .eq. 0) then
-            write(6,'(a)')
-     .        'bands: WARNING: BandPoints block supersedes BandLines'
+C Find lattice constant
+          if (Node.eq.0) then
+            alat = fdf_physical( 'LatticeConstant', 0.d0, 'Bohr' )
+          endif
+#ifdef MPI
+          call MPI_Bcast(alat,1,MPI_double_precision,0,
+     .      MPI_Comm_World,MPIerror)
+#endif
+          if (alat .eq. 0.d0) then
+            if (Node.eq.0) then
+              write(6,'(a)') 'bands: ERROR: Lattice constant required'
             endif
-            BandLinesPresent = .false.
-         endif
+            goto 999
+          endif
+
+C Find scale used in k point data
+          if (Node.eq.0) then
+            scale = fdf_string( 'BandLinesScale', 'pi/a' )
+          endif
+#ifdef MPI
+          call MPI_Bcast(scale,30,MPI_character,0,
+     .      MPI_Comm_World,MPIerror)
+#endif
+          if (scale .eq. 'pi/a') then
+            pi = 4.d0 * atan(1.d0)
+          elseif (scale .eq. 'ReciprocalLatticeVectors') then
+            if (Node.eq.0) then
+              call redcel( alat, caux, ucell, mscell )
+            endif
+#ifdef MPI
+            call MPI_Bcast(alat,1,MPI_double_precision,0,
+     .        MPI_Comm_World,MPIerror)
+            call MPI_Bcast(ucell(1,1),9,MPI_double_precision,0,
+     .        MPI_Comm_World,MPIerror)
+#endif
+            call reclat( ucell, rcell, 1 )
+          elseif (Node.eq.0) then
+            write(6,'(a,/,2a,/,a)')
+     .        'bands: WARNING: Invalid value for BandLinesScale',
+     .        'bands: Allowed values are pi/a and',
+     .              ' ReciprocalLatticeVectors',
+     .        'bands: No band calculation performed'
+          endif
+CEA
+        else
+C No k-point data available => go to exit point
+          goto 999
+        endif
 
 C For BandLines: Loop on data lines
 CEA
-        if ( BandLinesPresent) then
-
-          il = 1
-          nk = 0
-          Nlines_overflow = .FALSE.
-          BandLinesPresent = fdf_block('BandLines',bfdf)
-
-          do while(fdf_bline(bfdf, pline))
+        if ( BandLinesPresent .and. (.not. BandPointsPresent) ) then
+        
+          if (Node.eq.0) then
+            nk = 0
+            BandLinesPresent = fdf_block('BandLines',iu)
+            do il = 1,maxlin
 
 C Read and parse data line
-            nn = fdf_bnnames(pline)
-            nv = fdf_bnvalues(pline)
-            ni = fdf_bnintegers(pline)
-            nr = fdf_bnreals(pline)
+              read(iu,'(a)',end=50) line
+              lastc = index(line,'#') - 1
+              if (lastc .le. 0) lastc = len(line)
+              call parse( line(1:lastc), nn, lc, names, nv, values,
+     .                  ni, integs, nr, reals )
+
+C Check if data are already finished
+              if (nv .ge. 3) then
 
 C Add to total number of k points
-            nkl = fdf_bintegers(pline,1)
-            nk = nk + nkl
+                nkl = integs(1)
+                nk = nk + nkl
 
-! If there is room, store k points, otherwise skip this section
-! and wait for a second call after proper allocation
-
-            if (nk .le. maxk) then
+C If there is room to store k points
+                if (nk .le. maxk) then
 
 C Find last point in line
-               do ix = 1,3
-                  kpoint(ix,nk) = rcell(ix,1) * fdf_bvalues(pline,2) +
-     .                            rcell(ix,2) * fdf_bvalues(pline,3) +
-     .                            rcell(ix,3) * fdf_bvalues(pline,4)
-               enddo
+                  if (scale .eq. 'pi/a') then
+                    kpoint(1,nk) = values(2) * pi / alat
+                    kpoint(2,nk) = values(3) * pi / alat
+                    kpoint(3,nk) = values(4) * pi / alat
+                  elseif (scale .eq. 'ReciprocalLatticeVectors') then
+                    do ix = 1,3
+                      kpoint(ix,nk) = rcell(ix,1) * values(2) +
+     .                                rcell(ix,2) * values(3) +
+     .                                rcell(ix,3) * values(4)
+                    enddo
+                  endif
 
 C Find points along the line
-              do ik = 1,nkl-1
-                do ix = 1,3
-                  kpoint(ix,nk-nkl+ik) =
-     .              kpoint(ix,nk-nkl) * dble(nkl-ik) / dble(nkl) + 
-     .              kpoint(ix,nk)     * dble(ik)     / dble(nkl)
-                enddo
-              enddo
+                  do ik = 1,nkl-1
+                    do ix = 1,3
+                      kpoint(ix,nk-nkl+ik) =
+     .                  kpoint(ix,nk-nkl) * dble(nkl-ik) / dble(nkl) + 
+     .                  kpoint(ix,nk)     * dble(ik)     / dble(nkl)
+                    enddo
+                  enddo
 
 C Find point label
-              if (nn .gt. 0) then
-                label(il) = fdf_bnames(pline,1)
+                  if (nn .gt. 0) then
+                    label(il) = names(1:lc(1))
+                  else
+                    label(il) = ' '
+                  endif
+                  lastk(il) = nk
+
+                endif
               else
-                label(il) = ' '
+C No more lines to read => Exit do loop
+                goto 50
               endif
-              lastk(il) = nk
-
-            endif
-
-            il = il + 1
-            if (il .gt. maxlin) then
-              ! No room to store bands --- hard coded limit...
-              Nlines_overflow = .TRUE.
-            endif
-          enddo
-
-          if ((Nlines_overflow) .and. (Node .eq. 0)) then
+            enddo
             write(6,'(a)') 'bands: ERROR. Parameter maxlin too small'
+   50       continue
+            nlines = il - 1
           endif
-          nlines = il - 1
         endif
 
 C For BandPoints: Loop on data points
 CEA
         if ( BandPointsPresent ) then
-
-          il = 0
-          nk = 0
-          Nlines_overflow = .FALSE.
-          BandPointsPresent = fdf_block('BandPoints',bfdf)
-          do while(fdf_bline(bfdf, pline))
+        
+          if (Node.eq.0) then
+            nk = 0
+            BandPointsPresent = fdf_block('BandPoints',iu)
+            do il = 1,maxlin
 
 C Read and parse data line
-            nn = fdf_bnnames(pline)
-            nv = fdf_bnvalues(pline)
-            ni = fdf_bnintegers(pline)
-            nr = fdf_bnreals(pline)
+              read(iu,'(a)',end=51) line
+              lastc = index(line,'#') - 1
+              if (lastc .le. 0) lastc = len(line)
+              call parse( line(1:lastc), nn, lc, names, nv, values,
+     .                  ni, integs, nr, reals )
+
+C Check if data are already finished
+              if (nv .ge. 3) then
 
 C Add to total number of k points
-            nk = nk + 1
+                nk = nk + 1
 
-! If there is room, store k points, otherwise skip this section
-! and wait for a second call after proper allocation
-            if (nk .le. maxk) then
+C If there is room to store k points
+                if (nk .le. maxk) then
 
 C Accumulate new point
-                do ix = 1,3
-                  kpoint(ix,nk) = rcell(ix,1) * fdf_bvalues(pline,1) +
-     .                            rcell(ix,2) * fdf_bvalues(pline,2) +
-     .                            rcell(ix,3) * fdf_bvalues(pline,3)
-                enddo
-            endif
-
-            il = il + 1
-            if (il .gt. maxlin) then
-            !  No room to store bands
-              Nlines_overflow = .TRUE.
-            endif
-          enddo
-
-          if ((Nlines_overflow) .and. (Node .eq. 0)) then
+                  if (scale .eq. 'pi/a') then
+                    kpoint(1,nk) = values(1) * pi / alat
+                    kpoint(2,nk) = values(2) * pi / alat
+                    kpoint(3,nk) = values(3) * pi / alat
+                  elseif (scale .eq. 'ReciprocalLatticeVectors') then
+                    do ix = 1,3
+                      kpoint(ix,nk) = rcell(ix,1) * values(1) +
+     .                                rcell(ix,2) * values(2) +
+     .                                rcell(ix,3) * values(3)
+                    enddo
+                  endif
+                endif
+              else
+C No more lines to read => Exit do loop
+                goto 51
+              endif
+            enddo
             write(6,'(a)') 'bands: ERROR. Parameter maxlin too small'
+   51       continue
+            nlines = - 3
           endif
-          nlines = - 3
         endif
+      endif
+
+C Global broadcast of values
+#ifdef MPI
+      call MPI_Bcast(nk,1,MPI_integer,0,MPI_Comm_World,MPIerror)
+      if (nk.le.maxk) then
+         call MPI_Bcast(kpoint(1,1),3*nk,MPI_double_precision,0,
+     .     MPI_Comm_World,MPIerror)
+      endif
+#endif
 
 C This is the only exit point 
   999 continue
@@ -296,8 +373,7 @@ C This is the only exit point
       end subroutine initbands
 
 
-      subroutine bands( no_s, spin,
-     .                  no_u, no_l,maxnh, maxk,
+      subroutine bands( no_s, nspin, maxspn, no_u, no_l, maxnh, maxk,
      .                  numh, listhptr, listh, H, S, ef, xij, indxuo,
      .                  writeb, nk, kpoint, ek, occtol, getPSI )
 
@@ -306,39 +382,39 @@ C Optionally write WFS to file
 C Written by J.Soler, August 1997 and August 1998.
 C Initialisation moved into a separate routine, JDG Jan 2000.
 C WFS options by A. Garcia, April 2012
-C Cleaned for tSpin by N. Papior, August 2019
 
 C **************************** INPUT **********************************
 C integer no_s                : Number of basis orbitals in supercell
-C type(tSpin) spin            : Containing all spin-information
+C integer nspin               : Number of spin components
+C integer maxspn              : Second dimension of ek
 C integer maxnh               : Maximum number of orbitals interacting
 C                               with any orbital
 C integer maxk                : Last dimension of kpoint and ek
-C integer numh(no_l)          : Number of nonzero elements of each row
+C integer numh(no_l)           : Number of nonzero elements of each row
 C                               of hamiltonian matrix
-C integer listhptr(no_l)      : Pointer to start of each row of the
+C integer listhptr(no_l)       : Pointer to start of each row of the
 C                               hamiltonian matrix
 C integer listh(maxlh)        : Nonzero hamiltonian-matrix element
 C                               column indexes for each matrix row
-C real*8  H(maxnh,spin%H)     : Hamiltonian in sparse form
+C real*8  H(maxnh,nspin)      : Hamiltonian in sparse form
 C real*8  S(maxnh)            : Overlap in sparse form
 C real*8  ef                  : Fermi energy
 C real*8  xij(3,maxnh)        : Vectors between orbital centers (sparse)
 C                               (not used if only gamma point)
 C integer no_u                : First dimension of ek
-C integer no_l                : Second dimension of H and S
-C integer indxuo(no_s)        : Index of equivalent orbital in unit cell
+C integer no_l               : Second dimension of H and S
+C integer indxuo(no_s)          : Index of equivalent orbital in unit cell
 C                               Unit cell orbitals must be the first in
 C                               orbital lists, i.e. indxuo.le.no_l, with
 C                               no_l the number of orbitals in unit cell
 C real*8  ef                  : Fermi energy
 C logical writeb              : This routine must write bands?
-C integer no_u                : Total number of orbitals in unit cell
+C integer no_u              : Total number of orbitals in unit cell
 C integer nk                  : Number of band k points
 C real*8  kpoint(3,maxk)      : k point vectors
 C real*8  occtol              : Occupancy threshold for DM build
 C *************************** OUTPUT **********************************
-C real*8  ek(no_u,spin%spinor,maxk) : Eigenvalues
+C real*8  ek(no_u,maxspn,maxk) : Eigenvalues
 C *************************** UNITS ***********************************
 C Lengths in atomic units (Bohr).
 C k vectors in reciprocal atomic units.
@@ -356,56 +432,55 @@ C  Modules
 C
       use precision,    only : dp
       use parallel,     only : Node, Nodes
+      use parallel,     only : ParallelOverK, ResetFirstCall
       use parallelsubs, only : GetNodeOrbs
-      use densematrix,  only : allocDenseMatrix, resetDenseMatrix
+      use m_fdf_global, only : fdf_global_get
       use densematrix,  only : Haux, Saux, psi
       use alloc,        only : re_alloc, de_alloc
       use files,        only : slabel, label_length
+      use m_gamma,      only : gamma
       use atomlist,     only : iaorb, iphorb
       use siesta_geom,  only : isa
       use atmfuncs,     only : symfio, cnfigfio, labelfis, nofis
       use writewave,    only : wfs_filename
 
-      use t_spin, only: tSpin
-
-      use m_diag_option, only: ParallelOverK, Serial
-      use m_diag, only: diag_init
-
 
       implicit          none
 
-      type(tSpin), intent(in) :: spin
-      integer  ::   maxk, maxnh, no_u, no_l, nk, no_s,
+      integer  ::   nspin
+      integer  ::   maxk, maxnh, maxspn, no_u, no_l, nk, no_s,
      .              indxuo(no_s), listh(maxnh), numh(no_l),
      .              listhptr(*)
       logical  ::   writeb
-      real(dp) ::   ef, ek(no_u,spin%spinor,maxk),
-     .              H(maxnh,spin%H), kpoint(3,maxk),
+      real(dp) ::   ef, ek(no_u,maxspn,maxk),
+     .              H(maxnh,nspin), kpoint(3,maxk),
      .              S(maxnh), xij(3,maxnh), occtol
       logical, intent(in) :: getPSI
 
-      external ::       io_assign, io_close, memory
+      character(len=label_length+6) :: paste
+      external ::       io_assign, io_close, paste, memory
 
 
       character(len=label_length+6) :: fname
       character(len=10)             :: string
 
-      logical, parameter :: getD = .false.
-      logical, parameter :: fixspin = .false.
+      logical ::   getD, fixspin
 
-      integer :: ik, il, io, ispin, iu, iu_wfs, iuo, naux, nhs, j
-      logical :: SaveParallelOverK
-      
+      integer ::   ik, il, io, ispin, iu, iu_wfs, iuo, naux, nhs, j
+
+      logical ::   SaveParallelOverK
+
       real(dp)
      .  Dnew, qs(2), e1, e2, efs(2), emax, emin, Enew, eV, qk, qtot,
      .  path, temp, wk, Entropy
 
 C Dynamic arrays
-      real(dp), dimension(:), pointer :: aux => null()
+      real(dp), dimension(:), pointer :: aux
 
       parameter ( eV = 1.d0 / 13.60580d0 )
+      save getD, Dnew, Enew, e1, e2, qk, qtot, temp, wk
+      data getD /.false./
 
-      save Dnew, Enew, e1, e2, qk, qtot, temp, wk
       data Dnew, Enew, e1, e2, qk, qtot, temp, wk /8*0.d0/
 
 C Start time counter
@@ -421,16 +496,15 @@ C Check parameter maxk
         goto 999
       endif
 
-C     Allocate local arrays - only aux is relevant here
+C Allocate local arrays - only aux is relevant here
+      nhs = 2*no_u*no_l
+      call re_alloc(Haux,1,nhs,name='Haux',routine='bands')
+      call re_alloc(Saux,1,nhs,name='Saux',routine='bands')
+      call re_alloc(psi,1,nhs,name='psi',routine='bands')
+      naux  = 2*no_u*5
+      nullify( aux )
+      call re_alloc( aux, 1, naux, name='aux', routine='bands' )
 
-      if ( spin%Grid == 4 ) then
-         nhs = 2 * (2*no_u) * (2*no_l)
-      else
-         nhs = 2 * no_u*no_l
-      endif
-      naux = 2*no_u*5
-      call allocDenseMatrix(nhs, nhs, nhs)
-      call re_alloc( aux, 1, naux, 'aux', 'bands' )
 
       if (getPSI .AND. (Node.eq.0)) then
 
@@ -440,78 +514,73 @@ C     Allocate local arrays - only aux is relevant here
 
         rewind (iu_wfs)
 
-        write(iu_wfs) nk, .false. ! nk, Gamma, same file-format in WFS as for Gamma-point
-        write(iu_wfs) spin%Grid
+        write(iu_wfs) nk, gamma
+        write(iu_wfs) nspin
         write(iu_wfs) no_u
         write(iu_wfs) (iaorb(j),labelfis(isa(iaorb(j))),
      .            iphorb(j), cnfigfio(isa(iaorb(j)),iphorb(j)),
      .            symfio(isa(iaorb(j)),iphorb(j)), j=1,no_u)
 
         call io_close(iu_wfs)
+
       endif
-      
-C Handle parallel over K points option which is not allowed for here
-      SaveParallelOverK = ParallelOverK
-      if ( ParallelOverK ) then
-        if ( Node .eq. 0 ) then
-          write(*,"(a)")
-     $        "*** Note: ParallelOverK option not used for Bands"
-        end if
-        ParallelOverK = .false.
-        Serial = Nodes == 1
-        call diag_init()
-      end if
 
 C Find the band energies
-      if ( spin%none .or. spin%Col ) then
+      if (nspin.le.2) then
 C fixspin and qs are not used in diagk, since getD=.false. ...
+        fixspin = .false.
         qs(1) = 0.0_dp
         qs(2) = 0.0_dp
 
-        call diagk( spin%H, no_l, no_s, spin%spinor, 
-     .              maxnh, maxnh, 
+C Handle parallel over K points option which is not allowed for here
+        SaveParallelOverK = ParallelOverK
+        if ((Node .eq. 0) .and. ParallelOverK) then
+           write(6,"(a)")
+     $          "*** Note: ParallelOverK option not used for Bands"
+        endif
+
+        ParallelOverK = .false.
+        ResetFirstCall = .true.
+
+        call diagk( nspin, no_l, no_s, maxspn, no_l, maxnh, maxnh,
      .              no_u, numh, listhptr, listh, numh, listhptr,
      .              listh, H, S, getD, getPSI, fixspin, qtot, qs, temp,
      .              e1, e2, xij, indxuo, nk, kpoint, wk,
      .              ek, qk, Dnew, Enew, ef, efs, Entropy,
      .              Haux, Saux, psi, Haux, Saux, aux,
-     .              no_u, occtol, 1, no_u )
+     .              no_u, occtol, 1 )
 
-      elseif ( spin%NCol ) then
-        call diag2k(no_l, no_s, maxnh, maxnh, no_u,
+        ParallelOverK = SaveParallelOverK
+        ResetFirstCall = .false.
+
+      elseif (nspin.eq.4) then
+         if (getPSI) then
+            if (node==0) then
+               write(6,*) "No WFS for nspin=4 yet..."
+            endif
+            RETURN
+         endif
+        call diag2k(no_l, no_s, no_l, maxnh, maxnh, no_u,
      .              numh, listhptr, listh, numh, listhptr,
-     .              listh, H, S, getD, getPSI, qtot, temp, e1, e2,
+     .              listh, H, S, getD, qtot, temp, e1, e2,
      .              xij, indxuo, nk, kpoint, wk,
      .              ek, qk, Dnew, Enew, ef, Entropy,
      .              Haux, Saux, psi, Haux, Saux, aux,
-     .              no_u, occtol, 1, no_u )
-
-      elseif ( spin%SO ) then
-        call diag3k(no_l, no_s, maxnh, maxnh, no_u, numh,
-     .              listhptr, listh, numh, listhptr, listh,
-     .              H, S, getD, getPSI, qtot, temp, e1, e2, xij,
-     .              indxuo, nk, kpoint, wk, ek, qk, Dnew,
-     .              Enew, ef, Entropy,
-     .              Haux, Saux, psi, Haux, Saux, aux,
-     .              no_u, occtol, 1, no_u )
+     .              no_u, occtol, 1 )
       else
-        call die( 'bands: ERROR: incorrect value of spin%H')
+        call die( 'bands: ERROR: incorrect value of nspin')
       endif
-
-      ! Restore parallel over k
-      ParallelOverK = SaveParallelOverK
-      if ( ParallelOverK ) Serial = .true.
 
 C Write bands
       if (writeb.and.Node.eq.0) then
 
 C Find name of output file and open it
-        fname = trim(slabel) // '.bands'
+        fname = paste(slabel,'.bands')
         call io_assign(iu)
         open( iu, file=fname, status='unknown')
 
 C Write Fermi energy
-        write(iu,*) Ef/eV
+        write(iu,*) ef/eV
 
 C Find and write the ranges of k and ek
         path = 0.d0
@@ -522,7 +591,7 @@ C Find and write the ranges of k and ek
      .      path = path + sqrt( (kpoint(1,ik)-kpoint(1,ik-1))**2 +
      .                          (kpoint(2,ik)-kpoint(2,ik-1))**2 +
      .                          (kpoint(3,ik)-kpoint(3,ik-1))**2 )
-          do ispin = 1, spin%spinor
+          do ispin = 1,min(nspin,2)
             do io = 1, no_u
               emax = max( emax, ek(io,ispin,ik) )
               emin = min( emin, ek(io,ispin,ik) )
@@ -534,14 +603,7 @@ C Write path for BandLines but not for BandPoints
         write(iu,*) emin/eV, emax/eV
 
 C Write eigenvalues
-        if ( spin%Grid == 4 ) then
-          write(iu,*) 2*no_u, 1, nk     ! A single spin channel, double number of bands
-        else 
-          write(iu,*) no_u, spin%spinor, nk
-        endif
-
-        ! For non-collinear calculations, the ek array will contain the first no_u
-        ! bands in ek(:,1,ik), and the next no_u bands in ek(:,2,ik)   
+        write(iu,*) no_u, min(nspin,2), nk
         path = 0.d0
         do ik = 1,nk
           if (nlines .ge. 0) then
@@ -550,12 +612,12 @@ C Write eigenvalues
      .                            (kpoint(2,ik)-kpoint(2,ik-1))**2 +
      .                            (kpoint(3,ik)-kpoint(3,ik-1))**2 )
             write(iu,'(f10.6,10f12.4,/,(10x,10f12.4))')
-     .         path, ((ek(io,ispin,ik)/eV,io=1,no_u),
-     .         ispin=1,spin%spinor)
+     .        path, ((ek(io,ispin,ik)/eV,io=1,no_u),
+     .        ispin=1,min(nspin,2))
           else
             write(iu,'(3f9.5,8f12.4,/,(27x,8f12.4))')
      .        kpoint(1,ik), kpoint(2,ik), kpoint(3,ik),
-     .        ((ek(io,ispin,ik)/eV,io=1,no_u),ispin=1,spin%spinor)
+     .           ((ek(io,ispin,ik)/eV,io=1,no_u),ispin=1,min(nspin,2))
           endif
         enddo
 
@@ -572,9 +634,9 @@ C Write abscisas of line ends and their labels
             if (ik .eq. lastk(il)) then
 C Put label between quotes
               if (label(il) .eq. ' ') then
-                string = "' '"
+                string = ''' '''
               else
-                string = "'"//trim(label(il))//"'"
+                string = paste( ''''//label(il),'''' )
               endif
               write(iu,'(f12.6,3x,a)') path, string
               il = il + 1
@@ -587,9 +649,8 @@ C Close output file
       endif
 
 C Free local arrays
-      call de_alloc( aux, 'aux', 'bands' )
-      call resetDenseMatrix()
-      
+      call de_alloc( aux, name='aux' )
+
 C This is the only exit point
   999 continue
       call timer( 'bands', 2 )

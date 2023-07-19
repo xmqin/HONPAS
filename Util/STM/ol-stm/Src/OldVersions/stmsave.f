@@ -1,10 +1,3 @@
-! ---
-! Copyright (C) 1996-2016	The SIESTA group
-!  This file is distributed under the terms of the
-!  GNU General Public License: see COPYING in the top directory
-!  or http://www.gnu.org/copyleft/gpl.txt .
-! See Docs/Contributors.txt for a list of contributors.
-! ---
 
       SUBROUTINE STM   ( NA, NO, NUO, MAXNA, NSPIN, 
      .                   ISA, IPHORB, INDXUO, LASTO, XA, CELL, UCELL,
@@ -106,11 +99,11 @@ C     .  SNAME*40, FNAMEWFRE*60, FNAMEWFIM*60,
 C     .  FNAMEWFURE*60, FNAMEWFUIM*60, FNAMEWFDRE*60, FNAMEWFDIM*60, 
 C     .  FNAMEWFMO*60, FNAMEWFPH*60,
 C     .  FNAMEWFUMO*60, FNAMEWFUPH*60, FNAMEWFDMO*60, FNAMEWFDPH*60,
-C     .  CHAR1*10, CHAR2*10, ITOCHAR*10, 
+C     .  PASTE*60, CHAR1*10, CHAR2*10, ITOCHAR*10, 
 C     .  EXT*20, EXT2*25
 C
 C      EXTERNAL
-C     .  IO_ASSIGN, IO_CLOSE, PLANE,
+C     .  IO_ASSIGN, IO_CLOSE, PASTE, PLANE,
 C     .  NEIGHB, WROUT, ITOCHAR
 
 C **********************************************************************

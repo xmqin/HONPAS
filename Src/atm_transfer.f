@@ -1,11 +1,14 @@
 ! 
-! Copyright (C) 1996-2016	The SIESTA group
-!  This file is distributed under the terms of the
-!  GNU General Public License: see COPYING in the top directory
-!  or http://www.gnu.org/copyleft/gpl.txt.
-! See Docs/Contributors.txt for a list of contributors.
+! This file is part of the SIESTA package.
 !
-      subroutine atm_transfer()
+! Copyright (c) Fundacion General Universidad Autonoma de Madrid:
+! E.Artacho, J.Gale, A.Garcia, J.Junquera, P.Ordejon, D.Sanchez-Portal
+! and J.M.Soler, 1996- .
+! 
+! Use of this software constitutes agreement with the full conditions
+! given in the SIESTA license, as signed by all legitimate users.
+!
+      subroutine atm_transfer
 
       use atm_types, only: maxnorbs, nspecies
       use atm_types, only: species, species_info
@@ -33,7 +36,6 @@
       use old_atmfuncs, only: lmxkbfis, nkbfis
 
 !----------------------------------------------------------------
-      use dftu_specs,     only: populate_species_info_dftu
 
       use periodic_table, only: symbol
       use sys,            only: die
@@ -71,9 +73,7 @@
          if (spp%z.eq.-100) then
             spp%symbol = 'BS'
          else
-            ! The function 'symbol' knows how to deal
-            ! with (ghost) synthetics
-            spp%symbol = symbol(spp%z)
+            spp%symbol = symbol(abs(spp%z))
          endif
          spp%zval  = zvalfis(is)
          spp%mass  = massfis(is)
@@ -82,10 +82,6 @@
 
          spp%lmax_basis = lomaxfis(is)
          spp%norbs = nofis(is)
-
-!        Check that number of orbitals is below maximum 
-         if (spp%norbs.gt.maxnorbs) 
-     .     call die("atm_transfer: Increase maxnorbs in atm_types.f")
 
          do io = 1,  spp%norbs
             spp%orb_n(io) = cnfigfio(is,io)  !! Not sure about this
@@ -284,8 +280,6 @@
          spp%core%d2(1:)        = coretab(2:,2,is)
 
       enddo
-
-      call populate_species_info_dftu
 
       end subroutine atm_transfer
 

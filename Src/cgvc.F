@@ -1,9 +1,12 @@
 ! 
-! Copyright (C) 1996-2016	The SIESTA group
-!  This file is distributed under the terms of the
-!  GNU General Public License: see COPYING in the top directory
-!  or http://www.gnu.org/copyleft/gpl.txt.
-! See Docs/Contributors.txt for a list of contributors.
+! This file is part of the SIESTA package.
+!
+! Copyright (c) Fundacion General Universidad Autonoma de Madrid:
+! E.Artacho, J.Gale, A.Garcia, J.Junquera, P.Ordejon, D.Sanchez-Portal
+! and J.M.Soler, 1996- .
+! 
+! Use of this software constitutes agreement with the full conditions
+! given in the SIESTA license, as signed by all legitimate users.
 !
       subroutine cgvc( na, xa, fa, cell, stress, dxmax, 
      .                 tp, ftol, strtol, varcel, relaxd, usesavecg )
@@ -50,9 +53,9 @@ C  Modules
 C
       use precision, only : dp
       use parallel,    only : Node
-      use sys,         only : die
-      use fdf
+      use fdf, only : fdf_block, fdf_physical
 
+      use m_fdf_global, only: fdf_global_get
       use m_mpi_utils, only:  broadcast
       use units, only: kBar, Ang
 !
@@ -60,7 +63,6 @@ C
 !     Use the new one only for the Zmatrix case
 !
       use m_conjgr_old, only: conjgr
-      use alloc,        only: re_alloc, de_alloc
 
       implicit none
 
@@ -78,16 +80,13 @@ c Internal variables and arrays
       real(dp)            :: new_volume, trace, ftol_tmp, volume
 
       logical           found
-      integer           ia, i, j, n, indi
+      integer           iu, ia, i, j, n, indi
 
       real(dp) ::  celli(3,3), sxx, syy, szz, sxy, sxz, syz
       real(dp) ::  stress_dif(3,3)
 
-      real(dp), pointer :: gxa(:)=>null(), gfa(:)=>null()
-      real(dp), pointer, save :: cgaux(:)=>null()
-
-      type(block_fdf)            :: bfdf
-      type(parsed_line), pointer :: pline=>null()
+      real(dp), dimension(:), allocatable       :: gxa, gfa
+      real(dp), dimension(:), allocatable, save :: cgaux
 
 ! Saved internal variables:
 
@@ -114,10 +113,14 @@ c ---------------------------------------------------------------------------
       volume = volcel(cell)
 
 C Allocate local memory
-      call re_alloc( gfa, 1, na*3+6, 'gfa', 'cgvc' )
-      call re_alloc( gxa, 1, na*3+6, 'gxa', 'cgvc' )
-      if (.not.associated(cgaux))
-     &  call re_alloc( cgaux, 1, na*6+12, 'cgaux', 'cgvc' )
+      allocate(gfa(na*3 + 6))
+      call memory('A','D',3*na+6,'cgvc')
+      allocate(gxa(na*3 + 6))
+      call memory('A','D',3*na+6,'cgvc')
+      if (.not.allocated(cgaux)) then
+        allocate(cgaux(2*(na*3 + 6)))
+        call memory('A','D',6*na+12,'cgvc')
+      endif
 
 C If first call to cgvc, check dim and get target stress --------------------
 
@@ -126,87 +129,76 @@ C If first call to cgvc, check dim and get target stress --------------------
         if ( varcel ) then
 
 C Check if we want a constant-volume simulation
-          constant_volume = fdf_get("MD.ConstantVolume", .false.)
+          call fdf_global_get(constant_volume,
+     .                        "MD.ConstantVolume", .false.)
 
 C Look for target stress and read it if found, otherwise generate it --------
 
-          tarstr = fdf_block('MD.TargetStress',bfdf)
+          if (Node.eq.0) then
+            tarstr = fdf_block('MD.TargetStress',iu)
 
-          if (tarstr) then
-            if (Node.eq.0) then
-              write(6,'(/a,a)') 'cgvc: Reading %block MD.TargetStress',
-     .                          ' (units of MD.TargetPressure).'
-            endif
-            if (.not. fdf_bline(bfdf,pline))
-     .        call die('cgvc: ERROR in MD.TargetStress block')
-            sxx = fdf_bvalues(pline,1)
-            syy = fdf_bvalues(pline,2)
-            szz = fdf_bvalues(pline,3)
-            sxy = fdf_bvalues(pline,4)
-            sxz = fdf_bvalues(pline,5)
-            syz = fdf_bvalues(pline,6)
-            call fdf_bclose(bfdf)
-            
-            tstres(1,1) = - sxx * tp
-            tstres(2,2) = - syy * tp
-            tstres(3,3) = - szz * tp
-            tstres(1,2) = - sxy * tp
-            tstres(2,1) = - sxy * tp
-            tstres(1,3) = - sxz * tp
-            tstres(3,1) = - sxz * tp
-            tstres(2,3) = - syz * tp
-            tstres(3,2) = - syz * tp
-          else
-            if (Node.eq.0) then
+            if (tarstr) then
+               write(6,'(/a,a)') 'cgvc: Reading %block MD.TargetStress',
+     .                        ' (units of MD.TargetPressure).'
+               read(iu,*, end=50) sxx, syy, szz, sxy, sxz, syz
+               tstres(1,1) = - sxx * tp
+               tstres(2,2) = - syy * tp
+               tstres(3,3) = - szz * tp
+               tstres(1,2) = - sxy * tp
+               tstres(2,1) = - sxy * tp
+               tstres(1,3) = - sxz * tp
+               tstres(3,1) = - sxz * tp
+               tstres(2,3) = - syz * tp
+               tstres(3,2) = - syz * tp
+   50          continue
+            else
               write(6,'(/a,a)') 'cgvc: No target stress found, ',
-     .             'assuming hydrostatic MD.TargetPressure.'
-            endif
-            do i= 1, 3
-              do j= 1, 3
-                tstres(i,j) = 0._dp
+     .                'assuming hydrostatic MD.TargetPressure.'
+              do i = 1, 3
+                do j = 1, 3
+                  tstres(i,j) = 0._dp
+                enddo
+                tstres(i,i) = - tp
               enddo
-              tstres(i,i) = - tp
-            enddo
-          endif
+            endif
 
 C Write target stress down --------------------------------------------------
 
-          if (constant_volume) then
-            tstres(:,:) = 0.0_dp
-            if (Node.eq.0) then
-              write(6,"(a)") "***Target stress set to zero " //
-     $            "for constant-volume calculation"
+            if (constant_volume) then
+               tstres(:,:) = 0.0_dp
+               write(6,"(a)") "***Target stress set to zero " //
+     $              "for constant-volume calculation"
             endif
-          endif
-          if (Node.eq.0) then
             write(6,"(/a)") 'cgvc: Target stress (kBar)'
             write(6,"(a,2x,3f12.3)") 
-     .       'cgvc:', tstres(1,1)/kBar, tstres(1,2)/kBar,
+     .       'cgvc:', tstres(1,1)/kBar, tstres(1,2)/kBar, 
      .       tstres(1,3)/kBar
             write(6,"(a,2x,3f12.3)") 
-     .       'cgvc:', tstres(2,1)/kBar, tstres(2,2)/kBar,
+     .       'cgvc:', tstres(2,1)/kBar, tstres(2,2)/kBar, 
      .       tstres(2,3)/kBar
             write(6,"(a,2x,3f12.3)") 
-     .       'cgvc:', tstres(3,1)/kBar, tstres(3,2)/kBar,
+     .       'cgvc:', tstres(3,1)/kBar, tstres(3,2)/kBar, 
      .       tstres(3,3)/kBar
-          endif
+          endif  ! node0
+
+          call broadcast(tstres(1:3,1:3))
 
 
 C Moduli of original cell vectors for fractional coor scaling back to au ---
 
           do n = 1, 3
-            modcel(n) = 0.0_dp
-            do j = 1, 3
-              modcel(n) = modcel(n) + cell(j,n)*cell(j,n)
-            enddo
-            modcel(n) = dsqrt( modcel(n) )
+             modcel(n) = 0.0_dp
+             do j = 1, 3
+                modcel(n) = modcel(n) + cell(j,n)*cell(j,n)
+             enddo
+             modcel(n) = dsqrt( modcel(n) )
           enddo
 
 C Scale factor for strain variables to share magnitude with coordinates 
 C ---- (a length in Bohrs typical of bond lengths ..) ------------------
 
-          precon = fdf_get('MD.PreconditionVariableCell',
-     .                     9.4486344d0,'Bohr')
+          call fdf_global_get(precon,'MD.PreconditionVariableCell',
+     .                           9.4486344d0,'Bohr')
 
 C Dimension of space where E is minimized ------------------------------
 
@@ -412,8 +404,10 @@ C Save cgaux ----------------------------------------------------------------
      .  call iocg( 'write', ndeg*2, cgaux, cgcntr, relaxd, found )
 
 C Deallocate local memory
-      call de_alloc( gxa, 'gxa', 'cgvc' )
-      call de_alloc( gfa, 'gfa', 'cgvc' )
+      call memory('D','D',size(gxa),'cgvc')
+      deallocate(gxa)
+      call memory('D','D',size(gfa),'cgvc')
+      deallocate(gfa)
 
       return
       end

@@ -1,15 +1,18 @@
 ! 
-! Copyright (C) 1996-2016	The SIESTA group
-!  This file is distributed under the terms of the
-!  GNU General Public License: see COPYING in the top directory
-!  or http://www.gnu.org/copyleft/gpl.txt.
-! See Docs/Contributors.txt for a list of contributors.
+! This file is part of the SIESTA package.
+!
+! Copyright (c) Fundacion General Universidad Autonoma de Madrid:
+! E.Artacho, J.Gale, A.Garcia, J.Junquera, P.Ordejon, D.Sanchez-Portal
+! and J.M.Soler, 1996- .
+! 
+! Use of this software constitutes agreement with the full conditions
+! given in the SIESTA license, as signed by all legitimate users.
 !
       module parallelsubs
 C
 C  Parallelisation related subroutines
 C
-      use parallel,     only : BlockSize, ProcessorY
+      use parallel,     only : BlockSize, ProcessorY,BSize
       use parallel,     only : thisNode => Node
       use spatial,      only : lspatial, nNode, nL2G, nG2L,
      &                         nOrbPerNode
@@ -17,9 +20,6 @@ C
      &                         ulimit, llimit, dd_invp, dd_nnode
       use sys,          only : die
       implicit none
-
-      logical, public, save :: pexsi_dist 
-      integer, public, save :: pexsi_bs
 
       contains
 
@@ -63,20 +63,6 @@ C Saved variables
       data
      .  NOrbLast / 0 /
      .  NOrbNodeLast / 0 /
-
-!      if (thisNode /= Node)
-!     $       call message("Non-local use of GetNodeOrbs")
-
-      if (pexsi_dist) then
-         remainder = Norb - pexsi_bs*Nodes
-         if (Node == Nodes-1) then
-            NorbNode = pexsi_bs + remainder
-         else
-            NorbNode = pexsi_bs
-         endif
-         
-         RETURN
-      endif
 
       if (NOrb .eq. NOrbLast) then
 C Values are the same as last call - no need to recalculate
@@ -128,7 +114,6 @@ C Save value for next call
       end subroutine GetNodeOrbs
 
       subroutine GlobalToLocalOrb( GOrb, Node, Nodes, LOrb)
-      use parallel, only: thisNode => Node
 C
 C  Converts an orbital index in the global frame to the local frame
 C  if the orbital is local to this node. Otherwise the pointer is
@@ -159,18 +144,7 @@ C
 C  Local variables
       integer OrbCheck, GBlock, LEle, LBlock
 
-!      if (thisNode /= Node)
-!     $       call message("Non-local use of GlobalToLocalOrb")
-
-      if (pexsi_dist) then
-         call WhichNodeOrb(Gorb,Nodes,OrbCheck)
-         if (OrbCheck == Node) then
-            lorb = gorb - pexsi_bs*Node
-         else
-            lorb = 0
-         endif
-         
-      else if (lspatial) then 
+      if (lspatial) then 
 C-------------------------
 C  Spatial distribution  -
 C-------------------------
@@ -245,13 +219,7 @@ C
 C  Local variables
       integer LEle, LBlock
 
-!      if (thisNode /= Node)
-!     $       call message("Non-local use of LocalToGlobalOrb")
-
-      if (pexsi_dist) then
-         gorb = pexsi_bs*Node + lorb
-
-      else if (lspatial) then 
+      if (lspatial) then 
 C-------------------------
 C  Spatial distribution  - 
 C-------------------------
@@ -311,14 +279,7 @@ C
 C  Local variables
       integer GBlock
 
-      if (pexsi_dist) then
-         Node = (Gorb-1)/pexsi_bs
-         ! Check for overflow: if gorb is in the "remainder" set, 
-         ! the above will be incorrect (e.g. 4 (or even 5) in a {0,1,2,3} set)
-         ! (Consider the case norbs=13, pexsi_bs=2, nodes=5)
-         if (Node > Nodes-1) Node = Nodes-1
-
-      else if (lspatial) then 
+      if (lspatial) then 
 C-------------------------
 C  Spatial distribution  - 
 C-------------------------
@@ -412,7 +373,9 @@ C
 C  integer NMeshPN  = total number of local mesh points
 C  integer NxyzL(3) = local dimensions of mesh points on this node
 C
-
+#ifdef MPI
+      use mpi_siesta
+#endif
       implicit none
 C  Passed variables
       integer Nxyz(3), Node, Nodes, NMeshPN, NxyzL(3)
@@ -421,7 +384,9 @@ C  Local variables
       integer 
      .  BlockSizeY, BlockSizeZ, NRemY, NRemZ, Py, Pz,
      .  ProcessorZ
-
+#ifdef MPI
+      integer MPI_err
+#endif
 C  Check that ProcessorY is a factor of the number of processors
       if (mod(Nodes,ProcessorY).gt.0)
      $     call die('ERROR: ProcessorY must be a factor of the' //
@@ -435,6 +400,22 @@ C  Find processor grid location
 C  Set blocking sizes
       BlockSizeY = (Nxyz(2)/ProcessorY)
       BlockSizeZ = (Nxyz(3)/ProcessorZ)
+
+      ! This check seems to be superfluous, and it 
+      ! triggers an abort in certain TranSiesta runs
+      ! Note that it comes from the BSC branch.
+
+c$$$      if (BlockSizeY.eq.0.or.BlockSizeZ.eq.0) then
+c$$$        if (Node.eq.0) then
+c$$$          write(*,*) 'ERROR: Not enough mesh per node'
+c$$$          write(*,*) 'Nxyz=', Nxyz, 'PY=', ProcessorY,
+c$$$     &               'PZ=', ProcessorZ
+c$$$        endif
+c$$$#ifdef MPI
+c$$$        call MPI_Finalize( MPI_err )
+c$$$#endif
+c$$$        STOP
+c$$$      endif
 
       NRemY = Nxyz(2) - BlockSizeY*ProcessorY
       NRemZ = Nxyz(3) - BlockSizeZ*ProcessorZ
@@ -768,8 +749,7 @@ C Choose default value as lowest of Nx and Ny
 
       end subroutine set_processorYdefault
 
-#ifdef MPI
-      subroutine set_blocksizedefault(Nodes,nuotot,bs)
+      subroutine set_blocksizedefault(Nodes,nuotot,blocksizedefault)
 C
 C Finds a sensible default value for the blocksize default.
 C When the number of orbitals is less than the blocksize
@@ -783,50 +763,201 @@ C integer nuotot       : total number of orbitals
 C
 C Output :
 C
-C integer bs : default value of blocksize
+C integer blocksizedefault : default value of blocksize
 C
 C Written by Julian Gale, March 2001
-C Modified by Alberto Garcia, October 2013
 C
 C Passed arguments
-      integer, intent(in)  :: Nodes, nuotot
-      integer, intent(out) :: bs
-
-      integer  :: n1, nn
-
-      ! Scalapack routine for block-cyclic distributions
-      integer, external :: numroc
+      integer
+     .  Nodes, nuotot, blocksizedefault
 
 C Compare number of orbitals against sensible number
-! Note that this number could be optimized...
-
       if (nuotot.gt.24*Nodes) then
-        bs = 24
-      else if (nuotot.lt.Nodes) then
-        bs = 1
+        blocksizedefault = 24
       else
-
-         bs = nuotot/Nodes + 1
-         do
-            ! Check the number of orbitals handled
-            ! by the first and last processors
-            ! Avoid idle processors, and too-high
-            ! imbalances
-
-            n1 = numroc(nuotot,bs,0,0,nodes)
-            nn = numroc(nuotot,bs,nodes-1,0,nodes)
-
-            if (nn == 0) then
-               bs = bs - 1
-            else if (dble(n1)/nn > 2) then
-               bs = bs - 1
-            else
-               exit
-            endif
-         enddo
-               
+        blocksizedefault = ( (nuotot - 1) / Nodes) + 1
       endif
 
       end subroutine set_blocksizedefault
-#endif
+
+
+
+      subroutine GetNodeOrbs_NAO2GTO( NOrb, Node, Nodes, NOrbNode)
+      use parallel, only: thisNode => Node
+C
+C  Calculates the number of orbitals stored on the local Node.
+C
+C  Julian Gale, October 1998
+C
+C  Input :
+C
+C  integer NOrb     = The total number of orbitals in the calculation
+C  integer Node     = The local processor
+C  integer Nodes    = The total number of processors
+C
+C  Output :
+C
+C  integer NOrbNode = The number of orbitals stored on this Node - if
+C  zero
+C                     on input then calculated otherwise left unchanged
+C
+C  Modified so that value from last call is saved in case it can be
+C  re-used on the next call to save re-calculation.
+C
+
+C Passed arguments
+      integer NOrb, NOrbNode, Node, Nodes
+
+C Local variables
+      integer Remainder, MinPerNode, RemainderBlocks, NOrbLast,
+     .  NOrbNodeLast
+      save NOrbLast, NOrbNodeLast
+
+      data
+     .  NOrbLast / 0 /
+     .  NOrbNodeLast / 0 /
+
+      if (NOrb .eq. NOrbLast) then
+C Values are the same as last call - no need to recalculate
+        NOrbNode = NOrbNodeLast
+
+      else
+
+        if (lspatial) then
+C-------------------------
+C  Spatial distribution  -
+C-------------------------
+          NOrbNode = nOrbPerNode(Node+1)
+
+        else if (use_dd) then
+           if (use_dd_perm) then
+              !  NOrbNode = dd_nuo
+              ! We have this structure also
+              NOrbNode = nOrbPerNode(Node+1)
+           else
+              if (thisNode /= Node)
+     $             call die("Wrong use of dd GetNodeOrbs")
+              NOrbNode = dd_nuo
+           endif
+        else
+C-----------------------------
+C  Blockcyclic distribution  -
+C-----------------------------
+C Calculate the minimum number of orbitals per node
+          MinPerNode = NOrb / (Nodes*BSize)
+
+C Find the remainder of unassigned orbitals
+          Remainder = NOrb - MinPerNode * Nodes * BSize
+
+C Find number of complete blocks in the remainder
+          RemainderBlocks = Remainder / BSize
+          Remainder = Remainder - RemainderBlocks * BSize
+
+C Workout the local number of orbitals
+          NOrbNode = MinPerNode*BSize
+          if (Node.lt.RemainderBlocks) NOrbNode = NOrbNode + BSize
+          if (Node.eq.RemainderBlocks) NOrbNode = NOrbNode + Remainder
+        endif
+
+C Save value for next call
+        NOrbNodeLast = NOrbNode
+
+      endif
+
+      end subroutine GetNodeOrbs_NAO2GTO
+
+
+      subroutine LocalToGlobalOrb_NAO2GTO( LOrb, Node, Nodes, GOrb)
+      use parallel, only: thisNode => Node
+C
+C  Converts an orbital index in the local frame to the global frame
+C
+C  Julian Gale, Imperial College, December 1998
+C
+C  Input :
+C
+C  integer LOrb   = local orbital index
+C  integer Node   = local processor number
+C  integer Nodes  = global number of processors
+C
+C  From parallel.h :
+C
+C  integer BlockSize = blocking size for orbital distribution across
+C                      the nodes. Choice of value affects the
+C                      performance of the Scalapack routines
+C
+C  Output :
+C
+C  integer GOrb   = global orbital index
+C
+
+      integer LOrb, Node, Nodes, GOrb
+
+C  Local variables
+      integer LEle, LBlock
+
+      if (lspatial) then
+C-------------------------
+C  Spatial distribution  -
+C-------------------------
+        GOrb = nL2G(LOrb,Node+1)
+
+      else if (use_dd) then
+        if (use_dd_perm) then
+          !  GOrb = dd_invp(LOrb)
+          ! We have this structures also...
+           GOrb = nL2G(LOrb,Node+1)
+        else
+           if (thisNode /= Node)
+     $          call die("Wrong use of dd LocalToGlobalOrb")
+
+          GOrb = LOrb + llimit - 1
+        endif
+      else
+C-----------------------------
+C  Blockcyclic distribution  -
+C-----------------------------
+C  Find local block number
+        LBlock = ((LOrb -1)/BSize)
+
+C  Substract local base line to find element number within the block
+        LEle = LOrb - LBlock*BSize
+
+C  Calculate global index
+        GOrb = (LBlock*Nodes + Node)*BSize + LEle
+      endif
+      return
+      end  subroutine LocalToGlobalOrb_NAO2GTO
+
+      subroutine set_bsize_NAO2GTO(Nodes,pair_number,bsizedefault)
+C
+C Finds a sensible default value for the blocksize default.
+C When the number of orbitals is less than the blocksize
+C typically used then lower the blocksize to ensure that
+C some work is done on all nodes.
+C
+C Input :
+C
+C integer Nodes        : total number of processors
+C integer nuotot       : total number of orbitals
+C
+C Output :
+C
+C integer blocksizedefault : default value of blocksize
+C
+C Written by Julian Gale, March 2001
+C
+C Passed arguments
+      integer
+     .  Nodes, pair_number, bsizedefault
+
+C Compare number of orbitals against sensible number
+C      if (pair_number.gt.200*Nodes) then
+C        bsizedefault = 200
+C      else
+        bsizedefault = ( (pair_number - 1) / Nodes) + 1
+C      endif
+
+      end subroutine set_bsize_NAO2GTO
+
       end module parallelsubs

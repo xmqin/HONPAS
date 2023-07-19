@@ -1,12 +1,15 @@
 ! 
-! Copyright (C) 1996-2016	The SIESTA group
-!  This file is distributed under the terms of the
-!  GNU General Public License: see COPYING in the top directory
-!  or http://www.gnu.org/copyleft/gpl.txt.
-! See Docs/Contributors.txt for a list of contributors.
+! This file is part of the SIESTA package.
+!
+! Copyright (c) Fundacion General Universidad Autonoma de Madrid:
+! E.Artacho, J.Gale, A.Garcia, J.Junquera, P.Ordejon, D.Sanchez-Portal
+! and J.M.Soler, 1996- .
+! 
+! Use of this software constitutes agreement with the full conditions
+! given in the SIESTA license, as signed by all legitimate users.
 !
       subroutine iomd( na, isa, iza, xa, va, cell, vcell, varcel, istep,
-     .                 istep0, temp, eks, getot, volume, Psol)
+     .                 istep0, istepf, temp, eks, getot, volume, Psol)
 c *******************************************************************
 c Saves positions, cell, and energies in a MD run (accumulative)
 c J.Kohanoff August 1998, slightly modified by E. Artacho, Feb. 1999
@@ -29,63 +32,71 @@ c real*8  eks        : Kohn-Sham energy
 c real*8  getot      : Total energy
 c integer istep      : Present time step
 c integer istep0     : First time step
+c integer istepf     : Last time step
 c real*8  volume     : cell volume in Ang**3
 c real*8  Psol       : total pressure (static plus kinetik) in kBar
 c *******************************************************************
 
       use precision,  only : dp
       use files,      only : slabel, label_length
-      use units, only: eV
 
       implicit          none
 
       integer           na, isa(na), iza(na)
-      integer           istep, istep0
+      integer           istep, istep0, istepf
       logical           varcel
       real(dp)          cell(3,3), xa(3,na), va(3,na), vcell(3,3),
-     .                  temp, eks, getot, volume, Psol
+     .                  temp, eks, getot, volume, Psol, eV
 
 c Internal variables and arrays
-      logical, parameter :: IS_FORMATTED = .false.
-      character(len=label_length+4) :: fncel
-      character(len=label_length+4) :: fnene
-      character(len=label_length+4) :: fnpos
+      logical, save ::     formtt = .false.
+      character(len=label_length+4)       :: paste
+      character(len=label_length+4), save :: fncel
+      character(len=label_length+4), save :: fnene
+      character(len=label_length+4), save :: fnpos
 
-      integer :: ia, iv, ix
-      integer :: iucel, iuene, iupos
-      
-      external          io_assign, io_close
+      integer    ia, iupos, iuene, iucel, iv, ix
+      logical    formt
+      save       formt, iupos, iuene, iucel, eV
+      logical, save :: frstme = .true.
 
-      ! Find name of file
-      fnene = trim(slabel) // '.MDE'
-      if ( IS_FORMATTED ) then
-         fnpos = trim(slabel) // '.MDX'
-         if (varcel) fncel = trim(slabel) // '.MDC'
-      else
-         fnpos = trim(slabel) // '.MD'
-      end if
+      external          io_assign, io_close, paste
+
+c Find name of file
+      if (frstme) then
+        eV = 13.60580d0
+        formt = formtt
+        fnene = paste( slabel, '.MDE' )
+        if (formt) then
+          fnpos = paste( slabel, '.MDX' )
+          if (varcel) fncel = paste( slabel, '.MDC' )
+        else
+          fnpos = paste( slabel, '.MD' )
+        endif
+        frstme = .false.
+      endif
 
 c Open file 
 
       call io_assign( iuene )
       open(iuene, file=fnene, form='formatted', position='append', 
-     .     status='unknown')
-      if ( IS_FORMATTED ) then
-         call io_assign( iupos )
-         open(iupos, file=fnpos, form='formatted', position='append',
-     .        status='unknown')
-         if ( varcel ) then 
-            call io_assign( iucel )
-            open(iucel,file=fncel,form='formatted',position='append',
-     .           status='unknown' )
-         end if
+     .  status='unknown')
+      if ( formt ) then
+        call io_assign( iupos )
+        open(iupos, file=fnpos, form='formatted', position='append',
+     .    status='unknown')
+        if ( varcel ) then 
+          call io_assign( iucel )
+          open(iucel,file=fncel,form='formatted',position='append',
+     .      status='unknown' )
+        endif
       else
-         call io_assign( iupos )
-         open(iupos,file=fnpos,form='unformatted',status='unknown',
-     $        position="append")
-      end if
+        call io_assign( iupos )
+        open(iupos,file=fnpos,form='unformatted',status='unknown',
+     $       position="append")
+      endif
 
-      if(istep .eq. istep0) then
+      if(istep . eq . istep0) then
         write(iuene,"(6a)") '# Step','     T (K)','     E_KS (eV)',
      .     '    E_tot (eV)','   Vol (A^3)','    P (kBar)' 
       endif
@@ -93,8 +104,8 @@ c Open file
 C Write data on files
 
       write(iuene,'(i6,1x,f9.2,2(1x,f13.5),1x,f11.3,1x,f11.3)') 
-     .            istep, temp, eks/eV, getot/eV, volume, Psol
-      if ( IS_FORMATTED ) then
+     .            istep, temp, eks*eV, getot*eV, volume, Psol
+      if ( formt ) then
         write(iupos,*) istep
         do ia = 1,na
           write(iupos,'(i3,i6,3f13.6,3x,3f13.6)')
@@ -110,10 +121,11 @@ C Write data on files
         if ( varcel ) write(iupos) cell, vcell
       endif
 
-C Close files
+C Close file
 
       call io_close( iuene )
       call io_close( iupos )
-      if ( IS_FORMATTED .and. varcel ) call io_close( iucel )
+      if ( formt .and. varcel ) call io_close( iucel )
 
+      return
       end

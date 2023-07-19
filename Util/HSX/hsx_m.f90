@@ -1,10 +1,3 @@
-! ---
-! Copyright (C) 1996-2016	The SIESTA group
-!  This file is distributed under the terms of the
-!  GNU General Public License: see COPYING in the top directory
-!  or http://www.gnu.org/copyleft/gpl.txt .
-! See Docs/Contributors.txt for a list of contributors.
-! ---
 module hsx_m
 
 !
@@ -17,48 +10,6 @@ integer, parameter, private :: sp = selected_real_kind(6,30)
 
 public  :: read_hsx_file, write_hsx_file
 public  :: read_hs_file, write_hs_file
-
-! Set derived type hsx_t to hold info of HSX file, containing:
-!   nspecies                : number of chemical species
-!   na_u                    : number of atoms in unit cell
-!   no_u                    : number of orbitals in unit cell
-!   no_s                    : number of orbitals in supercell
-!   nspin                   : number of spin components
-!   nh                      : dimension of arrays hamilt, Sover, and xij
-!   gamma                   : was this a gamma-only calculation?
-!   has_xij                 : does the file contain xij vectors?
-!   no(nspecies)            : number of atomic orbitals of each species
-!   nquant(nspecies,naoatx) : principal quantum number of each atomic orbital
-!                             with naoatx=max(no)
-!   lquant(nspecies,naoatx) : ang. momentum number of each atomic orbital
-!   zeta(nspecies,naoatx)   : zeta-index of each atomic orbital
-!   iaorb(no_u)             : atom to which each orbital belongs
-!   iphorb(no_u)            : index of each orbital within its atom
-!   label(nspecies)         : atomic label (symbol) of each species
-!   numh(no_u)              : num of nonzero elements in each row of hamiltonian
-!   listhptr(no_u)          : row-start index in sparse-matrix arrays
-!   listh(nh)               : orbital index of nonzero matrix elements
-!   indxuo(no_s)            : index of equivalent orbital in first unit cell
-!   hamilt(nh,nspin)        : hamiltonian matrix elements in sparse format
-!   Sover(nh)               : overlap matrix elements in sparse format
-!   xij(3,nh)               : vector between each pair of connected orbitals
-!   isa(na_u)               : species index of each atom
-!   zval(nspecies)          : atomic number of each species
-! To transform from sparse to full format, for a given k point:
-!   S(1:no_u,1:no_u) = 0                       ! full complex overlap matrix
-!   H(1:no_u,1:no_u,1:nspin) = 0               ! full complex hamiltonian
-!   do io = 1,no_u                             ! loop on unit cell orbitals
-!     do j = 1,numh(io)                        ! loop on connected orbitals
-!        ij = listhptr(io)+j                   ! sparse-matrix array index
-!        jos = listh(ij)                       ! index of connected orbital
-!        jo = indxuo(jos)                      ! equiv. orbital in unit cell
-!        phase = exp(i*sum(k(:)*xij(:,ij)))    ! phase factor between orbs.
-!        H(io,jo,1:nspin) = H(io,jo,1:nspin) + ! hamiltonian matrix element
-!                           phase*hamilt(ij,1:spin)
-!        S(io,jo) = S(io,jo) + phase*Sover(ij) ! overlap matrix element
-!     enddo
-!   enddo
-! Notice that io,jo are within unit cell, and jos is within supercell
 
 type, public :: hsx_t
   integer :: nspecies
@@ -76,6 +27,7 @@ type, public :: hsx_t
   integer, pointer :: iaorb(:) => null()
   integer, pointer :: iphorb(:) => null()
   character(len=20), pointer :: label(:) => null()
+
   integer, pointer  :: numh(:) => null() 
   integer, pointer  :: listhptr(:) => null()
   integer, pointer  :: listh(:) => null()  
@@ -86,6 +38,7 @@ type, public :: hsx_t
   integer, pointer  :: isa(:) => null()
   real(dp), pointer :: zval(:) => null()
   real(dp)          :: qtot, temp           !  fossils
+
 end type
 
 private

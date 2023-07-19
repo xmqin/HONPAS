@@ -1,9 +1,12 @@
 ! 
-! Copyright (C) 1996-2016	The SIESTA group
-!  This file is distributed under the terms of the
-!  GNU General Public License: see COPYING in the top directory
-!  or http://www.gnu.org/copyleft/gpl.txt.
-! See Docs/Contributors.txt for a list of contributors.
+! This file is part of the SIESTA package.
+!
+! Copyright (c) Fundacion General Universidad Autonoma de Madrid:
+! E.Artacho, J.Gale, A.Garcia, J.Junquera, P.Ordejon, D.Sanchez-Portal
+! and J.M.Soler, 1996- .
+! 
+! Use of this software constitutes agreement with the full conditions
+! given in the SIESTA license, as signed by all legitimate users.
 !
       subroutine ener3lomem(c,grad,lam,eta,qs,h,s,nbasis,nbasisloc,
      .                      nbands,ncmax,nctmax,nfmax,nhmax,nhijmax,
@@ -68,10 +71,9 @@ C                                     C + 3 * lam * GRAD
 C ************************************************************************
 
       use precision
+      use on_main,   only : ncG2L,ncT2P,nbG2L,nbL2G,nbandsloc
       use globalise
-      use on_main,     only : ncG2L,ncT2P,nbG2L,nbL2G,nbandsloc
-      use m_mpi_utils, only : globalize_sum
-      use alloc,       only : re_alloc, de_alloc
+      use m_mpi_utils, only: globalize_sum
 
       implicit none
 
@@ -95,7 +97,11 @@ C Internal variables ......................................................
       integer
      .  i,il,ilam,in,is,j,jn,k,kk,kn,lc,indk,mu
 
-      real(dp), pointer, save :: aux1(:), aux2(:), bux1(:), bux2(:)
+      real(dp), dimension(:), allocatable, save ::
+     .  aux1, aux2
+
+      real(dp), dimension(:), allocatable, save ::
+     .  bux1, bux2
 
       real(dp) ::
      .  a,b,c1,func1(3),func2(3),
@@ -104,20 +110,30 @@ C Internal variables ......................................................
 #ifdef MPI
       real(dp) ::
      .  ftmp(3,2),ftmp2(3,2)
-      real(dp), pointer, save :: bux2g(:), bux1s(:,:), bux2s(:,:)
+      real(dp), dimension(:), allocatable, save ::
+     .  bux2g
+      real(dp), dimension(:,:), allocatable, save ::
+     .  bux1s, bux2s
 #endif
 C
       call timer('ener3',1)
 
 C Allocate workspace arrays
-      call re_alloc( aux1, 1, nbasis, 'aux1', 'ener3' )
-      call re_alloc( aux2, 1, nbasis, 'aux2', 'ener3' )
-      call re_alloc( bux1, 1, nbasis, 'bux1', 'ener3' )
-      call re_alloc( bux2, 1, nbasis, 'bux2', 'ener3' )
+      allocate(aux1(nbasis))
+      call memory('A','D',size(aux1),'ener3')
+      allocate(aux2(nbasis))
+      call memory('A','D',size(aux2),'ener3')
+      allocate(bux1(nbands))
+      call memory('A','D',size(bux1),'ener3')
+      allocate(bux2(nbands))
+      call memory('A','D',size(bux2),'ener3')
 #ifdef MPI
-      call re_alloc( bux1s, 1, nhijmax, 1, nbandsloc, 'bux1s', 'ener3' )
-      call re_alloc( bux2s, 1, nhijmax, 1, nbandsloc, 'bux2s', 'ener3' )
-      call re_alloc( bux2g, 1, nbasis, 'bux2g', 'ener3' )
+      allocate(bux1s(nhijmax,nbandsloc))
+      call memory('A','D',size(bux1s),'ener3')
+      allocate(bux2s(nhijmax,nbandsloc))
+      call memory('A','D',size(bux2s),'ener3')
+      allocate(bux2g(nbands))
+      call memory('A','D',size(bux2g),'ener3')
 #endif
 
 C..................
@@ -298,14 +314,21 @@ C End loop over spin states
 
 C Dellocate workspace arrays
 #ifdef MPI
-      call de_alloc( bux2g, 'bux2g', 'ener3' )
-      call de_alloc( bux2s, 'bux2s', 'ener3' )
-      call de_alloc( bux1s, 'bux1s', 'ener3' )
+      call memory('D','D',size(bux2g),'ener3')
+      deallocate(bux2g)
+      call memory('D','D',size(bux2s),'ener3')
+      deallocate(bux2s)
+      call memory('D','D',size(bux1s),'ener3')
+      deallocate(bux1s)
 #endif
-      call de_alloc( bux2, 'bux2', 'ener3' )
-      call de_alloc( bux1, 'bux1', 'ener3' )
-      call de_alloc( aux2, 'aux2', 'ener3' )
-      call de_alloc( aux1, 'aux1', 'ener3' )
+      call memory('D','D',size(bux2),'ener3')
+      deallocate(bux2)
+      call memory('D','D',size(bux1),'ener3')
+      deallocate(bux1)
+      call memory('D','D',size(aux2),'ener3')
+      deallocate(aux2)
+      call memory('D','D',size(aux1),'ener3')
+      deallocate(aux1)
 
       call timer('ener3',2)
 

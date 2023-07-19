@@ -13,10 +13,10 @@ $(label)-completed:
 	@for i in `cat $(name).pseudos` ; do \
 		echo "    ==> Copying pseudopotential file for $$i..." ;\
 		ln ../Pseudos/$$i.psf $(label)/$$i.psf ;\
-	done 
+   	done 
 
 	@(cd $(label) ; ../../Scripts/e-vs-mesh.sh ${SIESTA} $(name) $(GridMin) $(GridMax) $(GridIncrement) ) \
-		&& touch $(label)-completed
+   		&& touch $(label)-completed
 	@if [ -f $(label)-completed ]; then \
 	   echo "    ===> SIESTA finished";\
 	   else \

@@ -1,9 +1,12 @@
 ! 
-! Copyright (C) 1996-2016	The SIESTA group
-!  This file is distributed under the terms of the
-!  GNU General Public License: see COPYING in the top directory
-!  or http://www.gnu.org/copyleft/gpl.txt.
-! See Docs/Contributors.txt for a list of contributors.
+! This file is part of the SIESTA package.
+!
+! Copyright (c) Fundacion General Universidad Autonoma de Madrid:
+! E.Artacho, J.Gale, A.Garcia, J.Junquera, P.Ordejon, D.Sanchez-Portal
+! and J.M.Soler, 1996- .
+! 
+! Use of this software constitutes agreement with the full conditions
+! given in the SIESTA license, as signed by all legitimate users.
 !
 
 
@@ -15,9 +18,6 @@
 !
         implicit none
 
-        integer, parameter :: dp = selected_real_kind(10,100)
-        integer, parameter :: sp = selected_real_kind(5,10)
-
         integer io,iu, nk, nspin, ik, iik, ispin, iispin,
      .          nwflist, iw, indwf, j, nuotot, jj
 
@@ -25,10 +25,10 @@
         integer, allocatable, dimension(:) :: iaorb,iphorb,cnfigfio
         character(len=20), allocatable, dimension(:) :: symfio,labelfis
 
-        real(sp), allocatable, dimension(:,:) :: psi
+        real*4, allocatable, dimension(:,:) :: psi
         logical gamma
 
-        real(dp) k(3), energy
+        real*8 k(3), energy
  
         iu = 10
         io = 11
@@ -61,7 +61,7 @@
      .            symfio(j), j=1,nuotot)
 
         do iik = 1,nk
-          do iispin = 1,min(4,nspin)
+          do iispin = 1,nspin
 
           read(iu) ik,k(1),k(2),k(3)
           write(io) ik,k(1),k(2),k(3)

@@ -1,9 +1,12 @@
 ! 
-! Copyright (C) 1996-2016	The SIESTA group
-!  This file is distributed under the terms of the
-!  GNU General Public License: see COPYING in the top directory
-!  or http://www.gnu.org/copyleft/gpl.txt.
-! See Docs/Contributors.txt for a list of contributors.
+! This file is part of the SIESTA package.
+!
+! Copyright (c) Fundacion General Universidad Autonoma de Madrid:
+! E.Artacho, J.Gale, A.Garcia, J.Junquera, P.Ordejon, D.Sanchez-Portal
+! and J.M.Soler, 1996- .
+! 
+! Use of this software constitutes agreement with the full conditions
+! given in the SIESTA license, as signed by all legitimate users.
 !
       subroutine cspa(ioptlwf,iopt,natoms,no_u,no_l,lasto,isa,
      .                qa,rcoor,rh,cell,xa,nhmax,numh,listh,listhptr,
@@ -80,8 +83,7 @@ C ****************************************************************************
       use alloc,     only: re_alloc, de_alloc
       use on_main,   only: numc, listc, c, cold, listcold
       use on_main,   only: ncg2l, ncl2g, nct2p, ncp2t
-      use neighbour, only: jan, r2ij, xij, mneighb, maxnna,
-     &                     reset_neighbour_arrays
+      use neighbour, only: jan, r2ij, xij, mneighb, maxnna
       use sys,      only : die
       use spatial,  only : nL2G
 
@@ -106,7 +108,7 @@ C ****************************************************************************
 C  Internal variables .......................................................
 
       integer, dimension(:), pointer ::  alist, ilist, numft
-      integer, pointer               ::  indexloc(:) => null()
+      integer, pointer               ::  indexloc(:)
 
       integer
      . i,ia,imu,in,index,indexa,indexb,indexi,indexj,iorb,is,j,ja,
@@ -120,16 +122,19 @@ C  Internal variables .......................................................
 
       real(dp) ::
      .  cg,fact(2),qtot,r,rmax,rr(3),rrmod,
-     .  snor,tiny,randomg,cgval
+     .  snor,tiny,ran3,cgval
 
-      external :: randomg
+      external :: ran3
 
       logical, save :: firstcall = .true., secondodd = .false.
 
       if (firstcall) then
 
+C Nullify local pointers on first call
+        nullify(indexloc)
+
 C Initialise random number generator
-        cgval = randomg(-iseed)
+        cgval = ran3(-iseed)
 
         firstcall = .false.
 
@@ -144,10 +149,13 @@ C Check that iopt is correct ................................................
 
 
 C Allocate local arrays
-      nullify( alist, ilist, numft, lneeded )
-      call re_alloc( alist,   1, natoms, 'alist',   'cspa' )
+      nullify( alist )
+      call re_alloc( alist, 1, natoms, name='alist', routine='cspa' )
+      nullify( ilist )
       call re_alloc( ilist, 1, no_u, name='ilist', routine='cspa' )
+      nullify( numft )
       call re_alloc( numft, 1, no_u, name='numft', routine='cspa' )
+      nullify( lneeded )
       call re_alloc( lneeded, 1, no_u, name='lneeded',
      &               routine='cspa' )
 
@@ -301,7 +309,7 @@ C Allocate local memory
           ! Look for neighbours of atom ia
           call mneighb(cell,rcoor,natoms,xa,ia,0,nna)
           ! Reallocate in case nna has increased  (Tight form)
-          call re_alloc( indexloc, 1, nna, 'indexloc', 'cspa' )
+          call re_alloc(indexloc,1,nna,name='indexloc',routine="cspa")
         else
           ! Localization size greater than max cell size
           ! We can treat all atoms in the cell as neighbors
@@ -359,7 +367,7 @@ C loop over the neighbors of ia within rcoor
 
               ! Get random number here for reproducibility over numbers of processors
               get_random: do
-                 cgval = (randomg(iseed) - 0.5d0) * 2.0d0
+                 cgval = (ran3(iseed) - 0.5d0) * 2.0d0
                  if (abs(cgval) .ge. 1d-5) exit get_random
               enddo get_random
 
@@ -553,7 +561,7 @@ C  (or the number of electrons)
       endif
 
 C Deallocate local memory
-      call reset_neighbour_arrays( )
+
       call de_alloc( lneeded, name='lneeded' )
       call de_alloc( numft, name='numft' )
       call de_alloc( ilist, name='ilist' )

@@ -1,9 +1,12 @@
 ! 
-! Copyright (C) 1996-2016	The SIESTA group
-!  This file is distributed under the terms of the
-!  GNU General Public License: see COPYING in the top directory
-!  or http://www.gnu.org/copyleft/gpl.txt.
-! See Docs/Contributors.txt for a list of contributors.
+! This file is part of the SIESTA package.
+!
+! Copyright (c) Fundacion General Universidad Autonoma de Madrid:
+! E.Artacho, J.Gale, A.Garcia, J.Junquera, P.Ordejon, D.Sanchez-Portal
+! and J.M.Soler, 1996- .
+! 
+! Use of this software constitutes agreement with the full conditions
+! given in the SIESTA license, as signed by all legitimate users.
 !
       module m_ener3
       public :: ener3
@@ -71,10 +74,9 @@ C                                     C + 3 * lam * GRAD
 C ************************************************************************
 
       use precision, only : dp
+      use on_main,   only : ncG2L,ncT2P,nbG2L,nbL2G,nbandsloc
       use globalise
-      use on_main,     only : ncG2L,ncT2P,nbG2L,nbL2G,nbandsloc
       use m_mpi_utils, only : globalize_sum
-      use alloc,       only : re_alloc, de_alloc
 
       implicit none
 
@@ -100,12 +102,11 @@ C Internal variables ......................................................
       integer
      .  i,il,in,is,j,jn,k,kk,kn,lc,indk,mu
 
-      real(dp), pointer       :: aux1(:) => null(), aux2(:) => null(),
-     &                           aux3(:) => null(), aux4(:) => null(),
-     &                           aux5(:) => null(), aux6(:) => null(),
-     &                           bux1(:) => null(), bux2(:) => null(),
-     &                           bux3(:) => null(), bux4(:) => null(),
-     &                           bux5(:) => null(), bux6(:) => null()
+      real(dp), dimension(:), allocatable, save ::
+     .  aux1, aux2, aux3, aux4, aux5, aux6
+
+      real(dp), dimension(:), allocatable, save ::
+     .  bux1, bux2, bux3, bux4, bux5, bux6
 
       real(dp) ::
      .  a1,a2,a3,b1,b2,b3,c1,c2,c3,func1(3),func2(3),
@@ -114,38 +115,52 @@ C Internal variables ......................................................
 #ifdef MPI
       real(dp) ::
      .  ftmp(3,2),ftmp2(3,2)
-      real(dp),pointer       :: bux246(:,:) => null(),
-     &                          bux1s(:,:) => null(),
-     &                          bux2s(:,:) => null(),
-     &                          bux3s(:,:) => null(),
-     &                          bux4s(:,:) => null(),
-     &                          bux5s(:,:) => null(),
-     &                          bux6s(:,:) => null()
+      real(dp), dimension(:,:), allocatable, save ::
+     .  bux246, bux1s, bux2s, bux3s, bux4s, bux5s, bux6s
 #endif
 C
       call timer('ener3',1)
 
 C Allocate workspace arrays
-      call re_alloc( aux1, 1, no_u, 'aux1', 'ener3' )
-      call re_alloc( aux2, 1, no_u, 'aux2', 'ener3' )
-      call re_alloc( aux3, 1, no_u, 'aux3', 'ener3' )
-      call re_alloc( aux4, 1, no_u, 'aux4', 'ener3' )
-      call re_alloc( aux5, 1, no_u, 'aux5', 'ener3' )
-      call re_alloc( aux6, 1, no_u, 'aux6', 'ener3' )
-      call re_alloc( bux1, 1, no_u, 'bux1', 'ener3' )
-      call re_alloc( bux2, 1, no_u, 'bux2', 'ener3' )
-      call re_alloc( bux3, 1, no_u, 'bux3', 'ener3' )
-      call re_alloc( bux4, 1, no_u, 'bux4', 'ener3' )
-      call re_alloc( bux5, 1, no_u, 'bux5', 'ener3' )
-      call re_alloc( bux6, 1, no_u, 'bux6', 'ener3' )
+      allocate(aux1(no_u))
+      call memory('A','D',size(aux1),'ener3')
+      allocate(aux2(no_u))
+      call memory('A','D',size(aux2),'ener3')
+      allocate(aux3(no_u))
+      call memory('A','D',size(aux3),'ener3')
+      allocate(aux4(no_u))
+      call memory('A','D',size(aux4),'ener3')
+      allocate(aux5(no_u))
+      call memory('A','D',size(aux5),'ener3')
+      allocate(aux6(no_u))
+      call memory('A','D',size(aux6),'ener3')
+      allocate(bux1(nbands))
+      call memory('A','D',size(bux1),'ener3')
+      allocate(bux2(nbands))
+      call memory('A','D',size(bux2),'ener3')
+      allocate(bux3(nbands))
+      call memory('A','D',size(bux3),'ener3')
+      allocate(bux4(nbands))
+      call memory('A','D',size(bux4),'ener3')
+      allocate(bux5(nbands))
+      call memory('A','D',size(bux5),'ener3')
+      allocate(bux6(nbands))
+      call memory('A','D',size(bux6),'ener3')
 #ifdef MPI
-      call re_alloc( bux1s, 1, nhijmax, 1, nbandsloc, 'bux1s', 'ener3' )
-      call re_alloc( bux2s, 1, nhijmax, 1, nbandsloc, 'bux2s', 'ener3' )
-      call re_alloc( bux3s, 1, nhijmax, 1, nbandsloc, 'bux3s', 'ener3' )
-      call re_alloc( bux4s, 1, nhijmax, 1, nbandsloc, 'bux4s', 'ener3' )
-      call re_alloc( bux5s, 1, nhijmax, 1, nbandsloc, 'bux5s', 'ener3' )
-      call re_alloc( bux6s, 1, nhijmax, 1, nbandsloc, 'bux6s', 'ener3' )
-      call re_alloc( bux246, 1, nbands, 1, 3, 'bux246', 'ener3' )
+      allocate(bux1s(nhijmax,nbandsloc))
+      call memory('A','D',size(bux1s),'ener3')
+      allocate(bux2s(nhijmax,nbandsloc))
+      call memory('A','D',size(bux2s),'ener3')
+      allocate(bux3s(nhijmax,nbandsloc))
+      call memory('A','D',size(bux3s),'ener3')
+      allocate(bux4s(nhijmax,nbandsloc))
+      call memory('A','D',size(bux4s),'ener3')
+      allocate(bux5s(nhijmax,nbandsloc))
+      call memory('A','D',size(bux5s),'ener3')
+      allocate(bux6s(nhijmax,nbandsloc))
+      call memory('A','D',size(bux6s),'ener3')
+      allocate(bux246(nbands,3))
+      call memory('A','D',size(bux246),'ener3')
 #endif
 
 C..................
@@ -378,26 +393,45 @@ C End loop over spin states
 
 C Dellocate workspace arrays
 #ifdef MPI
-      call de_alloc( bux246, 'bux246', 'ener3' )
-      call de_alloc( bux6s, 'bux6s', 'ener3' )
-      call de_alloc( bux5s, 'bux5s', 'ener3' )
-      call de_alloc( bux4s, 'bux4s', 'ener3' )
-      call de_alloc( bux3s, 'bux3s', 'ener3' )
-      call de_alloc( bux2s, 'bux2s', 'ener3' )
-      call de_alloc( bux1s, 'bux1s', 'ener3' )
+      call memory('D','D',size(bux246),'ener3')
+      deallocate(bux246)
+      call memory('D','D',size(bux6s),'ener3')
+      deallocate(bux6s)
+      call memory('D','D',size(bux5s),'ener3')
+      deallocate(bux5s)
+      call memory('D','D',size(bux4s),'ener3')
+      deallocate(bux4s)
+      call memory('D','D',size(bux3s),'ener3')
+      deallocate(bux3s)
+      call memory('D','D',size(bux2s),'ener3')
+      deallocate(bux2s)
+      call memory('D','D',size(bux1s),'ener3')
+      deallocate(bux1s)
 #endif
-      call de_alloc( bux6, 'bux6', 'ener3' )
-      call de_alloc( bux5, 'bux5', 'ener3' )
-      call de_alloc( bux4, 'bux4', 'ener3' )
-      call de_alloc( bux3, 'bux3', 'ener3' )
-      call de_alloc( bux2, 'bux2', 'ener3' )
-      call de_alloc( bux1, 'bux1', 'ener3' )
-      call de_alloc( aux6, 'aux6', 'ener3' )
-      call de_alloc( aux5, 'aux5', 'ener3' )
-      call de_alloc( aux4, 'aux4', 'ener3' )
-      call de_alloc( aux3, 'aux3', 'ener3' )
-      call de_alloc( aux2, 'aux2', 'ener3' )
-      call de_alloc( aux1, 'aux1', 'ener3' )
+      call memory('D','D',size(bux6),'ener3')
+      deallocate(bux6)
+      call memory('D','D',size(bux5),'ener3')
+      deallocate(bux5)
+      call memory('D','D',size(bux4),'ener3')
+      deallocate(bux4)
+      call memory('D','D',size(bux3),'ener3')
+      deallocate(bux3)
+      call memory('D','D',size(bux2),'ener3')
+      deallocate(bux2)
+      call memory('D','D',size(bux1),'ener3')
+      deallocate(bux1)
+      call memory('D','D',size(aux6),'ener3')
+      deallocate(aux6)
+      call memory('D','D',size(aux5),'ener3')
+      deallocate(aux5)
+      call memory('D','D',size(aux4),'ener3')
+      deallocate(aux4)
+      call memory('D','D',size(aux3),'ener3')
+      deallocate(aux3)
+      call memory('D','D',size(aux2),'ener3')
+      deallocate(aux2)
+      call memory('D','D',size(aux1),'ener3')
+      deallocate(aux1)
 
       call timer('ener3',2)
 

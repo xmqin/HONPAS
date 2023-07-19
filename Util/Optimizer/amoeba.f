@@ -1,49 +1,4 @@
-! ---
-! Copyright (C) 1996-2016	The SIESTA group
-!  This file is distributed under the terms of the
-!  GNU General Public License: see COPYING in the top directory
-!  or http://www.gnu.org/copyleft/gpl.txt .
-! See Docs/Contributors.txt for a list of contributors.
-! ---
-!------------------------------------------------------------------------------
-! module m_amoeba
-!   Wrapper for subroutine amoeba
-! Used modules
-!   use precision,   only: dp
-!   use vars_module, only: constrained
-! Public procedures provided by this module:
-!   amoeba : Nelder-Mead minimization algorithm
-! Public derived types:
-!   none
-! Public variables and parameters:
-!   none
-! Written by A.Garcia and J.M.Soler, May 2015
-!------------------------------------------------------------------------------
-! SUBROUTINE amoeba(x,y,ndim,ftol,funk,neval,maxeval)
-!   Nelder-Mead minimization algorithm
-! Input:
-!   integer ndim           ! number of coordinates
-!   interface
-!     function funk(x) result(value)        ! function to be minimized
-!       use precision, only: dp
-!       real(dp),intent(in) :: x(:)         ! point coordinates
-!       real(dp)            :: value        ! function value at x
-!     end function funk
-!   end interface
-!   real(dp) ftol           ! function tolerance at minimum
-! Optional input:
-!   integer  maxeval        ! max. function evaluations
-! Input/output:
-!   real(dp) x(ndim+1,ndim) ! simplex values x(ipoint,icoord)
-!   real(dp) y(ndim+1)      ! function values at x
-! Output:
-!   integer neval           ! number of function evaluations
-! Reference:
-!   W.H.Press et al, Numerical Recipes, Cambridge U.P.
-!------------------------------------------------------------------------------
-
-      MODULE m_amoeba
-
+      module m_amoeba
       use precision, only: dp
       use vars_module, only: constrained
 
@@ -54,117 +9,141 @@
 
       CONTAINS
 
-!------------------------------------------------------------------------------
+      SUBROUTINE amoeba(p,y,mp,np,ndim,ftol,funk,iter,req_itmax)
+      INTEGER iter,mp,ndim,np
+      REAL(dp)  ftol,p(mp,np),y(mp)
+      integer, intent(in), optional :: req_itmax
 
-      SUBROUTINE amoeba(x,y,ndim,ftol,funk,neval,maxeval)
+      integer, parameter :: ITMAX_default = 2000
 
-      ! Arguments
-      implicit none
-      real(dp),intent(inout):: x(ndim+1,ndim) ! simplex values x(ipoint,icoord)
-      real(dp),intent(inout):: y(ndim+1)      ! function values at x
-      integer, intent(in)   :: ndim           ! number of coordinates
       interface
-        function funk(x) result(value)        ! function to be minimized
-          use precision, only: dp
-          real(dp),intent(in) :: x(:)         ! point coordinates
-          real(dp)            :: value        ! function value at x
-        end function funk
+         function funk(x) result(value)
+         use precision, only: dp
+         real(dp), dimension(:), intent(in) :: x
+         real(dp)                           :: value
+      end function funk
       end interface
-      real(dp),intent(in)   :: ftol           ! function tolerance at minimum
-      integer, intent(out)  :: neval          ! number of function evaluations
-      integer, intent(in),optional:: maxeval  ! max. function evaluations
 
-      ! Internal parameters and variables
-      integer, parameter :: maxeval_default = 2000
-      real(dp),parameter :: tiny = 1.0e-12_dp
-      INTEGER :: i,ihi,ilo,inhi,max_eval,npoint
-      REAL(dp):: df,x0(ndim),xtry(ndim),yhi,ytry
+      integer :: itmax
 
-      ! Set parameters
-      npoint=ndim+1                           ! number of simplex points
-      if (present(maxeval)) then
-         max_eval = maxeval                   ! max. allowed func. evaluations
+      INTEGER i,ihi,ilo,inhi,j,m,n
+      REAL(dp)  rtol,sum,swap,ysave,ytry
+      real(dp), parameter :: tiny = 1.0e-12_dp
+
+      REAL(dp)  :: psum(ndim)  ! Automatic
+
+      if (present(req_itmax)) then
+         itmax = req_itmax
       else
-         max_eval = maxeval_default
+         itmax = itmax_default
       endif
 
-      ! Minimization iteration
-      neval=0
-      do while (neval<=max_eval)
-        ilo=minloc(y,dim=1)                   ! lowest point
-        ihi=maxloc(y,dim=1)                   ! highest point
-        inhi=maxloc(y,dim=1,mask=(y/=y(ihi))) ! next highest point
-
-        ! If converged, place lowest vertex first and return
-        df=2*abs(y(ihi)-y(ilo))/(abs(y(ihi))+abs(y(ilo))+tiny)
-        print *,"Fractional dispersion: ", df
-        if (df<ftol) then
-          x((/1,ilo/),:)=x((/ilo,1/),:)       ! swap 1 and ilo
-          y((/1,ilo/))=y((/ilo,1/))
-          exit ! do while loop
+      iter=0
+1     continue
+      do 12 n=1,ndim
+        sum=0.
+        do 11 m=1,ndim+1
+          sum=sum+p(m,n)
+11      continue
+        psum(n)=sum
+12    continue
+2     ilo=1
+      if (y(1).gt.y(2)) then
+        ihi=1
+        inhi=2
+      else
+        ihi=2
+        inhi=1
+      endif
+      do 13 i=1,ndim+1
+        if(y(i).le.y(ilo)) ilo=i
+        if(y(i).gt.y(ihi)) then
+          inhi=ihi
+          ihi=i
+        else if(y(i).gt.y(inhi)) then
+          if(i.ne.ihi) inhi=i
         endif
-
-        ! First try a reflection
-        ytry=trial(-1.0_dp)
-        if (ytry<=y(ilo)) then ! lower than best => double the reflected point
-          ytry=trial(2.0_dp)
-        elseif (ytry>=y(inhi)) then ! worse than 2nd highest => contract
-          yhi=y(ihi)
-          ytry=trial(0.5_dp)
-          if (ytry>=yhi) then  ! contract all points, relative to the lowest
-            do i=1,npoint
-              if(i/=ilo)then
-                x(i,:)=0.5_dp*(x(i,:)+x(ilo,:)) ! factor-2 contraction
-                y(i)=funk(x(i,:))
-                neval=neval+1
-              endif
-            enddo ! i
-          endif ! (ytry>=yhi)
-        endif ! (ytry<=y(ilo))
-
-      enddo ! while (neval<=max_eval). This is the return point
-
-      CONTAINS ! trial is a contained function of amoeba
-
-!------------------------------------------------------------------------------
-
-      FUNCTION trial(fac) result(ytry)
-
-      ! Tries a new position for highest point and substitutes it if better
-
-      REAL(dp),intent(in):: fac  ! expansion factor of highest point,
-                                 ! relative to opposite face
-      REAL(dp)           :: ytry ! function value at new position
-
-      INTEGER :: j
-
-      ! Find center of face opposite to highest point ihi
-      x0=(sum(x,dim=1)-x(ihi,:))/(npoint-1)
-
-      ! Find unconstrained new position of ihi
-      xtry=x0+fac*(x(ihi,:)-x0)
-
-      ! Find constrained new position of ihi
-      do j=1,ndim
-        xtry(j)=constrained(xtry(j),j)
-      enddo
-
-      ! Find function at new position
-      ytry=funk(xtry)
-      neval=neval+1
-      print *, "New point: ", xtry, " --- ",  ytry
-
-      ! If succesful, substitute highest point by trial point
-      if (ytry<y(ihi)) then
-        x(ihi,:)=xtry(:)
-        y(ihi)=ytry
+13    continue
+      rtol=2.*abs(y(ihi)-y(ilo))/(abs(y(ihi))+abs(y(ilo)) + tiny)
+      print *, "Fractional dispersion: ", rtol
+      if (rtol.lt.ftol) then
+        swap=y(1)
+        y(1)=y(ilo)
+        y(ilo)=swap
+        do 14 n=1,ndim
+          swap=p(1,n)
+          p(1,n)=p(ilo,n)
+          p(ilo,n)=swap
+14      continue
+        return
       endif
+      if (iter.ge.ITMAX) RETURN
 
-      END function trial
-
-!------------------------------------------------------------------------------
-
+      iter=iter+2
+      ytry=amotry(p,y,psum,mp,np,ndim,funk,ihi,-1.0_dp)
+      if (ytry.le.y(ilo)) then
+        ytry=amotry(p,y,psum,mp,np,ndim,funk,ihi,2.0_dp)
+      else if (ytry.ge.y(inhi)) then
+        ysave=y(ihi)
+        ytry=amotry(p,y,psum,mp,np,ndim,funk,ihi,0.5_dp)
+        if (ytry.ge.ysave) then
+          do 16 i=1,ndim+1
+            if(i.ne.ilo)then
+              do 15 j=1,ndim
+                psum(j)=0.5*(p(i,j)+p(ilo,j))
+                p(i,j)=psum(j)
+15            continue
+              y(i)=funk(psum(1:ndim))
+            endif
+16        continue
+          iter=iter+ndim
+          goto 1
+        endif
+      else
+        iter=iter-1
+      endif
+      goto 2
       END subroutine amoeba
+!------------------------------------------------------------------------------
+C
+      FUNCTION amotry(p,y,psum,mp,np,ndim,funk,ihi,fac)
+      INTEGER ihi,mp,ndim,np
+      REAL(dp)  amotry,fac,p(mp,np),psum(np),y(mp)
 
-      END MODULE m_amoeba
+      INTEGER j
+      REAL(dp)  fac1,fac2,ytry
+      
+      REAL(dp)  :: ptry(size(psum))  ! Automatic
 
+      interface
+         function funk(x) result(val)
+         use precision, only: dp
+         real(dp), dimension(:), intent(in) :: x
+         real(dp)                           :: val
+         end function funk
+      end interface
+
+
+      fac1=(1.-fac)/ndim
+      fac2=fac1-fac
+      do 11 j=1,ndim
+        ptry(j)=constrained(psum(j)*fac1-p(ihi,j)*fac2,j)
+11    continue
+
+      ytry=funk(ptry(1:ndim))
+      print *, "New point: ", ptry(1:ndim), " --- ",  ytry
+
+      if (ytry.lt.y(ihi)) then
+        y(ihi)=ytry
+        do 12 j=1,ndim
+          psum(j)=psum(j)-p(ihi,j)+ptry(j)
+          p(ihi,j)=ptry(j)
+12      continue
+      endif
+      amotry=ytry
+      return
+      END function amotry
+
+C  (C) Copr. 1986-92 Numerical Recipes Software P#5,t$D#)K#)?.
+
+      end module m_amoeba

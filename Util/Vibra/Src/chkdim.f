@@ -1,9 +1,12 @@
 ! 
-! Copyright (C) 1996-2016	The SIESTA group
-!  This file is distributed under the terms of the
-!  GNU General Public License: see COPYING in the top directory
-!  or http://www.gnu.org/copyleft/gpl.txt.
-! See Docs/Contributors.txt for a list of contributors.
+! This file is part of the SIESTA package.
+!
+! Copyright (c) Fundacion General Universidad Autonoma de Madrid:
+! E.Artacho, J.Gale, A.Garcia, J.Junquera, P.Ordejon, D.Sanchez-Portal
+! and J.M.Soler, 1996- .
+! 
+! Use of this software constitutes agreement with the full conditions
+! given in the SIESTA license, as signed by all legitimate users.
 !
       SUBROUTINE CHKDIM (SUB,VAR,ND,N,IOPT)
 C **********************************************************************
@@ -17,7 +20,6 @@ C INTEGER   N       : Required value of dimension parameter
 C INTEGER   IOPT    : Option switch: IOPT=0 => Require that ND.EQ.N
 C                                    IOPT=1 => Require that ND.GE.N
 C **********************************************************************
-      integer :: nd,n,iopt
       CHARACTER SUB*(*),VAR*(*)
       IF ( IOPT.EQ.0 ) THEN
         IF ( ND.EQ.N ) RETURN
@@ -35,7 +37,6 @@ C **********************************************************************
 
 
       SUBROUTINE CHKDIME (ND,N,OVERFLOW,NM)
-      integer :: nd, n, nm
       LOGICAL OVERFLOW
       NM = MAX(N,NM)
       IF ( ND.GE.N ) RETURN

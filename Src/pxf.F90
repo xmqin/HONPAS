@@ -1,10 +1,3 @@
-! ---
-! Copyright (C) 1996-2016	The SIESTA group
-!  This file is distributed under the terms of the
-!  GNU General Public License: see COPYING in the top directory
-!  or http://www.gnu.org/copyleft/gpl.txt .
-! See Docs/Contributors.txt for a list of contributors.
-! ---
 ! pxf.F90 - assortment of Fortran wrappers to various
 ! unix-y system calls.
 !
@@ -15,7 +8,7 @@
 ! in fact I don't think that either flush or abort were
 ! covered by said standard.
 
-! Of the preprocessor defines used here, only xlF is
+! Of the preprocessor defines used here, only xlC is
 ! automatically defined by the appropriate compiler. All
 ! others must be defined by some other mechanism - I
 ! recommend autoconf.
@@ -35,33 +28,25 @@
 ! 
 ! If no FLUSH is available, the subroutine is a no-op.
 
-      subroutine pxfflush(unit)
+subroutine pxfflush(unit)
 #ifdef __NAG__
-      use f90_unix_io, only : flush
+  use f90_unix_io, only : flush
 #endif
-      implicit none
-      integer, intent(in) :: unit
+  integer, intent(in) :: unit
+
 #if defined(F2003)
-      flush(unit)
+  flush(unit)
 #elif defined(GFORTRAN)
-      call flush(unit)
-#elif defined(__GFORTRAN__)
-      call flush(unit)
-#elif defined(XLF)
-      if (unit.eq.6 .or. unit.eq.0) then
-        call flush_(unit)
-      else
-        flush(unit)
-      endif
+  call flush(unit)
+#elif defined(xlC)
+  call flush_(unit)
 #elif defined (FC_HAVE_FLUSH)
-      call flush(unit)
-#elif defined (ALTIX)
-      flush(unit)
-      call flush(unit)
+  call flush(unit)
 #else
-      continue
+  continue
 #endif
-      end subroutine pxfflush
+
+end subroutine pxfflush
 
 ! ABORT: terminates program execution in such a way that a backtrace
 ! is produced. (see abort() in the C Standard Library). No arguments.
@@ -76,33 +61,29 @@
 ! on every platform I've tried it with. Just in case it doesn't (it need
 ! not even stop execution) a stop is given to force termination.
 
-      subroutine pxfabort()
+subroutine pxfabort()
 #ifdef __NAG__
-      use f90_unix_proc, only : abort
+  use f90_unix_proc, only : abort
 #endif
 
 #ifdef F2003
-      interface
-        subroutine abort() bind(c)
-        end subroutine abort
-      end interface
-      call abort()
-#elif defined(GFORTRAN)
-      call abort()
-#elif defined(__GFORTRAN__)
+  interface
+    subroutine abort(), bind(c)
+    end subroutine abort
+  end interface
   call abort()
-#elif defined(XLF)
-      call abort_()
+#elif defined(GFORTRAN)
+  call abort()
+#elif defined(xlC)
+  call abort_()
 #elif defined(FC_HAVE_ABORT)
-      call abort()
-#elif defined(ALTIX)
-      call abort()
+  call abort()
 #else
-      Integer, Pointer :: i
-      i=>null()
-      Print*,i
+  Integer, Pointer :: i
+  i=>null()
+  Print*,i
 #endif
 
-      stop
+  stop
 
-      end subroutine pxfabort
+end subroutine pxfabort

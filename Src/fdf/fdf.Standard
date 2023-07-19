@@ -1,4 +1,4 @@
-FDF Standard. Version 0.6.6, September 2007
+FDF Standard. Version 0.6.5, September 1998
 
 Input lines are parsed and a token list is created. A token is:
 
@@ -14,9 +14,9 @@ Input lines are parsed and a token list is created. A token is:
 
 Examples:
 	
-MeshCutoff < "File.fdf"           3 tokens: MeshCutoff, <, File.fdf
-System_Name  Devil's staircase    3 tokens: System_Name, Devil's, staircase
-%block AtomicCoordinates %dump < coords.dat  5 tokens
+MeshCutoff <"File.fdf"		3 tokens: MeshCutoff, <, File.fdf
+System_Name  Devil's staircase   3 tokens: System_Name, Devil's, staircase
+%block Coordinates,AtomicCoordinates %dump < coords.dat  6 tokens
 
 The characters '#', ';', and '!' signal the beginning of a comment. Any
 remaining characters on the line are discarded.
@@ -26,7 +26,7 @@ Labels are also punctuation-insensitive, by which it is understood that
 the characters '.', '_', and '-' are removed before any comparison is made.
 
 
-Label   [ Value ]
+Label   [  Value ]
 
 	This line assigns an optional Value to Label. Value could be
 	a token or a sequence of tokens not including '<'. 
@@ -34,9 +34,9 @@ Label   [ Value ]
 	token, but fdf_string will return the whole list. 
 
 %block Label 
-  ...
-  ...
-  ...
+====
+=====
+====
 # Optional comments
 %endblock [ Label ]
 
@@ -48,8 +48,8 @@ Label   [ Value ]
 %block Label  < Filename  [ %dump ]
 
 	Opens Filename in order to read the block. If %dump appears
-	at the *end* of the line, the contents of Filename are dumped
-  to fdf_out.
+	anywhere (except as the first token), the contents of Filename
+	are dumped to fdf_out.
 
 %include  Filename  # Comments
 
@@ -64,32 +64,5 @@ Label   < Filename   # Comments
 	same time for fdf processing.
 
 
-* Debugging and logging.
-
-By default, all the fdf requests are logged, printing the final value
-extracted (if it is the default value, it is identified as such).
-In MPI operation, only the master node does the logging, unless the
-"output-level" is set to a value >= 2. This can be done directly in
-the fdf file:
-
-fdf-output 2  # Turn on logging for all nodes
-fdf-output 0  # Turn off logging completely
-
-No debugging is done, unless the "debug-level" is set to a value greater
-than zero. The most meaningful way to use this feature is to set the
-debugging level before the fdf data structures are built. This can be
-achieved by calling the routine fdf_setdebug with the appropriate level
-and file name *before* the call to fdf_init.  This gives full control
-over the behavior.  
-
-Alternatively, if the library is compiled with the pre-processor symbol
-FDF_DEBUG defined, it will set the debug level to 2 (exhaustive) for all
-nodes in the system. (It will also set the output level to 2 (all nodes)).
-
-If the debugging level (>=2) is only specified in the fdf file itself,
-the library will provide a print-out of the final data structure generated
-(in all nodes).
-
-fdf-debug 2
 
 

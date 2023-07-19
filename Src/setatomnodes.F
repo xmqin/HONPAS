@@ -1,9 +1,12 @@
 ! 
-! Copyright (C) 1996-2016	The SIESTA group
-!  This file is distributed under the terms of the
-!  GNU General Public License: see COPYING in the top directory
-!  or http://www.gnu.org/copyleft/gpl.txt.
-! See Docs/Contributors.txt for a list of contributors.
+! This file is part of the SIESTA package.
+!
+! Copyright (c) Fundacion General Universidad Autonoma de Madrid:
+! E.Artacho, J.Gale, A.Garcia, J.Junquera, P.Ordejon, D.Sanchez-Portal
+! and J.M.Soler, 1996- .
+! 
+! Use of this software constitutes agreement with the full conditions
+! given in the SIESTA license, as signed by all legitimate users.
 !
       subroutine setatomnodes(na,lasto,Node,Nodes)
 C
@@ -111,6 +114,7 @@ C
       real(dp)                                 :: diffxy
       real(dp)                                 :: diffxz
       real(dp)                                 :: diffyz
+      real(dp)                                 :: fdiff
       real(dp)                                 :: pratio
       real(dp)                                 :: ratiox
       real(dp)                                 :: ratioy
@@ -141,8 +145,8 @@ C**********************
         natompernode = na
         if (natompernode.gt.maxatompernode) then
           maxatompernode = natompernode
-          call re_alloc( natomsL2G, 1, maxatompernode, 'natomsL2G',
-     .                   'setatomnodes' )
+          call re_alloc(natomsL2G,1,maxatompernode,
+     .      name='natomsL2G')
         endif
         do i = 1,natompernode
            natomsL2G(i) = i
@@ -153,10 +157,10 @@ C
         ncellpernode = nspcell(1)*nspcell(2)*nspcell(3)
         if (ncellpernode.gt.maxcellpernode) then
           maxcellpernode = ncellpernode
-          call re_alloc( lbuffercell, 1, maxcellpernode,
-     .                   'lbuffercell', 'setatomnodes' )
-          call re_alloc( ncellnodeptr, 1, maxcellpernode,
-     .                   'ncellnodeptr', 'setatomnodes' )
+          call re_alloc(lbuffercell,1,maxcellpernode,
+     .      name='lbuffercell')
+          call re_alloc(ncellnodeptr,1,maxcellpernode,
+     .      name='ncellnodeptr')
         endif
         nspmax(1) = nspcell(1) - nbufferx
         nspmin(1) = nbufferx
@@ -187,8 +191,8 @@ C
 C
 C  Build lists linking atoms with parallel structure
 C
-        call re_alloc( natomsG2L, 1, na, 'natomsG2L', 'setatomnodes' )
-        call re_alloc( natomsNode, 1, na, 'natomsNode', 'setatomnodes' )
+        call re_alloc(natomsG2L,1,na,name='natomsG2L')
+        call re_alloc(natomsNode,1,na,name='natomsNode')
         natomsNode(1:na) = 0
         do ii = 1,na
           natomsG2L(ii) = ii
@@ -197,12 +201,10 @@ C
 C  Build dummy lists linking orbitals with parallel structure 
 C
         maxorb = lasto(na)
-        call re_alloc( nL2G, 1, maxorb,1, Nodes, 'nL2G',
-     &                 'setatomnodes' )
-        call re_alloc( nG2L, 1, maxorb, 'nG2L', 'setatomnodes' )
-        call re_alloc( nNode, 1, maxorb, 'nNode', 'setatomnodes')
-        call re_alloc( nOrbPerNode, 1, Nodes, 'nOrbPerNode',
-     &                 'setatomnodes' )
+        call re_alloc(nL2G,1,maxorb,1,Nodes,name='nL2G')
+        call re_alloc(nG2L,1,maxorb,name='nG2L')
+        call re_alloc(nNode,1,maxorb,name='nNode')
+        call re_alloc(nOrbPerNode,1,Nodes,name='nOrbPerNode')
 C
         nOrbPerNode(1) = maxorb
         do ii = 1,maxorb
@@ -356,7 +358,7 @@ C
           enddo
         enddo
 
- 999    continue
+ 999    continue             ! Use goto to avoid re-indenting code too much
 
         if (ldebug) then
           write(6,'(/,''  Processor grid = '',3(i4,1x))') 
@@ -372,14 +374,14 @@ C
 C  Allocate local memory
 C
         nullify( npgridxptr )
-        call re_alloc( npgridxptr, 0, npgrid(1), 'npgridxptr',
-     &                 'setatomnodes' )
+        call re_alloc( npgridxptr, 0, npgrid(1), name='npgridxptr',
+     &                 routine='setatomnodes' )
         nullify( npgridyptr )
-        call re_alloc( npgridyptr, 0, npgrid(2), 'npgridyptr',
-     &                 'setatomnodes' )
+        call re_alloc( npgridyptr, 0, npgrid(2), name='npgridyptr',
+     &                 routine='setatomnodes' )
         nullify( npgridzptr )
-        call re_alloc( npgridzptr, 0, npgrid(3), 'npgridzptr',
-     &                 'setatomnodes' )
+        call re_alloc( npgridzptr, 0, npgrid(3), name='npgridzptr',
+     &                 routine='setatomnodes' )
 C
 C
 C Now count cells, and divide them in x, y, and z 
@@ -400,8 +402,8 @@ C
         ii = 1
         do ix = nbufferx+1,nspcell(1) - nbufferx
           if (ii == npgrid(1)) exit
-          ! If we've reached the last cell, then all other atoms must
-          ! go onto next node. Go over each plane of x
+          ! If we've reached the last cell, then all other atoms must go onto next node
+          ! Go over each plane of x
           do iy = nbuffery+1,nspcell(2) - nbuffery
             do iz = nbufferz+1,nspcell(3) - nbufferz
               ! Within each plane of x, calculate the index of each cell
@@ -423,8 +425,8 @@ C
        ! Put all remaining atoms onto next node; in case we still
        ! have nodes left over, leave them empty.
         npgridxptr(ii:npgrid(1)) = nspcell(1) - nbufferx
-       ! npgridxptr contains, indexed by processor grid in the x
-       ! direction, the first x cell that processor is responsible for.
+       ! npgridxptr contains, indexed by processor grid in the x direction,
+       ! the first x cell that processor is responsible for.
 
 C Now repeat the above algorithm for y & z directions.
 C
@@ -523,10 +525,10 @@ C nadd is the number of cells we've allocated for this node
      .                 (npgridxptr(ix) - npgridxptr(ix-1) + 2*nbufferx)
                 if (ncellpernode+nadd.gt.maxcellpernode) then
                   maxcellpernode = ncellpernode + nadd
-                  call re_alloc( lbuffercell, 1, maxcellpernode,
-     .                           'lbuffercell', 'setatomnodes' )
-                  call re_alloc( ncellnodeptr,1,maxcellpernode,
-     .                           'ncellnodeptr', 'setatomnodes' )
+                  call re_alloc(lbuffercell,1,maxcellpernode,
+     .              name='lbuffercell')
+                  call re_alloc(ncellnodeptr,1,maxcellpernode,
+     .              name='ncellnodeptr')
                 endif
 C
 C The lok[xyz] variable below are only necessary when using buffers.
@@ -559,13 +561,17 @@ C The lok[xyz] variable below are only necessary when using buffers.
         enddo
         
         if (ionode) then
+          !allocate(ncellpernodelist(nodes))
           nullify( ncellpernodelist )
           call re_alloc( ncellpernodelist, 1, nodes , 
-     &                   'ncellpernodelist', 'setatomnodes' )
+     &                   name    = 'ncellpernodelist',
+     &                   routine = 'setatomnodes' )
         else
+          !allocate(ncellpernodelist(0))
           nullify( ncellpernodelist )
           call re_alloc( ncellpernodelist, 0, 0, 
-     &                   'ncellpernodelist', 'setatomnodes' )
+     &                   name    = 'ncellpernodelist',
+     &                   routine = 'setatomnodes' )
         endif
 #ifdef MPI
         call mpi_gather(ncellpernode,1,mpi_integer,
@@ -591,8 +597,7 @@ C The lok[xyz] variable below are only necessary when using buffers.
               call die()
            endif
         endif
-        call de_alloc( ncellpernodelist, 'ncellpernodelist',
-     &                 'setatomnodes' )
+        call de_alloc( ncellpernodelist,  name='ncellpernodelist' )
 C
 C  Find size for atom link array and then allocate
 C
@@ -605,8 +610,8 @@ C
         enddo
         if (natompernode.gt.maxatompernode) then
           maxatompernode = natompernode
-          call re_alloc( natomsL2G, 1, maxatompernode, 'natomsL2G',
-     &                   'setatomnodes' )
+          call re_alloc(natomsL2G,1,maxatompernode,
+     .      name='natomsL2G')
         endif
 C
 C  Build lists linking atoms to nodes
@@ -623,13 +628,17 @@ C
         enddo
 
         if (ionode) then
+          !allocate(natompernodelist(nodes))
           nullify( natompernodelist )
           call re_alloc( natompernodelist, 1, nodes , 
-     &                   'natompernodelist', 'setatomnodes' )
+     &                   name    = 'natompernodelist',
+     &                   routine = 'setatomnodes' )
         else
+          !allocate(natompernodelist(0))
           nullify( natompernodelist )
           call re_alloc( natompernodelist, 0, 0 , 
-     &                   'natompernodelist', 'setatomnodes' )
+     &                   name    = 'natompernodelist',
+     &                   routine = 'setatomnodes' )
         endif
 #ifdef MPI
         call mpi_gather(natompernode,1,mpi_integer,
@@ -648,13 +657,12 @@ C
              call die("Bad load balancing. Nodes with no atoms")
           endif
         endif
-        call de_alloc( natompernodelist, 'natompernodelist',
-     &                 'setatomnodes' )
+        call de_alloc( natompernodelist,  name='natompernodelist' )
 C
 C  Build lists linking atoms with parallel structure
 C
-        call re_alloc( natomsG2L, 1, na, 'natomsG2L', 'setatomnodes' )
-        call re_alloc( natomsNode, 1, na, 'natomsNode', 'setatomnodes' )
+        call re_alloc(natomsG2L,1,na,name='natomsG2L')
+        call re_alloc(natomsNode,1,na,name='natomsNode')
         natomsNode(1:na) = 0
         natomsG2L(1:na) = 0
         j = 0
@@ -674,9 +682,11 @@ C  Globalise data
 C
         maxorb = lasto(na)
 #ifdef MPI
+        !allocate(ntmp(max(maxorb,Nodes)))
         nullify( ntmp )
-        call re_alloc( ntmp, 1, max(maxorb,Nodes), 'ntmp',
-     &                 'setatomnodes' )
+        call re_alloc( ntmp, 1, max(maxorb,Nodes) , 
+     &                 name    = 'ntmp',
+     &                 routine = 'setatomnodes' )
         ntmp(1:na) = natomsNode(1:na)
         call MPI_AllReduce(ntmp,natomsNode,na,MPI_integer,MPI_max,
      .    MPI_Comm_World,MPIerror)
@@ -689,11 +699,10 @@ C  Build lists linking orbitals with parallel structure
 C
         ! Instead of maxorb, nL2G's first dimension could
         ! be max(no_l)
-        call re_alloc( nL2G, 1, maxorb,1,Nodes, 'nL2G', 'setatomnodes' )
-        call re_alloc( nG2L, 1, maxorb, 'nG2L', 'setatomnodes' )
-        call re_alloc( nNode, 1, maxorb, 'nNode', 'setatomnodes' )
-        call re_alloc( nOrbPerNode, 1, Nodes, 'nOrbPerNode',
-     &                 'setatomnodes' )
+        call re_alloc(nL2G,1,maxorb,1,Nodes,name='nL2G')
+        call re_alloc(nG2L,1,maxorb,name='nG2L')
+        call re_alloc(nNode,1,maxorb,name='nNode')
+        call re_alloc(nOrbPerNode,1,Nodes,name='nOrbPerNode')
 C
         nOrbPerNode(1:Nodes) = 0
         nNode(1:maxorb) = 0
@@ -744,7 +753,7 @@ C
         ntmp(1:Nodes) = nOrbPerNode(1:Nodes)
         call MPI_AllReduce(ntmp,nOrbPerNode,Nodes,MPI_integer,MPI_max,
      .    MPI_Comm_World,MPIerror)
-        call de_alloc( ntmp,  'ntmp', 'setatomnodes' )
+        call de_alloc( ntmp,  name='ntmp' )
 #endif
          no_u = maxorb
          if (node==0) then
@@ -773,9 +782,11 @@ C
 C
 C  Free local memory
 C
-        call de_alloc( npgridxptr, 'npgridxptr', 'setatomnodes' )
-        call de_alloc( npgridyptr, 'npgridyptr', 'setatomnodes' )
-        call de_alloc( npgridzptr, 'npgridzptr', 'setatomnodes' )
+        call de_alloc( npgridxptr,  name='npgridxptr' )
+        call de_alloc( npgridyptr,  name='npgridyptr' )
+        call de_alloc( npgridzptr,  name='npgridzptr' )
       endif
+C
+
       return
       end

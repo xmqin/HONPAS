@@ -1,13 +1,14 @@
-The FDF package, designed by Alberto Garcia and Jose Soler, has been
-reimplemented by Raul de la Cruz (Barcelona Supercomputer Center).
+This is the original FDF package, by Alberto Garcia and Jose Soler.
 
-The library is memory-side instead of file-oriented, and works better
-and faster than before. Supports MPI executions (outputs have
-different names for each node), Cluster mode (at least one node only
-has access to the input file) and Blocking mode (reading phase is
-split in several steps for huge execution in shared-filesystems).
+We request that the copyright notices in the code be kept if the package is
+eventually used as part of another program.
 
-We request that the copyright notices in the code be kept if the package
-is eventually used as part of another program.
+NOTES:
 
-September 2007
+The library, as compiled, still depends on the functionality of an
+"io" package. In Siesta, that is provided by file Src/io.f (which has
+its own Siesta-specific dependencies). If you use fdf in your program,
+you will need to link it to something similar to the code in
+io_for_fdf_tests.f.
+
+

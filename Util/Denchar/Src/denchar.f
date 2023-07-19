@@ -1,10 +1,3 @@
-! ---
-! Copyright (C) 1996-2016	The SIESTA group
-!  This file is distributed under the terms of the
-!  GNU General Public License: see COPYING in the top directory
-!  or http://www.gnu.org/copyleft/gpl.txt .
-! See Docs/Contributors.txt for a list of contributors.
-! ---
 
       PROGRAM DENCHAR
 
@@ -16,10 +9,12 @@ C Modified by J. Junquera 07/01
 C 3D and wavefunction capabilities coded by P. Ordejon, June 2003
 C Modified to handle complex wavefunctions and multiple k-points
 C by P. Ordejon, July 2004
+C Modified to include the local density of states at a point
+C by P. Ordejon, July 2004
 C Modified to use the more efficient WFSX format for wave functions
 C by A. Garcia, May 2012
-C Added more files in 3D mode (A. Garcia, Nov 2016)
-! Added support for NC/SOC wfs and streamlined by A. Garcia (March-June 2019)
+C
+C Version: 2.1
 C **********************************************************************
 C
 C  Modules
@@ -28,26 +23,25 @@ C
       USE BASIS_IO
       USE LISTSC_MODULE, ONLY: LISTSC_INIT
       USE FDF
-      use parallel, only: nodes, node
-      use m_getopts
+      use parallel, only: nodes, node, ionode
 
       IMPLICIT NONE
 
-      character(len=200) :: opt_arg
-      character(len=10)  :: opt_name 
-      integer :: nargs, iostat, n_opts, nlabels
-
       INTEGER
      .   NO_U, NO_S, NA_S, NSPIN, MAXND, MAXNA,
-     .   NSC(3), NK
+     .   NSC(3), NK, NUMWF, NE
       integer :: ns_dummy
 
       INTEGER
-     .  IDIMEN, IOPTION, NPX, NPY, NPZ, IUNITCD, ISCALE
+     .  IDIMEN, IOPTION, NPX, NPY, NPZ, IUNITCD, ISCALE, BFUNC
 
       INTEGER, DIMENSION(:), ALLOCATABLE ::
      .  ISA, LASTO, IPHORB, INDXUO, 
-     .  NUMD, LISTD, LISTDPTR
+     .  NUMD, LISTD, LISTDPTR, NWF
+
+      INTEGER, DIMENSION(:,:), ALLOCATABLE ::
+     .  INDW
+
 
       real(dp)
      .   CELL(3,3), VOLUME, VOLCEL, RMAXO
@@ -55,23 +49,29 @@ C
       real(dp)
      .  XMIN, XMAX, YMIN, YMAX, ZMIN, ZMAX,
      .  COORPO(3,3), NORMAL(3), DIRVER1(3),
-     .  DIRVER2(3), ARMUNI, EMIN
+     .  DIRVER2(3), ARMUNI, EMIN, DELTAE, ETA, XSTS(3)
 
-      real(dp), DIMENSION(:,:), ALLOCATABLE     :: XA, DSCF, K
-      real(dp), DIMENSION(:), ALLOCATABLE       :: DATM
+      real(dp), DIMENSION(:,:,:,:), ALLOCATABLE ::
+     .   RPSI,IPSI
+
+      real(dp), DIMENSION(:,:,:), ALLOCATABLE ::
+     .   E
+
+      real(dp), DIMENSION(:,:), ALLOCATABLE ::
+     .   XA, DSCF, K
+
+      real(dp), DIMENSION(:), ALLOCATABLE ::
+     .   DATM
 
       CHARACTER
-     .  FILEIN*20, FILEOUT*20, sname*30
+     .  FILEIN*20, FILEOUT*20
 
       LOGICAL 
-     .  FOUND, CHARGE, WAVES, ionode, debug
-      logical :: gamma_wfsx, non_coll
-      integer :: nspin_wfsx, nspin_blocks, wf_unit
-      integer :: no_u_wfsx
-      integer :: kpoint_selected, wf_selected
-      
+     .  FOUND, CHARGE, WAVES, STS
+
       EXTERNAL
      .  IODM, READPLA, REDATA_DENCHAR, REINIT, RHOOFR, VOLCEL
+      external :: readwavesx
 
       DATA NORMAL /0.D0,0.D0,1.D0/
       DATA COORPO /1.D0,0.D0,0.D0,0.D0,1.D0,0.D0,0.D0,0.D0,1.D0/
@@ -114,10 +114,15 @@ C REAL*8  XA(3,NA_S)          : Atomic coordinates in cartesian coordinates
 C                               (units in bohrs)
 C REAL*8  DATM(NO_S)          : Occupations of basis orbitals in free atom
 C REAL*8  DSCF(MAXND,NSPIN)   : Density Matrix (DM)
+C REAL*8  RPSI(NO_U,NK,NUMWF,NSPIN): Wave function coefficients (real part)
+C REAL*8  IPSI(NO_U,NK,NUMWF,NSPIN): Wave function coefficients (imag part)
+C REAL*8  E(NK,NUMWF,NSPIN)        : Wave function energies
+C REAL*8  K(NK,3)             : K-points
 C ****** INFORMATION OF THE POINT, PLANE OR 3D GRID ***********************
 C INTEGER IDIMEN              : Specifies 2D or 3D mode
 C LOGICAL CHARGE              : Should charge density be computed?
 C LOGICAL WAVES               : Should wave functions be computed?
+C LOGICAL STS                 : Should STS simulation be done?
 C INTEGER IOPTION             : Option to generate the plane or 3D grid
 C                               1 = Normal vector to xy plane (ie, z direction)
 C                               2 = Two vectors belonging to the xy plane
@@ -128,6 +133,10 @@ C                               (and z for 3D grids) directions in a system of
 C                               reference in which the third component of the 
 C                               points of the plane is zero 
 C                               (Plane Reference Frame; PRF)
+C INTEGER NE                  : Number of energies for STS curve
+C REAL*8 EMIN                 : Minimum energy of STS curve
+C REAL*8 DELTAE               : Step in STS curve
+C REAL*8 ETA                  : Lorenzian width used in STS curve
 C INTEGER IUNITCD             : Units of the charge density
 C INTEGER ISCALE              : Units of the points of the plane or 3D grid
 C REAL*8  XMIN, XMAX          : Limits of the plane in the PRF for x-axis
@@ -141,71 +150,47 @@ C REAL*8  DIRVER1(3)          : Components of the first vector contained
 C                               in the plane
 C REAL*8  DIRVER2(3)          : Components of the first vector contained 
 C                               in the plane
+C REAL*8 XSTS(3)              : Coordinates of points where STS spectrum
+C                               is calculated
+C INTEGER BFUNC               : Broadening function for STS spectra:
+C                               1 = Lorentzian, 2 = Gaussian
 C REAL*8  ARMUNI              : Conversion factors for the charge density
 C ****** INTERNAL VARIABLES ********************************************
 C LOGICAL FOUND               : Has DM been found in disk?
 C                               (Only when task = 'read')
 C **********************************************************************
 C
-!     Process options
-!
-      kpoint_selected = 0
-      wf_selected = 0
-      n_opts = 0
-      do
-         call getopts('dhk:w:',
-     $        opt_name,opt_arg,n_opts,iostat)
-         if (iostat /= 0) exit
-         select case(opt_name)
-         case ('d')
-            debug = .true.
-         case ('k')
-            read(opt_arg,*) kpoint_selected
-         case ('w')
-            read(opt_arg,*) wf_selected
-         case ('h')
-            write(0,*) " See manual "
-            STOP
-         case ('?',':')
-            write(0,*) "Invalid option: ", opt_arg(1:1)
-            write(0,*) "Use -h option for manual"
-            write(0,*) ""
-            !call manual()
-            STOP
-         end select
-      enddo
-
-      nargs = command_argument_count()
-      nlabels = nargs - n_opts + 1
-      if (nlabels == 1)  then
-        call get_command_argument(n_opts,value=FILEIN,status=iostat)
-        if ( iostat /= 0 ) then
-           stop "Cannot get name of fdf file in command line"
-        end if
-      else
-        FILEIN = 'stdin'
-      endif
-
       nodes = 1
       node = 0
       ionode = .true.
 
 C Set up fdf -----------------------------------------------------------
-      !      FILEIN  = 'stdin'
+      FILEIN  = 'stdin'
       FILEOUT = 'out.fdf'
       CALL FDF_INIT(FILEIN,FILEOUT)
 
 C Read some variables from SIESTA to define the limits of some arrays --
       CALL REINIT( NO_S, NA_S, NO_U, MAXND, MAXNA, NSPIN, IDIMEN,
-     .     CHARGE, WAVES )
+     .            CHARGE, WAVES, STS )
 
 C Allocate some variables ----------------------------------------------
       ALLOCATE(XA(3,NA_S))
+      CALL MEMORY('A','D',3*NA_S,'denchar')
+
       ALLOCATE(LASTO(0:NA_S))
+      CALL MEMORY('A','D',NA_S+1,'denchar')
+
       ALLOCATE(ISA(NA_S))
+      CALL MEMORY('A','D',NA_S,'denchar')
+
       ALLOCATE(IPHORB(NO_S))
+      CALL MEMORY('A','D',NO_S,'denchar')
+
       ALLOCATE(INDXUO(NO_S))
+      CALL MEMORY('A','D',NO_S,'denchar')
+
       ALLOCATE(DATM(NO_S))
+      CALL MEMORY('A','D',NO_S,'denchar')
 
 C Read some variables from SIESTA --------------------------------------
       CALL REDATA_DENCHAR( NO_S, NA_S, NO_U, MAXND, NSPIN,
@@ -221,23 +206,31 @@ C Initialize listsc ----------------------------------------------------
 C Calculate the volume of the unit cell --------------------------------
       VOLUME = VOLCEL( CELL ) / (NSC(1) * NSC(2) * NSC(3))
 
+
+C Allocate variables
+
 C If this is a charge calculation, allocate space for DM
       IF (CHARGE) THEN
         ALLOCATE(LISTDPTR(NO_U))
+        CALL MEMORY('A','I',NO_U,'denchar')
         LISTDPTR(:) = 0
 
         ALLOCATE(NUMD(NO_U))
+        CALL MEMORY('A','I',NO_U,'denchar')
         NUMD(:) = 0
 
 C Allocate some other variables ----------------------------------------
         IF (.NOT.ALLOCATED(LISTD)) THEN
           ALLOCATE(LISTD(MAXND))
+          CALL MEMORY('A','I',MAXND,'denchar')
         ENDIF
         
         IF (ALLOCATED(DSCF)) THEN
+          CALL MEMORY('D','D',SIZE(DSCF),'denchar')
           DEALLOCATE(DSCF)
         ENDIF
         ALLOCATE(DSCF(MAXND,NSPIN))
+        CALL MEMORY('A','D',MAXND*NSPIN,'denchar')
 
 C Read Density Matrix from files ---------------------------------------
         CALL IODM('READ', MAXND, NO_U, NSPIN,
@@ -250,30 +243,67 @@ C Read Density Matrix from files ---------------------------------------
         ENDIF 
       ENDIF
 
-      IF (WAVES) THEN
+      IF (WAVES .OR. STS) THEN
 
-      ! Read header of WFSX file
+C Call readwaves just to find out number of wavefunctions to print
+C or to calculate STS spectra.
+C Allocate temporary space for eigenvalues and eigenfunctions
+        NUMWF = 1
+        NK = 1
 
-      SNAME = FDF_STRING('SystemLabel','siesta')
-      CALL IO_ASSIGN(wf_unit)
-      OPEN (wf_unit, FILE=trim(SNAME)//'.WFSX', FORM='unformatted',
-     $       STATUS='unknown',position='rewind')
+        ALLOCATE(NWF(NK))
+        CALL MEMORY('A','I',NK,'denchar')
+        ALLOCATE(INDW(NK,NUMWF))
+        CALL MEMORY('A','I',NUMWF*NK,'denchar')
+        ALLOCATE(K(NK,3))
+        CALL MEMORY('A','D',NK*3,'denchar')
+        ALLOCATE(E(NK,NUMWF,NSPIN))
+        CALL MEMORY('A','D',NUMWF*NSPIN*NK,'denchar')
+        ALLOCATE(RPSI(NO_U,NK,NUMWF,NSPIN))
+        CALL MEMORY('A','D',NO_U*NUMWF*NSPIN*NK,'denchar')
+        ALLOCATE(IPSI(NO_U,NK,NUMWF,NSPIN))
+        CALL MEMORY('A','D',NO_U*NUMWF*NSPIN*NK,'denchar')
 
-      read(wf_unit) nk, gamma_wfsx
-      read(wf_unit) nspin_wfsx
+!!!!!!!!        CALL READWAVES(NSPIN,NO_U,0,NWF,NUMWF,NK,RPSI,IPSI,E,K,INDW)
+        CALL READWAVESX(NSPIN,NO_U,0,NWF,NUMWF,NK,RPSI,IPSI,E,K,INDW)
 
-      ! Non-collinear or SOC files have a single "spin" block as opposed to collinear-spin
-      ! files, which contain two spin blocks per k section.
-      non_coll = (nspin_wfsx >= 4)
-      nspin_blocks = nspin_wfsx
-      if (non_coll) nspin_blocks = 1
+C deallocate temporary space 
+        CALL MEMORY('D','I',SIZE(NWF),'denchar')
+        DEALLOCATE(NWF)
+        CALL MEMORY('D','I',SIZE(INDW),'denchar')
+        DEALLOCATE(INDW)
+        CALL MEMORY('D','D',SIZE(K),'denchar')
+        DEALLOCATE(K)
+        CALL MEMORY('D','D',SIZE(E),'denchar')
+        DEALLOCATE(E)
+        CALL MEMORY('D','D',SIZE(RPSI),'denchar')
+        DEALLOCATE(RPSI)
+        CALL MEMORY('D','D',SIZE(IPSI),'denchar')
+        DEALLOCATE(IPSI)
 
-      read(wf_unit) no_u_wfsx
-      if (no_u /= no_u_wfsx) then
-         call die("Mismatch in no_u in WFSX and DIM/PLD files")
-      endif
-      read(wf_unit)   ! orbital labels
+C allocate space for eigenenergies and (complex) eigenfunctions 
+        ALLOCATE(NWF(NK))
+        CALL MEMORY('A','I',NK,'denchar')
+        ALLOCATE(INDW(NK,NUMWF))
+        CALL MEMORY('A','I',NUMWF*NK,'denchar')
+        ALLOCATE(K(NK,3))
+        CALL MEMORY('A','D',NK*3,'denchar')
+        ALLOCATE(E(NK,NUMWF,NSPIN))
+        CALL MEMORY('A','D',NUMWF*NSPIN*NK,'denchar')
+        ALLOCATE(RPSI(NO_U,NK,NUMWF,NSPIN))
+        CALL MEMORY('A','D',NO_U*NUMWF*NSPIN*NK,'denchar')
+        ALLOCATE(IPSI(NO_U,NK,NUMWF,NSPIN))
+        CALL MEMORY('A','D',NO_U*NUMWF*NSPIN*NK,'denchar')
 
+C call readwaves again to actually read wavefunctions
+!!!!        CALL READWAVES(NSPIN,NO_U,1,NWF,NUMWF,NK,RPSI,IPSI,E,K,INDW)
+        CALL READWAVESX(NSPIN,NO_U,1,NWF,NUMWF,NK,RPSI,IPSI,E,K,INDW)
+      ENDIF
+
+C Find out parameters of STS simulation
+      IF (STS) THEN
+        CALL READSTS(VOLUME, EMIN, NE, DELTAE, ETA, XSTS, BFUNC,
+     .               IUNITCD, ARMUNI)
       ENDIF
 
       IF (CHARGE .OR. WAVES) THEN
@@ -298,15 +328,21 @@ C Form Density Matrix for Neutral and Isolated Atoms -------------------
       ENDIF
 
       IF (WAVES) THEN
-        CALL WAVOFR( NA_S, NO_S, NO_U, MAXNA, NSPIN_wfsx, nspin_blocks,
-     $               non_coll,
+        CALL WAVOFR( NA_S, NO_S, NO_U, MAXNA, NSPIN, 
      .               ISA, IPHORB, INDXUO, LASTO, XA, CELL,
-     .               wf_unit, NK, gamma_wfsx,
+     .               RPSI, IPSI, E, INDW, NWF, NUMWF, NK, K,
      .               IDIMEN, IOPTION, XMIN, XMAX, YMIN, YMAX, 
      .               ZMIN, ZMAX, NPX, NPY, NPZ, COORPO, NORMAL, 
      .               DIRVER1, DIRVER2, 
-     .               ARMUNI, IUNITCD, ISCALE, RMAXO,
-     .               kpoint_selected, wf_selected)
+     .               ARMUNI, IUNITCD, ISCALE, RMAXO )
+      ENDIF
+
+      IF (STS) THEN
+        CALL STSOFR( NA_S, NO_S, NO_U, MAXNA, NSPIN,
+     .               ISA, IPHORB, INDXUO, LASTO, XA, CELL,
+     .               RPSI, IPSI, E, INDW, NWF, NUMWF, NK, K,
+     .               ARMUNI, IUNITCD, RMAXO,
+     .               EMIN, NE, DELTAE, ETA, XSTS, BFUNC )
       ENDIF
 
       END PROGRAM DENCHAR

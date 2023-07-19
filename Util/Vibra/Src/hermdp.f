@@ -1,3 +1,12 @@
+! 
+! This file is part of the SIESTA package.
+!
+! Copyright (c) Fundacion General Universidad Autonoma de Madrid:
+! E.Artacho, J.Gale, A.Garcia, J.Junquera, P.Ordejon, D.Sanchez-Portal
+! and J.M.Soler, 1996- .
+! 
+! Use of this software constitutes agreement with the full conditions
+! given in the SIESTA license, as signed by all legitimate users.
 !
 C ******************************************************************
 C *  HERMDP.FOR  SOLVES EIGENVALUE PROBLEM                          *
@@ -41,15 +50,12 @@ c ==============================================================
         SUBROUTINE hERMDP(H,ZR,ZI,E,IDIM,M,W1,W2,icall)
 c ==============================================================
 c        DOUBLE PRECISION H(IDIM,M),E(M),AID(501)
-        integer :: idim, m, icall
         DOUBLE PRECISION H(IDIM,M),E(M),AID(5501),w3(5501)
         DOUBLE PRECISION ZR(IDIM,M),ZI(IDIM,M),W1(M),W2(2,M)
-        DOUBLE PRECISION EIGSUM,TRACE
+       DOUBLE PRECISION EIGSUM,TRACE
 c ==============================================================
         COMMON /AIDIAG/AID
-c     ==============================================================
-        integer :: i, j, ier
-        
+c ==============================================================
 c        IF(M.GT.501)WRITE(*,*)' ERROR IN HERMDP ******* M>501'
 c        IF(M.GT.501)GO TO 999
 c      write(*,*)' welcome to hermdp.f ......'
@@ -109,7 +115,6 @@ C
 c      DOUBLE PRECISION F,FI,G,GI,H,HH,SI,SCALE,AID(501)
       DOUBLE PRECISION F,FI,G,GI,H,HH,SI,SCALE,AID(5501)
       DOUBLE PRECISION DSQRT,CDABS,DABS
-      double precision ajunk
        COMMON /AIDIAG/AID
 C      COMPLEX*16 DCMPLX
 C

@@ -1,11 +1,8 @@
-In the example directories, use the fdf file both to run Siesta and
-to execute the 'stm' program compiled in ../Src (each program will use only the
-keywords that are relevant to it).
+Use the siesta.fdf file to run Siesta (you can find the pseudopotentials needed in Tests/Pseudos).
 
-The wavefunctions will come out in the SystemLabel.fullBZ.WFSX file. You have
-to rename it (or make a symbolic link) to SystemLabel.WFSX before proceeding.
+Then, use the Util/wfsx2wfs.f  program to convert the si2x1h.WFSX file to si2x1h.WFS.
 
-The STM.LDOS file produced can be processed by the plstm program.
+Finally, run the STM program:
 
-For plotting the 2D results, you can use the gnuplot script in this directory.
+stm < stm.fdf
 

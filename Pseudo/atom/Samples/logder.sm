@@ -1,0 +1,31 @@
+read_logder  1   # read logarithmic derivative data: arg: prefix
+	  	data LOGDER0
+		read { e 1 lder 2}
+		set $1_e0=e/2
+		set $1_l0=lder*3
+		data LOGDER1
+		read { e 1 lder 2}
+		set $1_e1=e/2
+		set $1_l1=lder*3
+		data LOGDER2
+		read { e 1 lder 2}
+		set $1_e2=e/2
+		set $1_l2=lder*3
+
+aelogder 4
+		limits $1 $2 $3 $4
+		ctype white box
+		ptype 10 3
+		ctype green points ae_e0 ae_l0
+		ctype red points ae_e1 ae_l1 
+		ctype cyan points ae_e2 ae_l2
+		ctype white ltype 1 grid
+		ctype white ltype 0
+pslogder 4
+		limits $1 $2 $3 $4
+		ctype white box
+		ptype 4 0
+		ctype green points ps_e0 ps_l0
+		ctype red points ps_e1 ps_l1 
+		ctype cyan points ps_e2 ps_l2
+		ctype white ltype 1 grid

@@ -1,9 +1,12 @@
 ! 
-! Copyright (C) 1996-2016	The SIESTA group
-!  This file is distributed under the terms of the
-!  GNU General Public License: see COPYING in the top directory
-!  or http://www.gnu.org/copyleft/gpl.txt.
-! See Docs/Contributors.txt for a list of contributors.
+! This file is part of the SIESTA package.
+!
+! Copyright (c) Fundacion General Universidad Autonoma de Madrid:
+! E.Artacho, J.Gale, A.Garcia, J.Junquera, P.Ordejon, D.Sanchez-Portal
+! and J.M.Soler, 1996- .
+! 
+! Use of this software constitutes agreement with the full conditions
+! given in the SIESTA license, as signed by all legitimate users.
 !
       subroutine iozm( task, cell, vcell, xa, found )
 c *******************************************************************
@@ -30,6 +33,7 @@ C  Modules
 C
       use precision
       use parallel,  only : Node
+      use fdf
       use files,     only : slabel, label_length
       use zmatrix,   only : Zmat, ZmatForce, ZmatForceVar
       use zmatrix,   only : Zmat_to_Cartesian
@@ -41,24 +45,29 @@ C
       implicit          none
 
       character(len=*)                    :: task
+      character(len=label_length+3)       :: paste
       logical                             :: found
       real(dp)                            :: cell(3,3)
       real(dp)                            :: vcell(3,3)
       real(dp)                            :: xa(3,na_u)
-      external          io_assign, io_close
+      external          io_assign, io_close, paste
 
 c Internal variables and arrays
-      character(len=label_length+3) :: fname
+      character(len=label_length+3), save :: fname
+      logical,                       save :: frstme = .true.
       integer    ia, iu, iv, ix, k
 #ifdef MPI
       integer    MPIerror
 #endif
 
-C Find name of file
-      fname = trim(slabel) // '.ZM'
-
 C Only do reading and writing for IOnode
       if (Node.eq.0) then
+
+C Find name of file
+        if (frstme) then
+          fname = paste( slabel, '.ZM' )
+          frstme = .false.
+        endif
 
 C Choose between read or write
         if (task.eq.'read' .or. task.eq.'READ') then
@@ -99,7 +108,7 @@ C If input file not found, go to exit point
 
 C Open file
           call io_assign( iu )
-          open( iu, file=fname, form='formatted', status='unknown' )
+          open( iu, file=fname, form='formatted', status='unknown' )      
 
 C Write data on file
           write(iu,'(2(3x,3f18.9))')

@@ -1,12 +1,15 @@
 ! 
-! Copyright (C) 1996-2016	The SIESTA group
-!  This file is distributed under the terms of the
-!  GNU General Public License: see COPYING in the top directory
-!  or http://www.gnu.org/copyleft/gpl.txt.
-! See Docs/Contributors.txt for a list of contributors.
+! This file is part of the SIESTA package.
 !
-      subroutine initparallel( no_u, na_u, lasto, xa,
-     &                         ucell, rmaxh )
+! Copyright (c) Fundacion General Universidad Autonoma de Madrid:
+! E.Artacho, J.Gale, A.Garcia, J.Junquera, P.Ordejon, D.Sanchez-Portal
+! and J.M.Soler, 1996- .
+! 
+! Use of this software constitutes agreement with the full conditions
+! given in the SIESTA license, as signed by all legitimate users.
+!
+      subroutine initparallel(no_u,na_u,lasto,xa,ucell,rmaxh,rcoor,
+     .                        isolve)
 C
 C  Initialises parallel parameters
 C
@@ -14,39 +17,33 @@ C  Julian Gale, NRI, Curtin Uni, March 2004
 C
       use precision
       use fdf
+      use m_fdf_global, only: fdf_global_get
       use siesta_options, only: want_domain_decomposition
       use siesta_options, only: want_spatial_decomposition
-      use siesta_options, only: isolve, SOLVE_ORDERN, SOLVE_PEXSI
-      use siesta_options, only: rcoor
       use parallel,     only : Node, Nodes, BlockSize, ProcessorY
+      use parallelsubs, only : set_processorY, set_BlockSizeDefault
+      use parallelsubs, only : set_processorYdefault
       use parallelsubs, only : WhichNodeOrb, GetNodeOrbs
       use parallelsubs, only : LocalToGlobalOrb, GlobalToLocalOrb
-      use parallelsubs, only : pexsi_dist, pexsi_bs
       use spatial
       use sys
-      use alloc,        only : re_alloc
+      use alloc
       use domain_decom, only: use_dd, use_dd_perm, preSetOrbitLimits
-      use parallelsubs, only : set_processorY, set_processorYdefault
 #ifdef MPI
-      use parallelsubs, only : set_BlockSizeDefault
-      use mpi_siesta,   only: MPI_Comm_World, MPI_Comm_Self
+      use mpi_siesta, only: mpi_comm_world, mpi_integer
+      use mpi_siesta, only: mpi_double_precision
 #endif
-      use class_OrbitalDistribution
-      use sparse_matrices,     only : block_dist, single_dist
-
       implicit none
-
-#ifdef MPI
-      integer, external :: numroc
-#endif
 C
 C  Passed variables
 C
       integer       :: no_u
       integer       :: na_u
+      integer       :: isolve
       integer       :: lasto(0:na_u)
       real(dp)      :: xa(3,na_u)
       real(dp)      :: ucell(3,3)
+      real(dp)      :: rcoor
       real(dp)      :: rmaxh
 C
 C  Local variables
@@ -55,7 +52,7 @@ C
       integer       :: blocksizedefault
       integer       :: procYdefault
       integer       :: procYval
-      integer       :: n1, nn
+      integer       :: MPIerror
 #endif
       integer       :: ii, j, LOrb, GOrb, iu
       integer       :: maxorb
@@ -69,16 +66,13 @@ C
       real(dp)      :: cellmin
       real(dp)      :: cscale
       real(dp)      :: alpha
-      real(dp)      :: bbeta
+      real(dp)      :: beta
       real(dp)      :: gamma
       real(dp)      :: degtorad
       real(dp)      :: rcmax
       real(dp)      :: rcmaxopt
       real(dp), save:: tiny = 1.0d-6
 
-#ifdef DEBUG
-      call write_debug( '  PRE initparallel' )
-#endif
 
 C  Initialise on first call
       if (first) then
@@ -96,10 +90,9 @@ C  Initialise on first call
 
 C Set spatial decomposition flag according to SCF method
 
-
       lspatial = .false.
 #ifdef MPI
-      if (isolve.eq.SOLVE_ORDERN) then
+      if (isolve.eq.1) then
          if (want_domain_decomposition) then
             use_dd = .true.
             use_dd_perm = .false.
@@ -114,29 +107,21 @@ C Set spatial decomposition flag according to SCF method
 
 C Spatial decomposition flag
 
-      rspatial = fdf_physical('RcSpatial',0.0d0,'Bohr')
+      call fdf_global_get(rspatial, 'RcSpatial', 0.0_dp, 'Bohr' )
 
 C Processor grid
-      npgrid(1) = fdf_integer('ProcessorGridX',1)
-      npgrid(2) = fdf_integer('ProcessorGridY',1)
-      npgrid(3) = fdf_integer('ProcessorGridZ',1)
+      call fdf_global_get(npgrid(1), 'ProcessorGridX',1)
+      call fdf_global_get(npgrid(2), 'ProcessorGridY',1)
+      call fdf_global_get(npgrid(3), 'ProcessorGridZ',1)
 
 C Set ProcessorY  
 #ifdef MPI
-      call set_processorYdefault(Nodes,procYdefault)
-      procYval = fdf_integer('processorY',procYdefault)
-      ! Sanity check
-      if (procYval > Nodes) then
-         if (Node.eq.0) then
-            write(6,'(a)')
-     .       '* Warning: ProcessorY > Nodes in fdf file. '//
-     $       'Reset to estimated optimal value.'
-         endif
-         call set_processorY(procYdefault)
-      else
-         call set_processorY(procYval)
+      if (Node.eq.0) then
+        call set_processorYdefault(Nodes,procYdefault)
+        procYval = fdf_integer('processorY',procYdefault)
       endif
-         
+      call MPI_Bcast(procYval,1,MPI_integer,0,MPI_Comm_World,MPIerror)
+      call set_processorY(procYval)
 #else
       call set_processorY(1)
 #endif
@@ -169,7 +154,7 @@ C number of processors and if not then modify
 
 C Find cell parameters
       degtorad = 4.0d0*atan(1.0d0)/180.0d0
-      call uncell(ucell,acell,bcell,ccell,alpha,bbeta,gamma,degtorad)
+      call uncell(ucell,acell,bcell,ccell,alpha,beta,gamma,degtorad)
 
 C Check that cut-off is less than cell parameter
       cellmin = min(acell, bcell, ccell)
@@ -194,43 +179,31 @@ C Check that cut-off is less than cell parameter
         endif
       endif
 
-      if (.not. lspatial) then
+      if (.not.lspatial) then
 C Set BlockSize
 #ifdef MPI
-        pexsi_dist = .false.
-        call set_blocksizedefault(Nodes,no_u,blocksizedefault)
-        BlockSize = fdf_integer('blocksize',blocksizedefault)
-        call newDistribution(blocksize,MPI_Comm_World,block_dist)
+        if (Node.eq.0) then
+          call set_blocksizedefault(Nodes,no_u,blocksizedefault)
+          BlockSize = fdf_integer('blocksize',blocksizedefault)
+        endif
+        call MPI_Bcast(BlockSize,1,MPI_integer,0,MPI_Comm_World,
+     .    MPIerror)
 #else
+        call set_processorY(1)
         BlockSize = 8
-        call newDistribution(blocksize,-1,block_dist)
 #endif
       endif
-
-      ! Create single communicator
-#ifdef MPI
-      call newDistribution(no_u,MPI_Comm_Self,single_dist,
-     &     name='Single-dist')
-#else
-      call newDistribution(no_u,-1           ,single_dist,
-     &     name='Singledist')
-#endif
-
 
 #ifdef MPI
 C Output indication of parallel parameters
       if (Node.eq.0) then
         if (lspatial) then
-           write(6,'(/,a,f8.4,/)')
+          write(6,'(/,a,f8.4,/)')
      .        '* Spatial decomposition: Cutoff = ',rcmax
         else
-           write(6,'(/,a,2i4,/)')
-     .        '* ProcessorY, Blocksize: ', processorY, Blocksize
+          write(6,'(/,a,2i4,/)')
+     .        '* ProcessorY, Blocksize: ', procYval, Blocksize
         endif
-        n1 = numroc(no_u,Blocksize,0,0,Nodes)
-        nn = numroc(no_u,Blocksize,Nodes-1,0,Nodes)
-        write(6,"(/,a,2i6,/)")
-     $       "* Orbital distribution balance (max,min):", n1, nn
       endif
 #endif
 
@@ -247,22 +220,16 @@ C If spatial perform allocation of atoms to processors
         else
           ProcessorY = 1
         endif
-        if (Node.eq.0) then
-           write(6,'(/,a,i4,/)')
-     .        '* ProcessorY ', processorY
-        endif
 
-      elseif ((isolve.eq.SOLVE_ORDERN) .AND. (.not. use_dd)) then
+      elseif (.not. use_dd) then
 C
 C  Build dummy lists linking orbitals with parallel structure
 C
         maxorb = lasto(na_u)
-        call re_alloc( nL2G, 1, maxorb, 1, Nodes, 'nL2G',
-     &                 'initparallel' )
-        call re_alloc( nG2L, 1, maxorb, 'nG2L', 'initparallel' )
-        call re_alloc( nNode, 1, maxorb, 'nNode', 'initparallel' )
-        call re_alloc( nOrbPerNode, 1, Nodes, 'nOrbPerNode',
-     &                 'initparallel' )
+        call re_alloc(nL2G,1,maxorb,1,Nodes,name='nL2G')
+        call re_alloc(nG2L,1,maxorb,name='nG2L')
+        call re_alloc(nNode,1,maxorb,name='nNode')
+        call re_alloc(nOrbPerNode,1,Nodes,name='nOrbPerNode')
 C
 
         do j = 1, Nodes
@@ -305,7 +272,5 @@ C
         call preSetOrbitLimits( no_u )
       endif
 
-#ifdef DEBUG
-      call write_debug( '  POS initparallel' )
-#endif
-      end subroutine initparallel
+      return
+      end

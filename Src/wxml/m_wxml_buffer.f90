@@ -18,8 +18,8 @@ implicit none
 !
 ! In a forthcoming implementation it could be made dynamical...
 !
-integer, parameter, public   :: MAX_BUFF_SIZE  = 4096
-integer, parameter, private  :: BUFF_SIZE_WARNING  = MAX_BUFF_SIZE - 256
+integer, parameter, public   :: MAX_BUFF_SIZE  = 2000
+integer, parameter, private  :: BUFF_SIZE_WARNING  = 1750
 !
 type, public  :: buffer_t
 private
@@ -112,7 +112,7 @@ subroutine add_str_to_buffer(s,buffer)
 character(len=*), intent(in)   :: s
 type(buffer_t), intent(inout)  :: buffer
 
-integer   :: i, n, len_s, last_pos
+integer   :: n, len_s, last_pos
 
 len_s = len(s)
 last_pos = buffer%size
@@ -123,7 +123,7 @@ if (n> MAX_BUFF_SIZE) then
   call wxml_error("Buffer overflow: long unbroken string of pcdata or attribute value...")
 endif
 
-if (len_s.gt.0) buffer%str(last_pos+1:n) = s
+buffer%str(last_pos+1:n) = s
 end subroutine add_str_to_buffer
 
 subroutine add_to_buffer_escaping_markup(s,buf)

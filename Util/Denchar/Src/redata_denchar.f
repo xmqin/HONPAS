@@ -1,10 +1,3 @@
-! ---
-! Copyright (C) 1996-2016	The SIESTA group
-!  This file is distributed under the terms of the
-!  GNU General Public License: see COPYING in the top directory
-!  or http://www.gnu.org/copyleft/gpl.txt .
-! See Docs/Contributors.txt for a list of contributors.
-! ---
       SUBROUTINE REDATA_DENCHAR( MAXO, MAXA, MAXUO, MAXNH, NSPIN, 
      .                   ISA, IPHORB, INDXUO, LASTO,
      .                   CELL, NSC, XA, RMAXO, DATM )
@@ -62,6 +55,8 @@ C **********************************************************************
 
 C Internal variables ---------------------------------------------------
 
+      CHARACTER*33 PASTE
+
       CHARACTER*30
      .  SNAME, FNAME
 
@@ -69,12 +64,12 @@ C Internal variables ---------------------------------------------------
      .  UNIT1, IL, IA, J
 
       EXTERNAL
-     .  IO_ASSIGN, IO_CLOSE
+     .  IO_ASSIGN, IO_CLOSE, PASTE
 
 
 C Assign the name of the output file -----------------------------------
       SNAME = FDF_STRING('SystemLabel','siesta')
-      FNAME = TRIM(sname)//'.PLD'
+      FNAME = PASTE(sname,'.PLD')
 
       CALL IO_ASSIGN(UNIT1)
 

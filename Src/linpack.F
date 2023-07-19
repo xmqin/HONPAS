@@ -1,22 +1,13 @@
-      module m_linpack
-      public :: zgedi, zgefa
-      
-      integer, parameter, private :: dp = kind(1.d0)  ! to make it consistent
-
-c     Updated (somewhat) by A. Garcia, Sep 2016
-c
-      CONTAINS
-
       subroutine zgedi(a,lda,n,ipvt,det,work,job)
-      integer lda,n,ipvt(n),job
-      complex(dp) a(lda,n),det(2),work(n)
+      integer lda,n,ipvt(*),job
+      complex*16 a(lda,*),det(2),work(*)
 c
 c     zgedi computes the determinant and inverse of a matrix
 c     using the factors computed by zgeco or zgefa.
 c
 c     on entry
 c
-c        a       complex(dp)(lda, n)
+c        a       complex*16(lda, n)
 c                the output from zgeco or zgefa.
 c
 c        lda     integer
@@ -28,7 +19,7 @@ c
 c        ipvt    integer(n)
 c                the pivot vector from zgeco or zgefa.
 c
-c        work    complex(dp)(n)
+c        work    complex*16(n)
 c                work vector.  contents destroyed.
 c
 c        job     integer
@@ -41,7 +32,7 @@ c
 c        a       inverse of original matrix if requested.
 c                otherwise unchanged.
 c
-c        det     complex(dp)(2)
+c        det     complex*16(2)
 c                determinant of original matrix if requested.
 c                otherwise not referenced.
 c                determinant = det(1) * 10.0**det(2)
@@ -66,18 +57,17 @@ c     fortran abs,cmplx,mod
 c
 c     internal variables
 c
-      complex(dp) t
-      real(dp) ten
+      complex*16 t
+      double precision ten
       integer i,j,k,kb,kp1,l,nm1
 c
-      complex(dp) zdum
-      real(dp) cabs1
-      real(dp) real,aimag
-      complex(dp) zdumr,zdumi
-      real(dp) :: local_real, local_aimag
-      local_real(zdumr) = zdumr
-      local_aimag(zdumi) = (0.0d0,-1.0d0)*zdumi
-      cabs1(zdum) = abs(local_real(zdum)) + abs(local_aimag(zdum))
+      complex*16 zdum
+      double precision cabs1
+      double precision real,aimag
+      complex*16 zdumr,zdumi
+      real(zdumr) = zdumr
+      aimag(zdumi) = (0.0d0,-1.0d0)*zdumi
+      cabs1(zdum) = abs(real(zdum)) + abs(aimag(zdum))
 c
 c     compute determinant
 c
@@ -91,12 +81,12 @@ c
 c        ...exit
             if (cabs1(det(1)) .eq. 0.0d0) go to 60
    10       if (cabs1(det(1)) .ge. 1.0d0) go to 20
-               det(1) = dcmplx(ten,0.0d0)*det(1)
+               det(1) = cmplx(ten,0.0d0)*det(1)
                det(2) = det(2) - (1.0d0,0.0d0)
             go to 10
    20       continue
    30       if (cabs1(det(1)) .lt. ten) go to 40
-               det(1) = det(1)/dcmplx(ten,0.0d0)
+               det(1) = det(1)/cmplx(ten,0.0d0)
                det(2) = det(2) + (1.0d0,0.0d0)
             go to 30
    40       continue
@@ -158,13 +148,13 @@ c
   140    continue
   150 continue
       return
-      end subroutine zgedi
+      end
 
       subroutine zgefa(a,lda,n,ipvt,info)
-      integer lda,n,ipvt(n),info
-      complex(dp) a(lda,n)
+      integer lda,n,ipvt(*),info
+      complex*16 a(lda,*)
 c
-c     zgefa factors a complex(dp) matrix by gaussian elimination.
+c     zgefa factors a complex*16 matrix by gaussian elimination.
 c
 c     zgefa is usually called by zgeco, but it can be called
 c     directly with a saving in time if  rcond  is not needed.
@@ -172,7 +162,7 @@ c     (time for zgeco) = (1 + 9/n)*(time for zgefa) .
 c
 c     on entry
 c
-c        a       complex(dp)(lda, n)
+c        a       complex*16(lda, n)
 c                the matrix to be factored.
 c
 c        lda     integer
@@ -210,15 +200,13 @@ c     fortran abs
 c
 c     internal variables
 c
-      complex(dp) t
-      integer j,k,kp1,l,nm1
+      complex*16 t
+      integer izamax_l,j,k,kp1,l,nm1
 c
-c!    Statement functions...
-c!
-      complex(dp) zdum
-      real(dp) cabs1
-      real(dp) real,aimag
-      complex(dp) zdumr,zdumi
+      complex*16 zdum
+      double precision cabs1
+      double precision real,aimag
+      complex*16 zdumr,zdumi
       real(zdumr) = zdumr
       aimag(zdumi) = (0.0d0,-1.0d0)*zdumi
       cabs1(zdum) = abs(real(zdum)) + abs(aimag(zdum))
@@ -280,8 +268,7 @@ c
       ipvt(n) = n
       if (cabs1(a(n,n)) .eq. 0.0d0) info = n
       return
-      end subroutine zgefa
-
+      end
       integer function izamax_l(n,zx,incx)
 c
 c     finds the index of element having max. absolute value.
@@ -289,8 +276,9 @@ c     jack dongarra, 3/11/78.
 c
       integer n,incx
       integer :: ix, i
-      complex(dp) zx(*)
-      real(dp) smax
+      complex*16 zx(*)
+      double precision smax
+      double precision sdcabs1
 c
       izamax_l = 1
       if(n.le.1)return
@@ -319,20 +307,17 @@ c
          smax = sdcabs1(zx(i))
    30 continue
       return
-      end function izamax_l
+      end
 C
 C  The code below is a modified form of the routine sdcabs1
 C  changed to avoid problems on the Cray when compiled
 C  with optimisation turned on. JDG, November 1999
 C
-      real(dp) function sdcabs1(z)
-      complex(dp) z
-      real(dp) t(2)
+      double precision function sdcabs1(z)
+      double complex z
+      double precision t(2)
       t(1) = real(z)
       t(2) = aimag(z)
       sdcabs1 = abs(t(1)) + abs(t(2))
       return
-      end function sdcabs1
-
-      end module m_linpack
-
+      end

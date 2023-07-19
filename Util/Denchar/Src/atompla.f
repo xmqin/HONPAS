@@ -1,10 +1,3 @@
-! ---
-! Copyright (C) 1996-2016	The SIESTA group
-!  This file is distributed under the terms of the
-!  GNU General Public License: see COPYING in the top directory
-!  or http://www.gnu.org/copyleft/gpl.txt .
-! See Docs/Contributors.txt for a list of contributors.
-! ---
       SUBROUTINE ATOMPLA( NA, ORIGIN, XA, MROT, IDIMEN, ISCALE,
      .                   NATINPLA, INDICES, XAPLANE )
 C **********************************************************************
@@ -16,11 +9,10 @@ C Coded by J. Junquera May '99
 C Modified by P. Ordejon to include 3D capability; June 2003
 C **********************************************************************
 
-      use precision, only: dp
-      USE FDF, only: block_fdf, fdf_block, fdf_bline
-      use fdf, only: fdf_bmatch, fdf_bintegers
-      USE PARSE, only: parsed_line, digest, match
-      USE SYS, only: die
+      use precision
+      USE FDF
+      USE PARSE
+      USE SYS
 
       IMPLICIT NONE
 
@@ -46,6 +38,9 @@ C                          will be rotated
 C REAL*8  XAPLANE(3,NA)  : Atomic coordinates in plane reference frame
 C **********************************************************************
 
+      CHARACTER
+     .  LINE*150
+
       INTEGER 
      .  NATINPL_DEFECT, IDIMEN, IUNIT, IAT, IX
  
@@ -55,8 +50,8 @@ C **********************************************************************
       LOGICAL 
      .  ATINPLA
 
-      TYPE(PARSED_LINE), pointer :: line
-      TYPE(BLOCK_fdf)            :: BP
+      TYPE(PARSED_LINE), POINTER :: P
+      TYPE(BLOCK), POINTER       :: BP
 
       EXTERNAL 
      .  MATVECT
@@ -76,15 +71,19 @@ C Read fdf data block 'Denchar.AtomsInPlane' ---------------------------
         NATINPL_DEFECT = 0
         NATINPLA = 0
   
+        NULLIFY(BP)
         IF ( .NOT. FDF_BLOCK('Denchar.AtomsInPlane',BP) )  GOTO 2000
 
         LOOP: DO
           IF (.NOT. FDF_BLINE(BP,LINE)) EXIT LOOP
-          IF (.NOT. fdf_bmatch(line,"I") ) 
+          P=>DIGEST(LINE)
+          IF (.NOT. MATCH(P,"I") ) 
      .         CALL DIE("Wrong format in Denchar.AtomsInPlane")
           NATINPLA = NATINPLA + 1
-          INDICES(NATINPLA) = fdf_bintegers(line,1) 
+          INDICES(NATINPLA) = INTEGERS(P,1) 
+          CALL DESTROY(P)
         ENDDO LOOP
+        CALL DESTROY(BP) 
  2000   CONTINUE
 
       ELSE IF (IDIMEN .EQ. 3) THEN
