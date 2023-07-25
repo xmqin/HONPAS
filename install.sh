@@ -7,12 +7,20 @@
     mkdir libint_install
     cd libint-1.1.5
 
-    ./configure --prefix="$PWD/../libint_install"  CC=icc CXX=icpc F77=ifort
+## For GNU compuler
+    ./configure --prefix="$PWD/../libint_install"  CC=gcc CXX=g++ F77=gfortran
+## For INtel compuler
+#    ./configure --prefix="$PWD/../libint_install"  CC=icc CXX=icpc F77=ifort
+#
     make -j8
     make install
     cd ..
 
-    ln -s ../ARCH-HONPAS/honpas-intel-mpi.make arch.make
+## For GNU compuler and openmpi
+    cp ../ARCH-HONPAS/honpas-gnu-openmpi.make arch.make
+## For intel compiler and intelmpi
+#    cp ../ARCH-HONPAS/honpas-intelmpi.make arch.make
+
     make -j8
 
 
