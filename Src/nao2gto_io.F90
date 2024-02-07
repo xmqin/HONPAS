@@ -221,6 +221,7 @@ contains
     type(parsed_line), pointer :: pline => null()
     type(species_info), pointer :: spp => null()
 
+    integer ::  num_gaus
     logical, dimension(:),      pointer :: chk_coeffs => null()
     integer, dimension(:,:),    pointer :: hfx_contract => null()
 !                                          Actual number of Gaussians in the
@@ -522,7 +523,7 @@ contains
         'nao2gto_transfer')
 !     Allocate the temporal variable that will contain the 
 !     coefficients of the Gaussians that fit a NAO
-      call re_alloc(fit_trial, 1, 2, 1, hfx_opts%max_num_gaus, 'nao2gto_transfer')
+      call re_alloc(fit_trial, 1, 2, 1, hfx_opts%max_num_gaus_s, 'nao2gto_transfer')
 
 !     Loop over atomic species
       do isp = 1, nspecies
@@ -555,15 +556,15 @@ contains
 
           !> Step 2.c(fit): Perform Gaussian fitting and filter results
           fit_trial(:,:) = 0.0_dp
-          if( l == 0)  hfx_opts%max_num_gaus = 5
-          if( l > 0)  hfx_opts%max_num_gaus = 4
-          if (spp%orbnl_ispol(inlz)) hfx_opts%max_num_gaus = 3
-          write(6,*) inlz, l, spp%orbnl_ispol(inlz), hfx_opts%max_num_gaus
+          if( l == 0)  num_gaus = hfx_opts%max_num_gaus_s 
+          if( l == 1)  num_gaus = hfx_opts%max_num_gaus_p
+          if (l == 2)  num_gaus = hfx_opts%max_num_gaus_d
+          write(6,*) inlz, l, spp%orbnl_ispol(inlz), num_gaus
 
-          call nao2gto_gaussfit( hfx_opts%max_num_gaus, rad_pts, orb_pts, &
+          call nao2gto_gaussfit( num_gaus, rad_pts, orb_pts, &
  &                               hfx_opts, fit_trial, errno )
           ipgf = 0
-          do jnlz = 1, hfx_opts%max_num_gaus
+          do jnlz = 1, num_gaus
 !!           For debugging
             write(6,'(a,3i5,3f12.5,i5,l5)')                                 &
  &            'nao2gto_transfer: species, orbital, gauss, exp, coef, epsilon, error = ', &
@@ -679,8 +680,7 @@ contains
 !          if(zeta.le.0.1) then
 !             gtos(isp)%pgf_radius(ipgf,inlz)= exp_radius(l, zeta, 0.5d-3, 1.0_dp )
 !          else
-            gtos(isp)%pgf_radius(ipgf,inlz)= exp_radius(l, zeta, hfx_opts%gto_eps, 1.0_dp ) ! gcca) !1.0_dp)
-!            gtos(isp)%pgf_radius(ipgf,inlz)= exp_radius(l, zeta, 1.0d-4, 1.0_dp ) !
+            gtos(isp)%pgf_radius(ipgf,inlz)= exp_radius(l, zeta, hfx_opts%gto_eps, 1.0_dp )
 !          endif
 !!         For debugging
           write(6,'(a,3i5,f12.5)')                                           &
@@ -1277,13 +1277,14 @@ contains
     write(*,'(A,3X,E12.3)') "HFX.SchwarzTolerance", hfx_opts%eps_schwarz
     write(*,'(A,1X,E12.3)') "HFX.StoreERIsTolerance", hfx_opts%eps_stored
     write(*,'(A,14X,E12.3)') "HFX.Omega", hfx_opts%omega
-    write(*,'(A,14X,I5)') "HFX.MinimumNumberGaussians", hfx_opts%min_num_gaus
-    write(*,'(A,14X,I5)') "HFX.MaximumNumberGaussians", hfx_opts%max_num_gaus
+    write(*,'(A,14X,I5)') "HFX.MaximumNumberGaussians-S", hfx_opts%max_num_gaus_s
+    write(*,'(A,14X,I5)') "HFX.MaximumNumberGaussians-P", hfx_opts%max_num_gaus_p
+    write(*,'(A,14X,I5)') "HFX.MaximumNumberGaussians-D", hfx_opts%max_num_gaus_d
     write(*,'(A,14X,E12.3)') "HFX.SeparationExponents", hfx_opts%threshold_exp_gaus
     write(*,'(A,14X,E12.3)') "HFX.ToleranceFit", hfx_opts%tolerance_gaus
     write(*,'(A,14X,E12.3)') "HFX.GaussianEPS", hfx_opts%gto_eps
     write(*,'(A,9X,L12)') "HFX.Dynamic_parallel", hfx_opts%Dynamic_parallel
-    write(*,'(A,8X,L12)') "HFX.FragSize", hfx_opts%frag_size
+    write(*,'(A,8X,I12)') "HFX.FragSize", hfx_opts%frag_size
 
 
     ! Mark the end of the FDF data for automatic extraction
@@ -1430,12 +1431,13 @@ contains
     hfx_opts%dump_fit_data = fdf_get("HFX.DumpFitData", .true.)
     hfx_opts%farfield = fdf_get("HFX.FarField", .true.)
     hfx_opts%npts_fit = fdf_get("HFX.FitDataPoints", NTBMAX)
-    hfx_opts%min_num_gaus = fdf_get("HFX.MinimumNumberGaussians", 3)
-    hfx_opts%max_num_gaus = fdf_get("HFX.MaximumNumberGaussians", 6)
+    hfx_opts%max_num_gaus_s = fdf_get("HFX.MaximumNumberGaussians-S", 6)
+    hfx_opts%max_num_gaus_p = fdf_get("HFX.MaximumNumberGaussians-P", 5)
+    hfx_opts%max_num_gaus_d = fdf_get("HFX.MaximumNumberGaussians-D", 4)
     hfx_opts%threshold_exp_gaus = fdf_get("HFX.SeparationExponents", 1.4)
     hfx_opts%tolerance_gaus = fdf_get("HFX.ToleranceFit", 1.d-3)
     hfx_opts%is_fitted_nao = fdf_get("HFX.UseFittedNAOs", .true.)
-    hfx_opts%gto_eps = fdf_get( "HFX.GaussianEPS", 1.0d-5)
+    hfx_opts%gto_eps = fdf_get( "HFX.GaussianEPS", 1.0d-4)
     hfx_opts%Dynamic_parallel = fdf_get("HFX.Dynamic_parallel", .false.)
     hfx_opts%frag_size = fdf_get("HFX.FragSize", 10000)
 

@@ -101,8 +101,9 @@ module nao2gto_types
     integer   ::  frag_size  = 10000
     integer   ::  npts_fit = -1
     integer   ::  potential_type = -1
-    integer   ::  min_num_gaus   =  3
-    integer   ::  max_num_gaus   =  6
+    integer   ::  max_num_gaus_s   =  6
+    integer   ::  max_num_gaus_p   =  5
+    integer   ::  max_num_gaus_d   =  4
     real(dp)  ::  omega = 0.11_dp
     real(dp)  ::  cutoff_radius = 1.0d-6
     real(dp)  ::  eps_farfield = 1.0d-6
