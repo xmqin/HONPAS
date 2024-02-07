@@ -14,6 +14,7 @@ echo $NCPUS
 #
 cd $PBS_O_WORKDIR
 
-mpirun -np $NCPUS -machinefile $PBS_NODEFILE  /public/home/xmqin/Paper/honpas_2.0-beta/Obj/honpas < TiO2.fdf |tee TiO2.out
+HONPAS=/public/home/xmqin/HONPAS_release/HONPAS-honpas_v1.0/Obj/honpas
 
+/public/software/intel/2019/compilers_and_libraries_2019.3.199/linux/mpi/intel64/bin/mpirun -np $NCPUS -machinefile $PBS_NODEFILE ${HONPAS} < TiO2.fdf > TiO2.out
 

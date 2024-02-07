@@ -97,7 +97,7 @@ contains
 ! -------------------------------------------------------------------------
 
 ! Initialize some variables
-    ngfs_min   = hfx_opts%min_num_gaus           ! Minimum number of Gaussians
+    ngfs_min   = 3           ! Minimum number of Gaussians
     tol_g      = hfx_opts%tolerance_gaus         ! Tolerance for convergence
     threshold  = hfx_opts%threshold_exp_gaus     ! Separation between exponents
     npts_gauss = 2 * hfx_opts%npts_fit           ! Number of points in the mesh

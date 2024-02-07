@@ -63,8 +63,9 @@
         logical   ::  parallel = .false.
         integer   ::  fragsize  = 10000
         integer   ::  npts_fit = -1
-        integer   ::  min_num_gaus   =  3
-        integer   ::  max_num_gaus   =  6
+        integer   ::  max_num_gaus_s   =  6
+        integer   ::  max_num_gaus_p   =  5
+        integer   ::  max_num_gaus_d   =  4
         real(dp)  ::  omega = -1.0_dp
         real(dp)  ::  cutoff_radius = -1.0_dp
         real(dp)  ::  eps_far = -1.0_dp
@@ -180,10 +181,12 @@
      call fdf_global_get(hfx_parameter%fragsize,'HFX.FragSize', 10000)
      call fdf_global_get(hfx_parameter%dump_fit_data, 'HFX.DumpFitData',.true.)
      call fdf_global_get(hfx_parameter%npts_fit, 'HFX.FitDataPoints',500)
-     call fdf_global_get(hfx_parameter%min_num_gaus, &
-                         'HFX.MinimumNumberGaussians', 3)
-     call fdf_global_get(hfx_parameter%max_num_gaus, &
-                         'HFX.MaximumNumberGaussians', 6)
+     call fdf_global_get(hfx_parameter%max_num_gaus_s, &
+                         'HFX.MaximumNumberGaussians-S', 6)
+     call fdf_global_get(hfx_parameter%max_num_gaus_p, &
+                         'HFX.MaximumNumberGaussians-P', 5)
+     call fdf_global_get(hfx_parameter%max_num_gaus_d, &
+                         'HFX.MaximumNumberGaussians-D', 4)
      call fdf_global_get(hfx_parameter%threshold_exp_gaus, &
                          'HFX.SeparationExponents', 1.4_dp)
      call fdf_global_get(hfx_parameter%tolerance_gaus, &
@@ -225,9 +228,11 @@
         write(*,'(A,9X,L12)') "HFX.UseFittedNAOs", hfx_parameter%is_fitted_nao
 !        write(*,'(A,8X,L12)') "HFX.DumpFitData", hfx_parameter%dump_fit_data
         write(*,'(A,6X,I12)') "HFX.FitDataPoints", hfx_parameter%npts_fit
-        write(*,'(A,14X,I5)') "HFX.MinimumNumberGaussians", hfx_parameter%min_num_gaus
-        write(*,'(A,14X,I5)') "HFX.MaximumNumberGaussians", hfx_parameter%max_num_gaus
+        write(*,'(A,14X,I5)') "HFX.MaximumNumberGaussians-S", hfx_parameter%max_num_gaus_s
+        write(*,'(A,14X,I5)') "HFX.MaximumNumberGaussians-P", hfx_parameter%max_num_gaus_p
+        write(*,'(A,14X,I5)') "HFX.MaximumNumberGaussians-D", hfx_parameter%max_num_gaus_d
         write(*,'(A,14X,E12.3)') "HFX.SeparationExponents", hfx_parameter%threshold_exp_gaus
+
         write(*,'(A,14X,E12.3)') "HFX.ToleranceFit", hfx_parameter%tolerance_gaus
         write(*,'(A,14X,E12.3)') "HFX.GaussianEPS", hfx_parameter%gto_eps
 

@@ -60,7 +60,7 @@
       external memory
 ! ----------------------------------------------------------------------
 
-     call cpu_time(time_start)
+!     call cpu_time(time_start)
 #ifdef MPI
      
       allocate(numhg(nuotot))
@@ -190,8 +190,8 @@
 !                          samexa, Dscfg, Dscf_max, Fal )
 #endif
 
-      call cpu_time(time_end)
-      if(Node.eq.0) write(6,*) " All Force time :: ",  time_end-time_start, " s"
+!      call cpu_time(time_end)
+!      if(Node.eq.0) write(6,*) " All Force time :: ",  time_end-time_start, " s"
 
       deallocate(Dscfg)
       deallocate(Dscf_max)

@@ -1,6 +1,6 @@
 #!/bin/bash -x
 #PBS -N honpas
-#PBS -l nodes=1:ppn=18
+#PBS -l nodes=1:ppn=24
 #PBS -j oe
 #PBS -q check
 #define variables
@@ -14,42 +14,7 @@ echo $NCPUS
 #
 cd $PBS_O_WORKDIR
 
-for a in 4.22 4.24 4.26 4.28 4.3 4.32 4.34 4.36 4.38 4.40 4.42 4.44 4.46 4.48  #4.3 4.31 4.32 4.33 4.34 4.35 4.36 4.37 4.38 4.39 4.40 4.41
-do
-mkdir $a
-cp  *psf *fdf $a
-cd $a
-cat > coord.fdf <<EOF
-LatticeConstant      $a Ang
+HONPAS=/public/home/xmqin/HONPAS_release/HONPAS-honpas_v1.0/Obj/honpas
 
-%block LatticeVectors
-  0.00  0.50  0.50
-  0.50  0.00  0.50
-  0.50  0.50  0.00
-%endblock LatticeVectors
-
-AtomicCoordinatesFormat     Fractional
-%block AtomicCoordinatesAndAtomicSpecies
-  0.00  0.00  0.00        1
-  0.25  0.25  0.25        2
-%endblock AtomicCoordinatesAndAtomicSpecies
-
-EOF
-mpirun -np $NCPUS -machinefile $PBS_NODEFILE /public/home/xmqin/Paper/honpas_v1.2/Obj/honpas < SiC.fdf |tee SiC.out
-wait
-
-E_eV=`grep "Total" SiC.out | tail -1 | awk '{printf "%12.6f \n", $4 }'`
-Force=`grep -A2 "siesta: Atomic forces" SiC.out | tail -1 | awk '{printf "%12.6f \n", $3 }'`
-
-/public/home/xmqin/Paper/honpas_v1.2/Util/Bands/gnubands < SiC.bands > band_plot
-wait
-
-LUMO=`sed -n "826p"  band_plot | awk '{printf "%12.6f \n", $2 }'`
-HOMO=`sed -n "902p"  band_plot | awk '{printf "%12.6f \n", $2 }'`
-Eg=`echo $LUMO - $HOMO |bc -l`
-
-echo " a-V-Eg " " " $a " "  $E_eV  " "  $Eg >> ../E_a.dat
-cd ..
-
-done
+/public/software/intel/2019/compilers_and_libraries_2019.3.199/linux/mpi/intel64/bin/mpirun -np $NCPUS -machinefile $PBS_NODEFILE ${HONPAS} < SiC.fdf > SiC.out
 

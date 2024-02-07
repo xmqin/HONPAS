@@ -96,7 +96,7 @@
       external memory
 ! ----------------------------------------------------------------------
 
-      call cpu_time(time_start)
+!      call cpu_time(time_start)
 #ifdef MPI
      
       allocate(numhg(nuotot))
@@ -226,7 +226,7 @@
 !      write(6,'(a,f16.6,a)')'sparse to dense',time_end2-time_end1,'secs'
 !      endif
 
-      call cpu_time(time_start2)
+!      call cpu_time(time_start2)
 
       call build_hfx_potential( nspin, norb, iaorb, iphorb, nuotot, nuotot, na, isa, xa, &
                                 indxua, cell, nsc, maxnhg, numhg, listhptrg, listhg,  &
@@ -251,8 +251,8 @@
       Hfxg=Hfxg_tmp
       deallocate(Hfxg_tmp)
 
-      call cpu_time(time_end2)
-      if(Node.eq.0) WRITE(6,*) " Allreduce time :: " , time_end2 - time_start2, " s "
+!      call cpu_time(time_end2)
+!      if(Node.eq.0) WRITE(6,*) " Allreduce time :: " , time_end2 - time_start2, " s "
 !#else
 
 !      call sparse_dense( nspin, nuotot, nuotot, norb, maxnd, numd, &
@@ -267,9 +267,9 @@
 !                          samexa, DM_tmp, P_max, H_EXX )
 #endif
   
-      call cpu_time(time_end)
+!      call cpu_time(time_end)
      
-      if(Node.eq.0) WRITE(6,*) " All HFX time :: " , time_end - time_start, " s "
+!      if(Node.eq.0) WRITE(6,*) " All HFX time :: " , time_end - time_start, " s "
 
       if(nspin.eq.1) then
          spin_factor = 1.0d0

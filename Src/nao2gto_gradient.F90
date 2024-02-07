@@ -121,7 +121,7 @@
 !      eri_time = 0.0_dp
 !      hfx_time = 0.0_dp
      
-       call cpu_time(time_start)
+!       call cpu_time(time_start)
 
 !      shell_eri = 0_int_8
       ncells = norb / nuotot
@@ -545,10 +545,10 @@
 
       endif
 
-       call cpu_time(time_end)
-      if(node .eq.0) then
-         write(6,*) "HFX Force time : ", time_end-time_start, " s "
-      endif
+!       call cpu_time(time_end)
+!      if(node .eq.0) then
+!         write(6,*) "HFX Force time : ", time_end-time_start, " s "
+!      endif
 
 !       tot_time = time_end1-time_start1
 !             call cpu_time(time_start)

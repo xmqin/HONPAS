@@ -1,0 +1,179 @@
+SystemName	TiO2, rutile structure.
+#               Optimization of the cubic lattice constant
+#		MeshCutOff energy of 1200 Ry
+#               6 x 6 x 6 Monkhorst-Pack mesh
+SystemLabel	TiO2
+NumberOfSpecies		2
+%block ChemicalSpeciesLabel
+      1      22     Ti
+      2       8     O
+%endblock ChemicalSpeciesLabel
+%block PS.lmax
+   Ti    3
+    O    3
+%endblock PS.lmax
+%block PAO.Basis
+Ti    5      2.0345829
+ n=3    0    1   E     83.6767677       2.7383082
+   3.6693821
+   1.00000000000000
+ n=4    0    2   E     101.4085969       4.8177690
+   5.2616626            3.2826160
+   1.00000000000000        1.00000000000000
+ n=3    1    1   E     19.7689470       2.5835443
+   3.9726775
+   1.00000000000000
+ n=4    1    1   E     98.6765931       2.1236661
+   3.6530292
+   1.00000000000000
+ n=3    2    2   E     53.8948464       4.2974121
+    5.0381797            3.1486843
+   1.00000000000000        1.00000000000000
+O     3     -.5074421
+ n=2    0    2   E      40.5163425       3.7494516
+   4.3573191            2.8372895
+   1.00000000000000        1.00000000000000
+ n=2    1    2   E      36.6791481       3.7987264
+   5.1791638            3.7253647
+   1.00000000000000        1.00000000000000
+ n=3    2    1   E      20.9602331       1.3492424
+   3.0497870
+   1.00000000000000
+%endblock PAO.Basis
+%block NAO2GTO
+Ti   7
+3  0  1  5
+    0.49203199E+00     0.79732003E+00
+    0.14577260E+01     0.44359165E+01
+    0.20408164E+01    -0.32221986E+01
+    0.28571429E+01    -0.17884217E+01
+    0.40000000E+01     0.13076243E+01
+4  0  1  5
+    0.19533627E+00    -0.24010055E+01
+    0.27347078E+00     0.23184128E+01
+    0.17425747E+01     0.43645876E+01
+    0.24396045E+01    -0.46648239E+01
+    0.34154462E+01     0.13194612E+01
+4  0  2  5
+    0.62950942E+00    -0.18755778E+02
+    0.88131317E+00     0.52654236E+02
+    0.12338384E+01    -0.65438688E+02
+    0.17273738E+01     0.47594744E+02
+    0.24183232E+01    -0.13479616E+02
+3  1  1  3
+0.552001354053265      0.730345175874573
+4.32705508804188       -0.284123677310724
+1.60555475567057       2.97516756165431
+4  1  1  4
+    0.57827367E+00    -0.51486511E+01
+    0.80958313E+00     0.71017386E+01
+    0.31548145E+01     0.28606254E+01
+    0.44167402E+01    -0.14352164E+01
+3  2  1  4
+0.330866571074327      0.17864807160686
+6.65509839634718       -1.03276730765004
+3.2827256134639        6.82773157744008
+1.09901679197456       1.41107399473128
+3  2  2  4
+0.689195064082229      0.829280129806296
+1.87470008147885       2.46867016140883
+5.21624665118724       -5.24885435464808
+4.03424862850695       10.3718164116568
+O   5
+2  0  1  5
+4.13969327531419       17.8517889785121
+0.813524221624063      1.05544869844859
+0.26356283523924       0.511716302225971
+3.71709846118363       -36.6455997458304
+3.31964661491497       18.4274040828819
+2  0  2  5
+1.12924238829874       75.8653711360624
+1.40861991323814       72.7518795764575
+3.89733938549867       34.8165245433104
+1.24855706899024       -143.16182270615
+3.7379375989639        -38.8950205037079
+2  1  1  4
+3.97724481404075       3.71587474310853
+1.07184239957366       1.40154046038399
+9.67716961909106       -0.475766355971558
+0.245785749776917      0.289484324753684
+2  1  2  4
+0.456998833473644      0.663017266106266
+1.54021978311553       1.89672498574229
+5.66425136770417       52.8313039006616
+5.81048718488705       -49.6736080862657
+3  2  1  3
+1.48619546790924       -17.9822526709869
+1.58657873370156       17.5010607294238
+0.78441276292696       2.4935628702104
+%endblock NAO2GTO
+%block kgrid_Monkhorst_Pack
+   8  0  0  0.5
+   0  8  0  0.5
+   0  0  12  0.5
+%endblock kgrid_Monkhorst_Pack
+BandLinesScale ReciprocalLatticeVectors
+%block BandLines
+ 1  0.000  0.000  0.000 G
+20  0.000  0.500  0.000 X
+20  0.000  0.500  0.500 R
+20  0.000  0.000  0.500 Z
+20  0.000  0.000  0.000 G
+20  0.500  0.500  0.000 M
+20  0.500  0.500  0.500 A
+20  0.000  0.000  0.500 Z
+%endblock BandLines
+%include coord.fdf
+MeshCutoff             250 Ry
+XC.Functional          GGA
+XC.Authors            HSE06
+SpinPolarized          .false.
+DM.NumberPulay         6
+DM.MixingWeight        0.2000      # New DM amount for next SCF cycle
+DM.Tolerance           1.d-4       # Tolerance in maximum difference
+                                   # between input and output DM
+MaxSCFIterations       200
+Diag.DivideAndConquer  .false.
+#
+# Options for saving/reading information
+#
+DM.UseSaveDM            .true.        # Use DM Continuation files
+MD.UseSaveXV            .false.      # Use stored positions and velocities
+MD.UseSaveCG            .false.      # Use CG history information
+WriteIonPlotFiles       .true.
+#
+# Molecular dynamics and relaxations
+#
+MD.TypeOfRun            cg          # Type of dynamics:
+                                    #   - CG
+DM.AllowExtrapolation   .true.
+MD.VariableCell         .false.      # The lattice is relaxed together with
+                                    # the atomic coordinates?
+MD.NumCGsteps            200          # Number of CG steps for
+                                    #   coordinate optimization
+MD.MaxCGDispl           0.3 Bohr    # Maximum atomic displacement
+                                    #   in one CG step
+MD.MaxForceTol          0.01 eV/Ang # Tolerance in the maximum
+                                    #   atomic force
+MD.MaxStressTol         0.0001 eV/Ang**3
+%block GeometryConstraints
+   routine constr
+%endblock GeometryConstraints
+SCF.MixAfterConvergence F
+#WriteIonPlotFiles        .true.
+KB.New.Reference.Orbitals .true.
+HFX.UseFittedNAOs                    T
+HFX.TruncateDM                    T
+HFX.DumpFitData                   T
+HFX.FarField                      T
+HFX.FitDataPoints               500
+HFX.FarFieldTolerance     0.100E-05
+HFX.PairListTolerance     0.100E-05
+HFX.SchwarzTolerance      0.100E-05
+HFX.StoreERIsTolerance    0.100E-05
+HFX.Omega                 0.110E+00
+HFX.SeparationExponents                 0.140E+01
+HFX.ToleranceFit                 0.100E-02
+HFX.GaussianEPS                 0.100E-04
+HFX.Dynamic_parallel                    F
+HFX.FragSize               10000

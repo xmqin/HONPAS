@@ -125,7 +125,7 @@
 !      other_time2= 0.0_dp
 !      other_time3= 0.0_dp
 
-      call cpu_time(time_start)
+!      call cpu_time(time_start)
 
       ncells = norb / nuotot
 
@@ -618,11 +618,11 @@
 
       endif
 
-      call cpu_time(time_end)
+!      call cpu_time(time_end)
 
-      if(node .eq.0) then
-        write(6,*) "HFX time : ", time_end-time_start, " s "
-      endif
+!      if(node .eq.0) then
+!        write(6,*) "HFX time : ", time_end-time_start, " s "
+!      endif
 
 !            write(6,'(a)')"--------------PrintHFX_Time_Information-----------------"
 !            write(6,'(a21,2x,f12.6,2x,a3)') " ERI calculate time =", eri_time, "[s]"

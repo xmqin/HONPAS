@@ -50,9 +50,9 @@
                nao2gto_coefficient(maxn_contract,maxn_orbnl,nspecies)
       integer i_cphi,num_cphi(maxnorbs) ! maxnorb=100,so cphi is always less than 100.
       character*50  relabel
-      integer ren, reorb , rel, rezeta
+      integer  num_gaus,  ren, reorb , rel, rezeta
       logical  found
-
+     
       integer ::  inlz, jnlz, irad, errno
       real(dp) :: dummy
       real(dp), dimension(:,:),   pointer :: fit_trial => null()
@@ -106,8 +106,9 @@
 
       hfx_opts%dump_fit_data = fdf_boolean("HFX.DumpFitData",.true.)
       hfx_opts%npts_fit  = fdf_integer( "HFX.FitDataPoints",500)
-      hfx_opts%min_num_gaus = fdf_integer("HFX.MinimumNumberGaussians",3)
-      hfx_opts%max_num_gaus = fdf_integer("HFX.MaximumNumberGaussians",6)
+      hfx_opts%max_num_gaus_s = fdf_integer("HFX.MaximumNumberGaussians-S",6)
+      hfx_opts%max_num_gaus_p = fdf_integer("HFX.MaximumNumberGaussians-P",6)
+      hfx_opts%max_num_gaus_d = fdf_integer("HFX.MaximumNumberGaussians-D",6)
       hfx_opts%tolerance_gaus = fdf_double( "HFX.ToleranceFit", 1.d-3)
       hfx_opts%threshold_exp_gaus = fdf_double("HFX.SeparationExponents", 1.4d0)
       hfx_opts%gto_eps = fdf_double("HFX.GaussianEPS", 1.0d-4)
@@ -150,7 +151,7 @@
         'nao2gto_transfer')
 !     Allocate the temporal variable that will contain the
 !     coefficients of the Gaussians that fit a NAO
-      call re_alloc(fit_trial, 1, 2, 1,  hfx_opts%max_num_gaus, 'nao2gto_transfer')
+      call re_alloc(fit_trial, 1, 2, 1,  hfx_opts%max_num_gaus_s, 'nao2gto_transfer')
 
 
       do is=1,nspecies
@@ -175,15 +176,16 @@
              enddo
               orb_pts(hfx_opts%npts_fit) = 0.0_dp
               fit_trial(:,:) = 0.0_dp
-              if( l == 1) hfx_opts%max_num_gaus = 4
-              if( l >= 2)  hfx_opts%max_num_gaus = hfx_opts%min_num_gaus
+              if( l == 0)  num_gaus = hfx_opts%max_num_gaus_s
+              if( l == 1)  num_gaus = hfx_opts%max_num_gaus_p
+              if( l == 2)  num_gaus = hfx_opts%max_num_gaus_d
 !              if (spp%orbnl_ispol(inlz)) hfx_opts%max_num_gaus = 3
-              write(6,*) inlz, l, spp%orbnl_ispol(inlz), hfx_opts%max_num_gaus
+              write(6,*) inlz, l, spp%orbnl_ispol(inlz), num_gaus 
 
-              call nao2gto_gaussfit( hfx_opts%max_num_gaus, rad_pts, orb_pts, &
+              call nao2gto_gaussfit( num_gaus , rad_pts, orb_pts, &
      &                               hfx_opts, fit_trial, errno )
               ipgf = 0
-          do jnlz = 1, hfx_opts%max_num_gaus
+          do jnlz = 1, num_gaus
 !!           For debugging
             write(6,'(a,3i5,3f12.5,i5,l5)') &
  &            'nao2gto_transfer: species, orbital, gauss, exp, coef, epsilon, error = ', &

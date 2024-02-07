@@ -122,7 +122,7 @@
 !      endif
       
       call timer('HFX_gradient',1)    
-      call cpu_time(time_start)
+!      call cpu_time(time_start)
       call  evaluate_gradient( deriv, nspin, norb, iaorb, iphorb, nuotot, nua, na, isa,    &
                                maxnh, numh, listhptr, listh, &
                                scell, rscell, hfx_parameter, Dscf, Dscf_max, &
@@ -130,7 +130,7 @@
                                log10_eps_schwarz, Fal )
 
 
-      call cpu_time(time_end)
+!      call cpu_time(time_end)
 !      if(node.eq.0)write(6,'(a, f12.6)') "ERIs time = ", time_end-time_start
 !                                   "(Sec), on Node =", node
 

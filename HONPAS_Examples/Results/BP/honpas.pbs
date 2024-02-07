@@ -1,6 +1,6 @@
 #!/bin/bash -x
 #PBS -N honpas
-#PBS -l nodes=1:ppn=24
+#PBS -l nodes=1:ppn=12
 #PBS -j oe
 #PBS -q check
 #define variables
@@ -14,35 +14,10 @@ echo $NCPUS
 #
 cd $PBS_O_WORKDIR
 
-for a in 4.44 4.46 4.48 4.50 4.52 4.54 4.56 4.58 4.60 4.62 4.64 4.66 # 4.51 4.53 4.55 4.56 4.57 4.58 4.6 4.64 4.66 4.7
-do
-mkdir $a
-cp  *psf *fdf $a
-cd $a
-cat > coord.fdf <<EOF
-LatticeConstant      $a Ang
+HONPAS=/public/home/xmqin/HONPAS_release/HONPAS-honpas_v1.0/Obj/honpas
 
-%block LatticeVectors
-  0.00  0.50  0.50
-  0.50  0.00  0.50
-  0.50  0.50  0.00
-%endblock LatticeVectors
+rmsiesta3
+rm *.out *.band_plot
 
-AtomicCoordinatesFormat     Fractional
-%block AtomicCoordinatesAndAtomicSpecies
-  0.00  0.00  0.00        1
-  0.25  0.25  0.25        2
-%endblock AtomicCoordinatesAndAtomicSpecies
-
-EOF
-mpirun -np $NCPUS -machinefile $PBS_NODEFILE /public/home/xmqin/Paper/honpas_v1.2/Obj/honpas < BP.fdf |tee BP.out
-wait
-
-E_eV=`grep "Total" BP.out | tail -1 | awk '{printf "%12.6f \n", $4 }'`
-Force=`grep -A2 "siesta: Atomic forces" BP.out | tail -1 | awk '{printf "%12.6f \n", $3 }'`
-
-echo "Tol" $a  $E_eV  $Force >> ../E_a.dat
-cd ..
-
-done
+/public/software/intel/2019/compilers_and_libraries_2019.3.199/linux/mpi/intel64/bin/mpirun -np $NCPUS -machinefile $PBS_NODEFILE ${HONPAS} < BP.fdf > BP.out
 
