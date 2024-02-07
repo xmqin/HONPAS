@@ -1,0 +1,23 @@
+#!/bin/bash -x
+#PBS -N honpas
+#PBS -l nodes=1:ppn=12
+#PBS -j oe
+#PBS -q short
+#define variables
+
+echo $PBS_O_WORKDIR
+NCPUS=`wc -l $PBS_NODEFILE | awk '{print $1}'`
+echo $NCPUS
+#
+#
+#running jobs
+#
+cd $PBS_O_WORKDIR
+
+HONPAS=/public/home/xmqin/HONPAS_release/HONPAS-master/Obj/honpas
+
+rmsiesta3
+rm *.out *.band_plot
+
+/public/software/intel/2019/compilers_and_libraries_2019.3.199/linux/mpi/intel64/bin/mpirun -np $NCPUS -machinefile $PBS_NODEFILE ${HONPAS} < Graphene.fdf > Graphene.out
+

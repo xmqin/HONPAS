@@ -64,7 +64,20 @@ BandLinesScale ReciprocalLatticeVectors
 20 0.33333333 0.33333333 0.000
 20 0.5  0.0  0.0
 %endblock BandLines
-HFX.UseFittedNAOs .true.
-HFX.Dynamic_parallel   .false.
-HFX.UseFittedNAOs .true.
-HFX.Dynamic_parallel   .false.
+
+HFX.MaximumNumberGaussians_S        5  # number of GTOs for s-type orbitals
+HFX.MaximumNumberGaussians_P        4  # number of GTOs for p-type orbitals
+HFX.MaximumNumberGaussians_D        4  # number of GTOs for d-type orbitals
+HFX.SeparationExponents           0.140E+01
+HFX.ToleranceFit                  0.100E-02
+HFX.UseFittedNAOs                 T    # to use fitted CGTOs as new NAOs for all the DFT calculations
+HFX.TruncateDM                    T    # density matrix screening
+HFX.FarField                      T    # far field screening for HSE
+HFX.FarFieldTolerance             0.100E-05  
+HFX.PairListTolerance             0.100E-05
+HFX.SchwarzTolerance              0.100E-05
+HFX.StoreERIsTolerance            0.100E-05
+HFX.GaussianEPS                   0.100E-03
+HFX.Dynamic_parallel              F   # dynamic parallel for ERIs
+HFX.FragSize                      1000 # batched size of ERIs requested by each worker in a MPI communication
+
