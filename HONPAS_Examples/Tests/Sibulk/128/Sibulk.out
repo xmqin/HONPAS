@@ -1,0 +1,1332 @@
+Siesta Version:                                        siesta-3.2
+Architecture  : x86_64-unknown-linux-gnu--unknown
+Compiler flags: mpiifort -O2 -g  -assume byterecl -w -fPIC -fp-model source
+PARALLEL version
+
+* Running on  240 nodes in parallel
+>> Start of run:  24-MAY-2023   6:16:39
+
+                           ***********************       
+                           *  WELCOME TO SIESTA  *       
+                           ***********************       
+
+reinit: Reading from standard input
+************************** Dump of input data file ****************************
+SystemName      Bulk Silisin
+SystemLabel     Sibulk
+NumberOfSpecies	        1
+%block ChemicalSpeciesLabel
+  1  14  Si
+%endblock ChemicalSpeciesLabel
+NumberOfAtoms           8
+LatticeConstant      5.430 Ang
+%block LatticeVectors
+  1.00  0.00  0.00
+  0.00  1.00  0.00
+  0.00  0.00  1.00
+%endblock LatticeVectors
+AtomicCoordinatesFormat   Fractional
+%block AtomicCoordinatesAndAtomicSpecies
+  0.00000000000000  0.00000000000000  0.00000000000000  1
+  0.00000000000000  0.50000000000000  0.50000000000000  1
+  0.50000000000000  0.00000000000000  0.50000000000000  1
+  0.50000000000000  0.50000000000000  0.00000000000000  1
+  0.75000000000000  0.25000000000000  0.75000000000000  1
+  0.25000000000000  0.25000000000000  0.25000000000000  1
+  0.25000000000000  0.75000000000000  0.75000000000000  1
+  0.75000000000000  0.75000000000000  0.25000000000000  1
+%endblock AtomicCoordinatesAndAtomicSpecies
+%block Supercell
+   2   0   0
+   0   2   0
+   0   0   4
+%endblock Supercell
+kgrid.Cutoff 0. Bohr
+PAO.BasisSize DZP
+%block NAO2GTO
+Si   5
+3  0  1  5
+       0.179543763     0.766529816
+       1.428571429    -0.738302342
+       2.000000000    -1.004566820
+       2.800000000     1.982436539
+       3.920000000    -0.736616451
+3  0  2  5
+       0.335009542     2.745919238
+       0.469013358    -2.059683130
+       1.883789851    -2.767628033
+       2.637305791     3.385876003
+       3.692228108    -1.091102315
+3  1  1  4
+       0.150000000     0.236476747
+       0.684470842     0.803265300
+       0.958259179    -0.961002579
+       1.341562851     0.311032675
+3  1  2  4
+       0.244635090     0.486420717
+       0.905208197     0.361970708
+       1.267291476    -0.570942156
+       1.774208066     0.219187269
+3  2  1  3
+       0.256969853     0.204146654
+       2.078564229     0.089743383
+     102.000000000     0.056704347
+%endblock NAO2GTO
+#WriteIonPlotFiles .true.
+xc.functional      GGA    # Default vaxc.authors         HSE    # Default value
+xc.authors   HSE06    # Default value
+ElectronicTemperature   25 meV
+MeshCutoff              150. Ry     # Equivalent planewave cutoff for the grid
+MaxSCFIterations        50         # Maximum number of SCF iterations per step
+DM.MixingWeight         0.3         # New DM amount for next SCF cycle
+DM.Tolerance            1.d-4       # Tolerance in maximum difference
+DM.NumberPulay          3          # Number of SCF steps between pulay mixing
+# Eigenvalue problem: order-N or diagonalization
+SolutionMethod          diagon      # OrderN or Diagon
+MD.TypeOfRun            cg          # Type of dynamics:
+MD.NumCGsteps  0
+MD.VariableCell   .false.
+MD.MaxForceTol  0.01 eV/Ang
+#WriteMDXmol   .true.
+WriteForces  .true.
+WriteCoorStep
+HFX.MinimumNumberGaussians                  3
+HFX.MaximumNumberGaussians                  5
+HFX.UseFittedNAOs                 T
+HFX.TruncateDM                    T
+HFX.FarField                      T
+HFX.FarFieldTolerance     0.100E-05
+HFX.PairListTolerance     0.100E-05
+HFX.SchwarzTolerance      0.100E-05
+HFX.StoreERIsTolerance    0.100E-05
+HFX.GaussianEPS                 1.0E-05
+HFX.Dynamic_parallel              T
+HFX.FragSize               100000
+************************** End of input data file *****************************
+
+reinit: -----------------------------------------------------------------------
+reinit: System Name: Bulk Silisin
+reinit: -----------------------------------------------------------------------
+reinit: System Label: Sibulk                                                      
+reinit: -----------------------------------------------------------------------
+
+initatom: Reading input for the pseudopotentials and atomic orbitals ----------
+ Species number:            1  Label: Si Atomic number:          14
+Ground state valence configuration:   3s02  3p02
+Reading pseudopotential information in formatted form from Si.psf
+
+Valence configuration for pseudopotential generation:
+3s( 2.00) rc: 1.89
+3p( 2.00) rc: 1.89
+3d( 0.00) rc: 1.89
+4f( 0.00) rc: 1.89
+For Si, standard SIESTA heuristics set lmxkb to 3
+ (one more than the basis l, including polarization orbitals).
+Use PS.lmax or PS.KBprojectors blocks to override.
+
+<basis_specs>
+===============================================================================
+Si                   Z=  14    Mass=  28.090        Charge= 0.17977+309
+Lmxo=1 Lmxkb= 3    BasisType=split      Semic=F
+L=0  Nsemic=0  Cnfigmx=3
+          n=1  nzeta=2  polorb=0
+            splnorm:   0.15000    
+               vcte:    0.0000    
+               rinn:    0.0000    
+                rcs:    0.0000      0.0000    
+            lambdas:    1.0000      1.0000    
+L=1  Nsemic=0  Cnfigmx=3
+          n=1  nzeta=2  polorb=1
+            splnorm:   0.15000    
+               vcte:    0.0000    
+               rinn:    0.0000    
+                rcs:    0.0000      0.0000    
+            lambdas:    1.0000      1.0000    
+-------------------------------------------------------------------------------
+L=0  Nkbl=1  erefs: 0.17977+309
+L=1  Nkbl=1  erefs: 0.17977+309
+L=2  Nkbl=1  erefs: 0.17977+309
+L=3  Nkbl=1  erefs: 0.17977+309
+===============================================================================
+</basis_specs>
+
+atom: Called for Si                    (Z =  14)
+
+read_vps: Pseudopotential generation method:
+read_vps: ATM3      Troullier-Martins                       
+Total valence charge:    4.00000
+
+xc_check: Exchange-correlation functional:
+xc_check: HSE06: JCP 125, 224106 (2006)
+xc_check: WARNING: Pseudopotential generated with GGA Perdew, Burke & Ernzerhof 1996 functional
+V l=0 = -2*Zval/r beyond r=  2.7826
+V l=1 = -2*Zval/r beyond r=  2.7826
+V l=2 = -2*Zval/r beyond r=  2.7826
+V l=3 = -2*Zval/r beyond r=  2.7826
+All V_l potentials equal beyond r=  1.8652
+This should be close to max(r_c) in ps generation
+All pots = -2*Zval/r beyond r=  2.7826
+Using large-core scheme for Vlocal
+
+atom: Estimated core radius    2.78258
+
+atom: Including non-local core corrections could be a good idea
+atom: Maximum radius for 4*pi*r*r*local-pseudopot. charge    3.07525
+atom: Maximum radius for r*vlocal+2*Zval:    2.81758
+GHOST: No ghost state for L =  0
+GHOST: No ghost state for L =  1
+GHOST: No ghost state for L =  2
+GHOST: No ghost state for L =  3
+
+KBgen: Kleinman-Bylander projectors: 
+   l= 0   rc=  1.936440   el= -0.791474   Ekb=  4.527346   kbcos=  0.300929
+   l= 1   rc=  1.936440   el= -0.300649   Ekb=  1.471620   kbcos=  0.304055
+   l= 2   rc=  1.936440   el=  0.001958   Ekb= -2.865202   kbcos= -0.050894
+   l= 3   rc=  1.936440   el=  0.003046   Ekb= -0.889187   kbcos= -0.005274
+
+KBgen: Total number of  Kleinman-Bylander projectors:   16
+atom: -------------------------------------------------------------------------
+
+atom: SANKEY-TYPE ORBITALS:
+atom: Selected multiple-zeta basis: split     
+
+SPLIT: Orbitals with angular momentum L= 0
+
+SPLIT: Basis orbitals for state 3s
+
+SPLIT: PAO cut-off radius determined from an
+SPLIT: energy shift=  0.020000 Ry
+
+   izeta = 1
+                 lambda =    1.000000
+                     rc =    5.007352
+                 energy =   -0.772769
+                kinetic =    0.573186
+    potential(screened) =   -1.345955
+       potential(ionic) =   -3.804540
+
+   izeta = 2
+                 rmatch =    4.418952
+              splitnorm =    0.150000
+                 energy =   -0.675735
+                kinetic =    0.871891
+    potential(screened) =   -1.547626
+       potential(ionic) =   -4.104120
+
+SPLIT: Orbitals with angular momentum L= 1
+
+SPLIT: Basis orbitals for state 3p
+
+SPLIT: PAO cut-off radius determined from an
+SPLIT: energy shift=  0.020000 Ry
+
+   izeta = 1
+                 lambda =    1.000000
+                     rc =    6.270866
+                 energy =   -0.282609
+                kinetic =    0.876409
+    potential(screened) =   -1.159018
+       potential(ionic) =   -3.411547
+
+   izeta = 2
+                 rmatch =    5.007352
+              splitnorm =    0.150000
+                 energy =   -0.188900
+                kinetic =    1.263886
+    potential(screened) =   -1.452786
+       potential(ionic) =   -3.887248
+
+POLgen: Perturbative polarization orbital with L=  2
+
+POLgen: Polarization orbital for state 3p
+
+   izeta = 1
+                     rc =    6.270866
+                 energy =    0.439455
+                kinetic =    1.304724
+    potential(screened) =   -0.865269
+       potential(ionic) =   -2.934348
+atom: Total number of Sankey-type orbitals: 13
+
+atm_pop: Valence configuration (for local Pseudopot. screening):
+ 3s( 2.00)                                                            
+ 3p( 2.00)                                                            
+Vna: chval, zval:    4.00000   4.00000
+
+Vna:  Cut-off radius for the neutral-atom potential:   6.270866
+
+atom: _________________________________________________________________________
+
+prinput: Basis input ----------------------------------------------------------
+
+PAO.BasisType split     
+
+%block ChemicalSpeciesLabel
+    1   14 Si                      # Species index, atomic number, species label
+%endblock ChemicalSpeciesLabel
+
+%block PAO.Basis                 # Define Basis set
+Si                    2                    # Species label, number of l-shells
+ n=3   0   2                         # n, l, Nzeta 
+   5.007      4.419   
+   1.000      1.000   
+ n=3   1   2 P   1                   # n, l, Nzeta, Polarization, NzetaPol
+   6.271      5.007   
+   1.000      1.000   
+%endblock PAO.Basis
+
+prinput: ----------------------------------------------------------------------
+
+ Read NAO2GTO from input fdf file
+nao2gto_transfer: isp, inlz, ipgf, pgf_radius =     1    1    1     8.00770
+nao2gto_transfer: isp, inlz, ipgf, pgf_radius =     1    1    2     2.83885
+nao2gto_transfer: isp, inlz, ipgf, pgf_radius =     1    1    3     2.39926
+nao2gto_transfer: isp, inlz, ipgf, pgf_radius =     1    1    4     2.02775
+nao2gto_transfer: isp, inlz, ipgf, pgf_radius =     1    1    5     1.71376
+nao2gto_transfer: is, inlz, fittedcut, origincut =     1    1     8.00770     5.00735
+nao2gto_transfer: isp, inlz, ipgf, pgf_radius =     1    2    1     5.86225
+nao2gto_transfer: isp, inlz, ipgf, pgf_radius =     1    2    2     4.95450
+nao2gto_transfer: isp, inlz, ipgf, pgf_radius =     1    2    3     2.47216
+nao2gto_transfer: isp, inlz, ipgf, pgf_radius =     1    2    4     2.08936
+nao2gto_transfer: isp, inlz, ipgf, pgf_radius =     1    2    5     1.76583
+nao2gto_transfer: is, inlz, fittedcut, origincut =     1    2     5.86225     4.41895
+nao2gto_transfer: isp, inlz, ipgf, pgf_radius =     1    3    1     9.58222
+nao2gto_transfer: isp, inlz, ipgf, pgf_radius =     1    3    2     4.35545
+nao2gto_transfer: isp, inlz, ipgf, pgf_radius =     1    3    3     3.65613
+nao2gto_transfer: isp, inlz, ipgf, pgf_radius =     1    3    4     3.06880
+nao2gto_transfer: is, inlz, fittedcut, origincut =     1    3     9.58222     6.27087
+nao2gto_transfer: isp, inlz, ipgf, pgf_radius =     1    4    1     7.43383
+nao2gto_transfer: isp, inlz, ipgf, pgf_radius =     1    4    2     3.76609
+nao2gto_transfer: isp, inlz, ipgf, pgf_radius =     1    4    3     3.16115
+nao2gto_transfer: isp, inlz, ipgf, pgf_radius =     1    4    4     2.65311
+nao2gto_transfer: is, inlz, fittedcut, origincut =     1    4     7.43383     5.00735
+nao2gto_transfer: isp, inlz, ipgf, pgf_radius =     1    5    1     7.79657
+nao2gto_transfer: isp, inlz, ipgf, pgf_radius =     1    5    2     2.53664
+nao2gto_transfer: isp, inlz, ipgf, pgf_radius =     1    5    3     0.29862
+nao2gto_transfer: is, inlz, fittedcut, origincut =     1    5     7.79657     6.27087
+%block NAO2GTO
+Si   5
+3  0  1  5
+       0.179543763     0.766529816
+       1.428571429    -0.738302342
+       2.000000000    -1.004566820
+       2.800000000     1.982436539
+       3.920000000    -0.736616451
+3  0  2  5
+       0.335009542     2.745919238
+       0.469013358    -2.059683130
+       1.883789851    -2.767628033
+       2.637305791     3.385876003
+       3.692228108    -1.091102315
+3  1  1  4
+       0.150000000     0.236476747
+       0.684470842     0.803265300
+       0.958259179    -0.961002579
+       1.341562851     0.311032675
+3  1  2  4
+       0.244635090     0.486420717
+       0.905208197     0.361970708
+       1.267291476    -0.570942156
+       1.774208066     0.219187269
+3  2  1  3
+       0.256969853     0.204146654
+       2.078564229     0.089743383
+     102.000000000     0.056704347
+%endblock NAO2GTO
+ Use fitted NAOs as new basis
+coor:   Atomic-coordinates input format  =     Fractional
+
+siesta: Atomic coordinates (Bohr) and species
+siesta:      0.00000   0.00000   0.00000  1        1
+siesta:      0.00000   5.13061   5.13061  1        2
+siesta:      5.13061   0.00000   5.13061  1        3
+siesta:      5.13061   5.13061   0.00000  1        4
+siesta:      7.69591   2.56530   7.69591  1        5
+siesta:      2.56530   2.56530   2.56530  1        6
+siesta:      2.56530   7.69591   7.69591  1        7
+siesta:      7.69591   7.69591   2.56530  1        8
+siesta:     10.26122   0.00000   0.00000  1        9
+siesta:     10.26122   5.13061   5.13061  1       10
+siesta:     15.39183   0.00000   5.13061  1       11
+siesta:     15.39183   5.13061   0.00000  1       12
+siesta:     17.95713   2.56530   7.69591  1       13
+siesta:     12.82652   2.56530   2.56530  1       14
+siesta:     12.82652   7.69591   7.69591  1       15
+siesta:     17.95713   7.69591   2.56530  1       16
+siesta:      0.00000  10.26122   0.00000  1       17
+siesta:      0.00000  15.39183   5.13061  1       18
+siesta:      5.13061  10.26122   5.13061  1       19
+siesta:      5.13061  15.39183   0.00000  1       20
+siesta:      7.69591  12.82652   7.69591  1       21
+siesta:      2.56530  12.82652   2.56530  1       22
+siesta:      2.56530  17.95713   7.69591  1       23
+siesta:      7.69591  17.95713   2.56530  1       24
+siesta:     10.26122  10.26122   0.00000  1       25
+siesta:     10.26122  15.39183   5.13061  1       26
+siesta:     15.39183  10.26122   5.13061  1       27
+siesta:     15.39183  15.39183   0.00000  1       28
+siesta:     17.95713  12.82652   7.69591  1       29
+siesta:     12.82652  12.82652   2.56530  1       30
+siesta:     12.82652  17.95713   7.69591  1       31
+siesta:     17.95713  17.95713   2.56530  1       32
+siesta:      0.00000   0.00000  10.26122  1       33
+siesta:      0.00000   5.13061  15.39183  1       34
+siesta:      5.13061   0.00000  15.39183  1       35
+siesta:      5.13061   5.13061  10.26122  1       36
+siesta:      7.69591   2.56530  17.95713  1       37
+siesta:      2.56530   2.56530  12.82652  1       38
+siesta:      2.56530   7.69591  17.95713  1       39
+siesta:      7.69591   7.69591  12.82652  1       40
+siesta:     10.26122   0.00000  10.26122  1       41
+siesta:     10.26122   5.13061  15.39183  1       42
+siesta:     15.39183   0.00000  15.39183  1       43
+siesta:     15.39183   5.13061  10.26122  1       44
+siesta:     17.95713   2.56530  17.95713  1       45
+siesta:     12.82652   2.56530  12.82652  1       46
+siesta:     12.82652   7.69591  17.95713  1       47
+siesta:     17.95713   7.69591  12.82652  1       48
+siesta:      0.00000  10.26122  10.26122  1       49
+siesta:      0.00000  15.39183  15.39183  1       50
+siesta:      5.13061  10.26122  15.39183  1       51
+siesta:      5.13061  15.39183  10.26122  1       52
+siesta:      7.69591  12.82652  17.95713  1       53
+siesta:      2.56530  12.82652  12.82652  1       54
+siesta:      2.56530  17.95713  17.95713  1       55
+siesta:      7.69591  17.95713  12.82652  1       56
+siesta:     10.26122  10.26122  10.26122  1       57
+siesta:     10.26122  15.39183  15.39183  1       58
+siesta:     15.39183  10.26122  15.39183  1       59
+siesta:     15.39183  15.39183  10.26122  1       60
+siesta:     17.95713  12.82652  17.95713  1       61
+siesta:     12.82652  12.82652  12.82652  1       62
+siesta:     12.82652  17.95713  17.95713  1       63
+siesta:     17.95713  17.95713  12.82652  1       64
+siesta:      0.00000   0.00000  20.52243  1       65
+siesta:      0.00000   5.13061  25.65304  1       66
+siesta:      5.13061   0.00000  25.65304  1       67
+siesta:      5.13061   5.13061  20.52243  1       68
+siesta:      7.69591   2.56530  28.21835  1       69
+siesta:      2.56530   2.56530  23.08774  1       70
+siesta:      2.56530   7.69591  28.21835  1       71
+siesta:      7.69591   7.69591  23.08774  1       72
+siesta:     10.26122   0.00000  20.52243  1       73
+siesta:     10.26122   5.13061  25.65304  1       74
+siesta:     15.39183   0.00000  25.65304  1       75
+siesta:     15.39183   5.13061  20.52243  1       76
+siesta:     17.95713   2.56530  28.21835  1       77
+siesta:     12.82652   2.56530  23.08774  1       78
+siesta:     12.82652   7.69591  28.21835  1       79
+siesta:     17.95713   7.69591  23.08774  1       80
+siesta:      0.00000  10.26122  20.52243  1       81
+siesta:      0.00000  15.39183  25.65304  1       82
+siesta:      5.13061  10.26122  25.65304  1       83
+siesta:      5.13061  15.39183  20.52243  1       84
+siesta:      7.69591  12.82652  28.21835  1       85
+siesta:      2.56530  12.82652  23.08774  1       86
+siesta:      2.56530  17.95713  28.21835  1       87
+siesta:      7.69591  17.95713  23.08774  1       88
+siesta:     10.26122  10.26122  20.52243  1       89
+siesta:     10.26122  15.39183  25.65304  1       90
+siesta:     15.39183  10.26122  25.65304  1       91
+siesta:     15.39183  15.39183  20.52243  1       92
+siesta:     17.95713  12.82652  28.21835  1       93
+siesta:     12.82652  12.82652  23.08774  1       94
+siesta:     12.82652  17.95713  28.21835  1       95
+siesta:     17.95713  17.95713  23.08774  1       96
+siesta:      0.00000   0.00000  30.78365  1       97
+siesta:      0.00000   5.13061  35.91426  1       98
+siesta:      5.13061   0.00000  35.91426  1       99
+siesta:      5.13061   5.13061  30.78365  1      100
+siesta:      7.69591   2.56530  38.47956  1      101
+siesta:      2.56530   2.56530  33.34896  1      102
+siesta:      2.56530   7.69591  38.47956  1      103
+siesta:      7.69591   7.69591  33.34896  1      104
+siesta:     10.26122   0.00000  30.78365  1      105
+siesta:     10.26122   5.13061  35.91426  1      106
+siesta:     15.39183   0.00000  35.91426  1      107
+siesta:     15.39183   5.13061  30.78365  1      108
+siesta:     17.95713   2.56530  38.47956  1      109
+siesta:     12.82652   2.56530  33.34896  1      110
+siesta:     12.82652   7.69591  38.47956  1      111
+siesta:     17.95713   7.69591  33.34896  1      112
+siesta:      0.00000  10.26122  30.78365  1      113
+siesta:      0.00000  15.39183  35.91426  1      114
+siesta:      5.13061  10.26122  35.91426  1      115
+siesta:      5.13061  15.39183  30.78365  1      116
+siesta:      7.69591  12.82652  38.47956  1      117
+siesta:      2.56530  12.82652  33.34896  1      118
+siesta:      2.56530  17.95713  38.47956  1      119
+siesta:      7.69591  17.95713  33.34896  1      120
+siesta:     10.26122  10.26122  30.78365  1      121
+siesta:     10.26122  15.39183  35.91426  1      122
+siesta:     15.39183  10.26122  35.91426  1      123
+siesta:     15.39183  15.39183  30.78365  1      124
+siesta:     17.95713  12.82652  38.47956  1      125
+siesta:     12.82652  12.82652  33.34896  1      126
+siesta:     12.82652  17.95713  38.47956  1      127
+siesta:     17.95713  17.95713  33.34896  1      128
+
+siesta: System type = bulk      
+
+initatomlists: Number of atoms, orbitals, and projectors:    128  1664  2048
+
+siesta: ******************** Simulation parameters ****************************
+siesta:
+siesta: The following are some of the parameters of the simulation.
+siesta: A complete list of the parameters used, including default values,
+siesta: can be found in file out.fdf
+siesta:
+redata: Non-Collinear-spin run           =     F
+redata: SpinPolarized (Up/Down) run      =     F
+redata: Number of spin components        =     1
+redata: Long output                      =     F
+redata: Number of Atomic Species         =        1
+redata: Charge density info will appear in .RHO file
+redata: Write Mulliken Pop.              =     NO
+redata: Mesh Cutoff                      =   150.0000  Ry
+redata: Net charge of the system         =     0.0000 |e|
+redata: Max. number of SCF Iter          =       50
+redata: Performing Pulay mixing using    =     3 iterations
+redata: Mix DM in first SCF step ?       =     F
+redata: Write Pulay info on disk?        =     F
+redata: Discard 1st Pulay DM after  kick =     F
+redata: New DM Mixing Weight             =     0.3000
+redata: New DM Occupancy tolerance       = 0.000000000001
+redata: No kicks to SCF
+redata: DM Mixing Weight for Kicks       =     0.5000
+redata: DM Tolerance for SCF             =     0.000100
+redata: Require Energy convergence for SCF =     F
+redata: DM Energy tolerance for SCF      =     0.000100 eV
+redata: Require Harris convergence for SCF =     F
+redata: DM Harris energy tolerance for SCF =     0.000100 eV
+redata: Using Saved Data (generic)   =     F
+redata: Use continuation files for DM    =     F
+redata: Neglect nonoverlap interactions  =     F
+redata: Method of Calculation            =     Diagonalization
+redata: Divide and Conquer               =     T
+redata: Electronic Temperature           =     0.0018  Ry
+redata: Fix the spin of the system       =     F
+redata: Dynamics option                  =     CG coord. optimization
+redata: Variable cell                    =     F
+redata: Use continuation files for CG    =     F
+redata: Max atomic displ per move        =     0.2000  Bohr
+redata: Maximum number of CG moves       =        0
+redata: Force tolerance                  =     0.0004  Ry/Bohr
+redata: ***********************************************************************
+Total number of electrons:   512.000000
+Total ionic charge:   512.000000
+
+* ProcessorY, Blocksize:   12   7
+
+ Kpoints in:            1 . Kpoints trimmed:            1
+
+siesta: k-grid: Number of k-points =     1
+siesta: k-grid: Cutoff (effective) =     5.430 Ang
+siesta: k-grid: Supercell and displacements
+siesta: k-grid:    1   0   0      0.000
+siesta: k-grid:    0   1   0      0.000
+siesta: k-grid:    0   0   1      0.000
+
+* Maximum dynamic memory allocated =     2 MB
+
+siesta:                 ==============================
+                            Begin CG move =      0
+                        ==============================
+
+outcoor: Atomic coordinates (fractional):                   
+    0.00000000    0.00000000    0.00000000   1       1  Si
+    0.00000000    0.25000000    0.12500000   1       2  Si
+    0.25000000    0.00000000    0.12500000   1       3  Si
+    0.25000000    0.25000000    0.00000000   1       4  Si
+    0.37500000    0.12500000    0.18750000   1       5  Si
+    0.12500000    0.12500000    0.06250000   1       6  Si
+    0.12500000    0.37500000    0.18750000   1       7  Si
+    0.37500000    0.37500000    0.06250000   1       8  Si
+    0.50000000    0.00000000    0.00000000   1       9  Si
+    0.50000000    0.25000000    0.12500000   1      10  Si
+    0.75000000    0.00000000    0.12500000   1      11  Si
+    0.75000000    0.25000000    0.00000000   1      12  Si
+    0.87500000    0.12500000    0.18750000   1      13  Si
+    0.62500000    0.12500000    0.06250000   1      14  Si
+    0.62500000    0.37500000    0.18750000   1      15  Si
+    0.87500000    0.37500000    0.06250000   1      16  Si
+    0.00000000    0.50000000    0.00000000   1      17  Si
+    0.00000000    0.75000000    0.12500000   1      18  Si
+    0.25000000    0.50000000    0.12500000   1      19  Si
+    0.25000000    0.75000000    0.00000000   1      20  Si
+    0.37500000    0.62500000    0.18750000   1      21  Si
+    0.12500000    0.62500000    0.06250000   1      22  Si
+    0.12500000    0.87500000    0.18750000   1      23  Si
+    0.37500000    0.87500000    0.06250000   1      24  Si
+    0.50000000    0.50000000    0.00000000   1      25  Si
+    0.50000000    0.75000000    0.12500000   1      26  Si
+    0.75000000    0.50000000    0.12500000   1      27  Si
+    0.75000000    0.75000000    0.00000000   1      28  Si
+    0.87500000    0.62500000    0.18750000   1      29  Si
+    0.62500000    0.62500000    0.06250000   1      30  Si
+    0.62500000    0.87500000    0.18750000   1      31  Si
+    0.87500000    0.87500000    0.06250000   1      32  Si
+    0.00000000    0.00000000    0.25000000   1      33  Si
+    0.00000000    0.25000000    0.37500000   1      34  Si
+    0.25000000    0.00000000    0.37500000   1      35  Si
+    0.25000000    0.25000000    0.25000000   1      36  Si
+    0.37500000    0.12500000    0.43750000   1      37  Si
+    0.12500000    0.12500000    0.31250000   1      38  Si
+    0.12500000    0.37500000    0.43750000   1      39  Si
+    0.37500000    0.37500000    0.31250000   1      40  Si
+    0.50000000    0.00000000    0.25000000   1      41  Si
+    0.50000000    0.25000000    0.37500000   1      42  Si
+    0.75000000    0.00000000    0.37500000   1      43  Si
+    0.75000000    0.25000000    0.25000000   1      44  Si
+    0.87500000    0.12500000    0.43750000   1      45  Si
+    0.62500000    0.12500000    0.31250000   1      46  Si
+    0.62500000    0.37500000    0.43750000   1      47  Si
+    0.87500000    0.37500000    0.31250000   1      48  Si
+    0.00000000    0.50000000    0.25000000   1      49  Si
+    0.00000000    0.75000000    0.37500000   1      50  Si
+    0.25000000    0.50000000    0.37500000   1      51  Si
+    0.25000000    0.75000000    0.25000000   1      52  Si
+    0.37500000    0.62500000    0.43750000   1      53  Si
+    0.12500000    0.62500000    0.31250000   1      54  Si
+    0.12500000    0.87500000    0.43750000   1      55  Si
+    0.37500000    0.87500000    0.31250000   1      56  Si
+    0.50000000    0.50000000    0.25000000   1      57  Si
+    0.50000000    0.75000000    0.37500000   1      58  Si
+    0.75000000    0.50000000    0.37500000   1      59  Si
+    0.75000000    0.75000000    0.25000000   1      60  Si
+    0.87500000    0.62500000    0.43750000   1      61  Si
+    0.62500000    0.62500000    0.31250000   1      62  Si
+    0.62500000    0.87500000    0.43750000   1      63  Si
+    0.87500000    0.87500000    0.31250000   1      64  Si
+    0.00000000    0.00000000    0.50000000   1      65  Si
+    0.00000000    0.25000000    0.62500000   1      66  Si
+    0.25000000    0.00000000    0.62500000   1      67  Si
+    0.25000000    0.25000000    0.50000000   1      68  Si
+    0.37500000    0.12500000    0.68750000   1      69  Si
+    0.12500000    0.12500000    0.56250000   1      70  Si
+    0.12500000    0.37500000    0.68750000   1      71  Si
+    0.37500000    0.37500000    0.56250000   1      72  Si
+    0.50000000    0.00000000    0.50000000   1      73  Si
+    0.50000000    0.25000000    0.62500000   1      74  Si
+    0.75000000    0.00000000    0.62500000   1      75  Si
+    0.75000000    0.25000000    0.50000000   1      76  Si
+    0.87500000    0.12500000    0.68750000   1      77  Si
+    0.62500000    0.12500000    0.56250000   1      78  Si
+    0.62500000    0.37500000    0.68750000   1      79  Si
+    0.87500000    0.37500000    0.56250000   1      80  Si
+    0.00000000    0.50000000    0.50000000   1      81  Si
+    0.00000000    0.75000000    0.62500000   1      82  Si
+    0.25000000    0.50000000    0.62500000   1      83  Si
+    0.25000000    0.75000000    0.50000000   1      84  Si
+    0.37500000    0.62500000    0.68750000   1      85  Si
+    0.12500000    0.62500000    0.56250000   1      86  Si
+    0.12500000    0.87500000    0.68750000   1      87  Si
+    0.37500000    0.87500000    0.56250000   1      88  Si
+    0.50000000    0.50000000    0.50000000   1      89  Si
+    0.50000000    0.75000000    0.62500000   1      90  Si
+    0.75000000    0.50000000    0.62500000   1      91  Si
+    0.75000000    0.75000000    0.50000000   1      92  Si
+    0.87500000    0.62500000    0.68750000   1      93  Si
+    0.62500000    0.62500000    0.56250000   1      94  Si
+    0.62500000    0.87500000    0.68750000   1      95  Si
+    0.87500000    0.87500000    0.56250000   1      96  Si
+    0.00000000    0.00000000    0.75000000   1      97  Si
+    0.00000000    0.25000000    0.87500000   1      98  Si
+    0.25000000    0.00000000    0.87500000   1      99  Si
+    0.25000000    0.25000000    0.75000000   1     100  Si
+    0.37500000    0.12500000    0.93750000   1     101  Si
+    0.12500000    0.12500000    0.81250000   1     102  Si
+    0.12500000    0.37500000    0.93750000   1     103  Si
+    0.37500000    0.37500000    0.81250000   1     104  Si
+    0.50000000    0.00000000    0.75000000   1     105  Si
+    0.50000000    0.25000000    0.87500000   1     106  Si
+    0.75000000    0.00000000    0.87500000   1     107  Si
+    0.75000000    0.25000000    0.75000000   1     108  Si
+    0.87500000    0.12500000    0.93750000   1     109  Si
+    0.62500000    0.12500000    0.81250000   1     110  Si
+    0.62500000    0.37500000    0.93750000   1     111  Si
+    0.87500000    0.37500000    0.81250000   1     112  Si
+    0.00000000    0.50000000    0.75000000   1     113  Si
+    0.00000000    0.75000000    0.87500000   1     114  Si
+    0.25000000    0.50000000    0.87500000   1     115  Si
+    0.25000000    0.75000000    0.75000000   1     116  Si
+    0.37500000    0.62500000    0.93750000   1     117  Si
+    0.12500000    0.62500000    0.81250000   1     118  Si
+    0.12500000    0.87500000    0.93750000   1     119  Si
+    0.37500000    0.87500000    0.81250000   1     120  Si
+    0.50000000    0.50000000    0.75000000   1     121  Si
+    0.50000000    0.75000000    0.87500000   1     122  Si
+    0.75000000    0.50000000    0.87500000   1     123  Si
+    0.75000000    0.75000000    0.75000000   1     124  Si
+    0.87500000    0.62500000    0.93750000   1     125  Si
+    0.62500000    0.62500000    0.81250000   1     126  Si
+    0.62500000    0.87500000    0.93750000   1     127  Si
+    0.87500000    0.87500000    0.81250000   1     128  Si
+
+outcell: Unit cell vectors (Ang):
+       10.860000    0.000000    0.000000
+        0.000000   10.860000    0.000000
+        0.000000    0.000000   21.720000
+
+outcell: Cell vector modules (Ang)   :   10.860000   10.860000   21.720000
+outcell: Cell angles (23,13,12) (deg):     90.0000     90.0000     90.0000
+outcell: Cell volume (Ang**3)        :   2561.6481
+ Folding of H and S is implicitly performed
+New_DM. Step:     1
+Initializing Density Matrix...
+
+InitMesh: MESH =    90 x    90 x   162 =     1312200
+InitMesh: Mesh cutoff (required, used) =   150.000   153.749 Ry
+
+ Input, default information for hybrid DFT calculations
+
+ Hybrid DFT :: HSE06
+ Omega =    0.110
+Schwarz tolerance = .1D-05
+pairlist tolerance = .1D-05
+Stored tolerance = .1D-05
+Farfield tolerance =.1D-05
+On_the_fly =   F
+use_DM_trunc =   T
+Farfield =   T
+Dynamic parallel =   T
+Dynamic tasksize =   100000
+HFX.UseFittedNAOs                    T
+HFX.FitDataPoints               500
+HFX.MinimumNumberGaussians                  3
+HFX.MaximumNumberGaussians                  5
+HFX.SeparationExponents                 0.140E+01
+HFX.ToleranceFit                 0.100E-02
+HFX.GaussianEPS                 0.100E-04
+ max_eri_prescreen  0.856125571840617     
+ max0 =   0.828185883976229     
+list_ij:         76736
+list_kl:         76736
+max_eri 0.856125572
+  1.000000000000000E-006  -6.00000000000000     
+       76736       76736            5888413696
+ HFX time :    2.80370200000000       s 
+  Allreduce time ::    89.7450480000000       s 
+  All HFX time ::    90.3326270000000       s 
+ HFX energy:        -740.830726  eV
+
+* Maximum dynamic memory allocated =    98 MB
+
+stepf: Fermi-Dirac step function
+
+siesta: Program's energy decomposition (eV):
+siesta: Ebs     =     -5200.236101
+siesta: Eions   =     23906.338942
+siesta: Ena     =      7091.446199
+siesta: Ekin    =      5086.509980
+siesta: Enl     =      2246.079717
+siesta: DEna    =        -0.000003
+siesta: DUscf   =         0.000000
+siesta: DUext   =         0.000000
+siesta: Exc     =     -4189.311693
+siesta: eta*DQ  =         0.000000
+siesta: Emadel  =         0.000000
+siesta: Emeta   =         0.000000
+siesta: Emolmec =         0.000000
+siesta: Ekinion =         0.000000
+siesta: Eharris =    -13626.505578
+siesta: Etot    =    -13671.614742
+siesta: FreeEng =    -13671.614742
+
+siesta: iscf   Eharris(eV)      E_KS(eV)   FreeEng(eV)   dDmax  Ef(eV)
+siesta:    1   -13626.5056   -13671.6147   -13671.6147  1.4940 -3.6279
+timer: Routine,Calls,Time,% = IterSCF        1   23266.470  99.63
+elaps: Routine,Calls,Wall,% = IterSCF        1      97.660  99.59
+       76736       76736            5888413696
+ HFX time :    59.4227190000000       s 
+  Allreduce time ::    59.4654410000000       s 
+  All HFX time ::    59.9355560000000       s 
+ HFX energy:        -720.014920  eV
+siesta:    2   -13676.7531   -13675.1883   -13675.1883  0.0342 -3.7758
+       76736       76736            5888413696
+ HFX time :    59.2875280000000       s 
+  Allreduce time ::    59.3303880000000       s 
+  All HFX time ::    59.7701250000000       s 
+ HFX energy:        -720.973782  eV
+siesta:    3   -13676.8241   -13675.7816   -13675.7816  0.0216 -3.6620
+       76736       76736            5888413696
+ HFX time :    59.0771210000000       s 
+  Allreduce time ::    59.1178800000000       s 
+  All HFX time ::    59.5710100000000       s 
+ HFX energy:        -723.312512  eV
+siesta:    4   -13676.8951   -13676.9839   -13676.9839  0.0016 -3.6611
+       76736       76736            5888413696
+ HFX time :    58.9860900000000       s 
+  Allreduce time ::    59.0276200000000       s 
+  All HFX time ::    59.4607240000000       s 
+ HFX energy:        -723.275939  eV
+siesta:    5   -13676.8951   -13676.9409   -13676.9409  0.0010 -3.6692
+       76736       76736            5888413696
+ HFX time :    59.0394210000000       s 
+  Allreduce time ::    59.0812890000000       s 
+  All HFX time ::    59.5194450000000       s 
+ HFX energy:        -723.277851  eV
+siesta:    6   -13676.8941   -13676.9022   -13676.9022  0.0003 -3.6723
+       76736       76736            5888413696
+ HFX time :    58.9085540000000       s 
+  Allreduce time ::    58.9523730000000       s 
+  All HFX time ::    59.3801220000000       s 
+ HFX energy:        -723.274620  eV
+siesta:    7   -13676.8941   -13676.8950   -13676.8950  0.0003 -3.6735
+       76736       76736            5888413696
+ HFX time :    59.0176170000000       s 
+  Allreduce time ::    59.0587690000000       s 
+  All HFX time ::    59.4865260000000       s 
+ HFX energy:        -723.276539  eV
+siesta:    8   -13676.8941   -13676.8932   -13676.8932  0.0002 -3.6735
+       76736       76736            5888413696
+ HFX time :    59.0070240000000       s 
+  Allreduce time ::    59.0483450000000       s 
+  All HFX time ::    59.4731559999999       s 
+ HFX energy:        -723.278844  eV
+siesta:    9   -13676.8942   -13676.8923   -13676.8923  0.0001 -3.6728
+       76736       76736            5888413696
+ HFX time :    58.9951870000000       s 
+  Allreduce time ::    59.0361800000001       s 
+  All HFX time ::    59.4706050000000       s 
+ HFX energy:        -723.280686  eV
+siesta:   10   -13676.8942   -13676.8927   -13676.8927  0.0001 -3.6731
+       76736       76736            5888413696
+ HFX time :    58.9954409999999       s 
+  Allreduce time ::    59.0384870000000       s 
+  All HFX time ::    59.4705680000001       s 
+ HFX energy:        -723.281923  eV
+siesta:   11   -13676.8942   -13676.8931   -13676.8931  0.0001 -3.6728
+       76736       76736            5888413696
+ HFX time :    58.9946040000000       s 
+  Allreduce time ::    59.0372540000000       s 
+  All HFX time ::    59.4685140000000       s 
+ HFX energy:        -723.282827  eV
+ To calculate HFX gradient
+list_ij:         76736
+list_kl:         76736
+       76736       76736            5888413696
+ HFX Force time :    77.6580110000000       s 
+  All Force time ::    78.1019560000001       s
+
+siesta: E_KS(eV) =           -13676.8934
+
+siesta: E_KS - E_eggbox =    -13676.8934
+
+siesta: Atomic forces (eV/Ang):
+     1   -0.002006   -0.001788   -0.000176
+     2   -0.001836   -0.002456   -0.000278
+     3   -0.002460   -0.001844   -0.000127
+     4   -0.002414   -0.002181   -0.000028
+     5   -0.002285   -0.002187   -0.000157
+     6   -0.001901   -0.001975    0.000048
+     7   -0.002109   -0.002275   -0.000257
+     8   -0.002505   -0.002355   -0.000065
+     9    0.001621   -0.001955   -0.000120
+    10    0.001606   -0.002360   -0.000176
+    11    0.002474   -0.001833    0.000008
+    12    0.002427   -0.002044    0.000211
+    13    0.002727   -0.002322   -0.000273
+    14    0.001971   -0.001842   -0.000279
+    15    0.001880   -0.002041   -0.000067
+    16    0.002599   -0.002413   -0.000064
+    17   -0.001743    0.001528    0.000077
+    18   -0.001853    0.002484    0.000226
+    19   -0.002259    0.001645    0.000031
+    20   -0.002091    0.002214    0.000030
+    21   -0.002229    0.001993   -0.000381
+    22   -0.001984    0.002001   -0.000259
+    23   -0.002304    0.002678   -0.000322
+    24   -0.002415    0.002306   -0.000180
+    25    0.001464    0.001707    0.000021
+    26    0.001608    0.002195   -0.000142
+    27    0.002425    0.001469   -0.000142
+    28    0.002153    0.002169   -0.000248
+    29    0.002597    0.002209   -0.000285
+    30    0.001847    0.002227   -0.000088
+    31    0.002027    0.002706   -0.000115
+    32    0.002727    0.002457   -0.000130
+    33   -0.001594   -0.001511   -0.000224
+    34   -0.001954   -0.002523   -0.000267
+    35   -0.002471   -0.001824   -0.000286
+    36   -0.002298   -0.002481   -0.000219
+    37   -0.002216   -0.002225    0.000184
+    38   -0.002249   -0.002077    0.000001
+    39   -0.002087   -0.002360   -0.000036
+    40   -0.002426   -0.002198   -0.000128
+    41    0.001614   -0.001640   -0.000400
+    42    0.001526   -0.002482   -0.000112
+    43    0.002663   -0.001724    0.000017
+    44    0.002279   -0.002091    0.000125
+    45    0.002667   -0.002104   -0.000123
+    46    0.001820   -0.002156   -0.000164
+    47    0.002008   -0.002093    0.000066
+    48    0.002893   -0.002368   -0.000290
+    49   -0.001550    0.001699   -0.000140
+    50   -0.001712    0.002528    0.000103
+    51   -0.002296    0.001564    0.000011
+    52   -0.002146    0.002183   -0.000015
+    53   -0.002348    0.002061   -0.000039
+    54   -0.002259    0.001857   -0.000148
+    55   -0.002154    0.002600   -0.000101
+    56   -0.002324    0.002406   -0.000128
+    57    0.001702    0.001692   -0.000215
+    58    0.001611    0.002328   -0.000005
+    59    0.002016    0.001720   -0.000059
+    60    0.002272    0.002237   -0.000103
+    61    0.002686    0.002236   -0.000025
+    62    0.001941    0.001809   -0.000039
+    63    0.002108    0.002451    0.000074
+    64    0.002464    0.002459   -0.000196
+    65   -0.001751   -0.001684   -0.000311
+    66   -0.001809   -0.002651   -0.000117
+    67   -0.002421   -0.001730   -0.000094
+    68   -0.002396   -0.002339   -0.000071
+    69   -0.002080   -0.002280    0.000129
+    70   -0.002029   -0.001825    0.000254
+    71   -0.002131   -0.002243    0.000115
+    72   -0.002526   -0.002303    0.000109
+    73    0.001558   -0.001616   -0.000243
+    74    0.001495   -0.002427    0.000184
+    75    0.002557   -0.001773    0.000237
+    76    0.002310   -0.002179    0.000284
+    77    0.002750   -0.002344   -0.000215
+    78    0.001993   -0.002027   -0.000033
+    79    0.001754   -0.002152    0.000171
+    80    0.002495   -0.002399    0.000063
+    81   -0.001404    0.001644    0.000004
+    82   -0.001641    0.002496    0.000232
+    83   -0.002323    0.001485    0.000243
+    84   -0.002143    0.002242    0.000231
+    85   -0.002233    0.002003    0.000035
+    86   -0.002018    0.001992   -0.000168
+    87   -0.002341    0.002689    0.000124
+    88   -0.002489    0.002237   -0.000074
+    89    0.001736    0.001757   -0.000128
+    90    0.001608    0.002325    0.000108
+    91    0.002273    0.001604    0.000044
+    92    0.002165    0.002220   -0.000113
+    93    0.002710    0.002182    0.000169
+    94    0.001924    0.001965    0.000041
+    95    0.002114    0.002733    0.000177
+    96    0.002330    0.002447    0.000099
+    97   -0.001710   -0.001701   -0.000138
+    98   -0.001708   -0.002372    0.000037
+    99   -0.002166   -0.001717    0.000007
+   100   -0.002332   -0.002226   -0.000026
+   101   -0.002192   -0.002164    0.000061
+   102   -0.002236   -0.002099    0.000439
+   103   -0.002074   -0.002366   -0.000024
+   104   -0.002310   -0.002152    0.000294
+   105    0.001609   -0.001690    0.000021
+   106    0.001461   -0.002342    0.000153
+   107    0.002554   -0.001664    0.000115
+   108    0.002326   -0.002022    0.000465
+   109    0.002339   -0.002362    0.000147
+   110    0.001812   -0.002224    0.000149
+   111    0.002046   -0.002276    0.000108
+   112    0.002598   -0.002265    0.000276
+   113   -0.001577    0.001721    0.000148
+   114   -0.001608    0.002576    0.000136
+   115   -0.002177    0.001671    0.000326
+   116   -0.002024    0.002314    0.000353
+   117   -0.002346    0.002057    0.000066
+   118   -0.002271    0.001713    0.000057
+   119   -0.002257    0.002307    0.000117
+   120   -0.002428    0.002454    0.000166
+   121    0.001730    0.001699    0.000087
+   122    0.001701    0.002329   -0.000014
+   123    0.002360    0.001496   -0.000046
+   124    0.001991    0.002005   -0.000032
+   125    0.002130    0.002319    0.000282
+   126    0.001895    0.001885    0.000395
+   127    0.002145    0.002349    0.000211
+   128    0.002655    0.002551    0.000502
+----------------------------------------
+   Tot   -0.000082   -0.000055   -0.000267
+----------------------------------------
+   Max    0.002893
+   Res    0.001752    sqrt( Sum f_i^2 / 3N )
+----------------------------------------
+   Max    0.002893    constrained
+
+Stress-tensor-Voigt (kbar):     -403.61     -403.61     -396.81        0.00        0.00        0.01
+(Free)E + p*V (eV/cell)   -13035.2112
+Target enthalpy (eV/cell)   -13676.8934
+
+* Maximum dynamic memory allocated =   805 MB
+
+siesta: Program's energy decomposition (eV):
+siesta: Ebs     =     -5153.217790
+siesta: Eions   =     23906.338942
+siesta: Ena     =      7091.446199
+siesta: Ekin    =      5259.613053
+siesta: Enl     =      1806.531744
+siesta: DEna    =       256.340260
+siesta: DUscf   =        20.972885
+siesta: DUext   =         0.000000
+siesta: Exc     =     -4205.458554
+siesta: eta*DQ  =         0.000000
+siesta: Emadel  =         0.000000
+siesta: Emeta   =         0.000000
+siesta: Emolmec =         0.000000
+siesta: Ekinion =         0.000000
+siesta: Eharris =    -13676.894150
+siesta: Etot    =    -13676.893356
+siesta: FreeEng =    -13676.893356
+
+siesta: Final energy (eV):
+siesta:  Band Struct. =   -5153.217790
+siesta:       Kinetic =    5259.613053
+siesta:       Hartree =     970.473479
+siesta:    Ext. field =       0.000000
+siesta:   Exch.-corr. =   -4205.458554
+siesta:  Ion-electron =   -6446.768854
+siesta:       Ion-ion =   -9254.752480
+siesta:       Ekinion =       0.000000
+siesta:         Total =  -13676.893356
+
+siesta: Stress tensor (static) (eV/Ang**3):
+siesta:    -0.251910    0.000000    0.000001
+siesta:     0.000000   -0.251910    0.000002
+siesta:     0.000003    0.000003   -0.247668
+
+siesta: Cell volume =       2561.648112 Ang**3
+
+siesta: Pressure (static):
+siesta:                Solid            Molecule  Units
+siesta:           0.00272822          0.00272598  Ry/Bohr**3
+siesta:           0.25049584          0.25029027  eV/Ang**3
+siesta:         401.34291189        401.01354923  kBar
+(Free)E+ p_basis*V_orbitals  =      -13430.980710
+(Free)Eharris+ p_basis*V_orbitals  =      -13430.981799
+
+* Maximum dynamic memory allocated : Node    0 =   805 MB
+* Maximum dynamic memory allocated : Node    1 =   803 MB
+* Maximum dynamic memory allocated : Node    2 =   803 MB
+* Maximum dynamic memory allocated : Node    3 =   803 MB
+* Maximum dynamic memory allocated : Node    4 =   803 MB
+* Maximum dynamic memory allocated : Node    5 =   803 MB
+* Maximum dynamic memory allocated : Node    6 =   803 MB
+* Maximum dynamic memory allocated : Node    7 =   803 MB
+* Maximum dynamic memory allocated : Node    8 =   803 MB
+* Maximum dynamic memory allocated : Node    9 =   803 MB
+* Maximum dynamic memory allocated : Node   10 =   803 MB
+* Maximum dynamic memory allocated : Node   11 =   804 MB
+* Maximum dynamic memory allocated : Node   12 =   803 MB
+* Maximum dynamic memory allocated : Node   13 =   803 MB
+* Maximum dynamic memory allocated : Node   14 =   803 MB
+* Maximum dynamic memory allocated : Node   15 =   803 MB
+* Maximum dynamic memory allocated : Node   16 =   803 MB
+* Maximum dynamic memory allocated : Node   17 =   803 MB
+* Maximum dynamic memory allocated : Node   18 =   803 MB
+* Maximum dynamic memory allocated : Node   19 =   803 MB
+* Maximum dynamic memory allocated : Node   20 =   805 MB
+* Maximum dynamic memory allocated : Node   21 =   803 MB
+* Maximum dynamic memory allocated : Node   22 =   803 MB
+* Maximum dynamic memory allocated : Node   23 =   803 MB
+* Maximum dynamic memory allocated : Node   24 =   803 MB
+* Maximum dynamic memory allocated : Node   25 =   803 MB
+* Maximum dynamic memory allocated : Node   26 =   803 MB
+* Maximum dynamic memory allocated : Node   27 =   803 MB
+* Maximum dynamic memory allocated : Node   28 =   803 MB
+* Maximum dynamic memory allocated : Node   29 =   803 MB
+* Maximum dynamic memory allocated : Node   30 =   803 MB
+* Maximum dynamic memory allocated : Node   31 =   803 MB
+* Maximum dynamic memory allocated : Node   32 =   803 MB
+* Maximum dynamic memory allocated : Node   33 =   803 MB
+* Maximum dynamic memory allocated : Node   34 =   803 MB
+* Maximum dynamic memory allocated : Node   35 =   803 MB
+* Maximum dynamic memory allocated : Node   36 =   803 MB
+* Maximum dynamic memory allocated : Node   37 =   803 MB
+* Maximum dynamic memory allocated : Node   38 =   803 MB
+* Maximum dynamic memory allocated : Node   39 =   803 MB
+* Maximum dynamic memory allocated : Node   40 =   805 MB
+* Maximum dynamic memory allocated : Node   41 =   803 MB
+* Maximum dynamic memory allocated : Node   42 =   803 MB
+* Maximum dynamic memory allocated : Node   43 =   803 MB
+* Maximum dynamic memory allocated : Node   44 =   803 MB
+* Maximum dynamic memory allocated : Node   45 =   803 MB
+* Maximum dynamic memory allocated : Node   46 =   803 MB
+* Maximum dynamic memory allocated : Node   47 =   803 MB
+* Maximum dynamic memory allocated : Node   48 =   803 MB
+* Maximum dynamic memory allocated : Node   49 =   803 MB
+* Maximum dynamic memory allocated : Node   50 =   803 MB
+* Maximum dynamic memory allocated : Node   51 =   803 MB
+* Maximum dynamic memory allocated : Node   52 =   804 MB
+* Maximum dynamic memory allocated : Node   53 =   803 MB
+* Maximum dynamic memory allocated : Node   54 =   803 MB
+* Maximum dynamic memory allocated : Node   55 =   803 MB
+* Maximum dynamic memory allocated : Node   56 =   803 MB
+* Maximum dynamic memory allocated : Node   57 =   803 MB
+* Maximum dynamic memory allocated : Node   58 =   803 MB
+* Maximum dynamic memory allocated : Node   59 =   803 MB
+* Maximum dynamic memory allocated : Node   60 =   805 MB
+* Maximum dynamic memory allocated : Node   61 =   803 MB
+* Maximum dynamic memory allocated : Node   62 =   803 MB
+* Maximum dynamic memory allocated : Node   63 =   803 MB
+* Maximum dynamic memory allocated : Node   64 =   803 MB
+* Maximum dynamic memory allocated : Node   65 =   803 MB
+* Maximum dynamic memory allocated : Node   66 =   803 MB
+* Maximum dynamic memory allocated : Node   67 =   803 MB
+* Maximum dynamic memory allocated : Node   68 =   803 MB
+* Maximum dynamic memory allocated : Node   69 =   803 MB
+* Maximum dynamic memory allocated : Node   70 =   803 MB
+* Maximum dynamic memory allocated : Node   71 =   803 MB
+* Maximum dynamic memory allocated : Node   72 =   803 MB
+* Maximum dynamic memory allocated : Node   73 =   803 MB
+* Maximum dynamic memory allocated : Node   74 =   803 MB
+* Maximum dynamic memory allocated : Node   75 =   803 MB
+* Maximum dynamic memory allocated : Node   76 =   803 MB
+* Maximum dynamic memory allocated : Node   77 =   803 MB
+* Maximum dynamic memory allocated : Node   78 =   803 MB
+* Maximum dynamic memory allocated : Node   79 =   803 MB
+* Maximum dynamic memory allocated : Node   80 =   805 MB
+* Maximum dynamic memory allocated : Node   81 =   803 MB
+* Maximum dynamic memory allocated : Node   82 =   803 MB
+* Maximum dynamic memory allocated : Node   83 =   803 MB
+* Maximum dynamic memory allocated : Node   84 =   803 MB
+* Maximum dynamic memory allocated : Node   85 =   803 MB
+* Maximum dynamic memory allocated : Node   86 =   803 MB
+* Maximum dynamic memory allocated : Node   87 =   803 MB
+* Maximum dynamic memory allocated : Node   88 =   803 MB
+* Maximum dynamic memory allocated : Node   89 =   803 MB
+* Maximum dynamic memory allocated : Node   90 =   803 MB
+* Maximum dynamic memory allocated : Node   91 =   803 MB
+* Maximum dynamic memory allocated : Node   92 =   803 MB
+* Maximum dynamic memory allocated : Node   93 =   803 MB
+* Maximum dynamic memory allocated : Node   94 =   803 MB
+* Maximum dynamic memory allocated : Node   95 =   803 MB
+* Maximum dynamic memory allocated : Node   96 =   803 MB
+* Maximum dynamic memory allocated : Node   97 =   803 MB
+* Maximum dynamic memory allocated : Node   98 =   803 MB
+* Maximum dynamic memory allocated : Node   99 =   803 MB
+* Maximum dynamic memory allocated : Node  100 =   805 MB
+* Maximum dynamic memory allocated : Node  101 =   803 MB
+* Maximum dynamic memory allocated : Node  102 =   803 MB
+* Maximum dynamic memory allocated : Node  103 =   803 MB
+* Maximum dynamic memory allocated : Node  104 =   803 MB
+* Maximum dynamic memory allocated : Node  105 =   803 MB
+* Maximum dynamic memory allocated : Node  106 =   803 MB
+* Maximum dynamic memory allocated : Node  107 =   803 MB
+* Maximum dynamic memory allocated : Node  108 =   803 MB
+* Maximum dynamic memory allocated : Node  109 =   803 MB
+* Maximum dynamic memory allocated : Node  110 =   803 MB
+* Maximum dynamic memory allocated : Node  111 =   803 MB
+* Maximum dynamic memory allocated : Node  112 =   803 MB
+* Maximum dynamic memory allocated : Node  113 =   803 MB
+* Maximum dynamic memory allocated : Node  114 =   803 MB
+* Maximum dynamic memory allocated : Node  115 =   803 MB
+* Maximum dynamic memory allocated : Node  116 =   803 MB
+* Maximum dynamic memory allocated : Node  117 =   804 MB
+* Maximum dynamic memory allocated : Node  118 =   803 MB
+* Maximum dynamic memory allocated : Node  119 =   803 MB
+* Maximum dynamic memory allocated : Node  120 =   805 MB
+* Maximum dynamic memory allocated : Node  121 =   803 MB
+* Maximum dynamic memory allocated : Node  122 =   803 MB
+* Maximum dynamic memory allocated : Node  123 =   803 MB
+* Maximum dynamic memory allocated : Node  124 =   803 MB
+* Maximum dynamic memory allocated : Node  125 =   803 MB
+* Maximum dynamic memory allocated : Node  126 =   803 MB
+* Maximum dynamic memory allocated : Node  127 =   803 MB
+* Maximum dynamic memory allocated : Node  128 =   803 MB
+* Maximum dynamic memory allocated : Node  129 =   803 MB
+* Maximum dynamic memory allocated : Node  130 =   803 MB
+* Maximum dynamic memory allocated : Node  131 =   803 MB
+* Maximum dynamic memory allocated : Node  132 =   803 MB
+* Maximum dynamic memory allocated : Node  133 =   803 MB
+* Maximum dynamic memory allocated : Node  134 =   803 MB
+* Maximum dynamic memory allocated : Node  135 =   803 MB
+* Maximum dynamic memory allocated : Node  136 =   803 MB
+* Maximum dynamic memory allocated : Node  137 =   803 MB
+* Maximum dynamic memory allocated : Node  138 =   803 MB
+* Maximum dynamic memory allocated : Node  139 =   803 MB
+* Maximum dynamic memory allocated : Node  140 =   805 MB
+* Maximum dynamic memory allocated : Node  141 =   803 MB
+* Maximum dynamic memory allocated : Node  142 =   803 MB
+* Maximum dynamic memory allocated : Node  143 =   803 MB
+* Maximum dynamic memory allocated : Node  144 =   803 MB
+* Maximum dynamic memory allocated : Node  145 =   803 MB
+* Maximum dynamic memory allocated : Node  146 =   803 MB
+* Maximum dynamic memory allocated : Node  147 =   803 MB
+* Maximum dynamic memory allocated : Node  148 =   803 MB
+* Maximum dynamic memory allocated : Node  149 =   803 MB
+* Maximum dynamic memory allocated : Node  150 =   803 MB
+* Maximum dynamic memory allocated : Node  151 =   803 MB
+* Maximum dynamic memory allocated : Node  152 =   803 MB
+* Maximum dynamic memory allocated : Node  153 =   803 MB
+* Maximum dynamic memory allocated : Node  154 =   803 MB
+* Maximum dynamic memory allocated : Node  155 =   803 MB
+* Maximum dynamic memory allocated : Node  156 =   803 MB
+* Maximum dynamic memory allocated : Node  157 =   803 MB
+* Maximum dynamic memory allocated : Node  158 =   803 MB
+* Maximum dynamic memory allocated : Node  159 =   803 MB
+* Maximum dynamic memory allocated : Node  160 =   805 MB
+* Maximum dynamic memory allocated : Node  161 =   803 MB
+* Maximum dynamic memory allocated : Node  162 =   804 MB
+* Maximum dynamic memory allocated : Node  163 =   803 MB
+* Maximum dynamic memory allocated : Node  164 =   803 MB
+* Maximum dynamic memory allocated : Node  165 =   803 MB
+* Maximum dynamic memory allocated : Node  166 =   803 MB
+* Maximum dynamic memory allocated : Node  167 =   804 MB
+* Maximum dynamic memory allocated : Node  168 =   803 MB
+* Maximum dynamic memory allocated : Node  169 =   803 MB
+* Maximum dynamic memory allocated : Node  170 =   803 MB
+* Maximum dynamic memory allocated : Node  171 =   803 MB
+* Maximum dynamic memory allocated : Node  172 =   803 MB
+* Maximum dynamic memory allocated : Node  173 =   803 MB
+* Maximum dynamic memory allocated : Node  174 =   803 MB
+* Maximum dynamic memory allocated : Node  175 =   803 MB
+* Maximum dynamic memory allocated : Node  176 =   803 MB
+* Maximum dynamic memory allocated : Node  177 =   803 MB
+* Maximum dynamic memory allocated : Node  178 =   803 MB
+* Maximum dynamic memory allocated : Node  179 =   803 MB
+* Maximum dynamic memory allocated : Node  180 =   803 MB
+* Maximum dynamic memory allocated : Node  181 =   802 MB
+* Maximum dynamic memory allocated : Node  182 =   802 MB
+* Maximum dynamic memory allocated : Node  183 =   802 MB
+* Maximum dynamic memory allocated : Node  184 =   802 MB
+* Maximum dynamic memory allocated : Node  185 =   801 MB
+* Maximum dynamic memory allocated : Node  186 =   802 MB
+* Maximum dynamic memory allocated : Node  187 =   802 MB
+* Maximum dynamic memory allocated : Node  188 =   802 MB
+* Maximum dynamic memory allocated : Node  189 =   802 MB
+* Maximum dynamic memory allocated : Node  190 =   801 MB
+* Maximum dynamic memory allocated : Node  191 =   802 MB
+* Maximum dynamic memory allocated : Node  192 =   802 MB
+* Maximum dynamic memory allocated : Node  193 =   802 MB
+* Maximum dynamic memory allocated : Node  194 =   801 MB
+* Maximum dynamic memory allocated : Node  195 =   802 MB
+* Maximum dynamic memory allocated : Node  196 =   802 MB
+* Maximum dynamic memory allocated : Node  197 =   802 MB
+* Maximum dynamic memory allocated : Node  198 =   801 MB
+* Maximum dynamic memory allocated : Node  199 =   802 MB
+* Maximum dynamic memory allocated : Node  200 =   803 MB
+* Maximum dynamic memory allocated : Node  201 =   802 MB
+* Maximum dynamic memory allocated : Node  202 =   802 MB
+* Maximum dynamic memory allocated : Node  203 =   802 MB
+* Maximum dynamic memory allocated : Node  204 =   802 MB
+* Maximum dynamic memory allocated : Node  205 =   802 MB
+* Maximum dynamic memory allocated : Node  206 =   802 MB
+* Maximum dynamic memory allocated : Node  207 =   801 MB
+* Maximum dynamic memory allocated : Node  208 =   802 MB
+* Maximum dynamic memory allocated : Node  209 =   802 MB
+* Maximum dynamic memory allocated : Node  210 =   802 MB
+* Maximum dynamic memory allocated : Node  211 =   801 MB
+* Maximum dynamic memory allocated : Node  212 =   802 MB
+* Maximum dynamic memory allocated : Node  213 =   802 MB
+* Maximum dynamic memory allocated : Node  214 =   802 MB
+* Maximum dynamic memory allocated : Node  215 =   802 MB
+* Maximum dynamic memory allocated : Node  216 =   802 MB
+* Maximum dynamic memory allocated : Node  217 =   802 MB
+* Maximum dynamic memory allocated : Node  218 =   801 MB
+* Maximum dynamic memory allocated : Node  219 =   802 MB
+* Maximum dynamic memory allocated : Node  220 =   803 MB
+* Maximum dynamic memory allocated : Node  221 =   802 MB
+* Maximum dynamic memory allocated : Node  222 =   802 MB
+* Maximum dynamic memory allocated : Node  223 =   802 MB
+* Maximum dynamic memory allocated : Node  224 =   801 MB
+* Maximum dynamic memory allocated : Node  225 =   802 MB
+* Maximum dynamic memory allocated : Node  226 =   802 MB
+* Maximum dynamic memory allocated : Node  227 =   802 MB
+* Maximum dynamic memory allocated : Node  228 =   802 MB
+* Maximum dynamic memory allocated : Node  229 =   802 MB
+* Maximum dynamic memory allocated : Node  230 =   802 MB
+* Maximum dynamic memory allocated : Node  231 =   802 MB
+* Maximum dynamic memory allocated : Node  232 =   802 MB
+* Maximum dynamic memory allocated : Node  233 =   802 MB
+* Maximum dynamic memory allocated : Node  234 =   802 MB
+* Maximum dynamic memory allocated : Node  235 =   801 MB
+* Maximum dynamic memory allocated : Node  236 =   802 MB
+* Maximum dynamic memory allocated : Node  237 =   801 MB
+* Maximum dynamic memory allocated : Node  238 =   799 MB
+* Maximum dynamic memory allocated : Node  239 =   799 MB
+
+* Maximum memory occured during update_hfx                    
+
+timer: CPU execution times:
+timer:  Routine       Calls   Time/call    Tot.time        %
+timer:  siesta            1  209154.681  209154.681   100.00
+timer:  Setup             1      55.828      55.828     0.03
+timer:  bands             1       0.079       0.079     0.00
+timer:  writewave         1       0.181       0.181     0.00
+timer:  KSV_init          1       0.057       0.057     0.00
+timer:  IterMD            1  209090.138  209090.138    99.97
+timer:  hsparse           1       8.599       8.599     0.00
+timer:  overlap           1      14.702      14.702     0.01
+timer:  IterSCF          11   15900.052  174900.567    83.62
+timer:  kinefsm           2       7.474      14.948     0.01
+timer:  nlefsm            2     133.114     266.228     0.13
+timer:  DHSCF            12   17221.910  206662.923    98.81
+timer:  DHSCF1            1      17.537      17.537     0.01
+timer:  DHSCF2            1     126.596     126.596     0.06
+timer:  REORD            74       0.003       0.228     0.00
+timer:  POISON           13       2.941      38.229     0.02
+timer:  DHSCF3           12     667.766    8013.191     3.83
+timer:  rhoofd           12      96.070    1152.838     0.55
+timer:  cellXC           12       4.045      48.542     0.02
+timer:  vmat             12     536.457    6437.479     3.08
+timer:  DHFX             12   14973.549  179682.588    85.91
+timer:  HFX              12   13101.784  157221.404    75.17
+timer:  MolMec            2       0.004       0.009     0.00
+timer:  diagon           11     148.944    1638.387     0.78
+timer:  r-eigvec         11     147.139    1618.527     0.77
+timer:  r-buildHS        11       0.019       0.214     0.00
+timer:  rdiag            11     147.118    1618.298     0.77
+timer:  rdiag1           11      26.011     286.119     0.14
+timer:  rdiag2           11      64.447     708.918     0.34
+timer:  rdiag3           11      52.000     571.997     0.27
+timer:  rdiag4           11       2.618      28.800     0.01
+timer:  r-buildD         11       1.736      19.093     0.01
+timer:  DHSCF4            1     113.358     113.358     0.05
+timer:  dfscf             1     110.160     110.160     0.05
+timer:  DFHFX             1   18709.194   18709.194     8.95
+timer:  HFX_gradie        1       0.000       0.000     0.00
+timer:  HFX_gradie        0    Infinity  209067.786    99.96
+timer:  overfsm           1       1.592       1.592     0.00
+timer:  optical           1       4.929       4.929     0.00
+  
+
+elaps: ELAPSED times:
+elaps:  Routine       Calls   Time/call    Tot.time        %
+elaps:  siesta            1     874.626     874.626   100.00
+elaps:  Setup             1       0.271       0.271     0.03
+elaps:  bands             1       0.000       0.000     0.00
+elaps:  writewave         1       0.001       0.001     0.00
+elaps:  KSV_init          1       0.000       0.000     0.00
+elaps:  IterMD            1     874.316     874.316    99.96
+elaps:  hsparse           1       0.036       0.036     0.00
+elaps:  overlap           1       0.046       0.046     0.01
+elaps:  IterSCF          11      66.490     731.388    83.62
+elaps:  kinefsm           2       0.023       0.046     0.01
+elaps:  nlefsm            2       0.563       1.126     0.13
+elaps:  DHSCF            12      72.053     864.635    98.86
+elaps:  DHSCF1            1       0.074       0.074     0.01
+elaps:  DHSCF2            1       0.577       0.577     0.07
+elaps:  REORD            74       0.000       0.001     0.00
+elaps:  POISON           13       0.016       0.207     0.02
+elaps:  DHSCF3           12       2.790      33.486     3.83
+elaps:  rhoofd           12       0.512       6.138     0.70
+elaps:  cellXC           12       0.017       0.204     0.02
+elaps:  vmat             12       2.242      26.902     3.08
+elaps:  DHFX             12      62.580     750.963    85.86
+elaps:  HFX              12      54.799     657.587    75.18
+elaps:  MolMec            2       0.000       0.000     0.00
+elaps:  diagon           11       0.656       7.215     0.82
+elaps:  r-eigvec         11       0.648       7.131     0.82
+elaps:  r-buildHS        11       0.000       0.001     0.00
+elaps:  rdiag            11       0.648       7.131     0.82
+elaps:  rdiag1           11       0.141       1.546     0.18
+elaps:  rdiag2           11       0.269       2.962     0.34
+elaps:  rdiag3           11       0.219       2.411     0.28
+elaps:  rdiag4           11       0.011       0.121     0.01
+elaps:  r-buildD         11       0.007       0.081     0.01
+elaps:  DHSCF4            1       0.594       0.594     0.07
+elaps:  dfscf             1       0.578       0.578     0.07
+elaps:  DFHFX             1      78.941      78.941     9.03
+elaps:  HFX_gradie        1       0.000       0.000     0.00
+elaps:  HFX_gradie        0    Infinity     874.562    99.99
+elaps:  overfsm           1       0.005       0.005     0.00
+elaps:  optical           1       0.000       0.000     0.00
+  
+>> End of run:  24-MAY-2023   6:31:14
