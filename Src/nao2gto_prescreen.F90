@@ -1377,8 +1377,8 @@ contains
 !   Compute the number of unit cells in the supercell
     ncells = hfx_sys%norb / hfx_sys%nuotot
 !   Initialize neighb subroutine
-    call mneighb(hfx_sys%cell, 2.0_dp*rmaxo, na, hfx_sys%xa, 0, 0, nnia )
-    call re_alloc(index, 1, maxna, name='index', routine='build_pair_list')
+!    call mneighb(hfx_sys%cell, 2.0_dp*rmaxo, na, hfx_sys%xa, 0, 0, nnia )
+!    call re_alloc(index, 1, maxna, name='index', routine='build_pair_list')
 
 !!   For debugging
 !    write(6,'(a,3i5)') &
@@ -1415,7 +1415,7 @@ contains
 
 !     Find all the neighbour atoms within a range of 
 !     2.0 * maximum cutoff radii
-      call mneighb(hfx_sys%cell, 2.0_dp*rmaxo, na, hfx_sys%xa, ia, 0, nnia)
+!      call mneighb(hfx_sys%cell, 2.0_dp*rmaxo, na, hfx_sys%xa, ia, 0, nnia)
 
 !!     For debugging
 !      write(6,'(a,2i5)') &
@@ -1426,10 +1426,10 @@ contains
 !     Sort the neighbours by distance
 !     The neighbour list will be ordered in such a way that they will appear
 !     in increasing order of the distance
-      call ordix (r2ij, 1, nnia, index)
-      call iorder(jna,  1, nnia, index)
-      call order (r2ij, 1, nnia, index)
-      call order (xij,  3, nnia, index)
+!      call ordix (r2ij, 1, nnia, index)
+!      call iorder(jna,  1, nnia, index)
+!      call order (r2ij, 1, nnia, index)
+!      call order (xij,  3, nnia, index)
 
 !     Loop over all the atomic orbitals within the atom
       do io = lasto(ia-1) + 1, lasto(ia)
@@ -1469,11 +1469,11 @@ contains
 !!       End debugging
 
 !       Loop over all the neighbours
-        do jn = 1, nnia
+!        do jn = 1, nnia
 
 !         Identify the atomic index of the neighbour
-          ja = jna(jn)
-!         do ja = 1, na
+!          ja = jna(jn)
+        do ja = 1, na
 !         Identify the relative position between the neighbour and the atom
 !         whose neigbours are sought
           r_temp(1:3) = hfx_sys%xa(1:3,ja) - hfx_sys%xa(1:3,ia)
@@ -1620,7 +1620,7 @@ contains
       end do   ! io
     end do   ! ia
 
-    call de_alloc(index, name='index', routine='build_pair_list')
+!    call de_alloc(index, name='index', routine='build_pair_list')
 !!   For debugging
 !#ifdef MPI
 !    call MPI_barrier(MPI_Comm_world,MPIerror)
