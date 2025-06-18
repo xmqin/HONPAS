@@ -1,151 +1,178 @@
-只在 . 存在：1
-./fdf 和 /public/home/xmqin/FrontChem/Paper/honpas_v1.2/Src/fdf 有共同的子目录
-./fdict 和 /public/home/xmqin/FrontChem/Paper/honpas_v1.2/Src/fdict 有共同的子目录
-./hfx 和 /public/home/xmqin/FrontChem/Paper/honpas_v1.2/Src/hfx 有共同的子目录
-./Include 和 /public/home/xmqin/FrontChem/Paper/honpas_v1.2/Src/Include 有共同的子目录
-./Libs 和 /public/home/xmqin/FrontChem/Paper/honpas_v1.2/Src/Libs 有共同的子目录
-./MPI 和 /public/home/xmqin/FrontChem/Paper/honpas_v1.2/Src/MPI 有共同的子目录
-diff ./nao2gto_hfx.F90 /public/home/xmqin/FrontChem/Paper/honpas_v1.2/Src/nao2gto_hfx.F90
-880c880
-<     real(dp) time1, time2, time_tot
+Only in .: 1
+Common subdirectories: ./fdf and /public/home/xmqin/HONPAS/honpas_develop/Src/fdf
+Common subdirectories: ./fdict and /public/home/xmqin/HONPAS/honpas_develop/Src/fdict
+Common subdirectories: ./hfx and /public/home/xmqin/HONPAS/honpas_develop/Src/hfx
+Common subdirectories: ./Include and /public/home/xmqin/HONPAS/honpas_develop/Src/Include
+Common subdirectories: ./Libs and /public/home/xmqin/HONPAS/honpas_develop/Src/Libs
+diff ./moremeshsubs.F /public/home/xmqin/HONPAS/honpas_develop/Src/moremeshsubs.F
+248,255c248,255
+<       if (Node == 0) then
+<          write(6,"(a,i3)")"New grid distribution: ", oDistr
+<          do PP= 1, Nodes
+<             write(6,"(i12,3x,3(i5,a1,i5))")
+<      $       PP,
+<      $       (distr%box(1,jj,PP), ":", distr%box(2,jj,PP), jj=1,3)
+<          enddo 
+<       endif 
 ---
->     real(dp) time_start, time_end
-886a887
->     
-913c914,915
+> !      if (Node == 0) then
+> !         write(6,"(a,i3)")"New grid distribution: ", oDistr
+> !         do PP= 1, Nodes
+> !            write(6,"(i12,3x,3(i5,a1,i5))")
+> !     $       PP,
+> !     $       (distr%box(1,jj,PP), ":", distr%box(2,jj,PP), jj=1,3)
+> !         enddo 
+> !      endif 
+Common subdirectories: ./MPI and /public/home/xmqin/HONPAS/honpas_develop/Src/MPI
+diff ./nao2gto_data.F90 /public/home/xmqin/HONPAS/honpas_develop/Src/nao2gto_data.F90
+66c66,67
 < 
 ---
->       call cpu_time(time_start)
->      !write(6,*) "node ", node, hfx_optdata%Dynamic_parallel, hfx_optdata%frag_size
-922c924
-< !        write(6,*) node, list_ij%nelement, list_kl%nelement, number_task
----
->         write(6,*) node, list_ij%nelement, list_kl%nelement, number_task
-1467c1469,1470
-< !    call cpu_time(time2)
----
-> 
->    call cpu_time(time_end)
-1470,1471c1473
-< !    if(node.eq.0)
-< !     write(6,*) "HFX time : ", time2-time1, " s  on ", node
----
-> !    if(node.eq.0)  write(6,*) "HFX time : ", time_end - time_start , " s "
-diff ./nao2gto_hfx_force.F90 /public/home/xmqin/FrontChem/Paper/honpas_v1.2/Src/nao2gto_hfx_force.F90
-292a293,294
->     real(dp) :: time_start, time_end
-> 
-301a304
->       call cpu_time(time_start)
-311,313c314
-< !        write(6,*) node, list_ij%nelement, list_kl%nelement, number_task
-< 
-< !        call cpu_time(time_start3)
----
->         write(6,*) node, list_ij%nelement, list_kl%nelement, number_task
-463c464
-<              DM_max = 2.0_dp*max( Dscf_max(D2Sindx(io, ko))*Dscf_max(D2Sindx(jo,lo)), &
----
->              DM_max = 2.0_dp * max( Dscf_max(D2Sindx(io, ko))*Dscf_max(D2Sindx(jo,lo)), &
-640c641
-<              DM_max = 2.0_dp*max( Dscf_max(D2Sindx(io, ko))*Dscf_max(D2Sindx(jo,lo)), &
----
->              DM_max = 2.0_dp * max( Dscf_max(D2Sindx(io, ko))*Dscf_max(D2Sindx(jo,lo)), &
-720a722,726
-> 
->       call cpu_time(time_end)
-> 
-> !    if(IOnode)  write(6,*) "HFX Force time : ", time_end - time_start , " s "
+>   
 >  
-diff ./nao2gto_io.F90 /public/home/xmqin/FrontChem/Paper/honpas_v1.2/Src/nao2gto_io.F90
-533a534
-> !         spp%orbnl_z(inlz)
-559,560c560,563
-<           if( l > 0)  hfx_opts%max_num_gaus = 4
-<           if (spp%orbnl_ispol(inlz)) hfx_opts%max_num_gaus = 3
----
->           if( l == 1)  hfx_opts%max_num_gaus = 4
-> !          if (spp%orbnl_ispol(inlz)) hfx_opts%max_num_gaus = 3
->           if( l >= 2)  hfx_opts%max_num_gaus =  hfx_opts%min_num_gaus
+195a197,233
 > 
-683c686
-<             gtos(isp)%pgf_radius(ipgf,inlz)= exp_radius(l, zeta, 1.0d-4, 1.0_dp ) !
----
->             gtos(isp)%pgf_radius(ipgf,inlz)= exp_radius(l, zeta, hfx_opts%gto_eps, 1.0_dp ) !
-1286c1289
-<     write(*,'(A,8X,L12)') "HFX.FragSize", hfx_opts%frag_size
----
->     write(*,'(A,8X,I12)') "HFX.FragSize", hfx_opts%frag_size
-diff ./nao2gto_prescreen.F90 /public/home/xmqin/FrontChem/Paper/honpas_v1.2/Src/nao2gto_prescreen.F90
-1380,1381c1380,1381
-< !    call mneighb(hfx_sys%cell, 2.0_dp*rmaxo, na, hfx_sys%xa, 0, 0, nnia )
-< !    call re_alloc(index, 1, maxna, name='index', routine='build_pair_list')
----
->     call mneighb(hfx_sys%cell, 2.0_dp*rmaxo, na, hfx_sys%xa, 0, 0, nnia )
->     call re_alloc(index, 1, maxna, name='index', routine='build_pair_list')
-1418c1418
-< !      call mneighb(hfx_sys%cell, 2.0_dp*rmaxo, na, hfx_sys%xa, ia, 0, nnia)
----
->       call mneighb(hfx_sys%cell, 2.0_dp*rmaxo, na, hfx_sys%xa, ia, 0, nnia)
-1429,1432c1429,1432
-< !      call ordix (r2ij, 1, nnia, index)
-< !      call iorder(jna,  1, nnia, index)
-< !      call order (r2ij, 1, nnia, index)
-< !      call order (xij,  3, nnia, index)
----
->       call ordix (r2ij, 1, nnia, index)
->       call iorder(jna,  1, nnia, index)
->       call order (r2ij, 1, nnia, index)
->       call order (xij,  3, nnia, index)
-1472c1472
-< !        do jn = 1, nnia
----
->         do jn = 1, nnia
-1475,1476c1475,1476
-< !          ja = jna(jn)
-<          do ja = 1, na
----
->           ja = jna(jn)
-> !         do ja = 1, na
-1623c1623
-< !    call de_alloc(index, name='index', routine='build_pair_list')
----
->     call de_alloc(index, name='index', routine='build_pair_list')
-1763a1764,1772
->     real(dp) :: eps_new
+> !!  public :: extend_pair_list, shrink_pair_list
+> !contains
+> !
+> !subroutine extend_pair_list(list, capacity)
+> !  type(pair_list_type), intent(inout) :: list
+> !  integer, intent(in) :: capacity
+> !  type(pair_list_element_type), dimension(:), allocatable :: temp
+> !
+> !!  if (.not. allocated(list%element)) then
+> !!    allocate(list%element(capacity))
+> !!    return
+> !!  end if
+> !
+> !  allocate(temp(size(list%element)))
+> !  temp = list%element
+> !  deallocate(list%element)
+> !  
+> !  allocate(list%element(capacity))
+> !  list%element(1:size(temp)) = temp
+> !  deallocate(temp)
+> !
+> !end subroutine extend_pair_list
+> !
+> !subroutine shrink_pair_list(list)
+> !  type(pair_list_type), intent(inout) :: list
+> !  type(pair_list_element_type), dimension(:), allocatable :: temp
+> !  
+> !  if (.not. allocated(list%element) .or. list%nelement == 0) return
+> !  
+> !  if (size(list%element) > list%nelement) then
+> !    allocate(temp(list%nelement))
+> !    temp = list%element(1:list%nelement)
+> !    deallocate(list%element)
+> !    call move_alloc(temp, list%element)
+> !  end if
+> !end subroutine shrink_pair_list
+diff ./nao2gto_hfx.F90 /public/home/xmqin/HONPAS/honpas_develop/Src/nao2gto_hfx.F90
+920a921
 > 
->     if( hfx_opts%eps_schwarz >1.0E-6_dp ) then
->       eps_new = 1.0E-6_dp
->     else
->       eps_new = hfx_opts%eps_schwarz
->     endif
+922c923,924
+< !        write(6,*) node, list_ij%nelement, list_kl%nelement, number_task
+---
 > 
-> !   write(6,*) "calc_pair_dist_radii: eps_schwarz ", hfx_opts%eps_schwarz
-1892c1901
-< &                      ra=ra, rb=rb, rp=rp, zetp=zetp, eps=1.0d-6, &
+>         write(6,*) node, list_ij%nelement, list_kl%nelement, number_task
+diff ./nao2gto_prescreen.F90 /public/home/xmqin/HONPAS/honpas_develop/Src/nao2gto_prescreen.F90
+818,819c818,826
+<     nelem_ij = ncells * hfx_sys%nuotot * (hfx_sys%nuotot + 1) / 2
+<     nelem_kl = ncells*ncells*hfx_sys%nuotot*(hfx_sys%nuotot+1)/2
 ---
-> &                      ra=ra, rb=rb, rp=rp, zetp=zetp, eps=eps_new, &
-diff ./nao2gto_types.F90 /public/home/xmqin/FrontChem/Paper/honpas_v1.2/Src/nao2gto_types.F90
-106,111c106,111
-<     real(dp)  ::  omega = -1.0_dp
-<     real(dp)  ::  cutoff_radius = -1.0_dp
-<     real(dp)  ::  eps_farfield = -1.0_dp
-<     real(dp)  ::  eps_pairlist = -1.0_dp
-<     real(dp)  ::  eps_schwarz = -1.0_dp
-<     real(dp)  ::  eps_stored = -1.0_dp
+>     nelem_ij = ncells * hfx_sys%nuotot ! * (hfx_sys%nuotot + 1) / 2
+>     nelem_kl = ncells*ncells*hfx_sys%nuotot !*(hfx_sys%nuotot+1)/2
+> !
+> !    if(node.eq.0)then
+> !      write(6,*) "nsc ", hfx_sys%nsc
+> !      write(6,*) "ncells, nuotot, norb ", ncells,  hfx_sys%nuotot, hfx_sys%norb
+> !      write(*,'(A,1X,I12)')  'init_prescreen_eri: nelem_ij =', nelem_ij
+> !      write(*,'(A,1X,I12)')  'init_prescreen_eri: nelem_kl =', nelem_kl
+> !    endif
+949c956
+<     if ( associated(list_ij%element) ) then
 ---
->     real(dp)  ::  omega = 0.11_dp
->     real(dp)  ::  cutoff_radius = 1.0d-6
->     real(dp)  ::  eps_farfield = 1.0d-6
->     real(dp)  ::  eps_pairlist = 1.0d-6
->     real(dp)  ::  eps_schwarz = 1.0d-6
->     real(dp)  ::  eps_stored = 1.0d-6
-114c114
-<     real(dp)  ::  gto_eps = 1.d-4
+>     if (allocated(list_ij%element) ) then
+953c960,961
+<     if ( associated(list_kl%element) ) then
 ---
->     real(dp)  ::  gto_eps = 1.d-5
-./ncdf 和 /public/home/xmqin/FrontChem/Paper/honpas_v1.2/Src/ncdf 有共同的子目录
-./Orphans 和 /public/home/xmqin/FrontChem/Paper/honpas_v1.2/Src/Orphans 有共同的子目录
-./SiestaXC 和 /public/home/xmqin/FrontChem/Paper/honpas_v1.2/Src/SiestaXC 有共同的子目录
-./wxml 和 /public/home/xmqin/FrontChem/Paper/honpas_v1.2/Src/wxml 有共同的子目录
-./xmlparser 和 /public/home/xmqin/FrontChem/Paper/honpas_v1.2/Src/xmlparser 有共同的子目录
+> 
+>     if (allocated(list_kl%element) ) then
+1173c1181
+<                  eri_prescreen, max_eri, list_orb)
+---
+>                  eri_prescreen, max_eri, list_orb )
+1211a1220,1221
+>     use nao2gto_types , only: pair_list_element_type 
+> !    use nao2gto_data  , only: extend_pair_list, shrink_pair_list
+1248c1258
+<     type(pair_list_type)  , intent(out) :: list_orb
+---
+>     type(pair_list_type)  , intent(inout) :: list_orb
+1341c1351
+<     integer, dimension(:), pointer :: index => null()
+---
+> !    integer, dimension(:), pointer :: index => null()
+1344a1355
+>                                               !   subroutine setup_hfx is called
+1349a1361,1364
+>     type(pair_list_element_type), allocatable :: new_array(:)
+> 
+>     integer :: current_capacity, new_capacity
+> 
+1378a1394,1401
+> 
+>     current_capacity = size(list_orb%element)
+> 
+> !    if (Node .eq. 0) then
+> !       write(6,*) "current_capacity ",   current_capacity
+> !     endif
+> !    nullify(list_orb%element)
+>    
+1573a1597,1614
+>                 if (list_orb%nelement >= current_capacity) then
+>                    new_capacity = int(current_capacity * 1.5) + 10
+>   
+>                    allocate(new_array(new_capacity))
+>                    new_array(1:current_capacity) = list_orb%element(1:current_capacity)
+> 
+>                    if (current_capacity > 0) then
+>                        new_array(1:current_capacity) = list_orb%element(1:current_capacity)
+>                        deallocate(list_orb%element)
+>                    end if
+>                
+>                    allocate(list_orb%element(new_capacity))
+>                    list_orb%element = new_array
+>                    deallocate(new_array)
+> 
+>                    current_capacity = new_capacity
+>                 end if
+> 
+1610c1651
+< ! &                Node, eri_prescreen(io,jo), max_eri, hfx_opts%eps_pairlist
+---
+> ! &                Node, eri_prescreen(D2Sindx(io,jo)), max_eri, hfx_opts%eps_pairlist
+diff ./nao2gto_types.F90 /public/home/xmqin/HONPAS/honpas_develop/Src/nao2gto_types.F90
+150,153c150,151
+< 
+<     type(pair_list_element_type), dimension(:), pointer :: element
+<     integer :: nelement
+< 
+---
+>     type(pair_list_element_type), dimension(:), allocatable :: element
+>     integer :: nelement = 0
+158d155
+< 
+160d156
+< 
+308a305,308
+> 
+>   type(eri_link_type), pointer, public :: head
+>   type(eri_link_type), pointer, public :: tail
+>   type(eri_link_type), pointer, public :: ptr
+Common subdirectories: ./ncdf and /public/home/xmqin/HONPAS/honpas_develop/Src/ncdf
+Common subdirectories: ./Orphans and /public/home/xmqin/HONPAS/honpas_develop/Src/Orphans
+Common subdirectories: ./SiestaXC and /public/home/xmqin/HONPAS/honpas_develop/Src/SiestaXC
+Common subdirectories: ./wxml and /public/home/xmqin/HONPAS/honpas_develop/Src/wxml
+Common subdirectories: ./xmlparser and /public/home/xmqin/HONPAS/honpas_develop/Src/xmlparser
