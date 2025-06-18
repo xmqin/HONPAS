@@ -1,0 +1,1277 @@
+Siesta Version  : 4.1.5
+Architecture    : x86_64-intel
+Compiler version: ifort (IFORT) 19.1.3.304 20200925
+Compiler flags  : mpiifort -O2 -g -fPIC -fp-model source
+PP flags        : -DMPI -DFC_HAVE_ABORT -DHAVE_LIBINT
+Libraries       :  -L/public/software/compiler/intel/2020.update4/compilers_and_libraries_2020..4.304/linux/mkl/lib/intel64 -lmkl_intel_lp64 -lmkl_core -lmkl_sequential -lmkl_scalapack_lp64 -lmkl_blacs_intelmpi_lp64 /public/home/xmqin/MathLibs/libint/1.1.5/intel/lib/libderiv.a /public/home/xmqin/MathLibs/libint/1.1.5/intel/lib/libint.a -lpthread -lstdc++
+PARALLEL version
+
+* Running on 128 nodes in parallel
+>> Start of run:  16-JUN-2025  11:36:01
+
+                           ***********************       
+                           *  WELCOME TO SIESTA  *       
+                           ***********************       
+
+reinit: Reading from standard input
+reinit: Dumped input in INPUT_TMP.96583
+************************** Dump of input data file ****************************
+SystemName      Bulk Silisin
+SystemLabel     Sibulk
+NumberOfSpecies	        1
+%block ChemicalSpeciesLabel
+  1  14  Si
+%endblock ChemicalSpeciesLabel
+NumberOfAtoms           8
+LatticeConstant      5.430 Ang
+%block LatticeVectors
+  1.00  0.00  0.00
+  0.00  1.00  0.00
+  0.00  0.00  1.00
+%endblock LatticeVectors
+AtomicCoordinatesFormat   Fractional
+%block AtomicCoordinatesAndAtomicSpecies
+  0.00000000000000  0.00000000000000  0.00000000000000  1
+  0.00000000000000  0.50000000000000  0.50000000000000  1
+  0.50000000000000  0.00000000000000  0.50000000000000  1
+  0.50000000000000  0.50000000000000  0.00000000000000  1
+  0.75000000000000  0.25000000000000  0.75000000000000  1
+  0.25000000000000  0.25000000000000  0.25000000000000  1
+  0.25000000000000  0.75000000000000  0.75000000000000  1
+  0.75000000000000  0.75000000000000  0.25000000000000  1
+%endblock AtomicCoordinatesAndAtomicSpecies
+%block Supercell
+   2   0   0
+   0   2   0
+   0   0   2
+%endblock Supercell
+kgrid.Cutoff 0. Bohr
+PAO.BasisSize DZP
+%block NAO2GTO
+Si   5
+3  0  1  5
+       0.179543763     0.766529816
+       1.428571429    -0.738302342
+       2.000000000    -1.004566820
+       2.800000000     1.982436539
+       3.920000000    -0.736616451
+3  0  2  5
+       0.335009542     2.745919238
+       0.469013358    -2.059683130
+       1.883789851    -2.767628033
+       2.637305791     3.385876003
+       3.692228108    -1.091102315
+3  1  1  4
+       0.150000000     0.236476747
+       0.684470842     0.803265300
+       0.958259179    -0.961002579
+       1.341562851     0.311032675
+3  1  2  4
+       0.244635090     0.486420717
+       0.905208197     0.361970708
+       1.267291476    -0.570942156
+       1.774208066     0.219187269
+3  2  1  3
+       0.256969853     0.204146654
+       2.078564229     0.089743383
+     102.000000000     0.056704347
+%endblock NAO2GTO
+#WriteIonPlotFiles .true.
+xc.functional      GGA    # Default vaxc.authors         HSE    # Default value
+xc.authors   HSE06    # Default value
+ElectronicTemperature   25 meV
+MeshCutoff              150. Ry     # Equivalent planewave cutoff for the grid
+MaxSCFIterations        50         # Maximum number of SCF iterations per step
+DM.MixingWeight         0.3         # New DM amount for next SCF cycle
+DM.Tolerance            1.d-4       # Tolerance in maximum difference
+DM.NumberPulay          3          # Number of SCF steps between pulay mixing
+# Eigenvalue problem: order-N or diagonalization
+SolutionMethod          diagon      # OrderN or Diagon
+MD.TypeOfRun            cg          # Type of dynamics:
+MD.NumCGsteps  0
+MD.VariableCell   .false.
+MD.MaxForceTol  0.01 eV/Ang
+#WriteMDXmol   .true.
+WriteForces  .true.
+WriteCoorStep
+HFX.MinimumNumberGaussians                  3
+HFX.MaximumNumberGaussians                  5
+HFX.UseFittedNAOs                 T
+HFX.TruncateDM                    T
+HFX.FarField                      T
+HFX.FarFieldTolerance     0.100E-05
+HFX.PairListTolerance     0.100E-05
+HFX.SchwarzTolerance      0.100E-05
+HFX.StoreERIsTolerance    0.100E-05
+HFX.GaussianEPS                 1.0E-05
+HFX.Dynamic_parallel              T
+HFX.FragSize               100000
+************************** End of input data file *****************************
+
+reinit: -----------------------------------------------------------------------
+reinit: System Name: Bulk Silisin
+reinit: -----------------------------------------------------------------------
+reinit: System Label: Sibulk
+reinit: -----------------------------------------------------------------------
+
+initatom: Reading input for the pseudopotentials and atomic orbitals ----------
+Species number:   1 Atomic number:   14 Label: Si
+ 
+Ground state valence configuration:   3s02  3p02
+Reading pseudopotential information in formatted form from Si.psf
+
+Valence configuration for pseudopotential generation:
+3s( 2.00) rc: 1.89
+3p( 2.00) rc: 1.89
+3d( 0.00) rc: 1.89
+4f( 0.00) rc: 1.89
+For Si, standard SIESTA heuristics set lmxkb to 3
+ (one more than the basis l, including polarization orbitals).
+Use PS.lmax or PS.KBprojectors blocks to override.
+
+<basis_specs>
+===============================================================================
+Si                   Z=  14    Mass=  28.090        Charge= 0.17977+309
+Lmxo=1 Lmxkb= 3    BasisType=split      Semic=F
+L=0  Nsemic=0  Cnfigmx=3
+          i=1  nzeta=2  polorb=0  (3s)
+            splnorm:   0.15000    
+               vcte:    0.0000    
+               rinn:    0.0000    
+               qcoe:    0.0000    
+               qyuk:    0.0000    
+               qwid:   0.10000E-01
+                rcs:    0.0000      0.0000    
+            lambdas:    1.0000      1.0000    
+L=1  Nsemic=0  Cnfigmx=3
+          i=1  nzeta=2  polorb=1  (3p)
+            splnorm:   0.15000    
+               vcte:    0.0000    
+               rinn:    0.0000    
+               qcoe:    0.0000    
+               qyuk:    0.0000    
+               qwid:   0.10000E-01
+                rcs:    0.0000      0.0000    
+            lambdas:    1.0000      1.0000    
+-------------------------------------------------------------------------------
+L=0  Nkbl=1  erefs: 0.17977+309
+L=1  Nkbl=1  erefs: 0.17977+309
+L=2  Nkbl=1  erefs: 0.17977+309
+L=3  Nkbl=1  erefs: 0.17977+309
+===============================================================================
+</basis_specs>
+
+atom: Called for Si                    (Z =  14)
+
+read_vps: Pseudopotential generation method:
+read_vps: ATM3      Troullier-Martins                       
+Valence charge for ps generation:    4.00000
+
+xc_check: Exchange-correlation functional:
+xc_check: Hybrid Heyd-Scuseria-Ernzerhof 2006
+ (JCP 125, 224106, 2006)
+xc_check: WARNING: Pseudopotential generated with GGA PBE functional
+V l=0 = -2*Zval/r beyond r=  2.7826
+V l=1 = -2*Zval/r beyond r=  2.7826
+V l=2 = -2*Zval/r beyond r=  2.7826
+V l=3 = -2*Zval/r beyond r=  2.7826
+All V_l potentials equal beyond r=  1.8652
+This should be close to max(r_c) in ps generation
+All pots = -2*Zval/r beyond r=  2.7826
+Using large-core scheme for Vlocal
+
+atom: Estimated core radius    2.78258
+
+atom: Including non-local core corrections could be a good idea
+atom: Maximum radius for 4*pi*r*r*local-pseudopot. charge    3.07525
+atom: Maximum radius for r*vlocal+2*Zval:    2.81758
+GHOST: No ghost state for L =  0
+GHOST: No ghost state for L =  1
+GHOST: No ghost state for L =  2
+GHOST: No ghost state for L =  3
+
+KBgen: Kleinman-Bylander projectors: 
+   l= 0   rc=  1.936440   el= -0.791474   Ekb=  4.527346   kbcos=  0.300929
+   l= 1   rc=  1.936440   el= -0.300649   Ekb=  1.471620   kbcos=  0.304055
+   l= 2   rc=  1.936440   el=  0.001958   Ekb= -2.865202   kbcos= -0.050894
+   l= 3   rc=  1.936440   el=  0.003046   Ekb= -0.889187   kbcos= -0.005274
+
+KBgen: Total number of Kleinman-Bylander projectors:   16
+atom: -------------------------------------------------------------------------
+
+atom: SANKEY-TYPE ORBITALS:
+atom: Selected multiple-zeta basis: split     
+
+SPLIT: Orbitals with angular momentum L= 0
+
+SPLIT: Basis orbitals for state 3s
+
+SPLIT: PAO cut-off radius determined from an
+SPLIT: energy shift=  0.020000 Ry
+
+   izeta = 1
+                 lambda =    1.000000
+                     rc =    5.007352
+                 energy =   -0.772769
+                kinetic =    0.573186
+    potential(screened) =   -1.345955
+       potential(ionic) =   -3.804540
+
+   izeta = 2
+                 rmatch =    4.418952
+              splitnorm =    0.150000
+                 energy =   -0.675735
+                kinetic =    0.871891
+    potential(screened) =   -1.547626
+       potential(ionic) =   -4.104120
+
+SPLIT: Orbitals with angular momentum L= 1
+
+SPLIT: Basis orbitals for state 3p
+
+SPLIT: PAO cut-off radius determined from an
+SPLIT: energy shift=  0.020000 Ry
+
+   izeta = 1
+                 lambda =    1.000000
+                     rc =    6.270866
+                 energy =   -0.282609
+                kinetic =    0.876409
+    potential(screened) =   -1.159018
+       potential(ionic) =   -3.411547
+
+   izeta = 2
+                 rmatch =    5.007352
+              splitnorm =    0.150000
+                 energy =   -0.188900
+                kinetic =    1.263886
+    potential(screened) =   -1.452786
+       potential(ionic) =   -3.887248
+
+POLgen: Perturbative polarization orbital with L=  2
+
+POLgen: Polarization orbital for state 3p
+
+   izeta = 1
+                     rc =    6.270866
+                 energy =    0.439455
+                kinetic =    1.304724
+    potential(screened) =   -0.865269
+       potential(ionic) =   -2.934348
+atom: Total number of Sankey-type orbitals: 13
+
+atm_pop: Valence configuration (for local Pseudopot. screening):
+ 3s( 2.00)                                                            
+ 3p( 2.00)                                                            
+Vna: chval, zval:    4.00000   4.00000
+
+Vna:  Cut-off radius for the neutral-atom potential:   6.270866
+
+atom: _________________________________________________________________________
+
+prinput: Basis input ----------------------------------------------------------
+
+PAO.BasisType split     
+
+%block ChemicalSpeciesLabel
+    1   14 Si                      # Species index, atomic number, species label
+%endblock ChemicalSpeciesLabel
+
+%block PAO.Basis                 # Define Basis set
+Si                    2                    # Species label, number of l-shells
+ n=3   0   2                         # n, l, Nzeta 
+   5.007      4.419   
+   1.000      1.000   
+ n=3   1   2 P   1                   # n, l, Nzeta, Polarization, NzetaPol
+   6.271      5.007   
+   1.000      1.000   
+%endblock PAO.Basis
+
+prinput: ----------------------------------------------------------------------
+
+************************ Begin: HYBRID XC INITIALIZATION **********************
+
+nao2gto_transfer: isp, inlz, ipgf, pgf_radius =     1    1    1     8.00770
+nao2gto_transfer: isp, inlz, ipgf, pgf_radius =     1    1    2     2.83885
+nao2gto_transfer: isp, inlz, ipgf, pgf_radius =     1    1    3     2.39926
+nao2gto_transfer: isp, inlz, ipgf, pgf_radius =     1    1    4     2.02775
+nao2gto_transfer: isp, inlz, ipgf, pgf_radius =     1    1    5     1.71376
+nao2gto_transfer: isp, inlz, shell_radius =     1    1     8.00770     5.00735
+nao2gto_transfer: isp, inlz, ipgf, pgf_radius =     1    2    1     5.86225
+nao2gto_transfer: isp, inlz, ipgf, pgf_radius =     1    2    2     4.95450
+nao2gto_transfer: isp, inlz, ipgf, pgf_radius =     1    2    3     2.47216
+nao2gto_transfer: isp, inlz, ipgf, pgf_radius =     1    2    4     2.08936
+nao2gto_transfer: isp, inlz, ipgf, pgf_radius =     1    2    5     1.76583
+nao2gto_transfer: isp, inlz, shell_radius =     1    2     5.86225     4.41895
+nao2gto_transfer: isp, inlz, ipgf, pgf_radius =     1    3    1     9.58222
+nao2gto_transfer: isp, inlz, ipgf, pgf_radius =     1    3    2     4.35545
+nao2gto_transfer: isp, inlz, ipgf, pgf_radius =     1    3    3     3.65613
+nao2gto_transfer: isp, inlz, ipgf, pgf_radius =     1    3    4     3.06880
+nao2gto_transfer: isp, inlz, shell_radius =     1    3     9.58222     6.27087
+nao2gto_transfer: isp, inlz, ipgf, pgf_radius =     1    4    1     7.43383
+nao2gto_transfer: isp, inlz, ipgf, pgf_radius =     1    4    2     3.76609
+nao2gto_transfer: isp, inlz, ipgf, pgf_radius =     1    4    3     3.16115
+nao2gto_transfer: isp, inlz, ipgf, pgf_radius =     1    4    4     2.65311
+nao2gto_transfer: isp, inlz, shell_radius =     1    4     7.43383     5.00735
+nao2gto_transfer: isp, inlz, ipgf, pgf_radius =     1    5    1     7.79657
+nao2gto_transfer: isp, inlz, ipgf, pgf_radius =     1    5    2     2.53664
+nao2gto_transfer: isp, inlz, ipgf, pgf_radius =     1    5    3     0.29862
+nao2gto_transfer: isp, inlz, shell_radius =     1    5     7.79657     6.27087
+nao2gto_transfer: isp, kind_radius =     1     9.58222
+
+nao2gto_print_info: NAO2GTO fitting information -------------------------------
+
+# %%% HYBRID XC FDF BEGIN
+
+# XC parameters with a short-range EXX potential
+XC.functional   GGA
+XC.authors      HSE06
+
+# The NAO2GTO block is structured as following:
+#
+#     species1 norbs_species1
+#     n1 l1 zeta1 ngaussians_orbital1
+#     exponent_gaussian1 coefficient_gaussian1
+#     exponent_gaussian2 coefficient_gaussian2
+#     exponent_gaussian3 coefficient_gaussian3
+#     ...
+#     n2 l2 zeta2 ngaussians_orbital2
+#     exponent_gaussian1 coefficient_gaussian1
+#     ...
+#     species2 norbs_species2
+#     ...
+#
+%block NAO2GTO
+Si   5
+3  0  1  5
+    0.17954376E+00     0.76652982E+00
+    0.14285714E+01    -0.73830234E+00
+    0.20000000E+01    -0.10045668E+01
+    0.28000000E+01     0.19824365E+01
+    0.39200000E+01    -0.73661645E+00
+3  0  2  5
+    0.33500954E+00     0.27459192E+01
+    0.46901336E+00    -0.20596831E+01
+    0.18837899E+01    -0.27676280E+01
+    0.26373058E+01     0.33858760E+01
+    0.36922281E+01    -0.10911023E+01
+3  1  1  4
+    0.15000000E+00     0.23647675E+00
+    0.68447084E+00     0.80326530E+00
+    0.95825918E+00    -0.96100258E+00
+    0.13415629E+01     0.31103267E+00
+3  1  2  4
+    0.24463509E+00     0.48642072E+00
+    0.90520820E+00     0.36197071E+00
+    0.12672915E+01    -0.57094216E+00
+    0.17742081E+01     0.21918727E+00
+3  2  1  3
+    0.25696985E+00     0.20414665E+00
+    0.20785642E+01     0.89743383E-01
+    0.10200000E+03     0.56704347E-01
+%endblock NAO2GTO
+
+# Hartree-Fock exchange options
+HFX.UseFittedNAOs                    T
+HFX.TruncateDM                    T
+HFX.DumpFitData                   T
+HFX.FarField                      T
+HFX.FitDataPoints               500
+HFX.FarFieldTolerance     0.100E-05
+HFX.PairListTolerance     0.100E-05
+HFX.SchwarzTolerance      0.100E-05
+HFX.StoreERIsTolerance    0.100E-05
+HFX.Omega                 0.110E+00
+HFX.MaximumNumberGaussians-S                  6
+HFX.MaximumNumberGaussians-P                  5
+HFX.MaximumNumberGaussians-D                  4
+HFX.SeparationExponents                 0.140E+01
+HFX.ToleranceFit                 0.100E-02
+HFX.GaussianEPS                 0.100E-04
+HFX.Dynamic_parallel                    T
+HFX.FragSize              100000
+
+# %%% HYBRID XC FDF END
+
+nao2gto_print_info: END -------------------------------------------------------
+
+Si   5
+************************ End: HYBRID XC INITIALIZATION ************************
+
+coor:   Atomic-coordinates input format  =     Fractional
+
+siesta: Atomic coordinates (Bohr) and species
+siesta:      0.00000   0.00000   0.00000  1        1
+siesta:      0.00000   5.13061   5.13061  1        2
+siesta:      5.13061   0.00000   5.13061  1        3
+siesta:      5.13061   5.13061   0.00000  1        4
+siesta:      7.69591   2.56530   7.69591  1        5
+siesta:      2.56530   2.56530   2.56530  1        6
+siesta:      2.56530   7.69591   7.69591  1        7
+siesta:      7.69591   7.69591   2.56530  1        8
+siesta:     10.26122   0.00000   0.00000  1        9
+siesta:     10.26122   5.13061   5.13061  1       10
+siesta:     15.39183   0.00000   5.13061  1       11
+siesta:     15.39183   5.13061   0.00000  1       12
+siesta:     17.95713   2.56530   7.69591  1       13
+siesta:     12.82652   2.56530   2.56530  1       14
+siesta:     12.82652   7.69591   7.69591  1       15
+siesta:     17.95713   7.69591   2.56530  1       16
+siesta:      0.00000  10.26122   0.00000  1       17
+siesta:      0.00000  15.39183   5.13061  1       18
+siesta:      5.13061  10.26122   5.13061  1       19
+siesta:      5.13061  15.39183   0.00000  1       20
+siesta:      7.69591  12.82652   7.69591  1       21
+siesta:      2.56530  12.82652   2.56530  1       22
+siesta:      2.56530  17.95713   7.69591  1       23
+siesta:      7.69591  17.95713   2.56530  1       24
+siesta:     10.26122  10.26122   0.00000  1       25
+siesta:     10.26122  15.39183   5.13061  1       26
+siesta:     15.39183  10.26122   5.13061  1       27
+siesta:     15.39183  15.39183   0.00000  1       28
+siesta:     17.95713  12.82652   7.69591  1       29
+siesta:     12.82652  12.82652   2.56530  1       30
+siesta:     12.82652  17.95713   7.69591  1       31
+siesta:     17.95713  17.95713   2.56530  1       32
+siesta:      0.00000   0.00000  10.26122  1       33
+siesta:      0.00000   5.13061  15.39183  1       34
+siesta:      5.13061   0.00000  15.39183  1       35
+siesta:      5.13061   5.13061  10.26122  1       36
+siesta:      7.69591   2.56530  17.95713  1       37
+siesta:      2.56530   2.56530  12.82652  1       38
+siesta:      2.56530   7.69591  17.95713  1       39
+siesta:      7.69591   7.69591  12.82652  1       40
+siesta:     10.26122   0.00000  10.26122  1       41
+siesta:     10.26122   5.13061  15.39183  1       42
+siesta:     15.39183   0.00000  15.39183  1       43
+siesta:     15.39183   5.13061  10.26122  1       44
+siesta:     17.95713   2.56530  17.95713  1       45
+siesta:     12.82652   2.56530  12.82652  1       46
+siesta:     12.82652   7.69591  17.95713  1       47
+siesta:     17.95713   7.69591  12.82652  1       48
+siesta:      0.00000  10.26122  10.26122  1       49
+siesta:      0.00000  15.39183  15.39183  1       50
+siesta:      5.13061  10.26122  15.39183  1       51
+siesta:      5.13061  15.39183  10.26122  1       52
+siesta:      7.69591  12.82652  17.95713  1       53
+siesta:      2.56530  12.82652  12.82652  1       54
+siesta:      2.56530  17.95713  17.95713  1       55
+siesta:      7.69591  17.95713  12.82652  1       56
+siesta:     10.26122  10.26122  10.26122  1       57
+siesta:     10.26122  15.39183  15.39183  1       58
+siesta:     15.39183  10.26122  15.39183  1       59
+siesta:     15.39183  15.39183  10.26122  1       60
+siesta:     17.95713  12.82652  17.95713  1       61
+siesta:     12.82652  12.82652  12.82652  1       62
+siesta:     12.82652  17.95713  17.95713  1       63
+siesta:     17.95713  17.95713  12.82652  1       64
+
+siesta: System type = bulk      
+
+initatomlists: Number of atoms, orbitals, and projectors:     64   832  1024
+
+siesta: ******************** Simulation parameters ****************************
+siesta:
+siesta: The following are some of the parameters of the simulation.
+siesta: A complete list of the parameters used, including default values,
+siesta: can be found in file out.fdf
+siesta:
+redata: Spin configuration                          = none
+redata: Number of spin components                   = 1
+redata: Time-Reversal Symmetry                      = T
+redata: Spin spiral                                 = F
+redata: Long output                                 =   F
+redata: Number of Atomic Species                    =        1
+redata: Charge density info will appear in .RHO file
+redata: Write Mulliken Pop.                         = NO
+redata: Matel table size (NRTAB)                    =     1024
+redata: Mesh Cutoff                                 =   150.0000 Ry
+redata: Net charge of the system                    =     0.0000 |e|
+redata: Min. number of SCF Iter                     =        0
+redata: Max. number of SCF Iter                     =       50
+redata: SCF convergence failure will abort job
+redata: SCF mix quantity                            = Hamiltonian
+redata: Mix DM or H after convergence               =   F
+redata: Recompute H after scf cycle                 =   F
+redata: Mix DM in first SCF step                    =   T
+redata: Write Pulay info on disk                    =   F
+redata: New DM Occupancy tolerance                  = 0.000000000001
+redata: No kicks to SCF
+redata: DM Mixing Weight for Kicks                  =     0.5000
+redata: Require Harris convergence for SCF          =   F
+redata: Harris energy tolerance for SCF             =     0.000100 eV
+redata: Require DM convergence for SCF              =   T
+redata: DM tolerance for SCF                        =     0.000100
+redata: Require EDM convergence for SCF             =   F
+redata: EDM tolerance for SCF                       =     0.001000 eV
+redata: Require H convergence for SCF               =   T
+redata: Hamiltonian tolerance for SCF               =     0.001000 eV
+redata: Require (free) Energy convergence for SCF   =   F
+redata: (free) Energy tolerance for SCF             =     0.000100 eV
+redata: Using Saved Data (generic)                  =   F
+redata: Use continuation files for DM               =   F
+redata: Neglect nonoverlap interactions             =   F
+redata: Method of Calculation                       = Diagonalization
+redata: Electronic Temperature                      =   290.1109 K
+redata: Fix the spin of the system                  =   F
+redata: Dynamics option                             = Single-point calculation
+mix.SCF: Pulay mixing                            = Pulay
+mix.SCF:    Variant                              = stable
+mix.SCF:    History steps                        = 3
+mix.SCF:    Linear mixing weight                 =     0.300000
+mix.SCF:    Mixing weight                        =     0.300000
+mix.SCF:    SVD condition                        = 0.1000E-07
+redata: ***********************************************************************
+
+%block SCF.Mixers
+  Pulay
+%endblock SCF.Mixers
+
+%block SCF.Mixer.Pulay
+  # Mixing method
+  method pulay
+  variant stable
+
+  # Mixing options
+  weight 0.3000
+  weight.linear 0.3000
+  history 3
+%endblock SCF.Mixer.Pulay
+ 
+DM_history_depth set to one: no extrapolation allowed by default for geometry relaxation
+Size of DM history Fstack: 1
+Total number of electrons:   256.000000
+Total ionic charge:   256.000000
+
+* ProcessorY, Blocksize:    8   6
+
+
+* Orbital distribution balance (max,min):    12     6
+
+ Kpoints in:            1 . Kpoints trimmed:            1
+
+siesta: k-grid: Number of k-points =     1
+siesta: k-grid: Cutoff (effective) =     5.430 Ang
+siesta: k-grid: Supercell and displacements
+siesta: k-grid:    1   0   0      0.000
+siesta: k-grid:    0   1   0      0.000
+siesta: k-grid:    0   0   1      0.000
+ 
+diag: Algorithm                                     = D&C
+diag: Parallel over k                               =   F
+diag: Use parallel 2D distribution                  =   T
+diag: Parallel block-size                           = 6
+diag: Parallel distribution                         =     8 x    16
+diag: Used triangular part                          = Lower
+diag: Absolute tolerance                            =  0.100E-15
+diag: Orthogonalization factor                      =  0.100E-05
+diag: Memory factor                                 =  1.0000
+ 
+ 
+ts: **************************************************************
+ts: Save H and S matrices                           =    F
+ts: Save DM and EDM matrices                        =    F
+ts: Only save the overlap matrix S                  =    F
+ts: **************************************************************
+ 
+************************ Begin: TS CHECKS AND WARNINGS ************************
+************************ End: TS CHECKS AND WARNINGS **************************
+
+
+                     ====================================
+                        Single-point calculation
+                     ====================================
+
+outcoor: Atomic coordinates (fractional):                   
+    0.00000000    0.00000000    0.00000000   1       1  Si
+    0.00000000    0.25000000    0.25000000   1       2  Si
+    0.25000000    0.00000000    0.25000000   1       3  Si
+    0.25000000    0.25000000    0.00000000   1       4  Si
+    0.37500000    0.12500000    0.37500000   1       5  Si
+    0.12500000    0.12500000    0.12500000   1       6  Si
+    0.12500000    0.37500000    0.37500000   1       7  Si
+    0.37500000    0.37500000    0.12500000   1       8  Si
+    0.50000000    0.00000000    0.00000000   1       9  Si
+    0.50000000    0.25000000    0.25000000   1      10  Si
+    0.75000000    0.00000000    0.25000000   1      11  Si
+    0.75000000    0.25000000    0.00000000   1      12  Si
+    0.87500000    0.12500000    0.37500000   1      13  Si
+    0.62500000    0.12500000    0.12500000   1      14  Si
+    0.62500000    0.37500000    0.37500000   1      15  Si
+    0.87500000    0.37500000    0.12500000   1      16  Si
+    0.00000000    0.50000000    0.00000000   1      17  Si
+    0.00000000    0.75000000    0.25000000   1      18  Si
+    0.25000000    0.50000000    0.25000000   1      19  Si
+    0.25000000    0.75000000    0.00000000   1      20  Si
+    0.37500000    0.62500000    0.37500000   1      21  Si
+    0.12500000    0.62500000    0.12500000   1      22  Si
+    0.12500000    0.87500000    0.37500000   1      23  Si
+    0.37500000    0.87500000    0.12500000   1      24  Si
+    0.50000000    0.50000000    0.00000000   1      25  Si
+    0.50000000    0.75000000    0.25000000   1      26  Si
+    0.75000000    0.50000000    0.25000000   1      27  Si
+    0.75000000    0.75000000    0.00000000   1      28  Si
+    0.87500000    0.62500000    0.37500000   1      29  Si
+    0.62500000    0.62500000    0.12500000   1      30  Si
+    0.62500000    0.87500000    0.37500000   1      31  Si
+    0.87500000    0.87500000    0.12500000   1      32  Si
+    0.00000000    0.00000000    0.50000000   1      33  Si
+    0.00000000    0.25000000    0.75000000   1      34  Si
+    0.25000000    0.00000000    0.75000000   1      35  Si
+    0.25000000    0.25000000    0.50000000   1      36  Si
+    0.37500000    0.12500000    0.87500000   1      37  Si
+    0.12500000    0.12500000    0.62500000   1      38  Si
+    0.12500000    0.37500000    0.87500000   1      39  Si
+    0.37500000    0.37500000    0.62500000   1      40  Si
+    0.50000000    0.00000000    0.50000000   1      41  Si
+    0.50000000    0.25000000    0.75000000   1      42  Si
+    0.75000000    0.00000000    0.75000000   1      43  Si
+    0.75000000    0.25000000    0.50000000   1      44  Si
+    0.87500000    0.12500000    0.87500000   1      45  Si
+    0.62500000    0.12500000    0.62500000   1      46  Si
+    0.62500000    0.37500000    0.87500000   1      47  Si
+    0.87500000    0.37500000    0.62500000   1      48  Si
+    0.00000000    0.50000000    0.50000000   1      49  Si
+    0.00000000    0.75000000    0.75000000   1      50  Si
+    0.25000000    0.50000000    0.75000000   1      51  Si
+    0.25000000    0.75000000    0.50000000   1      52  Si
+    0.37500000    0.62500000    0.87500000   1      53  Si
+    0.12500000    0.62500000    0.62500000   1      54  Si
+    0.12500000    0.87500000    0.87500000   1      55  Si
+    0.37500000    0.87500000    0.62500000   1      56  Si
+    0.50000000    0.50000000    0.50000000   1      57  Si
+    0.50000000    0.75000000    0.75000000   1      58  Si
+    0.75000000    0.50000000    0.75000000   1      59  Si
+    0.75000000    0.75000000    0.50000000   1      60  Si
+    0.87500000    0.62500000    0.87500000   1      61  Si
+    0.62500000    0.62500000    0.62500000   1      62  Si
+    0.62500000    0.87500000    0.87500000   1      63  Si
+    0.87500000    0.87500000    0.62500000   1      64  Si
+
+outcell: Unit cell vectors (Ang):
+       10.860000    0.000000    0.000000
+        0.000000   10.860000    0.000000
+        0.000000    0.000000   10.860000
+
+outcell: Cell vector modules (Ang)   :   10.860000   10.860000   10.860000
+outcell: Cell angles (23,13,12) (deg):     90.0000     90.0000     90.0000
+outcell: Cell volume (Ang**3)        :   1280.8241
+Gamma-point calculation with interaction between periodic images
+Some features might not work optimally:
+e.g. DM initialization from atomic data
+<dSpData1D:S at geom step 0
+  <sparsity:sparsity for geom step 0
+    nrows_g=832 nrows=12 sparsity=.0143 nnzs=9904, refcount: 7>
+  <dData1D:(new from dSpData1D) n=9904, refcount: 1>
+refcount: 1>
+new_DM -- step:     1
+Initializing Density Matrix...
+DM filled with atomic data:
+<dSpData2D:DM initialized from atoms
+  <sparsity:sparsity for geom step 0
+    nrows_g=832 nrows=12 sparsity=.0143 nnzs=9904, refcount: 8>
+  <dData2D:DM n=9904 m=1, refcount: 1>
+refcount: 1>
+calc_prescreen_eri: max_eri_prescreen      0.85612557E+00
+init_prescreen_eri: nelem_ij =       346528
+init_prescreen_eri: nelem_kl =       346528
+init_prescreen_eri: list_ij  :        35744
+init_prescreen_eri: list_kl  :        35744
+init_prescreen_eri: max_eri =         0.856126E+00
+No. of atoms with KB's overlaping orbs in proc 0. Max # of overlaps:      58     419
+New grid distribution:   1
+           1       1:   45    1:    6    1:    3
+           2       1:   45    1:    6    4:    6
+           3       1:   45    1:    6    7:    9
+           4       1:   45    1:    6   10:   12
+           5       1:   45    1:    6   13:   15
+           6       1:   45    1:    6   16:   18
+           7       1:   45    1:    6   19:   21
+           8       1:   45    1:    6   22:   24
+           9       1:   45    1:    6   25:   27
+          10       1:   45    1:    6   28:   30
+          11       1:   45    1:    6   31:   33
+          12       1:   45    1:    6   34:   36
+          13       1:   45    1:    6   37:   39
+          14       1:   45    1:    6   40:   41
+          15       1:   45    1:    6   42:   43
+          16       1:   45    1:    6   44:   45
+          17       1:   45    7:   12    1:    3
+          18       1:   45    7:   12    4:    6
+          19       1:   45    7:   12    7:    9
+          20       1:   45    7:   12   10:   12
+          21       1:   45    7:   12   13:   15
+          22       1:   45    7:   12   16:   18
+          23       1:   45    7:   12   19:   21
+          24       1:   45    7:   12   22:   24
+          25       1:   45    7:   12   25:   27
+          26       1:   45    7:   12   28:   30
+          27       1:   45    7:   12   31:   33
+          28       1:   45    7:   12   34:   36
+          29       1:   45    7:   12   37:   39
+          30       1:   45    7:   12   40:   41
+          31       1:   45    7:   12   42:   43
+          32       1:   45    7:   12   44:   45
+          33       1:   45   13:   18    1:    3
+          34       1:   45   13:   18    4:    6
+          35       1:   45   13:   18    7:    9
+          36       1:   45   13:   18   10:   12
+          37       1:   45   13:   18   13:   15
+          38       1:   45   13:   18   16:   18
+          39       1:   45   13:   18   19:   21
+          40       1:   45   13:   18   22:   24
+          41       1:   45   13:   18   25:   27
+          42       1:   45   13:   18   28:   30
+          43       1:   45   13:   18   31:   33
+          44       1:   45   13:   18   34:   36
+          45       1:   45   13:   18   37:   39
+          46       1:   45   13:   18   40:   41
+          47       1:   45   13:   18   42:   43
+          48       1:   45   13:   18   44:   45
+          49       1:   45   19:   24    1:    3
+          50       1:   45   19:   24    4:    6
+          51       1:   45   19:   24    7:    9
+          52       1:   45   19:   24   10:   12
+          53       1:   45   19:   24   13:   15
+          54       1:   45   19:   24   16:   18
+          55       1:   45   19:   24   19:   21
+          56       1:   45   19:   24   22:   24
+          57       1:   45   19:   24   25:   27
+          58       1:   45   19:   24   28:   30
+          59       1:   45   19:   24   31:   33
+          60       1:   45   19:   24   34:   36
+          61       1:   45   19:   24   37:   39
+          62       1:   45   19:   24   40:   41
+          63       1:   45   19:   24   42:   43
+          64       1:   45   19:   24   44:   45
+          65       1:   45   25:   30    1:    3
+          66       1:   45   25:   30    4:    6
+          67       1:   45   25:   30    7:    9
+          68       1:   45   25:   30   10:   12
+          69       1:   45   25:   30   13:   15
+          70       1:   45   25:   30   16:   18
+          71       1:   45   25:   30   19:   21
+          72       1:   45   25:   30   22:   24
+          73       1:   45   25:   30   25:   27
+          74       1:   45   25:   30   28:   30
+          75       1:   45   25:   30   31:   33
+          76       1:   45   25:   30   34:   36
+          77       1:   45   25:   30   37:   39
+          78       1:   45   25:   30   40:   41
+          79       1:   45   25:   30   42:   43
+          80       1:   45   25:   30   44:   45
+          81       1:   45   31:   35    1:    3
+          82       1:   45   31:   35    4:    6
+          83       1:   45   31:   35    7:    9
+          84       1:   45   31:   35   10:   12
+          85       1:   45   31:   35   13:   15
+          86       1:   45   31:   35   16:   18
+          87       1:   45   31:   35   19:   21
+          88       1:   45   31:   35   22:   24
+          89       1:   45   31:   35   25:   27
+          90       1:   45   31:   35   28:   30
+          91       1:   45   31:   35   31:   33
+          92       1:   45   31:   35   34:   36
+          93       1:   45   31:   35   37:   39
+          94       1:   45   31:   35   40:   41
+          95       1:   45   31:   35   42:   43
+          96       1:   45   31:   35   44:   45
+          97       1:   45   36:   40    1:    3
+          98       1:   45   36:   40    4:    6
+          99       1:   45   36:   40    7:    9
+         100       1:   45   36:   40   10:   12
+         101       1:   45   36:   40   13:   15
+         102       1:   45   36:   40   16:   18
+         103       1:   45   36:   40   19:   21
+         104       1:   45   36:   40   22:   24
+         105       1:   45   36:   40   25:   27
+         106       1:   45   36:   40   28:   30
+         107       1:   45   36:   40   31:   33
+         108       1:   45   36:   40   34:   36
+         109       1:   45   36:   40   37:   39
+         110       1:   45   36:   40   40:   41
+         111       1:   45   36:   40   42:   43
+         112       1:   45   36:   40   44:   45
+         113       1:   45   41:   45    1:    3
+         114       1:   45   41:   45    4:    6
+         115       1:   45   41:   45    7:    9
+         116       1:   45   41:   45   10:   12
+         117       1:   45   41:   45   13:   15
+         118       1:   45   41:   45   16:   18
+         119       1:   45   41:   45   19:   21
+         120       1:   45   41:   45   22:   24
+         121       1:   45   41:   45   25:   27
+         122       1:   45   41:   45   28:   30
+         123       1:   45   41:   45   31:   33
+         124       1:   45   41:   45   34:   36
+         125       1:   45   41:   45   37:   39
+         126       1:   45   41:   45   40:   41
+         127       1:   45   41:   45   42:   43
+         128       1:   45   41:   45   44:   45
+
+InitMesh: MESH =    90 x    90 x    90 =      729000
+InitMesh: (bp) =    45 x    45 x    45 =       91125
+InitMesh: Mesh cutoff (required, used) =   150.000   189.813 Ry
+ExtMesh (bp) on 0 =   133 x    94 x    91 =     1137682
+New grid distribution:   2
+           1       1:   12    1:   11   17:   22
+           2       1:   11   24:   34    1:    6
+           3      35:   45    1:   12    6:   11
+           4      34:   45   24:   34    1:    5
+           5      35:   45    1:   12   12:   17
+           6       1:   11    1:   11   29:   34
+           7      35:   45   35:   45    1:    6
+           8      34:   45    1:   11   23:   27
+           9       1:   11    1:   11   23:   28
+          10      34:   45    1:   11   28:   33
+          11      35:   45   24:   34   12:   17
+          12      23:   34   12:   22   23:   27
+          13      12:   22    1:   11   35:   40
+          14      23:   34    1:   11   40:   45
+          15       1:   11    1:   11    1:    6
+          16      12:   22    1:   11   41:   45
+          17      24:   34    1:   12    1:    6
+          18      35:   45    1:   11   40:   45
+          19       1:   11    1:   11    7:   11
+          20      12:   23   12:   23   12:   16
+          21      13:   23    1:   11   12:   17
+          22      13:   23    1:   11   18:   22
+          23      24:   34    1:   12   17:   22
+          24      12:   22    1:   11   23:   28
+          25      24:   34    1:   12    7:   11
+          26       1:   11    1:   11   35:   39
+          27      12:   22    1:   11   29:   34
+          28      23:   34    1:   11   34:   39
+          29      34:   45   35:   45   34:   39
+          30       1:   11    1:   11   40:   45
+          31       1:   11   23:   34   29:   33
+          32       1:   11   35:   45   23:   27
+          33      23:   33   12:   22   34:   39
+          34       1:   12   12:   23    1:    5
+          35       1:   12   12:   23    6:   11
+          36      35:   45   13:   23   12:   16
+          37      24:   34   13:   23   12:   17
+          38       1:   11   24:   34    7:   11
+          39      12:   23   12:   23   17:   22
+          40      12:   22   12:   22   23:   28
+          41      12:   23    1:   11    1:    5
+          42      35:   45   12:   22   29:   33
+          43      12:   22   12:   22   29:   34
+          44      34:   45   12:   22   34:   39
+          45       1:   11   12:   22   35:   40
+          46      34:   45   12:   22   40:   45
+          47       1:   11   12:   23   18:   22
+          48       1:   11   12:   22   41:   45
+          49      12:   23    1:   11    6:   11
+          50      23:   33   35:   45   34:   39
+          51      24:   34   13:   23    6:   11
+          52       1:   11   24:   34   12:   16
+          53       1:   11   12:   23   12:   17
+          54      12:   22   24:   34    1:    5
+          55      35:   45   13:   23   17:   22
+          56       1:   11   12:   22   23:   28
+          57      35:   45    1:   12   18:   22
+          58      23:   34   12:   22   28:   33
+          59       1:   11   12:   22   29:   34
+          60      12:   22   35:   45    7:   11
+          61      34:   45   35:   45   40:   45
+          62      23:   33   12:   22   40:   45
+          63      24:   34    1:   12   12:   16
+          64      12:   22   12:   22   41:   45
+          65      12:   22   12:   22   35:   40
+          66      23:   33   24:   34    1:    6
+          67      34:   45   24:   34    6:   11
+          68      23:   33   24:   34    7:   11
+          69      23:   33    1:   11   23:   28
+          70      12:   22   24:   34   12:   17
+          71      35:   45   24:   34   18:   22
+          72       1:   11   23:   34   23:   28
+          73      12:   22   23:   34   23:   27
+          74      34:   45   23:   33   28:   33
+          75      23:   33   23:   33   29:   33
+          76      23:   34   23:   34   34:   39
+          77       1:   12    1:   11   12:   16
+          78      23:   34   23:   34   40:   45
+          79      12:   22   23:   33   40:   45
+          80       1:   11   35:   45    1:    5
+          81      35:   45   23:   34   40:   45
+          82      12:   22   23:   33   34:   39
+          83      12:   22   24:   34    6:   11
+          84      35:   45   35:   45    7:   11
+          85      23:   34   24:   34   12:   16
+          86       1:   11   24:   34   17:   22
+          87      23:   34   24:   34   17:   22
+          88      23:   33   23:   33   23:   28
+          89      34:   45   23:   33   23:   27
+          90      12:   22   23:   34   28:   33
+          91      23:   33    1:   11   29:   33
+          92       1:   11   23:   33   34:   39
+          93      35:   45   23:   34   34:   39
+          94       1:   11   23:   33   40:   45
+          95      13:   23   12:   23    7:   11
+          96      35:   45   13:   23    7:   11
+          97      35:   45    1:   11   34:   39
+          98      12:   22   35:   45    1:    6
+          99      23:   34   35:   45    6:   11
+         100      34:   45   35:   45   12:   16
+         101      35:   45   12:   22   23:   28
+         102      23:   33   35:   45   12:   17
+         103      34:   45   35:   45   17:   22
+         104      23:   33   35:   45   18:   22
+         105      12:   22   35:   45   23:   28
+         106      23:   34   34:   45   28:   33
+         107      35:   45   34:   45   29:   33
+         108      24:   34   13:   23    1:    5
+         109      35:   45    1:   12    1:    5
+         110       1:   11   34:   45   40:   45
+         111      12:   22   34:   45   40:   45
+         112      24:   34   13:   23   18:   22
+         113      13:   23   12:   23    1:    6
+         114      35:   45   13:   23    1:    6
+         115       1:   11   35:   45    6:   11
+         116      12:   22   35:   45   12:   16
+         117       1:   11   35:   45   12:   17
+         118       1:   11   35:   45   18:   22
+         119      12:   22   35:   45   17:   22
+         120      35:   45   34:   45   23:   28
+         121      23:   34   34:   45   23:   27
+         122       1:   11   35:   45   28:   33
+         123      12:   22   35:   45   29:   33
+         124       1:   11   34:   45   34:   39
+         125      12:   22   34:   45   34:   39
+         126      23:   33   35:   45   40:   45
+         127      23:   34   35:   45    1:    5
+         128      12:   22   24:   34   18:   22
+New grid distribution:   3
+           1       1:   12    1:   12    1:    6
+           2      24:   34    1:   12    1:    6
+           3      35:   45   24:   34   35:   40
+           4      24:   34    1:   12   30:   34
+           5       1:   12    1:   12   13:   18
+           6      13:   23    1:   12   13:   18
+           7      13:   23   35:   45   13:   18
+           8      35:   45    1:   12   19:   23
+           9       1:   12    1:   12   24:   29
+          10      13:   23   13:   23   13:   18
+          11      35:   45   24:   34    7:   12
+          12      35:   45    1:   12   30:   34
+          13       1:   12    1:   12   35:   40
+          14      35:   45   13:   23    1:    6
+          15       1:   12    1:   12   41:   45
+          16      13:   23   35:   45   30:   34
+          17      13:   23    1:   12    1:    6
+          18       1:   12   35:   45   30:   34
+          19       1:   12    1:   12    7:   12
+          20      24:   34   13:   23   30:   34
+          21      35:   45    1:   12   13:   18
+          22      24:   34   13:   23    7:   12
+          23       1:   12    1:   12   19:   23
+          24      35:   45   13:   23   30:   34
+          25      13:   23    1:   12   24:   29
+          26      13:   23   35:   45    7:   12
+          27       1:   12    1:   12   30:   34
+          28      13:   23    1:   12   30:   34
+          29      24:   34    1:   12   13:   18
+          30      35:   45   35:   45   24:   29
+          31      24:   34    1:   12   41:   45
+          32      24:   34   13:   23   41:   45
+          33      35:   45    1:   12   35:   40
+          34      13:   23   13:   23    1:    6
+          35      35:   45   13:   23    7:   12
+          36      35:   45   24:   34   19:   23
+          37      24:   34    1:   12   24:   29
+          38      35:   45   13:   23   13:   18
+          39      24:   34   13:   23   19:   23
+          40      13:   23   13:   23   24:   29
+          41       1:   12   13:   23   24:   29
+          42      35:   45   13:   23   24:   29
+          43      35:   45    1:   12   41:   45
+          44      13:   23   13:   23   30:   34
+          45       1:   12   13:   23   35:   40
+          46      13:   23   13:   23   35:   40
+          47       1:   12   13:   23   41:   45
+          48      35:   45   13:   23   41:   45
+          49      13:   23    1:   12   35:   40
+          50      35:   45   24:   34    1:    6
+          51      13:   23   13:   23    7:   12
+          52      13:   23   35:   45   41:   45
+          53      24:   34    1:   12   35:   40
+          54      13:   23   24:   34   13:   18
+          55      35:   45   13:   23   19:   23
+          56      24:   34   13:   23   24:   29
+          57      35:   45    1:   12   24:   29
+          58      13:   23   24:   34   30:   34
+          59       1:   12   24:   34   30:   34
+          60      35:   45   13:   23   35:   40
+          61      35:   45    1:   12    7:   12
+          62      24:   34   13:   23   35:   40
+          63      13:   23    1:   12   19:   23
+          64      13:   23   13:   23   41:   45
+          65       1:   12   24:   34    1:    6
+          66      13:   23   24:   34    1:    6
+          67      24:   34   24:   34    7:   12
+          68      24:   34   24:   34   19:   23
+          69       1:   12   24:   34   13:   18
+          70      24:   34   24:   34   13:   18
+          71       1:   12   24:   34   19:   23
+          72      35:   45   24:   34   24:   29
+          73       1:   12   24:   34   24:   29
+          74      24:   34   24:   34   24:   29
+          75      24:   34   24:   34   30:   34
+          76      13:   23   24:   34   35:   40
+          77       1:   12   24:   34   35:   40
+          78      24:   34   13:   23    1:    6
+          79       1:   12   24:   34   41:   45
+          80      35:   45   24:   34   41:   45
+          81      24:   34   24:   34    1:    6
+          82      35:   45   35:   45   19:   23
+          83       1:   12   24:   34    7:   12
+          84      13:   23   24:   34    7:   12
+          85      35:   45    1:   12    1:    6
+          86      35:   45   24:   34   13:   18
+          87       1:   12   13:   23   19:   23
+          88      13:   23   24:   34   19:   23
+          89       1:   12   13:   23   13:   18
+          90      13:   23   24:   34   24:   29
+          91      35:   45   24:   34   30:   34
+          92      24:   34   24:   34   35:   40
+          93       1:   12   13:   23    7:   12
+          94      13:   23   35:   45    1:    6
+          95       1:   12   13:   23   30:   34
+          96      24:   34   24:   34   41:   45
+          97       1:   12   35:   45    1:    6
+          98      24:   34   35:   45    1:    6
+          99      35:   45   35:   45    7:   12
+         100      13:   23   13:   23   19:   23
+         101       1:   12   35:   45   13:   18
+         102      24:   34   35:   45   13:   18
+         103       1:   12   35:   45   19:   23
+         104      13:   23   35:   45   19:   23
+         105       1:   12   35:   45   24:   29
+         106      24:   34   35:   45   24:   29
+         107      24:   34   35:   45   30:   34
+         108      13:   23   35:   45   35:   40
+         109       1:   12   35:   45   35:   40
+         110      24:   34   35:   45   35:   40
+         111       1:   12   35:   45   41:   45
+         112      35:   45   35:   45   41:   45
+         113      35:   45   35:   45    1:    6
+         114      13:   23   24:   34   41:   45
+         115       1:   12   35:   45    7:   12
+         116      24:   34   35:   45    7:   12
+         117      24:   34    1:   12    7:   12
+         118      35:   45   35:   45   13:   18
+         119      13:   23    1:   12   41:   45
+         120      24:   34   35:   45   19:   23
+         121      13:   23    1:   12    7:   12
+         122      13:   23   35:   45   24:   29
+         123      35:   45   35:   45   30:   34
+         124      35:   45   35:   45   35:   40
+         125       1:   12   13:   23    1:    6
+         126      24:   34   13:   23   13:   18
+         127      24:   34    1:   12   19:   23
+         128      24:   34   35:   45   41:   45
+Setting up quadratic distribution...
+ExtMesh (bp) on 0 =   100 x    99 x    94 =      930600
+PhiOnMesh: Number of (b)points on node 0 =                  792
+PhiOnMesh: nlist on node 0 =               179101
+setup_hfx: call #0001
+ setup_hfx: HFX energy:       -370.415082  eV
+
+stepf: Fermi-Dirac step function
+setup_hfx: call #0002
+ setup_hfx: HFX energy:       -361.355103  eV
+
+siesta: Program's energy decomposition (eV):
+siesta: Ebs     =     -2567.764277
+siesta: Eions   =     11953.169471
+siesta: Ena     =      3545.728344
+siesta: Ekin    =      2639.293809
+siesta: Enl     =       913.781477
+siesta: Eso     =         0.000000
+siesta: Edftu   =         0.000000
+siesta: DEna    =       114.097287
+siesta: DUscf   =         9.913623
+siesta: DUext   =         0.000000
+siesta: Exc     =     -2103.737260
+siesta: eta*DQ  =         0.000000
+siesta: Emadel  =         0.000000
+siesta: Emeta   =         0.000000
+siesta: Emolmec =         0.000000
+siesta: Ekinion =         0.000000
+siesta: Eharris =     -6857.653558
+siesta: Etot    =     -6834.092191
+siesta: FreeEng =     -6834.092191
+
+        iscf     Eharris(eV)        E_KS(eV)     FreeEng(eV)     dDmax    Ef(eV) dHmax(eV)
+   scf:    1    -6857.653558    -6834.092191    -6834.092191  1.519328 -3.545695  0.646251
+timer: Routine,Calls,Time,% = IterSCF        1      41.079  61.46
+setup_hfx: call #0003
+ setup_hfx: HFX energy:       -361.752115  eV
+   scf:    2    -6834.894361    -6834.489826    -6834.489826  0.008435 -3.580089  0.459360
+setup_hfx: call #0004
+ setup_hfx: HFX energy:       -362.696666  eV
+   scf:    3    -6835.376907    -6834.917255    -6834.917255  0.018709 -3.486608  0.006996
+setup_hfx: call #0005
+ setup_hfx: HFX energy:       -362.741448  eV
+   scf:    4    -6834.919663    -6834.918303    -6834.918303  0.001468 -3.701443  0.004685
+setup_hfx: call #0006
+ setup_hfx: HFX energy:       -362.750239  eV
+   scf:    5    -6834.918510    -6834.918449    -6834.918449  0.000193 -3.675522  0.002123
+setup_hfx: call #0007
+ setup_hfx: HFX energy:       -362.754495  eV
+   scf:    6    -6834.918515    -6834.918506    -6834.918506  0.000105 -3.662246  0.000138
+setup_hfx: call #0008
+ setup_hfx: HFX energy:       -362.754614  eV
+   scf:    7    -6834.918508    -6834.918507    -6834.918507  0.000077 -3.661861  0.000088
+
+SCF Convergence by DM+H criterion
+max |DM_out - DM_in|         :     0.0000770231
+max |H_out - H_in|      (eV) :     0.0000881714
+SCF cycle converged after 7 iterations
+
+Using DM_out to compute the final energy and forces
+No. of atoms with KB's overlaping orbs in proc 0. Max # of overlaps:      58     419
+setup_hfx: call #0009
+ setup_hfx: HFX energy:       -362.754614  eV
+
+siesta: E_KS(eV) =            -6834.9185
+
+siesta: E_KS - E_eggbox =     -6834.9185
+
+siesta: Atomic forces (eV/Ang):
+     1   -0.001553   -0.001616   -0.001802
+     2   -0.001503   -0.002089   -0.002245
+     3   -0.002091   -0.001436   -0.002193
+     4   -0.002243   -0.002134   -0.001310
+     5   -0.001757   -0.002190   -0.001702
+     6   -0.001962   -0.001983   -0.002035
+     7   -0.002054   -0.001796   -0.001702
+     8   -0.001801   -0.001504   -0.002203
+     9    0.001468   -0.001646   -0.001578
+    10    0.001565   -0.002198   -0.002275
+    11    0.002154   -0.001870   -0.002052
+    12    0.002165   -0.001941   -0.001941
+    13    0.002096   -0.001903   -0.001887
+    14    0.001397   -0.001783   -0.001593
+    15    0.001824   -0.001951   -0.001692
+    16    0.002117   -0.001691   -0.001888
+    17   -0.001544    0.001251   -0.001503
+    18   -0.001874    0.002250   -0.002052
+    19   -0.002174    0.001402   -0.002198
+    20   -0.002043    0.002038   -0.001937
+    21   -0.001833    0.001877   -0.001780
+    22   -0.001724    0.001481   -0.001666
+    23   -0.001936    0.002038   -0.001932
+    24   -0.001634    0.002066   -0.001945
+    25    0.001378    0.001433   -0.001800
+    26    0.001336    0.002494   -0.002234
+    27    0.002382    0.001504   -0.002355
+    28    0.002159    0.002212   -0.001555
+    29    0.002124    0.001947   -0.001695
+    30    0.001813    0.001705   -0.002154
+    31    0.001841    0.002158   -0.001742
+    32    0.002150    0.001996   -0.001660
+    33   -0.001498   -0.001502    0.001227
+    34   -0.001712   -0.002006    0.002138
+    35   -0.002079   -0.001722    0.002167
+    36   -0.002223   -0.002123    0.001498
+    37   -0.001637   -0.002040    0.002009
+    38   -0.001723   -0.001660    0.001782
+    39   -0.002033   -0.001732    0.002070
+    40   -0.001871   -0.001754    0.001914
+    41    0.001465   -0.001698    0.001457
+    42    0.001311   -0.002324    0.002471
+    43    0.002078   -0.001613    0.002286
+    44    0.002387   -0.002224    0.001366
+    45    0.002042   -0.001506    0.002005
+    46    0.001806   -0.002168    0.001800
+    47    0.001776   -0.001480    0.002284
+    48    0.002166   -0.001588    0.001916
+    49   -0.001657    0.001170    0.001467
+    50   -0.001690    0.002145    0.002326
+    51   -0.002406    0.001302    0.002343
+    52   -0.002414    0.002282    0.001361
+    53   -0.001572    0.001798    0.002219
+    54   -0.001962    0.001772    0.001905
+    55   -0.001525    0.001982    0.001880
+    56   -0.001493    0.002176    0.001923
+    57    0.001320    0.001383    0.001461
+    58    0.001200    0.002469    0.002575
+    59    0.002493    0.001170    0.002415
+    60    0.002466    0.002372    0.001252
+    61    0.001995    0.001549    0.001922
+    62    0.001578    0.001563    0.001399
+    63    0.001354    0.002039    0.001952
+    64    0.001908    0.001901    0.001619
+----------------------------------------
+   Tot    0.000093    0.000056    0.000104
+----------------------------------------
+   Max    0.002575
+   Res    0.001888    sqrt( Sum f_i^2 / 3N )
+----------------------------------------
+   Max    0.002575    constrained
+
+Stress tensor Voigt[x,y,z,yz,xz,xy] (kbar):     -401.97     -401.97     -401.96        0.01        0.01        0.01
+(Free)E + p*V (eV/cell)    -6513.5758
+Target enthalpy (eV/cell)    -6834.9185
+
+siesta: Program's energy decomposition (eV):
+siesta: Ebs     =     -2568.635284
+siesta: Eions   =     11953.169471
+siesta: Ena     =      3545.728344
+siesta: Ekin    =      2641.975373
+siesta: Enl     =       902.359468
+siesta: Eso     =         0.000000
+siesta: Edftu   =         0.000000
+siesta: DEna    =       122.855307
+siesta: DUscf   =        11.163331
+siesta: DUext   =         0.000000
+siesta: Exc     =     -2105.830860
+siesta: eta*DQ  =         0.000000
+siesta: Emadel  =         0.000000
+siesta: Emeta   =         0.000000
+siesta: Emolmec =         0.000000
+siesta: Ekinion =         0.000000
+siesta: Eharris =     -6834.918508
+siesta: Etot    =     -6834.918507
+siesta: FreeEng =     -6834.918507
+
+siesta: Final energy (eV):
+siesta:  Band Struct. =   -2568.635284
+siesta:       Kinetic =    2641.975373
+siesta:       Hartree =     491.376032
+siesta:       Edftu   =       0.000000
+siesta:       Eso     =       0.000000
+siesta:    Ext. field =       0.000000
+siesta:   Exch.-corr. =   -2105.830860
+siesta:  Ion-electron =   -3235.068427
+siesta:       Ion-ion =   -4627.370625
+siesta:       Ekinion =       0.000000
+siesta:         Total =   -6834.918507
+siesta:         Fermi =      -3.661861
+
+siesta: Stress tensor (static) (eV/Ang**3):
+siesta:    -0.250890    0.000005    0.000005
+siesta:     0.000005   -0.250890    0.000005
+siesta:     0.000005    0.000005   -0.250883
+
+siesta: Cell volume =       1280.824056 Ang**3
+
+siesta: Pressure (static):
+siesta:                Solid            Molecule  Units
+siesta:           0.00273249          0.00272964  Ry/Bohr**3
+siesta:           0.25088750          0.25062611  eV/Ang**3
+siesta:         401.97043796        401.55164490  kBar
+(Free)E+ p_basis*V_orbitals  =       -6711.962184
+(Free)Eharris+ p_basis*V_orbitals  =       -6711.962186
+
+cite: Please see "Sibulk.bib" for an exhaustive BiBTeX file.
+cite: Please clearly indicate Siesta version in published work: 4.1.5
+cite: This calculation has made use of the following articles
+cite: which are encouraged to be cited in a published work.
+        Primary SIESTA paper
+          DOI: www.doi.org/10.1088/0953-8984/14/11/302
+ 
+>> End of run:  16-JUN-2025  11:42:26
+Job completed

@@ -1,0 +1,108 @@
+SystemName      Bulk Silisin
+SystemLabel     Sibulk
+NumberOfSpecies	        1
+%block ChemicalSpeciesLabel
+  1  14  Si
+%endblock ChemicalSpeciesLabel
+
+NumberOfAtoms           8
+LatticeConstant      5.430 Ang
+
+%block LatticeVectors
+  1.00  0.00  0.00
+  0.00  1.00  0.00
+  0.00  0.00  1.00
+%endblock LatticeVectors
+
+AtomicCoordinatesFormat   Fractional
+%block AtomicCoordinatesAndAtomicSpecies
+  0.00000000000000  0.00000000000000  0.00000000000000  1
+  0.00000000000000  0.50000000000000  0.50000000000000  1
+  0.50000000000000  0.00000000000000  0.50000000000000  1
+  0.50000000000000  0.50000000000000  0.00000000000000  1
+  0.75000000000000  0.25000000000000  0.75000000000000  1
+  0.25000000000000  0.25000000000000  0.25000000000000  1
+  0.25000000000000  0.75000000000000  0.75000000000000  1
+  0.75000000000000  0.75000000000000  0.25000000000000  1
+%endblock AtomicCoordinatesAndAtomicSpecies
+
+%block Supercell
+   4   0   0
+   0   4   0
+   0   0   8
+%endblock Supercell
+
+kgrid.Cutoff 0. Bohr
+
+%block PAO.Basis
+Si     3    0.5564780
+ n=3    0    2   E    129.4991135  5.4983922
+   5.6841605               2.0421107
+   1.00000000000000        1.00000000000000 
+ n=3    1    2   E    81.8582336   5.9078004
+   6.439786                3.5339345
+   1.00000000000000        1.00000000000000  
+ n=3    2    1   E    14.1744519   2.3574667
+   3.9159002
+   1.00000000000000
+%endblock PAO.Basis
+
+%block NAO2GTO
+Si   5
+3  0  1  5
+    0.16303247E+00     0.63383670E+00
+    0.72395647E+00     0.15046193E+01
+    0.10135390E+01    -0.24932928E+01
+    0.23816944E+01     0.10284758E+01
+    0.33343721E+01    -0.39166455E+00
+3  0  2  5
+    0.10204082E+01     0.26922872E+01
+    0.14285715E+01    -0.57983459E+01
+    0.20000000E+01    -0.10201836E+02
+    0.28000000E+01     0.16476430E+02
+    0.39199999E+01    -0.57551709E+01
+3  1  1  4
+    0.15000000E+00     0.21382045E+00
+    0.50330623E+00     0.44835493E+00
+    0.95300463E+00    -0.31444340E+00
+    0.16044378E+01     0.82939668E-01
+3  1  2  4
+    0.56960348E+00     0.39336859E+01
+    0.79744486E+00    -0.57162678E+01
+    0.11164228E+01     0.32400072E+01
+    0.15629919E+01    -0.73843893E+00
+3  2  1  4
+    0.38934207E+00     0.46504665E+00
+    0.13516736E+01     0.27829141E+00
+    0.18923430E+01     0.85799466E+00
+    0.26492802E+01    -0.44406486E+00
+%endblock NAO2GTO
+
+xc.functional      GGA    # Default vaxc.authors         HSE    # Default value
+xc.authors        HSE06    # Default value
+
+ElectronicTemperature  25 meV
+
+#DM.UseSaveDM            T
+MeshCutoff              250. Ry     # Equivalent planewave cutoff for the grid
+MaxSCFIterations        50         # Maximum number of SCF iterations per step
+DM.MixingWeight         0.2         # New DM amount for next SCF cycle
+DM.Tolerance            1.d-4       # Tolerance in maximum difference
+                                    # between input and output DM
+DM.NumberPulay          6          # Number of SCF steps between pulay mixing
+
+# Eigenvalue problem: order-N or diagonalization
+
+SolutionMethod          diagon      # OrderN or Diagon
+
+MD.TypeOfRun            cg          # Type of dynamics:
+MD.NumCGsteps  0
+#MD.VariableCell   .true.
+MD.MaxForceTol  0.01 eV/Ang
+#WriteMDXmol   .true.
+WriteForces  .true.
+WriteCoorStep
+
+HFX.UseFittedNAOs  .true.
+HFX.Dynamic_parallel .false.
+HFX.FragSize 60000
