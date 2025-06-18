@@ -245,14 +245,14 @@ C       distribution and the previous ones.
         enddo
 #endif
       endif
-      if (Node == 0) then
-         write(6,"(a,i3)")"New grid distribution: ", oDistr
-         do PP= 1, Nodes
-            write(6,"(i12,3x,3(i5,a1,i5))")
-     $       PP,
-     $       (distr%box(1,jj,PP), ":", distr%box(2,jj,PP), jj=1,3)
-         enddo 
-      endif 
+!      if (Node == 0) then
+!         write(6,"(a,i3)")"New grid distribution: ", oDistr
+!         do PP= 1, Nodes
+!            write(6,"(i12,3x,3(i5,a1,i5))")
+!     $       PP,
+!     $       (distr%box(1,jj,PP), ":", distr%box(2,jj,PP), jj=1,3)
+!         enddo 
+!      endif 
 
       call timer( 'INITMESH', 2 )
 !--------------------------------------------------------------------------- END

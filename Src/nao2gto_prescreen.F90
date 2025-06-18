@@ -815,8 +815,15 @@ contains
 !   Init HFX cell parameters
 !   Compute the number of unit cells in the supercell
     ncells   = hfx_sys%nsc(1) * hfx_sys%nsc(2) * hfx_sys%nsc(3)
-    nelem_ij = ncells * hfx_sys%nuotot * (hfx_sys%nuotot + 1) / 2
-    nelem_kl = ncells*ncells*hfx_sys%nuotot*(hfx_sys%nuotot+1)/2
+    nelem_ij = ncells * hfx_sys%nuotot ! * (hfx_sys%nuotot + 1) / 2
+    nelem_kl = ncells*ncells*hfx_sys%nuotot !*(hfx_sys%nuotot+1)/2
+!
+!    if(node.eq.0)then
+!      write(6,*) "nsc ", hfx_sys%nsc
+!      write(6,*) "ncells, nuotot, norb ", ncells,  hfx_sys%nuotot, hfx_sys%norb
+!      write(*,'(A,1X,I12)')  'init_prescreen_eri: nelem_ij =', nelem_ij
+!      write(*,'(A,1X,I12)')  'init_prescreen_eri: nelem_kl =', nelem_kl
+!    endif
 
 !!   For debugging
 !    write(6,'(a,5i5)')                                      &
@@ -946,11 +953,12 @@ contains
 !     max_element1 = ncells*hfx_sys%nuotot*(hfx_sys%nuotot+1)/2
 !     max_element2 = ncells**2*hfx_sys%nuotot*(hfx_sys%nuotot+1)/2
 !   Note: element is not a simple type, hence we cannot use re_alloc
-    if ( associated(list_ij%element) ) then
+    if (allocated(list_ij%element) ) then
       deallocate(list_ij%element)
     end if
     allocate(list_ij%element(nelem_ij))
-    if ( associated(list_kl%element) ) then
+
+    if (allocated(list_kl%element) ) then
       deallocate(list_kl%element)
     end if
     allocate(list_kl%element(nelem_kl))
@@ -1170,7 +1178,7 @@ contains
 !! \param[out] list_orb: list of angular momentum shells neighbors
 ! *****************************************************************************
   subroutine build_pair_list(nia, na, hfx_opts, hfx_sys, &
-                 eri_prescreen, max_eri, list_orb)
+                 eri_prescreen, max_eri, list_orb )
 
     use alloc         , only: re_alloc      ! Reallocation routines
     use alloc         , only: de_alloc      ! Deallocation routines
@@ -1209,6 +1217,8 @@ contains
     use nao2gto_index , only: indexsc
     use nao2gto_pbc   , only: trans_pbc
     use nao2gto_types , only: hfx_options_type, hfx_system_type, pair_list_type
+    use nao2gto_types , only: pair_list_element_type 
+!    use nao2gto_data  , only: extend_pair_list, shrink_pair_list
 !   For debugging
 #ifdef MPI
     use mpi_siesta
@@ -1245,7 +1255,7 @@ contains
     real(dp)              , intent(in)  :: max_eri
                                                   ! Maximum value of 
                                                   !   eri_prescreen
-    type(pair_list_type)  , intent(out) :: list_orb
+    type(pair_list_type)  , intent(inout) :: list_orb
                                                   ! List of angular momentum 
                                                   !   shells neighbors
 
@@ -1338,14 +1348,19 @@ contains
                                                   !   and the atom
     real(dp) :: rij                               ! Distance between a neighbour
      
-    integer, dimension(:), pointer :: index => null()
+!    integer, dimension(:), pointer :: index => null()
                                                   ! Array used to order the 
                                                   !   elements of the neighbour
                                                   !   list
+                                              !   subroutine setup_hfx is called
 
 !   For debugging
     integer :: MPIerror
 !   End debugging
+
+    type(pair_list_element_type), allocatable :: new_array(:)
+
+    integer :: current_capacity, new_capacity
 
 ! -------------------------------------------------------------------------
 
@@ -1376,6 +1391,14 @@ contains
     unit_shells = subshell(hfx_sys%nuotot)
 !   Compute the number of unit cells in the supercell
     ncells = hfx_sys%norb / hfx_sys%nuotot
+
+    current_capacity = size(list_orb%element)
+
+!    if (Node .eq. 0) then
+!       write(6,*) "current_capacity ",   current_capacity
+!     endif
+!    nullify(list_orb%element)
+   
 !   Initialize neighb subroutine
 !    call mneighb(hfx_sys%cell, 2.0_dp*rmaxo, na, hfx_sys%xa, 0, 0, nnia )
 !    call re_alloc(index, 1, maxna, name='index', routine='build_pair_list')
@@ -1571,6 +1594,24 @@ contains
                 n_shells = ncells*(ishell_unit)*(ishell_unit-1)/2 &
 &                        + ((jshell-1)/unit_shells)*ishell_unit + jshell_unit
 
+                if (list_orb%nelement >= current_capacity) then
+                   new_capacity = int(current_capacity * 1.5) + 10
+  
+                   allocate(new_array(new_capacity))
+                   new_array(1:current_capacity) = list_orb%element(1:current_capacity)
+
+                   if (current_capacity > 0) then
+                       new_array(1:current_capacity) = list_orb%element(1:current_capacity)
+                       deallocate(list_orb%element)
+                   end if
+               
+                   allocate(list_orb%element(new_capacity))
+                   list_orb%element = new_array
+                   deallocate(new_array)
+
+                   current_capacity = new_capacity
+                end if
+
                 list_orb%nelement = list_orb%nelement + 1
                 i = list_orb%nelement
                 list_orb%element(i)%pair(1) = io
@@ -1607,7 +1648,7 @@ contains
 ! &                Node, ishell_unit, jshell_unit, rcut(is,ioa), rcut(js,joa)
 !                write(6,'(a,i5,3f12.5)') &
 ! &                '         build_pair_list: Node, eri_prescreen, max_eri, eps_pairlist = ', &
-! &                Node, eri_prescreen(io,jo), max_eri, hfx_opts%eps_pairlist
+! &                Node, eri_prescreen(D2Sindx(io,jo)), max_eri, hfx_opts%eps_pairlist
 !                write(6,'(a,3i5)') &
 ! &                '         build_pair_list: Node, n_shells, list_orb%nelement = ', &
 ! &                Node, n_shells, list_orb%nelement 

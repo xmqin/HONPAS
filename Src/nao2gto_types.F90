@@ -147,17 +147,13 @@ module nao2gto_types
 
   !> \brief Data type to store a list of orbital-pair information
   type, public :: pair_list_type
-
-    type(pair_list_element_type), dimension(:), pointer :: element
-    integer :: nelement
-
+    type(pair_list_element_type), dimension(:), allocatable :: element
+    integer :: nelement = 0
   end type pair_list_type
 
 !> Data type to store information about screening coefficients
   type, public :: hfx_screen_coeff_type
-
     real(dp) :: x(2)
-
   end type hfx_screen_coeff_type
 
   !> \brief Data type to point NAO2GTO routines to relevant SIESTA data
@@ -306,6 +302,10 @@ module nao2gto_types
     type(eri_link_type), pointer :: next
 
   end type eri_link_type
+
+  type(eri_link_type), pointer, public :: head
+  type(eri_link_type), pointer, public :: tail
+  type(eri_link_type), pointer, public :: ptr
 
   !> \brief Data type to store relevant cell parameters
   type, public :: hfx_cell_type

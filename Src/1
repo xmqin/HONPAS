@@ -1,0 +1,178 @@
+Only in .: 1
+Common subdirectories: ./fdf and /public/home/xmqin/HONPAS/honpas_develop/Src/fdf
+Common subdirectories: ./fdict and /public/home/xmqin/HONPAS/honpas_develop/Src/fdict
+Common subdirectories: ./hfx and /public/home/xmqin/HONPAS/honpas_develop/Src/hfx
+Common subdirectories: ./Include and /public/home/xmqin/HONPAS/honpas_develop/Src/Include
+Common subdirectories: ./Libs and /public/home/xmqin/HONPAS/honpas_develop/Src/Libs
+diff ./moremeshsubs.F /public/home/xmqin/HONPAS/honpas_develop/Src/moremeshsubs.F
+248,255c248,255
+<       if (Node == 0) then
+<          write(6,"(a,i3)")"New grid distribution: ", oDistr
+<          do PP= 1, Nodes
+<             write(6,"(i12,3x,3(i5,a1,i5))")
+<      $       PP,
+<      $       (distr%box(1,jj,PP), ":", distr%box(2,jj,PP), jj=1,3)
+<          enddo 
+<       endif 
+---
+> !      if (Node == 0) then
+> !         write(6,"(a,i3)")"New grid distribution: ", oDistr
+> !         do PP= 1, Nodes
+> !            write(6,"(i12,3x,3(i5,a1,i5))")
+> !     $       PP,
+> !     $       (distr%box(1,jj,PP), ":", distr%box(2,jj,PP), jj=1,3)
+> !         enddo 
+> !      endif 
+Common subdirectories: ./MPI and /public/home/xmqin/HONPAS/honpas_develop/Src/MPI
+diff ./nao2gto_data.F90 /public/home/xmqin/HONPAS/honpas_develop/Src/nao2gto_data.F90
+66c66,67
+< 
+---
+>   
+>  
+195a197,233
+> 
+> !!  public :: extend_pair_list, shrink_pair_list
+> !contains
+> !
+> !subroutine extend_pair_list(list, capacity)
+> !  type(pair_list_type), intent(inout) :: list
+> !  integer, intent(in) :: capacity
+> !  type(pair_list_element_type), dimension(:), allocatable :: temp
+> !
+> !!  if (.not. allocated(list%element)) then
+> !!    allocate(list%element(capacity))
+> !!    return
+> !!  end if
+> !
+> !  allocate(temp(size(list%element)))
+> !  temp = list%element
+> !  deallocate(list%element)
+> !  
+> !  allocate(list%element(capacity))
+> !  list%element(1:size(temp)) = temp
+> !  deallocate(temp)
+> !
+> !end subroutine extend_pair_list
+> !
+> !subroutine shrink_pair_list(list)
+> !  type(pair_list_type), intent(inout) :: list
+> !  type(pair_list_element_type), dimension(:), allocatable :: temp
+> !  
+> !  if (.not. allocated(list%element) .or. list%nelement == 0) return
+> !  
+> !  if (size(list%element) > list%nelement) then
+> !    allocate(temp(list%nelement))
+> !    temp = list%element(1:list%nelement)
+> !    deallocate(list%element)
+> !    call move_alloc(temp, list%element)
+> !  end if
+> !end subroutine shrink_pair_list
+diff ./nao2gto_hfx.F90 /public/home/xmqin/HONPAS/honpas_develop/Src/nao2gto_hfx.F90
+920a921
+> 
+922c923,924
+< !        write(6,*) node, list_ij%nelement, list_kl%nelement, number_task
+---
+> 
+>         write(6,*) node, list_ij%nelement, list_kl%nelement, number_task
+diff ./nao2gto_prescreen.F90 /public/home/xmqin/HONPAS/honpas_develop/Src/nao2gto_prescreen.F90
+818,819c818,826
+<     nelem_ij = ncells * hfx_sys%nuotot * (hfx_sys%nuotot + 1) / 2
+<     nelem_kl = ncells*ncells*hfx_sys%nuotot*(hfx_sys%nuotot+1)/2
+---
+>     nelem_ij = ncells * hfx_sys%nuotot ! * (hfx_sys%nuotot + 1) / 2
+>     nelem_kl = ncells*ncells*hfx_sys%nuotot !*(hfx_sys%nuotot+1)/2
+> !
+> !    if(node.eq.0)then
+> !      write(6,*) "nsc ", hfx_sys%nsc
+> !      write(6,*) "ncells, nuotot, norb ", ncells,  hfx_sys%nuotot, hfx_sys%norb
+> !      write(*,'(A,1X,I12)')  'init_prescreen_eri: nelem_ij =', nelem_ij
+> !      write(*,'(A,1X,I12)')  'init_prescreen_eri: nelem_kl =', nelem_kl
+> !    endif
+949c956
+<     if ( associated(list_ij%element) ) then
+---
+>     if (allocated(list_ij%element) ) then
+953c960,961
+<     if ( associated(list_kl%element) ) then
+---
+> 
+>     if (allocated(list_kl%element) ) then
+1173c1181
+<                  eri_prescreen, max_eri, list_orb)
+---
+>                  eri_prescreen, max_eri, list_orb )
+1211a1220,1221
+>     use nao2gto_types , only: pair_list_element_type 
+> !    use nao2gto_data  , only: extend_pair_list, shrink_pair_list
+1248c1258
+<     type(pair_list_type)  , intent(out) :: list_orb
+---
+>     type(pair_list_type)  , intent(inout) :: list_orb
+1341c1351
+<     integer, dimension(:), pointer :: index => null()
+---
+> !    integer, dimension(:), pointer :: index => null()
+1344a1355
+>                                               !   subroutine setup_hfx is called
+1349a1361,1364
+>     type(pair_list_element_type), allocatable :: new_array(:)
+> 
+>     integer :: current_capacity, new_capacity
+> 
+1378a1394,1401
+> 
+>     current_capacity = size(list_orb%element)
+> 
+> !    if (Node .eq. 0) then
+> !       write(6,*) "current_capacity ",   current_capacity
+> !     endif
+> !    nullify(list_orb%element)
+>    
+1573a1597,1614
+>                 if (list_orb%nelement >= current_capacity) then
+>                    new_capacity = int(current_capacity * 1.5) + 10
+>   
+>                    allocate(new_array(new_capacity))
+>                    new_array(1:current_capacity) = list_orb%element(1:current_capacity)
+> 
+>                    if (current_capacity > 0) then
+>                        new_array(1:current_capacity) = list_orb%element(1:current_capacity)
+>                        deallocate(list_orb%element)
+>                    end if
+>                
+>                    allocate(list_orb%element(new_capacity))
+>                    list_orb%element = new_array
+>                    deallocate(new_array)
+> 
+>                    current_capacity = new_capacity
+>                 end if
+> 
+1610c1651
+< ! &                Node, eri_prescreen(io,jo), max_eri, hfx_opts%eps_pairlist
+---
+> ! &                Node, eri_prescreen(D2Sindx(io,jo)), max_eri, hfx_opts%eps_pairlist
+diff ./nao2gto_types.F90 /public/home/xmqin/HONPAS/honpas_develop/Src/nao2gto_types.F90
+150,153c150,151
+< 
+<     type(pair_list_element_type), dimension(:), pointer :: element
+<     integer :: nelement
+< 
+---
+>     type(pair_list_element_type), dimension(:), allocatable :: element
+>     integer :: nelement = 0
+158d155
+< 
+160d156
+< 
+308a305,308
+> 
+>   type(eri_link_type), pointer, public :: head
+>   type(eri_link_type), pointer, public :: tail
+>   type(eri_link_type), pointer, public :: ptr
+Common subdirectories: ./ncdf and /public/home/xmqin/HONPAS/honpas_develop/Src/ncdf
+Common subdirectories: ./Orphans and /public/home/xmqin/HONPAS/honpas_develop/Src/Orphans
+Common subdirectories: ./SiestaXC and /public/home/xmqin/HONPAS/honpas_develop/Src/SiestaXC
+Common subdirectories: ./wxml and /public/home/xmqin/HONPAS/honpas_develop/Src/wxml
+Common subdirectories: ./xmlparser and /public/home/xmqin/HONPAS/honpas_develop/Src/xmlparser
